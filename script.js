@@ -516,26 +516,28 @@ const formatter = new Intl.NumberFormat('ko-KR');
 
 
 // ==========================================
-// 💡 숫자 픽셀 길이에 맞춰 밑줄이 완벽하게 따라붙는 함수 (버그 수정완료)
+// 💡 숫자 픽셀 길이에 맞춰 밑줄/크기가 완벽하게 따라붙는 함수 (잘림 방지 패치)
 // ==========================================
 window.resizeInput = function(el) {
-    // 투명한 가짜 글씨를 만들어서 실제 너비를 측정하는 꼼수입니다.
     let span = document.createElement('span');
     span.style.font = window.getComputedStyle(el).font;
+    span.style.letterSpacing = window.getComputedStyle(el).letterSpacing; // 글자 간격까지 계산
     span.style.visibility = 'hidden';
     span.style.whiteSpace = 'pre';
     span.style.position = 'absolute';
     span.innerText = el.value || el.placeholder;
     document.body.appendChild(span);
     
-    let width = span.offsetWidth; // 실제 픽셀 너비 측정
+    // getBoundingClientRect를 써서 소수점 픽셀까지 더 정확하게 측정!
+    let width = span.getBoundingClientRect().width; 
     document.body.removeChild(span);
     
-    el.style.width = Math.max(width, 20) + 'px'; // 픽셀 단위로 정확하게 핏!
+    // 🚨 핵심 패치: 커서 공간 등 여유 버퍼를 15px 정도 넉넉하게 줘서 절대 안 잘리게 만듭니다!
+    el.style.width = Math.max(width + 15, 20) + 'px'; 
 };
 
 // ==========================================
-// 🍩 토스 스타일 도넛 차트 (표 삭제 + 차트 밖 라벨 렌더링)
+// 🍩 토스 스타일 도넛 차트 (차트 바깥쪽 라벨 렌더링)
 // ==========================================
 function drawDonutChart(d, f, e) {
     const canvas = document.getElementById('donutChart');
@@ -546,7 +548,6 @@ function drawDonutChart(d, f, e) {
     
     const total = d + f + e;
 
-    // ✨ 대표님이 원하시던 '차트 바깥에 퍼센트/금액 둥둥 띄우는' 특수 플러그인
     const floatingLabelPlugin = {
         id: 'floatingLabels',
         afterDraw(chart) {
@@ -558,29 +559,25 @@ function drawDonutChart(d, f, e) {
             
             meta.data.forEach((arc, i) => {
                 const val = chart.data.datasets[0].data[i];
-                if (val === 0) return; // 0원이면 안 그림
+                if (val === 0) return; 
                 
                 const pct = Math.round((val / total) * 100) + '%';
                 const labelName = chart.data.labels[i];
                 const color = chart.data.datasets[0].backgroundColor[i];
                 
-                // 수학 공식: 각 조각의 가운데 각도와 바깥쪽 좌표 계산
                 const angle = (arc.startAngle + arc.endAngle) / 2;
-                const radius = arc.outerRadius + 20; // 도넛 바깥으로 20px 뺌
+                const radius = arc.outerRadius + 20; 
                 const x = arc.x + Math.cos(angle) * radius;
                 const y = arc.y + Math.sin(angle) * radius;
                 
-                // 차트 왼쪽에 있으면 글씨를 오른쪽 정렬, 오른쪽에 있으면 왼쪽 정렬
                 ctx.textAlign = x < arc.x ? 'right' : 'left';
                 
-                // 1. 항목 이름 + 퍼센트 그리기
                 ctx.font = 'bold 13px sans-serif';
                 ctx.fillStyle = color;
                 ctx.fillText(`${labelName} ${pct}`, x, y - 8);
                 
-                // 2. 금액 그리기 (그 아래에)
                 ctx.font = 'bold 12px sans-serif';
-                ctx.fillStyle = '#8B95A1'; // 회색
+                ctx.fillStyle = '#8B95A1';
                 ctx.fillText(`${formatter.format(val)}원`, x, y + 10);
             });
             ctx.restore();
@@ -597,15 +594,15 @@ function drawDonutChart(d, f, e) {
                 borderWidth: 0, 
             }] 
         }, 
-        plugins: [floatingLabelPlugin], // 위에 만든 특수 플러그인 장착!
+        plugins: [floatingLabelPlugin], 
         options: { 
             responsive: true, 
             maintainAspectRatio: false, 
-            layout: { padding: 50 }, // ✨ 바깥에 글씨를 쓰기 위해 차트 주변 여백 확보
+            layout: { padding: 50 }, 
             cutout: '60%', 
             plugins: { 
                 legend: { display: false }, 
-                tooltip: { enabled: false } // 직접 그렸으니 기본 툴팁은 끕니다
+                tooltip: { enabled: false } 
             }, 
             animation: { animateScale: true, animateRotate: true } 
         } 
@@ -613,65 +610,104 @@ function drawDonutChart(d, f, e) {
 }
 
 // ==========================================
-// 💰 가계부 분석 (analyzeMoney) 완벽 분리 패치 (버그 수정본)
+// 💰 가계부 분석 (통합형 엔진 & 부드러운 카피라이팅 패치)
 // ==========================================
 window.analyzeMoney = function() {
-    const budgetInput = document.getElementById('v-budget');
-    let userBudget = 500000; 
-    if (budgetInput && budgetInput.value) { userBudget = parseInt(budgetInput.value.replace(/,/g, '')) || 500000; }
-    localStorage.setItem('tosil_budget', userBudget);
+    const ledger = JSON.parse(localStorage.getItem('tosil_ledger_data')) || { categories: { diaper: 0, food: 0, etc: 0 } };
+    if(!ledger.categories) ledger.categories = { diaper: 0, food: 0, etc: 0 };
+    
+    const d = ledger.categories.diaper || 0;
+    const f = ledger.categories.food || 0;
+    const e = ledger.categories.etc || 0;
+    const detailsTotal = d + f + e;
 
-    // 예산 상단 표시 갱신
+    const budgetInput = document.getElementById('v-budget');
+    let userBudget = parseInt(localStorage.getItem('tosil_budget')) || 500000; 
+    if (budgetInput && budgetInput.value) { 
+        userBudget = parseInt(budgetInput.value.replace(/,/g, '')) || 500000; 
+        localStorage.setItem('tosil_budget', userBudget);
+    }
+    
     const budgetDisplayEl = document.getElementById('budget-display');
     if(budgetDisplayEl) budgetDisplayEl.innerText = Math.floor(userBudget / 10000);
 
-    // 카테고리별 입력값 가져오기
-    const d = getV('v-diaper'), f = getV('v-food'), e = getV('v-etc');
-    const detailsTotal = d + f + e;
-
-    if(detailsTotal === 0) return alert("분석할 항목별 지출액을 1원이라도 입력해 주세요! 📊");
-
-    // 🚨 핵심 수정: 더 이상 전체 누적 지출(ledger.total)을 덮어쓰지 않습니다!
-    // 오직 '카테고리에 입력한 금액'만으로 차트와 퍼센트를 계산합니다.
-    const percent = Math.round((detailsTotal / userBudget) * 100);
-    let insightHtml = `<strong style="font-size:14px; display:block; margin-bottom:8px;">📊 핵심 소비 인사이트</strong>`;
-
-    const maxVal = Math.max(d, f, e);
-    if (maxVal === d && d > 0) insightHtml += `🧻 <strong>기저귀/위생용품 지출 1위!</strong><br>기저귀는 핫딜 뜰 때 대량 쟁여두는 게 최고입니다!`;
-    else if (maxVal === f && f > 0) insightHtml += `🍼 <strong>식비 지출 비중 1위!</strong><br>아이의 성장 속도를 고려하면 정상입니다! 잘 먹는 건 축복입니다 💪`;
-    else if (maxVal === e && e > 0) insightHtml += `🧸 <strong>장난감/기타 지출 비중 1위!</strong><br>'당근마켓'을 적절히 섞으면 방어율이 엄청나게 올라갑니다 🥕`;
-
-    if(percent > 100) insightHtml += `<br><br><span style="color:var(--danger)">🚨 <strong>주의:</strong></span> 분석된 지출액이 이번 달 예산을 초과했습니다!`;
-    else if(percent < 80) insightHtml += `<br><br><span style="color:var(--success)">🌿 <strong>우수:</strong></span> 예산 안에서 알뜰하게 분배되고 있습니다.`;
-    else insightHtml += `<br><br>👍 <strong>안정:</strong> 이상적인 소비 비율입니다.`;
-
-    // 텅 비어있던 하단 파란색 바 (퍼센트) 채우기
-    const avgPercentEl = document.getElementById('money-avg-percent');
-    if(avgPercentEl) avgPercentEl.innerText = `현재 분석된 지출은 예산 대비 ${percent}% 수준`;
-
-    // 텅 비어있던 하단 회색 박스 (인사이트) 채우기
-    const moneyInsightEl = document.getElementById('money-insight-detail');
-    if(moneyInsightEl) moneyInsightEl.innerHTML = insightHtml;
-    
-    // (이전 버전의 에러를 유발하던 money-diff 지난달 비교 텍스트는 완전히 삭제했습니다)
-    const moneyDiffEl = document.getElementById('money-diff');
-    if(moneyDiffEl) moneyDiffEl.style.display = 'none';
-
-    // 결과창 표시
     const resBox = document.getElementById('money-result'); 
-    if(resBox) resBox.style.display = 'block';
+    const emptyState = document.getElementById('money-empty-state');
 
-    // 차트 그리기
+    if(detailsTotal === 0) {
+        if(resBox) resBox.style.display = 'none';
+        if(emptyState) emptyState.style.display = 'block';
+        return; 
+    }
+
+    const budgetPercent = Math.round((detailsTotal / userBudget) * 100);
+    
+    // 1. 예산 대비 소진율 문구 다듬기 (퍼센트별로 다르게 반응!)
+    let percentMsg = `이번 달 예산의 <strong>${budgetPercent}%</strong>를 썼어요 💸`;
+    let percentStyle = `background: #E8F3FF; color: #1B64DA;`; // 기본 파란색
+
+    if (budgetPercent >= 100) {
+        percentMsg = `예산을 초과했어요! 지갑 지킴이 출동 🚨`;
+        percentStyle = `background: #FFF0F1; color: #F04452;`; // 빨간색
+    } else if (budgetPercent >= 80) {
+        percentMsg = `예산이 얼마 안 남았어요! (${budgetPercent}%) ⚠️`;
+        percentStyle = `background: #FFF4E6; color: #F76B1C;`; // 주황색
+    }
+
+    const avgPercentEl = document.getElementById('money-avg-percent');
+    if(avgPercentEl) {
+        avgPercentEl.innerHTML = `<div style="padding: 2px 0;">${percentMsg}</div>`;
+        avgPercentEl.style.cssText = `font-size:14px; font-weight:700; padding:14px; border-radius:12px; margin-bottom:16px; text-align: center; box-shadow: 0 2px 8px rgba(0,0,0,0.03); ${percentStyle}`;
+    }
+
+    // 2. 인사이트 문구 & 여백 시원하게 뚫어주기 (flex와 gap 사용)
+    let maxLabel = '기저귀/위생용품';
+    if (Math.max(d, f, e) === f) maxLabel = '분유/식비';
+    if (Math.max(d, f, e) === e) maxLabel = '장난감/기타';
+
+    let insightText = "알뜰하게 잘 방어하고 계시네요! 아주 좋습니다 🌿";
+    if (detailsTotal > 0) {
+        if (maxLabel === '기저귀/위생용품') insightText = "기저귀는 핫딜 뜰 때 대량으로 쟁여두는 게 최고입니다!";
+        else if (maxLabel === '분유/식비') insightText = "아이의 성장 속도를 고려하면 정상입니다! 잘 먹는 게 최고예요 💪";
+        else insightText = "'당근마켓'을 적절히 활용하면 방어율이 엄청나게 올라갑니다 🥕";
+    }
+
+    let statusHtml = `👍 <strong>안정:</strong> 이상적인 소비 비율입니다.`;
+    if (budgetPercent > 100) statusHtml = `<span style="color:var(--danger)">🚨 <strong>주의:</strong> 지출이 예산을 넘어섰습니다. 항목별 조율이 필요해요!</span>`;
+    else if (budgetPercent < 80) statusHtml = `<span style="color:var(--success)">🌿 <strong>우수:</strong> 예산 안에서 알뜰하게 분배되고 있습니다.</span>`;
+
+    const moneyInsightEl = document.getElementById('money-insight-detail');
+    if(moneyInsightEl) {
+        moneyInsightEl.innerHTML = `
+            <div style="display: flex; flex-direction: column; gap: 14px;">
+                <div>
+                    <div style="font-size: 14px; font-weight: 800; color: var(--text-m); margin-bottom: 4px;">
+                        🏆 ${maxLabel} 지출 비중이 가장 높아요
+                    </div>
+                    <div style="font-size: 13px; font-weight: 600; color: var(--text-s); line-height: 1.4;">
+                        ${insightText}
+                    </div>
+                </div>
+                <div style="height: 1px; background: var(--border); width: 100%;"></div>
+                <div>
+                    <div style="font-size: 14px; font-weight: 800; color: var(--text-m); margin-bottom: 4px;">
+                        💡 예산 진단 결과
+                    </div>
+                    <div style="font-size: 13px; font-weight: 600; color: var(--text-s); line-height: 1.4;">
+                        ${statusHtml}
+                    </div>
+                </div>
+            </div>
+        `;
+    }
+
+    if(resBox) resBox.style.display = 'block';
+    if(emptyState) emptyState.style.display = 'none';
+
     if (typeof drawDonutChart === 'function') {
         setTimeout(() => drawDonutChart(d, f, e), 100);
     }
-    
-    ledger.total = finalTotal;
-    saveLedgerToFirebase(ledger);
-    if(typeof updateHomeDashboard === 'function') updateHomeDashboard(); 
 }
-
-window.analyzeMoney = analyzeMoney;
 
 window.toggleHistory = function() {
     const area = document.getElementById('history-list-area');
@@ -688,7 +724,6 @@ window.toggleHistory = function() {
         const date = new Date();
         const currentMonthKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
         
-        // 👇 [핵심 2] 진짜 지난달 데이터만 뽑아오도록 안전 필터링
         const sortedKeys = Object.keys(history).filter(k => k !== currentMonthKey).sort().reverse();
         
         if(sortedKeys.length === 0) { 
@@ -715,8 +750,25 @@ window.toggleHistory = function() {
     }
 };
 
-// 가계부 빠른 입력 - 지출/저축 분리 및 메인 화면 즉시 갱신
-async function addDailyExpense(isSaving) {
+// 🌟 금액 입력 시 버튼 스르륵 나타나는 애니메이션 엔진
+window.toggleCategoryButtons = function(el) {
+    const val = Number(el.value.replace(/[^0-9]/g, ''));
+    const area = document.getElementById('expense-category-area');
+    if(val > 0) {
+        area.style.opacity = '1';
+        area.style.transform = 'translateY(0)';
+        area.style.pointerEvents = 'auto';
+        el.style.borderBottomColor = '#3182F6';
+    } else {
+        area.style.opacity = '0.3';
+        area.style.transform = 'translateY(10px)';
+        area.style.pointerEvents = 'none';
+        el.style.borderBottomColor = '#E5E8EB';
+    }
+};
+
+// 🌟 가계부 원터치 빠른 입력 (통합형 적용 완료!)
+window.addDailyExpense = async function(type) {
     const input = document.getElementById('v-input-amount');
     const amount = parseInt(input.value.replace(/,/g, '')) || 0;
     
@@ -725,26 +777,32 @@ async function addDailyExpense(isSaving) {
         else return alert("⚠️ 금액을 정확히 입력해주세요!");
     }
 
-    let ledger = JSON.parse(localStorage.getItem('tosil_ledger_data')) || { total: 0, savedTotal: 0, goal: "", goalAmount: 100000, history: [] };
+    let ledger = JSON.parse(localStorage.getItem('tosil_ledger_data')) || { total: 0, savedTotal: 0, goal: "", goalAmount: 100000, history: [], categories: { diaper: 0, food: 0, etc: 0 } };
     
-    const now = new Date();
-    const timeStr = `${now.getMonth()+1}/${now.getDate()} ${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`;
+    if(!ledger.categories) ledger.categories = { diaper: 0, food: 0, etc: 0 };
     if(!ledger.history) ledger.history = [];
 
-    if(isSaving) {
+    const now = new Date();
+    const timeStr = `${now.getMonth()+1}/${now.getDate()} ${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`;
+    let typeName = "";
+
+    if(type === 'saving') {
         ledger.savedTotal += amount;
-        ledger.history.unshift({ time: timeStr, amount: amount, type: 'saving' });
+        ledger.history.unshift({ time: timeStr, amount: amount, type: 'saving', catName: '저축' });
         if(typeof showToast === 'function') showToast(`🎉 목표 달성을 위해 ${amount.toLocaleString()}원 저금 완료!`);
     } else {
         ledger.total += amount;
-        ledger.history.unshift({ time: timeStr, amount: amount, type: 'expense' });
-        if(typeof showToast === 'function') showToast(`✅ 생활비 ${amount.toLocaleString()}원 지출 기록 완료!`);
+        if(type === 'diaper') { ledger.categories.diaper += amount; typeName = "🧻 위생"; }
+        else if(type === 'food') { ledger.categories.food += amount; typeName = "🍼 식비"; }
+        else if(type === 'etc') { ledger.categories.etc += amount; typeName = "🧸 기타"; }
+        
+        ledger.history.unshift({ time: timeStr, amount: amount, type: 'expense', catName: typeName });
+        if(typeof showToast === 'function') showToast(`✅ ${typeName} ${amount.toLocaleString()}원 기록 완료!`);
     }
     
     if(ledger.history.length > 30) ledger.history.pop(); 
     
-    // 파이어베이스 저장 (기존 안전 저장 함수 호출)
-    await saveLedgerToFirebase(ledger);
+    if (typeof saveLedgerToFirebase === 'function') await saveLedgerToFirebase(ledger);
     
     localStorage.setItem('tosil_money_total', ledger.total); 
     const curY = now.getFullYear(), curM = now.getMonth() + 1, monthKey = `${curY}-${curM}`;
@@ -752,12 +810,17 @@ async function addDailyExpense(isSaving) {
     localHistory[monthKey] = ledger.total;
     localStorage.setItem('TosilBabyApp', JSON.stringify(localHistory));
 
+    // UI 리셋 및 업데이트 (버튼 다시 숨기기)
     input.value = '';
-    updateLedgerUI(); // 👇 [핵심 3] 입력 후 즉시 UI 업데이트 함수 호출!
+    window.toggleCategoryButtons(input);
+    window.resizeInput(input);
+
+    window.updateLedgerUI(); 
+    window.analyzeMoney(); // 👈 입력과 동시에 차트를 알아서 다시 그림!
     if(typeof updateHomeDashboard === 'function') updateHomeDashboard();
 }
 
-function saveGoal() {
+window.saveGoal = function() {
     let ledger = JSON.parse(localStorage.getItem('tosil_ledger_data')) || { total: 0, savedTotal: 0, goal: "", goalAmount: 100000, history: [] };
     const textEl = document.getElementById('v-goal-text');
     const amtEl = document.getElementById('v-goal-amount');
@@ -767,14 +830,13 @@ function saveGoal() {
         const amountVal = amtEl.value.replace(/,/g, '');
         ledger.goalAmount = parseInt(amountVal) || 100000;
     }
+    if (typeof saveLedgerToFirebase === 'function') saveLedgerToFirebase(ledger);
+};
 
-    saveLedgerToFirebase(ledger);
-}
-
-function updateLedgerUI() {
+// 🌟 머니로그(히스토리) UI 업데이트 (앱 처음 켤 때도 글자 잘림 방지 적용)
+window.updateLedgerUI = function() {
     const ledger = JSON.parse(localStorage.getItem('tosil_ledger_data')) || { total: 0, savedTotal: 0, goal: "", goalAmount: 100000, history: [] };
     
-    // 👇 [핵심 4] UI 업데이트 시 큰 숫자(총 지출액) 무조건 갱신 보장
     const moneyTotalEl = document.getElementById('money-total-display');
     if(moneyTotalEl) moneyTotalEl.innerText = Number(ledger.total).toLocaleString();
 
@@ -782,12 +844,16 @@ function updateLedgerUI() {
     if(goalInput && document.activeElement !== goalInput && ledger.goal) goalInput.value = ledger.goal;
 
     const amountInput = document.getElementById('v-goal-amount');
-    if(amountInput && document.activeElement !== amountInput && ledger.goalAmount) amountInput.value = Number(ledger.goalAmount).toLocaleString();
+    if(amountInput && document.activeElement !== amountInput && ledger.goalAmount) {
+        amountInput.value = Number(ledger.goalAmount).toLocaleString();
+        window.resizeInput(amountInput); // 👈 앱 로딩 시 목표액 칸도 넉넉하게 자동 조절!
+    }
 
     const budgetInput = document.getElementById('v-budget');
     const savedBudget = localStorage.getItem('tosil_budget');
     if (budgetInput && document.activeElement !== budgetInput && savedBudget) {
         budgetInput.value = Number(savedBudget).toLocaleString();
+        window.resizeInput(budgetInput); // 👈 앱 로딩 시 예산 칸도 넉넉하게 자동 조절!
     }
 
     const targetAmount = parseInt(ledger.goalAmount) || 100000;
@@ -805,27 +871,36 @@ function updateLedgerUI() {
         } else {
             ledger.history.forEach(h => {
                 const isSave = h.type === 'saving';
-                const badge = isSave ? `<span style="color:#3182F6; font-weight:800; font-size:12px; background:#E8F3FF; padding:4px 8px; border-radius:6px;">💰 저금</span>` : `<span style="color:#4E5968; font-weight:800; font-size:12px; background:#F2F4F6; padding:4px 8px; border-radius:6px;">💸 지출</span>`;
+                
+                let bgColor = "#F2F4F6", textColor = "#4E5968";
+                if(isSave) { bgColor = "#F3E8FF"; textColor = "#7C3AED"; }
+                else if(h.catName && h.catName.includes('위생')) { bgColor = "#EBF8FF"; textColor = "#0284C7"; }
+                else if(h.catName && h.catName.includes('식비')) { bgColor = "#ECFDF5"; textColor = "#059669"; }
+                else if(h.catName && h.catName.includes('기타')) { bgColor = "#FFF4ED"; textColor = "#E65100"; }
+
+                const badge = `<span style="background:${bgColor}; color:${textColor}; padding:6px 12px; border-radius:10px; font-size:13px; font-weight:900;">${h.catName || (isSave ? '💰 저축' : '💸 지출')}</span>`;
                 const amountColor = isSave ? '#3182F6' : 'var(--text-m)';
-                html += `<div style="display:flex; justify-content:space-between; align-items:center; padding:14px; background:#FFF; border-radius:12px; font-size:13.5px; border:1px solid #E5E8EB; margin-bottom:8px; box-shadow: 0 2px 6px rgba(0,0,0,0.02);">
-                            <div style="display:flex; align-items:center; gap:8px;">${badge} <span style="color:var(--text-s); font-size:12.5px; font-weight:700;">${h.time}</span></div>
-                            <span style="font-weight:900; color:${amountColor}; font-size:15px;">${Number(h.amount).toLocaleString()}원</span>
+
+                html += `<div style="display:flex; justify-content:space-between; align-items:center; padding:16px; background:#FFF; border-radius:16px; font-size:13.5px; border:1px solid #E5E8EB; margin-bottom:8px; box-shadow: 0 2px 8px rgba(0,0,0,0.02);">
+                            <div style="display:flex; align-items:center; gap:10px;">${badge} <span style="color:var(--text-s); font-size:12px; font-weight:700;">${h.time}</span></div>
+                            <span style="font-weight:900; color:${amountColor}; font-size:16px;">${Number(h.amount).toLocaleString()}원</span>
                          </div>`;
             });
         }
         listContainer.innerHTML = html;
     }
-}
+};
 
-async function resetMoneyAll() {
-    if(!confirm("이번 달 기록된 '지출' 및 '저금' 데이터를 초기화하시겠습니까?\n(설정하신 예산과 목표는 유지됩니다)")) return;
+window.resetMoneyAll = async function() {
+    if(!confirm("이번 달 기록된 모든 지출 내역 및 카테고리를 초기화하시겠습니까?\n(설정하신 예산과 목표는 유지됩니다)")) return;
     
     let ledger = JSON.parse(localStorage.getItem('tosil_ledger_data')) || {};
     ledger.total = 0;
     ledger.savedTotal = 0;
     ledger.history = [];
+    ledger.categories = { diaper: 0, food: 0, etc: 0 }; // 🌟 카테고리도 싹 비우기
     
-    await saveLedgerToFirebase(ledger);
+    if (typeof saveLedgerToFirebase === 'function') await saveLedgerToFirebase(ledger);
     localStorage.removeItem('tosil_money_total');
     
     const date = new Date();
@@ -840,26 +915,29 @@ async function resetMoneyAll() {
         localStorage.removeItem('TosilBabyApp');
     }
     
-    const d = document.getElementById('v-diaper'); if(d) d.value = '';
-    const f = document.getElementById('v-food'); if(f) f.value = '';
-    const e = document.getElementById('v-etc'); if(e) e.value = '';
-    
     const resBox = document.getElementById('money-result'); 
     if(resBox) resBox.style.display = 'none'; 
+    const emptyState = document.getElementById('money-empty-state');
+    if(emptyState) emptyState.style.display = 'block';
+
     const area = document.getElementById('history-list-area');
     if(area) area.style.display = 'none';
     
-    // 👇 [핵심 5] 초기화 직후 즉시 0원 갱신!
-    updateLedgerUI();
+    window.updateLedgerUI();
+    window.analyzeMoney(); // 👈 0원으로 초기화된 차트 강제 적용
+    
     if(typeof showToast === 'function') showToast("데이터가 깔끔하게 리셋되었습니다! 🌿");
     else alert("데이터가 깔끔하게 리셋되었습니다! 다시 든든하게 모아봐요! 🌿");
     
     if(typeof updateHomeDashboard === 'function') updateHomeDashboard();
-}
+};
 
-window.addDailyExpense = addDailyExpense;
-window.saveGoal = saveGoal;
-window.resetMoneyAll = resetMoneyAll;
+// 처음 툴박스 화면 켰을 때 차트 불러오기
+document.addEventListener("DOMContentLoaded", () => {
+    setTimeout(() => {
+        if(typeof window.analyzeMoney === 'function') window.analyzeMoney();
+    }, 500);
+});
 
 // ==========================================
 // 🛍️ 스마트 핫딜 판독기 (나의 역대 최저가 갱신 시스템)
@@ -4545,24 +4623,51 @@ window.closeReceiptModal = function() {
     document.getElementById('receipt-modal').style.display = 'none';
 }
 
-// 영수증 이미지 저장 함수 (버튼의 onclick 이름과 정확히 일치시켰습니다)
+// ==========================================
+// 🧾 영수증 이미지 저장 (모바일 철통 방어 패치)
+// ==========================================
 window.downloadReceipt = function() {
     const target = document.getElementById('receipt-content'); 
 
     if (!target) {
-        alert("저장할 영수증 내용을 찾을 수 없습니다. (ID 확인 필요)");
-        return;
+        return alert("저장할 영수증 내용을 찾을 수 없습니다.");
+    }
+    
+    // 🚨 1번 원인 방어: 라이브러리가 로드되지 않았을 때
+    if (typeof html2canvas === 'undefined') {
+        return alert("이미지 저장 라이브러리가 필요합니다. HTML 파일에 html2canvas 스크립트가 있는지 확인해주세요!");
     }
 
+    // 캡처하는 동안 저장 버튼 임시 숨김 (버튼까지 사진에 찍히는 것 방지)
+    const btn = document.querySelector('#receipt-modal button[onclick*="downloadReceipt"]');
+    if (btn) btn.style.display = 'none';
+
     html2canvas(target, {
-        scale: 2, 
-        backgroundColor: '#ffffff' 
+        scale: 2, // 화질 2배 뻥튀기 (고화질)
+        backgroundColor: '#ffffff',
+        useCORS: true // 🚨 카카오 프사 같은 외부 이미지 깨짐 방지
     }).then(canvas => {
-        // 2. 캔버스를 이미지 파일로 변환하여 다운로드
+        if (btn) btn.style.display = 'block'; // 버튼 원상복구
+
+        // 🚨 2번 원인 방어: 모바일에서 다운로드 강제 실행 꼼수
+        const dataUrl = canvas.toDataURL("image/png");
         const link = document.createElement("a");
         link.download = "우리아기_하루_영수증.png";
-        link.href = canvas.toDataURL("image/png");
+        link.href = dataUrl;
+        
+        document.body.appendChild(link);
         link.click();
+        document.body.removeChild(link);
+
+        if (typeof window.showToast === 'function') {
+            window.showToast("📸 영수증이 앨범에 쏙 저장되었습니다!");
+        } else {
+            alert("📸 영수증이 앨범에 저장되었습니다!");
+        }
+    }).catch(err => {
+        if (btn) btn.style.display = 'block';
+        console.error("영수증 캡처 에러:", err);
+        alert("저장 중 오류가 발생했습니다 ㅠㅠ");
     });
 };
 
