@@ -513,94 +513,166 @@ async function saveLedgerToFirebase(data) {
 }
 
 const formatter = new Intl.NumberFormat('ko-KR'); 
+
+
+// ==========================================
+// 💡 숫자 픽셀 길이에 맞춰 밑줄이 완벽하게 따라붙는 함수 (버그 수정완료)
+// ==========================================
+window.resizeInput = function(el) {
+    // 투명한 가짜 글씨를 만들어서 실제 너비를 측정하는 꼼수입니다.
+    let span = document.createElement('span');
+    span.style.font = window.getComputedStyle(el).font;
+    span.style.visibility = 'hidden';
+    span.style.whiteSpace = 'pre';
+    span.style.position = 'absolute';
+    span.innerText = el.value || el.placeholder;
+    document.body.appendChild(span);
+    
+    let width = span.offsetWidth; // 실제 픽셀 너비 측정
+    document.body.removeChild(span);
+    
+    el.style.width = Math.max(width, 20) + 'px'; // 픽셀 단위로 정확하게 핏!
+};
+
+// ==========================================
+// 🍩 토스 스타일 도넛 차트 (표 삭제 + 차트 밖 라벨 렌더링)
+// ==========================================
 function drawDonutChart(d, f, e) {
     const canvas = document.getElementById('donutChart');
     if(!canvas || typeof Chart === 'undefined') return;
     const ctx = canvas.getContext('2d');
+    
     if(currentDonutChart) { currentDonutChart.destroy(); }
+    
+    const total = d + f + e;
+
+    // ✨ 대표님이 원하시던 '차트 바깥에 퍼센트/금액 둥둥 띄우는' 특수 플러그인
+    const floatingLabelPlugin = {
+        id: 'floatingLabels',
+        afterDraw(chart) {
+            const { ctx } = chart;
+            const meta = chart.getDatasetMeta(0);
+            
+            ctx.save();
+            ctx.textBaseline = 'middle';
+            
+            meta.data.forEach((arc, i) => {
+                const val = chart.data.datasets[0].data[i];
+                if (val === 0) return; // 0원이면 안 그림
+                
+                const pct = Math.round((val / total) * 100) + '%';
+                const labelName = chart.data.labels[i];
+                const color = chart.data.datasets[0].backgroundColor[i];
+                
+                // 수학 공식: 각 조각의 가운데 각도와 바깥쪽 좌표 계산
+                const angle = (arc.startAngle + arc.endAngle) / 2;
+                const radius = arc.outerRadius + 20; // 도넛 바깥으로 20px 뺌
+                const x = arc.x + Math.cos(angle) * radius;
+                const y = arc.y + Math.sin(angle) * radius;
+                
+                // 차트 왼쪽에 있으면 글씨를 오른쪽 정렬, 오른쪽에 있으면 왼쪽 정렬
+                ctx.textAlign = x < arc.x ? 'right' : 'left';
+                
+                // 1. 항목 이름 + 퍼센트 그리기
+                ctx.font = 'bold 13px sans-serif';
+                ctx.fillStyle = color;
+                ctx.fillText(`${labelName} ${pct}`, x, y - 8);
+                
+                // 2. 금액 그리기 (그 아래에)
+                ctx.font = 'bold 12px sans-serif';
+                ctx.fillStyle = '#8B95A1'; // 회색
+                ctx.fillText(`${formatter.format(val)}원`, x, y + 10);
+            });
+            ctx.restore();
+        }
+    };
+
     currentDonutChart = new Chart(ctx, { 
         type: 'doughnut', 
         data: { 
-            labels: ['기저귀/위생용품', '분유/이유식/식비', '의류/장난감/기타'], 
-            datasets: [{ data: [d, f, e], backgroundColor: ['#3182F6', '#10B981', '#FF823A'], borderWidth: 0, hoverOffset: 4 }] 
+            labels: ['위생용품', '분유/식비', '장난감/기타'], 
+            datasets: [{ 
+                data: [d, f, e], 
+                backgroundColor: ['#3182F6', '#10B981', '#FF823A'], 
+                borderWidth: 0, 
+            }] 
         }, 
+        plugins: [floatingLabelPlugin], // 위에 만든 특수 플러그인 장착!
         options: { 
-            responsive: true, maintainAspectRatio: false, cutout: '75%', 
-            plugins: { legend: { display: false }, tooltip: { callbacks: { label: function(c) { return ' ' + c.label + ': ' + formatter.format(c.raw) + '원'; } } } }, 
+            responsive: true, 
+            maintainAspectRatio: false, 
+            layout: { padding: 50 }, // ✨ 바깥에 글씨를 쓰기 위해 차트 주변 여백 확보
+            cutout: '60%', 
+            plugins: { 
+                legend: { display: false }, 
+                tooltip: { enabled: false } // 직접 그렸으니 기본 툴팁은 끕니다
+            }, 
             animation: { animateScale: true, animateRotate: true } 
         } 
     });
 }
 
-function analyzeMoney() {
+// ==========================================
+// 💰 가계부 분석 (analyzeMoney) 완벽 분리 패치 (버그 수정본)
+// ==========================================
+window.analyzeMoney = function() {
     const budgetInput = document.getElementById('v-budget');
     let userBudget = 500000; 
     if (budgetInput && budgetInput.value) { userBudget = parseInt(budgetInput.value.replace(/,/g, '')) || 500000; }
     localStorage.setItem('tosil_budget', userBudget);
-    
+
+    // 예산 상단 표시 갱신
+    const budgetDisplayEl = document.getElementById('budget-display');
+    if(budgetDisplayEl) budgetDisplayEl.innerText = Math.floor(userBudget / 10000);
+
+    // 카테고리별 입력값 가져오기
     const d = getV('v-diaper'), f = getV('v-food'), e = getV('v-etc');
     const detailsTotal = d + f + e;
-    
-    let ledger = JSON.parse(localStorage.getItem('tosil_ledger_data')) || { total: 0, savedTotal: 0, goal: "", goalAmount: 100000, history: [] };
-    
-    const finalTotal = detailsTotal > 0 ? detailsTotal : ledger.total;
-    if(finalTotal === 0 && ledger.savedTotal === 0) return alert("지출하신 금액을 1원이라도 입력해 주세요! 💰");
-    
-    localStorage.setItem('tosil_money_total', finalTotal); 
-    const history = JSON.parse(localStorage.getItem('TosilBabyApp')) || {};
-    const date = new Date(), curY = date.getFullYear(), curM = date.getMonth() + 1, monthKey = `${curY}-${curM}`;
-    history[monthKey] = finalTotal; 
-    localStorage.setItem('TosilBabyApp', JSON.stringify(history));
-    
-    const moneyTotalEl = document.getElementById('money-total');
-    if(moneyTotalEl) moneyTotalEl.innerText = formatter.format(finalTotal);
-    
-    const lastM = curM === 1 ? 12 : curM - 1, lastY = curM === 1 ? curY - 1 : curY, lastKey = `${lastY}-${lastM}`;
-    let diffMsg = "";
-    if(history[lastKey]) {
-        const diff = finalTotal - history[lastKey];
-        if (diff > 0) diffMsg = `지난달보다 <span style="color:var(--danger)">${formatter.format(diff)}원 더 썼어요! 💸</span>`;
-        else if (diff < 0) diffMsg = `지난달보다 <span style="color:var(--success)">${formatter.format(Math.abs(diff))}원 아꼈어요! 🎉</span>`;
-        else diffMsg = `지난달과 지출액이 완벽히 똑같습니다! ⚖️`;
-    } else { diffMsg = "첫 분석 시작! 이번 달이 기준점이 됩니다."; }
-    
-    const moneyDiffEl = document.getElementById('money-diff');
-    if(moneyDiffEl) moneyDiffEl.innerHTML = diffMsg;
-    
-    const percent = Math.round((finalTotal / userBudget) * 100);
-    let insightHtml = `<strong style="font-size:14px; display:block; margin-bottom:8px;">📊 핵심 소비 인사이트</strong>`;
-    
-    if (detailsTotal > 0) {
-        const maxVal = Math.max(d, f, e);
-        if (maxVal === d && d > 0) insightHtml += `🧻 <strong>기저귀/위생용품 지출 1위!</strong><br>기저귀는 핫딜 뜰 때 대량 쟁여두는 게 최고입니다!`;
-        else if (maxVal === f && f > 0) insightHtml += `🍼 <strong>식비 지출 비중 1위!</strong><br>아이의 성장 속도를 고려하면 정상입니다! 잘 먹는 건 축복입니다 💪`;
-        else if (maxVal === e && e > 0) insightHtml += `🧸 <strong>장난감/기타 지출 비중 1위!</strong><br>'당근마켓'을 적절히 섞으면 방어율이 엄청나게 올라갑니다 🥕`;
-    } else {
-        insightHtml += `💡 <strong>실시간 투트랙 머니로그 사용 중!</strong><br>위의 세부 항목 칸을 채워주시면 월간 정밀 도넛 차트를 확인하실 수 있습니다.`;
-    }
 
-    if(percent > 100) insightHtml += `<br><br><span style="color:var(--danger)">🚨 <strong>주의:</strong></span> 이번 달 한도 예산을 초과했습니다!`;
-    else if(percent < 80) insightHtml += `<br><br><span style="color:var(--success)">🌿 <strong>우수:</strong></span> 알뜰하게 육아 중입니다! 아주 좋습니다.`;
-    else insightHtml += `<br><br>👍 <strong>안정:</strong> 이상적인 육아 소비 패턴입니다.`;
-    
+    if(detailsTotal === 0) return alert("분석할 항목별 지출액을 1원이라도 입력해 주세요! 📊");
+
+    // 🚨 핵심 수정: 더 이상 전체 누적 지출(ledger.total)을 덮어쓰지 않습니다!
+    // 오직 '카테고리에 입력한 금액'만으로 차트와 퍼센트를 계산합니다.
+    const percent = Math.round((detailsTotal / userBudget) * 100);
+    let insightHtml = `<strong style="font-size:14px; display:block; margin-bottom:8px;">📊 핵심 소비 인사이트</strong>`;
+
+    const maxVal = Math.max(d, f, e);
+    if (maxVal === d && d > 0) insightHtml += `🧻 <strong>기저귀/위생용품 지출 1위!</strong><br>기저귀는 핫딜 뜰 때 대량 쟁여두는 게 최고입니다!`;
+    else if (maxVal === f && f > 0) insightHtml += `🍼 <strong>식비 지출 비중 1위!</strong><br>아이의 성장 속도를 고려하면 정상입니다! 잘 먹는 건 축복입니다 💪`;
+    else if (maxVal === e && e > 0) insightHtml += `🧸 <strong>장난감/기타 지출 비중 1위!</strong><br>'당근마켓'을 적절히 섞으면 방어율이 엄청나게 올라갑니다 🥕`;
+
+    if(percent > 100) insightHtml += `<br><br><span style="color:var(--danger)">🚨 <strong>주의:</strong></span> 분석된 지출액이 이번 달 예산을 초과했습니다!`;
+    else if(percent < 80) insightHtml += `<br><br><span style="color:var(--success)">🌿 <strong>우수:</strong></span> 예산 안에서 알뜰하게 분배되고 있습니다.`;
+    else insightHtml += `<br><br>👍 <strong>안정:</strong> 이상적인 소비 비율입니다.`;
+
+    // 텅 비어있던 하단 파란색 바 (퍼센트) 채우기
+    const avgPercentEl = document.getElementById('money-avg-percent');
+    if(avgPercentEl) avgPercentEl.innerText = `현재 분석된 지출은 예산 대비 ${percent}% 수준`;
+
+    // 텅 비어있던 하단 회색 박스 (인사이트) 채우기
     const moneyInsightEl = document.getElementById('money-insight-detail');
     if(moneyInsightEl) moneyInsightEl.innerHTML = insightHtml;
     
-    const avgPercentEl = document.getElementById('money-avg-percent');
-    if(avgPercentEl) avgPercentEl.innerText = `설정한 한도 예산 대비 ${percent}% 지출`;
-    
-    // 차트 화면 켜기
+    // (이전 버전의 에러를 유발하던 money-diff 지난달 비교 텍스트는 완전히 삭제했습니다)
+    const moneyDiffEl = document.getElementById('money-diff');
+    if(moneyDiffEl) moneyDiffEl.style.display = 'none';
+
+    // 결과창 표시
     const resBox = document.getElementById('money-result'); 
     if(resBox) resBox.style.display = 'block';
-    
-    // 차트 렌더링 딜레이
-    setTimeout(() => drawDonutChart(d, f, e), 100);
+
+    // 차트 그리기
+    if (typeof drawDonutChart === 'function') {
+        setTimeout(() => drawDonutChart(d, f, e), 100);
+    }
     
     ledger.total = finalTotal;
     saveLedgerToFirebase(ledger);
-    updateHomeDashboard(); 
+    if(typeof updateHomeDashboard === 'function') updateHomeDashboard(); 
 }
+
 window.analyzeMoney = analyzeMoney;
+
 window.toggleHistory = function() {
     const area = document.getElementById('history-list-area');
     if(!area) return;
@@ -613,7 +685,11 @@ window.toggleHistory = function() {
         if(!items) return; 
         
         items.innerHTML = "";
-        const sortedKeys = Object.keys(history).sort().reverse();
+        const date = new Date();
+        const currentMonthKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
+        
+        // 👇 [핵심 2] 진짜 지난달 데이터만 뽑아오도록 안전 필터링
+        const sortedKeys = Object.keys(history).filter(k => k !== currentMonthKey).sort().reverse();
         
         if(sortedKeys.length === 0) { 
             items.innerHTML = `
@@ -625,7 +701,6 @@ window.toggleHistory = function() {
         } else { 
             let html = '<div style="margin-top: 12px;">';
             sortedKeys.forEach(k => { 
-                // k는 "2026-7" 형태이므로 연/월로 쪼갭니다.
                 const [year, month] = k.split('-');
                 html += `
                 <div class="history-item" style="display:flex; justify-content:space-between; align-items:center; padding:16px; background:#F8F9FA; border-radius:12px; margin-bottom:8px; border:1px solid #E5E8EB;">
@@ -640,12 +715,15 @@ window.toggleHistory = function() {
     }
 };
 
-// 가계부 입력 - ✨ 토스트 팝업 적용 완료 ✨
+// 가계부 빠른 입력 - 지출/저축 분리 및 메인 화면 즉시 갱신
 async function addDailyExpense(isSaving) {
     const input = document.getElementById('v-input-amount');
     const amount = parseInt(input.value.replace(/,/g, '')) || 0;
     
-    if(amount <= 0) return showToast("⚠️ 금액을 정확히 입력해주세요!"); // 👈 alert 대신 showToast!
+    if(amount <= 0) {
+        if(typeof showToast === 'function') return showToast("⚠️ 금액을 정확히 입력해주세요!");
+        else return alert("⚠️ 금액을 정확히 입력해주세요!");
+    }
 
     let ledger = JSON.parse(localStorage.getItem('tosil_ledger_data')) || { total: 0, savedTotal: 0, goal: "", goalAmount: 100000, history: [] };
     
@@ -656,32 +734,39 @@ async function addDailyExpense(isSaving) {
     if(isSaving) {
         ledger.savedTotal += amount;
         ledger.history.unshift({ time: timeStr, amount: amount, type: 'saving' });
-        showToast(`🎉 대박! ${amount.toLocaleString()}원 절약 및 저금 완료!`); // 👈 alert 대신 showToast!
+        if(typeof showToast === 'function') showToast(`🎉 목표 달성을 위해 ${amount.toLocaleString()}원 저금 완료!`);
     } else {
         ledger.total += amount;
         ledger.history.unshift({ time: timeStr, amount: amount, type: 'expense' });
-        showToast(`✅ 지출 ${amount.toLocaleString()}원 기록 완료!`); // 👈 alert 대신 showToast!
+        if(typeof showToast === 'function') showToast(`✅ 생활비 ${amount.toLocaleString()}원 지출 기록 완료!`);
     }
     
-    if(ledger.history.length > 20) ledger.history.pop(); 
+    if(ledger.history.length > 30) ledger.history.pop(); 
+    
+    // 파이어베이스 저장 (기존 안전 저장 함수 호출)
     await saveLedgerToFirebase(ledger);
     
     localStorage.setItem('tosil_money_total', ledger.total); 
-    const date = new Date(), curY = date.getFullYear(), curM = date.getMonth() + 1, monthKey = `${curY}-${curM}`;
+    const curY = now.getFullYear(), curM = now.getMonth() + 1, monthKey = `${curY}-${curM}`;
     const localHistory = JSON.parse(localStorage.getItem('TosilBabyApp')) || {};
     localHistory[monthKey] = ledger.total;
     localStorage.setItem('TosilBabyApp', JSON.stringify(localHistory));
 
     input.value = '';
-    updateHomeDashboard();
+    updateLedgerUI(); // 👇 [핵심 3] 입력 후 즉시 UI 업데이트 함수 호출!
+    if(typeof updateHomeDashboard === 'function') updateHomeDashboard();
 }
 
 function saveGoal() {
     let ledger = JSON.parse(localStorage.getItem('tosil_ledger_data')) || { total: 0, savedTotal: 0, goal: "", goalAmount: 100000, history: [] };
-    ledger.goal = document.getElementById('v-goal-text').value;
+    const textEl = document.getElementById('v-goal-text');
+    const amtEl = document.getElementById('v-goal-amount');
     
-    const amountVal = document.getElementById('v-goal-amount').value.replace(/,/g, '');
-    ledger.goalAmount = parseInt(amountVal) || 100000;
+    if(textEl) ledger.goal = textEl.value;
+    if(amtEl) {
+        const amountVal = amtEl.value.replace(/,/g, '');
+        ledger.goalAmount = parseInt(amountVal) || 100000;
+    }
 
     saveLedgerToFirebase(ledger);
 }
@@ -689,21 +774,25 @@ function saveGoal() {
 function updateLedgerUI() {
     const ledger = JSON.parse(localStorage.getItem('tosil_ledger_data')) || { total: 0, savedTotal: 0, goal: "", goalAmount: 100000, history: [] };
     
+    // 👇 [핵심 4] UI 업데이트 시 큰 숫자(총 지출액) 무조건 갱신 보장
+    const moneyTotalEl = document.getElementById('money-total-display');
+    if(moneyTotalEl) moneyTotalEl.innerText = Number(ledger.total).toLocaleString();
+
     const goalInput = document.getElementById('v-goal-text');
     if(goalInput && document.activeElement !== goalInput && ledger.goal) goalInput.value = ledger.goal;
 
     const amountInput = document.getElementById('v-goal-amount');
-    if(amountInput && document.activeElement !== amountInput && ledger.goalAmount) amountInput.value = ledger.goalAmount.toLocaleString();
+    if(amountInput && document.activeElement !== amountInput && ledger.goalAmount) amountInput.value = Number(ledger.goalAmount).toLocaleString();
 
-    // 이번 달 예산 불러오기 (v-budget)
     const budgetInput = document.getElementById('v-budget');
     const savedBudget = localStorage.getItem('tosil_budget');
     if (budgetInput && document.activeElement !== budgetInput && savedBudget) {
         budgetInput.value = Number(savedBudget).toLocaleString();
     }
 
-    const targetAmount = ledger.goalAmount || 100000;
-    const percent = Math.min(Math.round((ledger.savedTotal / targetAmount) * 100), 100);
+    const targetAmount = parseInt(ledger.goalAmount) || 100000;
+    let percent = 0;
+    if (targetAmount > 0) percent = Math.min(Math.round((ledger.savedTotal / targetAmount) * 100), 100);
     
     const percentEl = document.getElementById('v-goal-percent');
     if(percentEl) percentEl.innerText = percent + "%";
@@ -718,9 +807,9 @@ function updateLedgerUI() {
                 const isSave = h.type === 'saving';
                 const badge = isSave ? `<span style="color:#3182F6; font-weight:800; font-size:12px; background:#E8F3FF; padding:4px 8px; border-radius:6px;">💰 저금</span>` : `<span style="color:#4E5968; font-weight:800; font-size:12px; background:#F2F4F6; padding:4px 8px; border-radius:6px;">💸 지출</span>`;
                 const amountColor = isSave ? '#3182F6' : 'var(--text-m)';
-                html += `<div style="display:flex; justify-content:space-between; align-items:center; padding:14px; background:#FFF; border-radius:12px; font-size:13.5px; border:1px solid #E5E8EB; margin-bottom:8px;">
+                html += `<div style="display:flex; justify-content:space-between; align-items:center; padding:14px; background:#FFF; border-radius:12px; font-size:13.5px; border:1px solid #E5E8EB; margin-bottom:8px; box-shadow: 0 2px 6px rgba(0,0,0,0.02);">
                             <div style="display:flex; align-items:center; gap:8px;">${badge} <span style="color:var(--text-s); font-size:12.5px; font-weight:700;">${h.time}</span></div>
-                            <span style="font-weight:900; color:${amountColor}; font-size:15px;">${h.amount.toLocaleString()}원</span>
+                            <span style="font-weight:900; color:${amountColor}; font-size:15px;">${Number(h.amount).toLocaleString()}원</span>
                          </div>`;
             });
         }
@@ -729,7 +818,6 @@ function updateLedgerUI() {
 }
 
 async function resetMoneyAll() {
-    // 1단계: 이번 달 데이터 지우기 확인
     if(!confirm("이번 달 기록된 '지출' 및 '저금' 데이터를 초기화하시겠습니까?\n(설정하신 예산과 목표는 유지됩니다)")) return;
     
     let ledger = JSON.parse(localStorage.getItem('tosil_ledger_data')) || {};
@@ -740,7 +828,6 @@ async function resetMoneyAll() {
     await saveLedgerToFirebase(ledger);
     localStorage.removeItem('tosil_money_total');
     
-    // 👇 [버그 수정] 월별 통계에서 '이번 달' 기록 확실하게 지우기
     const date = new Date();
     const monthKey = `${date.getFullYear()}-${date.getMonth() + 1}`;
     let localHistory = JSON.parse(localStorage.getItem('TosilBabyApp')) || {};
@@ -749,25 +836,27 @@ async function resetMoneyAll() {
         localStorage.setItem('TosilBabyApp', JSON.stringify(localHistory));
     }
 
-    // 👇 [추가 기능] 과거 데이터까지 싹 다 날릴지 한 번 더 물어보기! (테스트용)
     if(confirm("입력된 '과거 월별 통계(지난달 등)' 기록까지 전부 다 삭제할까요?")) {
         localStorage.removeItem('TosilBabyApp');
     }
     
-    // 화면 입력칸 초기화
-    document.getElementById('v-diaper').value = ''; 
-    document.getElementById('v-food').value = ''; 
-    document.getElementById('v-etc').value = '';
+    const d = document.getElementById('v-diaper'); if(d) d.value = '';
+    const f = document.getElementById('v-food'); if(f) f.value = '';
+    const e = document.getElementById('v-etc'); if(e) e.value = '';
     
-    // 차트 화면 및 통계 화면 닫기
     const resBox = document.getElementById('money-result'); 
     if(resBox) resBox.style.display = 'none'; 
     const area = document.getElementById('history-list-area');
     if(area) area.style.display = 'none';
     
-    alert("데이터가 깔끔하게 리셋되었습니다! 다시 든든하게 모아봐요! 🌿");
-    updateHomeDashboard();
+    // 👇 [핵심 5] 초기화 직후 즉시 0원 갱신!
+    updateLedgerUI();
+    if(typeof showToast === 'function') showToast("데이터가 깔끔하게 리셋되었습니다! 🌿");
+    else alert("데이터가 깔끔하게 리셋되었습니다! 다시 든든하게 모아봐요! 🌿");
+    
+    if(typeof updateHomeDashboard === 'function') updateHomeDashboard();
 }
+
 window.addDailyExpense = addDailyExpense;
 window.saveGoal = saveGoal;
 window.resetMoneyAll = resetMoneyAll;
@@ -889,43 +978,38 @@ async function sendHotdealToLedger(price, cat) {
 }
 
 // ==========================================
-// 5. 스마트 해열제 타이머 엔진 (실시간 연동형)
+// 5. 스마트 해열제 타이머 엔진 (실시간 연동형 + 하이엔드 디테일)
 // ==========================================
 function checkPillLock(type) {
-    // 1. ✨ 로컬 스토리지에서 기록 가져오기 (이 줄이 빠졌었습니다!)
     let currentFeverRecords = JSON.parse(localStorage.getItem('tosil_fever_records')) || [];
 
-    // 2. 기록이 없으면 둘 다 즉시 복용 가능
     if (currentFeverRecords.length === 0) {
         return { locked: false, reason: "" };
     }
 
-    // 3. 가장 최근에 먹인 약 기록 가져오기
     const lastRecord = currentFeverRecords[0]; 
-    
-    // 4. ✨ 시간 계산 (글씨가 아니라 저장해둔 timestamp 숫자로 정확히 계산!)
     const lastTime = lastRecord.timestamp; 
     const now = new Date().getTime();
     let diffMinutes = Math.floor((now - lastTime) / (1000 * 60));
 
-    // (혹시 폰 시간 오류로 음수가 나오면 0으로 보정)
     if (diffMinutes < 0) diffMinutes = 0;
 
-    // 5. ✨ 핵심 로직: 같은 약인지 다른 약인지 판별 ✨
     let requiredWaitMins = 0;
     if (lastRecord.type === type) {
-        requiredWaitMins = 240; // 🔴 같은 약이면 4시간(240분) 대기
+        requiredWaitMins = 240; // 🔴 같은 약 4시간
     } else {
-        requiredWaitMins = 120; // 🔵 다른 약(교차복용)이면 2시간(120분) 대기
+        requiredWaitMins = 120; // 🔵 다른 약 2시간
     }
 
-    // 6. 대기 시간이 아직 안 지났다면 잠금!
     if (diffMinutes < requiredWaitMins) {
-        const remain = requiredWaitMins - diffMinutes;
-        return { locked: true, reason: `투약 잠금\n(약 ${remain}분 남음)` };
+        // ✨ [니치 패치 1] '몇 분 남음'이 아니라 '몇 시 몇 분부터' 먹일 수 있는지 정확히 계산!
+        const unlockTime = new Date(lastTime + (requiredWaitMins * 60000));
+        const unlockHH = String(unlockTime.getHours()).padStart(2, '0');
+        const unlockMM = String(unlockTime.getMinutes()).padStart(2, '0');
+        
+        return { locked: true, reason: `투약 잠금\n(${unlockHH}:${unlockMM} 부터)` };
     }
 
-    // 시간이 다 지났으면 잠금 해제
     return { locked: false, reason: "" };
 }
 
@@ -1019,7 +1103,14 @@ async function addFeverRecord() {
     }
     
     localStorage.setItem('tosil_fever_records', JSON.stringify(records));
-    document.getElementById('v-temp').value = '';
+    
+    // ✨ 입력 후 원래대로 리셋!
+    const tempInput = document.getElementById('v-temp');
+    if (tempInput) {
+        tempInput.value = '';
+        tempInput.style.color = '';
+        tempInput.style.borderBottom = '';
+    }
     
     // 증상 체크박스 완벽 초기화
     ['sym-cough','sym-vomit','sym-diarrhea','sym-nofood'].forEach(id => { 
@@ -1067,7 +1158,7 @@ function renderFeverTimeline() {
     const fChart = document.getElementById('fever-chart-container'); if(fChart) fChart.style.display = 'block';
     const fTimer = document.getElementById('fever-timer-box'); if(fTimer) fTimer.style.display = 'block'; 
     
-    drawFeverChart(records);
+    if (typeof drawFeverChart === 'function') drawFeverChart(records);
     if(feverTimerInterval) clearInterval(feverTimerInterval); 
     updateFeverTimer(records); 
     feverTimerInterval = setInterval(() => updateFeverTimer(records), 1000);
@@ -1089,9 +1180,38 @@ function updateFeverTimer(records) {
     const redLock = checkPillLock('red'), blueLock = checkPillLock('blue');
     if (timerRedEl) { timerRedEl.innerText = redLock.locked ? redLock.reason.split('\n')[1] : "✅ 즉시 복용 가능"; timerRedEl.style.color = redLock.locked ? "var(--danger)" : "#2ECC71"; }
     if (timerBlueEl) { timerBlueEl.innerText = blueLock.locked ? blueLock.reason.split('\n')[1] : "✅ 즉시 복용 가능"; timerBlueEl.style.color = blueLock.locked ? "var(--danger)" : "#2ECC71"; }
-    if (redBtn) { redBtn.style.cursor = 'pointer'; redBtn.style.opacity = redLock.locked ? '0.3' : '1'; }
-    if (blueBtn) { blueBtn.style.cursor = 'pointer'; blueBtn.style.opacity = blueLock.locked ? '0.3' : '1'; }
+    if (redBtn) { redBtn.style.cursor = redLock.locked ? 'not-allowed' : 'pointer'; redBtn.style.opacity = redLock.locked ? '0.3' : '1'; }
+    if (blueBtn) { blueBtn.style.cursor = blueLock.locked ? 'not-allowed' : 'pointer'; blueBtn.style.opacity = blueLock.locked ? '0.3' : '1'; }
 }
+
+// ✨ [니치 패치 2] 체온 입력 시 실시간 색상 변화 엔진
+window.handleTempInputColor = function(inputEl) {
+    const val = parseFloat(inputEl.value);
+    if (!val || isNaN(val)) {
+        inputEl.style.color = '';
+        inputEl.style.borderBottom = '';
+        return;
+    }
+
+    if (val >= 38.0) {
+        inputEl.style.color = '#EF4444'; // 빨강 (고열)
+        inputEl.style.borderBottom = '2px solid #EF4444';
+    } else if (val >= 37.5) {
+        inputEl.style.color = '#F59E0B'; // 주황 (미열)
+        inputEl.style.borderBottom = '2px solid #F59E0B';
+    } else {
+        inputEl.style.color = '#10B981'; // 초록 (정상)
+        inputEl.style.borderBottom = '2px solid #10B981';
+    }
+};
+
+// 화면 켜질 때 이벤트 리스너 붙여주기
+document.addEventListener('DOMContentLoaded', () => {
+    const tempInput = document.getElementById('v-temp');
+    if (tempInput) {
+        tempInput.addEventListener('input', function() { window.handleTempInputColor(this); });
+    }
+});
 
 // 해열제 기록 전체 지우기 - ✨ 퀄리티업 완료 ✨
 async function clearFeverRecord() {
@@ -1420,6 +1540,7 @@ function calcHealthMaster() {
 window.calcHealthMaster = calcHealthMaster;
 
 // ✨ 성장 기록 저장 및 파이어베이스 연동 (안전장치 완비)
+// ✨ 성장 기록 저장 및 파이어베이스 연동 (폭풍성장 이스터에그 패치!)
 async function saveGrowthRecord() {
     console.log("1. 저장 버튼 클릭됨! 데이터 확인:", window.tempGrowthData);
 
@@ -1435,6 +1556,36 @@ async function saveGrowthRecord() {
     
     let records = JSON.parse(localStorage.getItem('tosil_growth_records')) || [];
     
+    // 🌟 [니치 패치 1] 직전 기록과 비교해서 성장 폭 계산하기!
+    let isSuperGrowth = false;
+    let growthMsg = "";
+    
+    if (records.length > 0) {
+        // 가장 최근 기록 가져오기 (날짜순 정렬 후 마지막)
+        const sortedRecords = [...records].sort((a,b) => new Date(b.date) - new Date(a.date));
+        const lastRecord = sortedRecords[0];
+        
+        // 같은 날짜 덮어쓰기가 아닐 때만 비교
+        if (lastRecord.date !== window.tempGrowthData.date) {
+            const diffH = window.tempGrowthData.height - lastRecord.height;
+            const diffW = window.tempGrowthData.weight - lastRecord.weight;
+            
+            let msgParts = [];
+            if (diffH > 0) msgParts.push(`키 +${diffH.toFixed(1)}cm`);
+            if (diffW > 0) msgParts.push(`몸무게 +${diffW.toFixed(1)}kg`);
+            
+            if (msgParts.length > 0) {
+                // 키 2cm 이상 OR 몸무게 0.5kg 이상 늘었으면 폭풍 성장!
+                if (diffH >= 2.0 || diffW >= 0.5) {
+                    isSuperGrowth = true;
+                    growthMsg = `🌱 대박! 폭풍 성장 중! (지난번보다 ${msgParts.join(', ')})`;
+                } else {
+                    growthMsg = `쑥쑥 잘 크고 있어요! (지난번보다 ${msgParts.join(', ')})`;
+                }
+            }
+        }
+    }
+
     // 같은 날짜 기록 덮어쓰기
     const existIdx = records.findIndex(r => r.date === window.tempGrowthData.date);
     if (existIdx > -1) {
@@ -1459,9 +1610,16 @@ async function saveGrowthRecord() {
     localStorage.setItem('tosil_growth_records', JSON.stringify(records));
     console.log("2. 로컬 스토리지 저장 완료:", records);
     
-    // 🚨 방어 3: showToast 함수가 없어서 멈추는 현상 방지
+    // 🌟 [니치 패치 2] 조건에 따라 토스트 팝업 & 폭죽 분기 처리
     if (typeof showToast === 'function') {
-        showToast("🎉 우리 아기 성장 기록이 차트에 안전하게 저장되었습니다!"); 
+        if (isSuperGrowth && typeof window.shootConfetti === 'function') {
+            window.shootConfetti(); // 팡!
+            showToast(`🎉 ${growthMsg}`);
+        } else if (growthMsg) {
+            showToast(`✨ ${growthMsg}`);
+        } else {
+            showToast("🎉 우리 아기 성장 기록이 차트에 안전하게 저장되었습니다!"); 
+        }
     } else {
         alert("🎉 우리 아기 성장 기록이 차트에 안전하게 저장되었습니다!");
     }
@@ -1487,7 +1645,7 @@ function deleteGrowthRecord(dateStr) {
 }
 window.deleteGrowthRecord = deleteGrowthRecord;
 
-// ✨ 저장된 기록으로 차트 & 리스트 그리기
+// ✨ 저장된 기록으로 차트 & 리스트 그리기 (마지막 계측일 배지 추가!)
 function renderGrowthHistory() {
     let records = JSON.parse(localStorage.getItem('tosil_growth_records')) || [];
     const acc = document.getElementById('growth-history-accordion');
@@ -1535,10 +1693,32 @@ function renderGrowthHistory() {
     const listContainer = document.getElementById('growth-history-list');
     if (listContainer) {
         let html = '';
+        
+        // 🌟 [니치 패치 3] 마지막 계측일 넛지 배지 추가!
+        const sortedRecords = [...records].sort((a,b) => new Date(b.date) - new Date(a.date));
+        const lastRecord = sortedRecords[0];
+        const today = new Date();
+        today.setHours(0,0,0,0);
+        const lastDate = new Date(lastRecord.date);
+        lastDate.setHours(0,0,0,0);
+        const diffDays = Math.floor((today - lastDate) / (1000 * 60 * 60 * 24));
+        
+        let badgeHtml = '';
+        if (diffDays === 0) {
+            badgeHtml = `<div style="background:#E6F7F2; color:#00B37A; border:1px solid #A7F3D0; padding:8px 12px; border-radius:12px; font-size:12.5px; font-weight:800; margin-bottom:16px; text-align:center;">✨ 오늘 계측 완료! 폭풍 성장 중 🌿</div>`;
+        } else if (diffDays <= 14) {
+            badgeHtml = `<div style="background:#F8F9FA; color:#8B95A1; border:1px solid #E5E8EB; padding:8px 12px; border-radius:12px; font-size:12.5px; font-weight:800; margin-bottom:16px; text-align:center;">마지막 계측: ${diffDays}일 전</div>`;
+        } else {
+            // 2주(14일) 이상 안 쟀으면 빨간색으로 재라고 꼬시기!
+            badgeHtml = `<div style="background:#FFF0F1; color:#F04452; border:1px dashed #F04452; padding:8px 12px; border-radius:12px; font-size:12.5px; font-weight:800; margin-bottom:16px; text-align:center;">🚨 앗! 계측한 지 ${diffDays}일이나 지났어요. 오늘 한 번 재볼까요?</div>`;
+        }
+        
+        html += badgeHtml; // 배지를 리스트 맨 위에 삽입
+
         // 최신 기록이 위로 오게 뒤집어서 렌더링
-        [...records].reverse().forEach(r => {
+        sortedRecords.forEach(r => {
             html += `
-                <div style="display:flex; justify-content:space-between; align-items:center; padding:12px 16px; background:#F8F9FA; border-radius:12px; border:1px solid #E5E8EB;">
+                <div style="display:flex; justify-content:space-between; align-items:center; padding:12px 16px; background:#F8F9FA; border-radius:12px; border:1px solid #E5E8EB; margin-bottom:8px;">
                     <div>
                         <div style="font-size:12px; color:var(--text-s); font-weight:800;">${r.date} (생후 ${r.month}개월)</div>
                         <div style="font-size:14px; font-weight:900; color:var(--text-m); margin-top:2px;">
@@ -2517,8 +2697,44 @@ window.openPediatricianReport = openPediatricianReport;
 // ==========================================
 // 📱 원터치 육아 트래커 엔진 (바텀시트 + 대시보드 완벽 통합본)
 // ==========================================
-window.trackerState = { type: '', subType: '', status: '' };
+window.trackerState = { type: '', subType: '', status: '', dateOffset: 0 }; // 👈 dateOffset 추가됨
 window.editingTrackerId = null;
+
+// 🌟 [신규] 어제/오늘 토글 스위치 엔진
+window.setTrackerDateOffset = function(offset) {
+    window.trackerState.dateOffset = offset;
+    
+    const btnToday = document.getElementById('btn-date-today');
+    const btnYest = document.getElementById('btn-date-yest');
+    
+    if(!btnToday || !btnYest) return;
+    
+    // 📱 진동 피드백
+    if (navigator.vibrate) navigator.vibrate(10);
+    
+    //  스위치 UI 변경
+    if (offset === 0) {
+        btnToday.style.background = '#FFF';
+        btnToday.style.color = '#191F28';
+        btnToday.style.boxShadow = '0 2px 4px rgba(0,0,0,0.05)';
+        btnToday.style.fontWeight = '900';
+        
+        btnYest.style.background = 'transparent';
+        btnYest.style.color = '#8B95A1';
+        btnYest.style.boxShadow = 'none';
+        btnYest.style.fontWeight = '800';
+    } else {
+        btnYest.style.background = '#FFF';
+        btnYest.style.color = '#191F28';
+        btnYest.style.boxShadow = '0 2px 4px rgba(0,0,0,0.05)';
+        btnYest.style.fontWeight = '900';
+        
+        btnToday.style.background = 'transparent';
+        btnToday.style.color = '#8B95A1';
+        btnToday.style.boxShadow = 'none';
+        btnToday.style.fontWeight = '800';
+    }
+};
 
 // 1. 버튼 클릭 시 상태 저장 (나머지는 회색, 누른 것만 컬러풀하게!)
 window.selectTrackerBtn = function(btn, category) {
@@ -2671,11 +2887,14 @@ window.selectTrackerBtn = function(btn, category) {
     else if (category === 'sleep_night') window.trackerState.subType = '밤잠';
 };
 
-// 2. 바텀 시트 열기 (이유식 토글 + 분유 퀵버튼 완벽 탑재)
-window.openTrackerSheet = function(type, editId = null) {
+// 🌟 바텀 시트 열기 (드럼 피커 & 날짜 계산 연동)
+window.openTrackerSheet = function(type, editId = null, preSelect = null) {
     window.editingTrackerId = (typeof editId === 'string') ? editId : null;
-    window.trackerState.type = type; window.trackerState.subType = ''; window.trackerState.status = '';
-
+    window.trackerState.type = type; 
+    window.trackerState.subType = ''; 
+    window.trackerState.status = '';
+    window.trackerState.dateOffset = 0; // 기본값 오늘
+    
     const overlay = document.getElementById('tracker-sheet-overlay');
     const content = document.getElementById('tracker-sheet-content');
     const title = document.getElementById('tracker-sheet-title');
@@ -2687,42 +2906,94 @@ window.openTrackerSheet = function(type, editId = null) {
     if(title) title.style.color = 'var(--text-m)';
     if(saveBtn) { saveBtn.style.backgroundColor = 'var(--primary)'; saveBtn.style.color = '#FFF'; saveBtn.style.border = 'none'; }
 
-    overlay.style.display = 'block'; setTimeout(() => { content.style.transform = 'translateY(0)'; }, 10);
+    overlay.style.display = 'block'; 
+    setTimeout(() => { content.style.transform = 'translateY(0)'; }, 10);
 
     const now = new Date();
     const currentTimeStr = `${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`;
+    let targetTime = currentTimeStr;
 
-    let timeLabel = type === 'sleep' ? "언제 잠들었나요?" : "기록 시간 (터치하여 시간 수정)";
-  // 🌟 (변경됨) 키보드 타이핑이 아닌 부드러운 스와이프 휠 UI로 교체!
+    // 💡 수정 모드일 때 기존 데이터 불러와서 날짜 오프셋(어제인지 오늘인지) 계산!
+    if (window.editingTrackerId) {
+        let records = JSON.parse(localStorage.getItem('tosil_tracker_records')) || [];
+        let recordToEdit = records.find(r => r.id === window.editingTrackerId);
+        if (recordToEdit) {
+            targetTime = recordToEdit.time;
+            const recDate = new Date(recordToEdit.timestamp);
+            const today = new Date();
+            today.setHours(0,0,0,0);
+            recDate.setHours(0,0,0,0);
+            
+            // 기록일이 며칠 전인지 계산해서 어제(-1)/오늘(0) 셋팅
+            const daysAgo = Math.round((today - recDate) / (1000 * 60 * 60 * 24));
+            window.trackerState.dateOffset = -daysAgo; 
+        }
+    }
+
+    // 🌟 통계(과거 기록) 수정할 때도 버튼 무조건 보이게 수정!
+    // 단, 3일 전 등 완전 과거 기록 수정 시에는 어제/오늘 둘 다 불 꺼진 상태로 둠
+    const isPastRecord = window.trackerState.dateOffset < -1;
+    const dateToggleDisplay = isPastRecord ? 'none' : 'flex';
+    
+    // 💡 먼 과거 기록을 수정할 땐 "00월 00일 기록 수정 중" 이라는 예쁜 뱃지를 띄워줍니다!
+    let pastDateBadgeHtml = '';
+    if (isPastRecord && window.editingTrackerId) {
+        let records = JSON.parse(localStorage.getItem('tosil_tracker_records')) || [];
+        let recordToEdit = records.find(r => r.id === window.editingTrackerId);
+        if (recordToEdit) {
+            const d = new Date(recordToEdit.timestamp);
+            pastDateBadgeHtml = `
+                <div style="display:flex; justify-content:center; margin-bottom:16px;">
+                    <div style="background:#F2F5F8; color:#4E5968; font-size:12px; font-weight:800; padding:6px 16px; border-radius:20px; border:1px solid #E5E8EB;">
+                        🗓️ ${d.getMonth() + 1}월 ${d.getDate()}일 기록 수정 중
+                    </div>
+                </div>
+            `;
+        }
+    }
+    
+    const todayBg = window.trackerState.dateOffset === 0 ? '#FFF' : 'transparent';
+    const todayColor = window.trackerState.dateOffset === 0 ? '#191F28' : '#8B95A1';
+    const todayWeight = window.trackerState.dateOffset === 0 ? '900' : '800';
+    const todayShadow = window.trackerState.dateOffset === 0 ? '0 2px 4px rgba(0,0,0,0.05)' : 'none';
+    
+    const yestBg = window.trackerState.dateOffset === -1 ? '#FFF' : 'transparent';
+    const yestColor = window.trackerState.dateOffset === -1 ? '#191F28' : '#8B95A1';
+    const yestWeight = window.trackerState.dateOffset === -1 ? '900' : '800';
+    const yestShadow = window.trackerState.dateOffset === -1 ? '0 2px 4px rgba(0,0,0,0.05)' : 'none';
+
+    let timeLabel = type === 'sleep' ? "언제 잠들었나요?" : "기록 시간 (스와이프하여 시간 수정)";
+    
     const timeInputHtml = `
         <div style="text-align: center; margin-bottom: 24px;">
+            <div style="display:${dateToggleDisplay}; justify-content:center; margin-bottom:16px;">
+                <div style="background:var(--bg-sub); border-radius:12px; padding:4px; display:inline-flex; border:1px solid var(--border);">
+                    <button id="btn-date-today" onclick="window.setTrackerDateOffset(0)" style="padding:6px 20px; border-radius:10px; border:none; font-weight:${todayWeight}; font-size:13.5px; cursor:pointer; background:${todayBg}; color:${todayColor}; box-shadow:${todayShadow}; transition:0.2s;">오늘</button>
+                    <button id="btn-date-yest" onclick="window.setTrackerDateOffset(-1)" style="padding:6px 20px; border-radius:10px; border:none; font-weight:${yestWeight}; font-size:13.5px; cursor:pointer; background:${yestBg}; color:${yestColor}; box-shadow:${yestShadow}; transition:0.2s;">어제</button>
+                </div>
+            </div>
+            
+            ${pastDateBadgeHtml}
+
             <div style="font-size:12.5px; font-weight:800; color:var(--text-s); margin-bottom:12px;">${timeLabel}</div>
             
             <style>
-                /* 스크롤바 숨기기 마법 */
                 .drum-picker::-webkit-scrollbar { display: none; }
                 .drum-picker { -ms-overflow-style: none; scrollbar-width: none; }
             </style>
 
             <div style="display:flex; justify-content:center; align-items:center; height: 150px; position:relative; overflow:hidden; background:var(--bg-sub); border-radius:20px; box-shadow:inset 0 2px 6px rgba(0,0,0,0.02);">
-                
-                <!-- 가운데를 잡아주는 투명한 강조 박스 -->
                 <div style="position:absolute; top:50%; left:20px; right:20px; height:44px; transform:translateY(-50%); background:rgba(49, 130, 246, 0.08); border-radius:12px; pointer-events:none; border: 1px solid rgba(49, 130, 246, 0.15);"></div>
-
-                <!-- 🕒 시(Hour) 스크롤 영역 -->
                 <div id="picker-hour" class="drum-picker" style="height:100%; overflow-y:auto; scroll-snap-type:y mandatory; width:80px; text-align:center; display:flex; flex-direction:column; scroll-behavior: smooth;"></div>
-                
                 <div style="font-size:22px; font-weight:900; color:var(--text-s); margin:0 10px; z-index:1; padding-bottom:4px;">:</div>
-                
-                <!-- 🕒 분(Minute) 스크롤 영역 -->
                 <div id="picker-minute" class="drum-picker" style="height:100%; overflow-y:auto; scroll-snap-type:y mandatory; width:80px; text-align:center; display:flex; flex-direction:column; scroll-behavior: smooth;"></div>
             </div>
             
-            <!-- 🚨 기존 시스템이 감지하는 투명 닌자 인풋 -->
-            <input type="hidden" id="v-tracker-time" value="${currentTimeStr}" onchange="${type === 'sleep' ? 'window.calcSleepFromTimes()' : ''}">
+            <input type="hidden" id="v-tracker-time" value="${targetTime}" onchange="${type === 'sleep' ? 'window.calcSleepFromTimes()' : ''}">
         </div>
     `;
 
+    // ⬇️ 여기서부터는 원래 있던 if (type === 'feed') ... 코드가 이어지면 됩니다!
     if (type === 'feed') {
         title.innerHTML = '🍼 맘마 기록하기';
         
@@ -2880,7 +3151,7 @@ window.openTrackerSheet = function(type, editId = null) {
             <div style="display: flex; gap: 8px; margin-bottom: 20px;">
                 <button class="btn-main" onclick="window.selectTrackerBtn(this, 'diaper_pee')" style="flex: 1; background: var(--bg-card); color: var(--text-s); border: 1px solid var(--border); box-shadow: none; margin:0; transition:0.2s; padding:12px 0;">💧 소변</button>
                 <button class="btn-main" onclick="window.selectTrackerBtn(this, 'diaper_poop')" style="flex: 1; background: var(--bg-card); color: var(--text-s); border: 1px solid var(--border); box-shadow: none; margin:0; transition:0.2s; padding:12px 0;">💩 대변</button>
-                <button class="btn-main" onclick="window.selectTrackerBtn(this, 'diaper_both')" style="flex: 1; background: var(--bg-card); color: var(--text-s); border: 1px solid var(--border); box-shadow: none; margin:0; transition:0.2s; padding:12px 0;">💧💩 둘 다</button>
+                <button class="btn-main" onclick="window.selectTrackerBtn(this, 'diaper_both')" style="flex: 1; background: var(--bg-card); color: var(--text-s); border: 1px solid var(--border); box-shadow: none; margin:0; transition:0.2s; padding:12px 0;">💩 둘 다</button>
             </div>
             
             <div id="diaper-status-area" style="display:none; margin-bottom:10px;">
@@ -2995,13 +3266,26 @@ window.openTrackerSheet = function(type, editId = null) {
             if (recordToEdit) targetTime = recordToEdit.time;
         }
         
+        // 🔥 [신규 패치] 홈 화면 퀵버튼으로 들어왔을 때 해당 버튼(소변/대변/둘 다) 자동 클릭!
+        if (type === 'diaper' && preSelect && !window.editingTrackerId) {
+            const diaperBtns = document.querySelectorAll('#tracker-sheet-body .btn-main');
+            diaperBtns.forEach(btn => {
+                if (btn.innerText.includes(preSelect)) {
+                    let cat = '';
+                    if (preSelect === '소변') cat = 'diaper_pee';
+                    if (preSelect === '대변') cat = 'diaper_poop';
+                    if (preSelect === '둘 다') cat = 'diaper_both';
+                    if (cat) window.selectTrackerBtn(btn, cat);
+                }
+            });
+        }
+
         // 화면에 창이 그려지고 난 뒤(0.08초 뒤) 엔진 스위치 ON!
         if (typeof window.initDrumPicker === 'function') {
             window.initDrumPicker(targetTime);
         }
     }, 80);
     // ==========================================
-
 }; // <--- openTrackerSheet 함수가 끝나는 진짜 마지막 중괄호
 
 // 💡 [이유식 패치] 토글 버튼 누를 때 화면 바뀌게 해주는 엔진
@@ -3092,15 +3376,29 @@ window.saveTrackerRecord = function() {
         if (originalRecord) timestamp = originalRecord.timestamp; 
     }
 
-    if(timeInputEl && timeInputEl.value) {
+    if (timeInputEl && timeInputEl.value) {
         timeStr = timeInputEl.value; 
         const [hours, minutes] = timeStr.split(':');
-        const d = new Date(timestamp); 
-        d.setHours(hours); d.setMinutes(minutes); d.setSeconds(0);
-        timestamp = d.getTime();
+        
+        let finalDate = new Date(); // 기본값: 현재(오늘)
+
+        if (window.editingTrackerId) {
+            // 수정 모드일 때는 오프셋 무시하고 기존 원본 기록의 날짜를 그대로 유지
+            const originalRecord = records.find(r => r.id === window.editingTrackerId);
+            if(originalRecord) finalDate = new Date(originalRecord.timestamp);
+        } else {
+            // 🌟 신규 기록일 땐 사용자가 선택한 어제/오늘(-1 or 0) 오프셋을 적용!
+            finalDate.setDate(finalDate.getDate() + (window.trackerState.dateOffset || 0));
+        }
+
+        finalDate.setHours(parseInt(hours), parseInt(minutes), 0, 0);
+        timestamp = finalDate.getTime();
+
     } else {
         const now = new Date();
+        now.setDate(now.getDate() + (window.trackerState.dateOffset || 0)); // 빈칸일 때도 오프셋 방어
         timeStr = `${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`;
+        timestamp = now.getTime();
     }
 
     let recordId = window.editingTrackerId ? window.editingTrackerId : 'trk_'+new Date().getTime();
@@ -3271,7 +3569,7 @@ window.updateTrackerDashboard = function() {
     else if (r.type === 'diaper') {
                         if (r.subType === '소변') icon = '💧';
                         else if (r.subType === '대변') icon = '💩';
-                        else icon = '💧💩';
+                        else icon = '💩';
                     }
 
                     let txt = '';
@@ -3675,7 +3973,7 @@ window.applyTimeBasedGreeting = function(babyName) {
         return; 
     }
 
-    // 2. ☀️ 평상시 시간대별 인사말 (토스 스타일의 큰 헤더)
+    // 2. ☀️ 평상시 시간대별 인사말 (스타일의 큰 헤더)
     if (greetingEl) {
         let title = ""; let sub = "";
         
@@ -3881,17 +4179,15 @@ window.stopSleepTimer = async function() {
     window.showToast(`✅ ${durationMins}분 동안 자고 일어났어요!`);
 };
 
-// 💾 트래커 기록 저장 함수 (이유식 저장 완벽 지원)
-// 💾 트래커 기록 저장 함수 (이유식 저장 완벽 지원 & 중복 클릭 방어)
+// 🌟 기록 저장 함수 (어제/오늘 날짜 무조건 우선 적용!)
 window.saveTrackerRecord = async function() {
     if(!window.trackerState.type) return;
 
-    // 🚨 [핵심 디테일] 버튼 따닥! 중복 클릭 원천 차단
     const saveBtn = document.getElementById('btn-tracker-save');
     if (saveBtn) {
-        if (saveBtn.disabled) return; // 이미 눌려서 저장 중이면 강제 종료!
-        saveBtn.disabled = true; // 1차 방어: 버튼 잠금
-        saveBtn.innerText = '저장 중... 💾'; // 2차 방어: 시각적 피드백
+        if (saveBtn.disabled) return; 
+        saveBtn.disabled = true; 
+        saveBtn.innerText = '저장 중... 💾'; 
         saveBtn.style.opacity = '0.5';
     }
 
@@ -3900,52 +4196,45 @@ window.saveTrackerRecord = async function() {
     let timestamp = new Date().getTime();
     const timeInputEl = document.getElementById('v-tracker-time');
     
-    if (window.editingTrackerId) {
-        const originalRecord = records.find(r => r.id === window.editingTrackerId);
-        if (originalRecord) timestamp = originalRecord.timestamp; 
-    }
-
-    if(timeInputEl && timeInputEl.value) {
+    // 🌟 날짜 계산 핵심 로직 (어제/오늘 버튼 누른 값을 무조건 반영)
+    let finalDate = new Date();
+    finalDate.setDate(finalDate.getDate() + window.trackerState.dateOffset); // 어제면 -1, 오늘이면 0
+    
+    if (timeInputEl && timeInputEl.value) {
         timeStr = timeInputEl.value; 
         const [hours, minutes] = timeStr.split(':');
-        const d = new Date(timestamp); 
-        d.setHours(hours); d.setMinutes(minutes); d.setSeconds(0);
-        timestamp = d.getTime();
+        finalDate.setHours(parseInt(hours), parseInt(minutes), 0, 0);
+        timestamp = finalDate.getTime();
     } else {
-        const now = new Date();
-        timeStr = `${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`;
+        timeStr = `${String(finalDate.getHours()).padStart(2,'0')}:${String(finalDate.getMinutes()).padStart(2,'0')}`;
+        timestamp = finalDate.getTime();
     }
 
     let recordId = window.editingTrackerId ? window.editingTrackerId : 'trk_'+new Date().getTime();
     let record = { id: recordId, time: timeStr, timestamp: timestamp, type: window.trackerState.type };
 
-    // 💡 [이유식 패치] 맘마를 눌렀을 때의 분기 처리
+    // 분기별 데이터 정리 로직
     if (window.trackerState.type === 'feed' || window.trackerState.type === 'babyfood') {
-        
-        // 1. 이유식 탭이 눌려있을 때!
         if (window.trackerState.subType === '이유식') {
             const foodAmt = document.getElementById('v-food-amount').value;
             if(!foodAmt) {
                 if(saveBtn) { saveBtn.disabled = false; saveBtn.innerText = '저장하기'; saveBtn.style.opacity = '1'; }
                 return window.showToast('⚠️ 먹은 이유식 양을 입력해주세요!');
             }
-            
             record.type = 'feed'; 
             record.subType = '이유식';
             record.amount = parseInt(foodAmt);
             record.status = ''; 
         } 
-        // 2. 분유/모유 탭이 눌려있을 때!
         else {
             if(!window.trackerState.subType) {
                 if(saveBtn) { saveBtn.disabled = false; saveBtn.innerText = '저장하기'; saveBtn.style.opacity = '1'; }
                 return window.showToast('⚠️ 분유, 모유, 유축 중 하나를 선택해주세요!');
             }
-            
             if (window.trackerState.subType === '모유') {
                 const bAmt = document.getElementById('v-breast-amount').value;
-                if(!bAmt) { if(saveBtn){ saveBtn.disabled = false; saveBtn.innerText='저장하기'; saveBtn.style.opacity='1'; } return window.showToast('⚠️ 수유 시간(분)을 입력해주세요!'); }
-                if(!window.trackerState.status) { if(saveBtn){ saveBtn.disabled = false; saveBtn.innerText='저장하기'; saveBtn.style.opacity='1'; } return window.showToast('⚠️ 왼쪽/오른쪽을 선택해주세요!'); }
+                if(!bAmt) { if(saveBtn){ saveBtn.disabled=false; saveBtn.innerText='저장하기'; saveBtn.style.opacity='1'; } return window.showToast('⚠️ 수유 시간(분)을 입력해주세요!'); }
+                if(!window.trackerState.status) { if(saveBtn){ saveBtn.disabled=false; saveBtn.innerText='저장하기'; saveBtn.style.opacity='1'; } return window.showToast('⚠️ 왼쪽/오른쪽을 선택해주세요!'); }
                 
                 record.type = 'feed';
                 record.subType = '모유';
@@ -3953,7 +4242,7 @@ window.saveTrackerRecord = async function() {
                 record.status = window.trackerState.status; 
             } else {
                 const amt = document.getElementById('v-feed-amount').value;
-                if(!amt) { if(saveBtn){ saveBtn.disabled = false; saveBtn.innerText='저장하기'; saveBtn.style.opacity='1'; } return window.showToast('⚠️ 먹은 양(ml)을 입력해주세요!'); }
+                if(!amt) { if(saveBtn){ saveBtn.disabled=false; saveBtn.innerText='저장하기'; saveBtn.style.opacity='1'; } return window.showToast('⚠️ 먹은 양(ml)을 입력해주세요!'); }
                 record.type = 'feed';
                 record.subType = window.trackerState.subType; 
                 record.amount = parseInt(amt);
@@ -3962,7 +4251,7 @@ window.saveTrackerRecord = async function() {
         }
     } 
     else if (window.trackerState.type === 'diaper') {
-        if(!window.trackerState.subType) { if(saveBtn){ saveBtn.disabled = false; saveBtn.innerText='저장하기'; saveBtn.style.opacity='1'; } return window.showToast('⚠️ 소변인지 대변인지 선택해주세요!'); }
+        if(!window.trackerState.subType) { if(saveBtn){ saveBtn.disabled=false; saveBtn.innerText='저장하기'; saveBtn.style.opacity='1'; } return window.showToast('⚠️ 소변인지 대변인지 선택해주세요!'); }
         record.subType = window.trackerState.subType;
         record.status = (window.trackerState.subType === '소변') ? '' : (window.trackerState.status || '');
     }
@@ -4008,7 +4297,6 @@ window.saveTrackerRecord = async function() {
     window.closeTrackerSheet();
     window.showToast(record.subType === '이유식' ? "🥄 냠냠! 이유식 기록 완료!" : "💾 기록이 저장되었습니다!");
 
-    // 👇 창이 닫힌 후, 다음 기록을 위해 버튼 상태 원상복구
     if (saveBtn) {
         setTimeout(() => {
             saveBtn.disabled = false;
@@ -4484,7 +4772,7 @@ window.nextOnboardingStep = function(step) {
     }
 };
 
-// 🎉 온보딩 완료 및 토스식 로딩 마술 발동! (여기가 핵심!)
+// 🎉 온보딩 완료 및 로딩 마술 발동! (여기가 핵심!)
 window.finishOnboarding = function(feedingStage) {
     const name = document.getElementById('ob-name').value.trim();
     const date = document.getElementById('ob-date').value;
@@ -4872,7 +5160,7 @@ window.calcPong = calcPong;
 window.switchPongTab = switchPongTab;
 
 // ==========================================
-// 🗓️ [툴박스] 언제깠지 (개봉일 추적기) 모듈 + 스마트 필터
+// 🗓️ [툴박스] 언제깠지 (개봉일 추적기) 모듈 + 편의성 마스터 패치
 // ==========================================
 window.currentOpenFilter = 'all'; // 현재 선택된 필터 탭 기억하기
 
@@ -4881,7 +5169,8 @@ window.setOpenFilter = function(filter) {
     renderOpenRecords();
 };
 
-function addOpenRecord() {
+// 1. [기존 유지] 아이템 추가 기능 (이름 스마트 압축 포함)
+window.addOpenRecord = function() {
     const typeSelect = document.getElementById('open-item-type');
     const dateInput = document.getElementById('open-item-date');
     
@@ -4893,12 +5182,9 @@ function addOpenRecord() {
     const emoji = parts[0]; 
     let typeText = parts.slice(1).join(' '); 
     
-    // ✨ [핵심 패치] 길고 안 예쁜 이름을 스마트하게 압축!
-    // 1. 슬래시(/)가 있으면 그 앞까지만! (예: "아기 로션/크림/오일" ➡️ "아기 로션")
+    // 길고 안 예쁜 이름을 스마트하게 압축!
     typeText = typeText.split('/')[0];
-    // 2. 괄호가 있으면 그 앞까지만! (예: "해열제 (챔프 등)" ➡️ "해열제")
     typeText = typeText.split('(')[0];
-    // 3. 혹시 모를 앞뒤 공백 깔끔하게 청소
     typeText = typeText.trim();
     
     const dateVal = dateInput.value;
@@ -4920,7 +5206,7 @@ function addOpenRecord() {
     const newRecord = {
         id: 'open_' + new Date().getTime(),
         type: typeVal,
-        name: typeText, // 👈 스마트하게 줄여진 이름이 저장됨!
+        name: typeText,
         emoji: emoji,
         openDate: dateVal,
         limitDays: limitMap[typeVal]
@@ -4933,19 +5219,65 @@ function addOpenRecord() {
     window.currentOpenFilter = 'all'; 
     renderOpenRecords();
     showToast("✍️ 라벨 스티커가 등록되었습니다!");
-}
+};
 
-function deleteOpenRecord(id) {
-    showConfirm("이 품목을 삭제하시겠습니까?", function() {
+// 2. [기존 유지] 개별 삭제 기능
+window.deleteOpenRecord = function(id) {
+    showConfirm("이 기록을 삭제하시겠습니까?", function() {
         let records = JSON.parse(localStorage.getItem('tosil_open_records')) || [];
         records = records.filter(r => r.id !== id);
         localStorage.setItem('tosil_open_records', JSON.stringify(records));
         renderOpenRecords();
-        showToast("🗑️ 삭제 완료!");
+        showToast("🗑️ 삭제되었습니다!");
     }, "🗑️", "삭제", "#F04452");
-}
+};
 
-function renderOpenRecords() {
+// 3. [신규 패치] 새로 뜯음(리필) 기능
+window.renewOpenRecord = function(id) {
+    showConfirm("이 제품을 오늘 날짜로 새로 뜯으셨나요?", function() {
+        let records = JSON.parse(localStorage.getItem('tosil_open_records')) || [];
+        const todayStr = new Date().toISOString().split('T')[0];
+
+        records = records.map(record => {
+            if (record.id === id) {
+                return { ...record, openDate: todayStr };
+            }
+            return record;
+        });
+
+        localStorage.setItem('tosil_open_records', JSON.stringify(records));
+        window.renderOpenRecords();
+        showToast("🔄 오늘 날짜로 새로 갱신되었습니다!");
+    }, "🔄", "새로 뜯음", "#3182F6");
+};
+
+// 4. [신규 패치] 기한 만료템 한 번에 지우기 기능
+window.clearExpiredRecords = function() {
+    showConfirm("기한이 지난 아이템을 모두 비우시겠습니까?", function() {
+        let records = JSON.parse(localStorage.getItem('tosil_open_records')) || [];
+        
+        const validRecords = records.filter(record => {
+            const today = new Date();
+            today.setHours(0,0,0,0);
+            const openDate = new Date(record.openDate);
+            openDate.setHours(0,0,0,0);
+            
+            const passedDays = Math.floor((today - openDate) / (1000 * 60 * 60 * 24));
+            const remainDays = record.limitDays - passedDays;
+            
+            return remainDays >= 0; // 0일 이상 남은 것만 통과
+        });
+
+        const deletedCount = records.length - validRecords.length;
+
+        localStorage.setItem('tosil_open_records', JSON.stringify(validRecords));
+        window.renderOpenRecords();
+        showToast(`🧹 ${deletedCount}개의 만료템을 깔끔하게 치웠습니다!`);
+    }, "🧹", "비우기", "#F04452");
+};
+
+// 5. [수정 패치] 언제깠지 화면 렌더링 (필터 + 리필버튼 + 대청소버튼 통합)
+window.renderOpenRecords = function() {
     const container = document.getElementById('open-list-container');
     if (!container) return;
 
@@ -4965,7 +5297,6 @@ function renderOpenRecords() {
         return;
     }
 
-    // 🌟 카테고리 맵핑 (내부에 있는 데이터들의 큰 그룹 묶기)
     const catGroupMap = {
         'formula': 'food', 'puree': 'food',
         'fever': 'med', 'eye_drop': 'med',
@@ -4976,25 +5307,20 @@ function renderOpenRecords() {
         'food': '🍼 수유/식품', 'med': '💊 약/영양제', 'skin': '🧴 연고/스킨케어', 'hygiene': '🧻 위생용품'
     };
 
-    // 현재 등록된 물건들을 바탕으로 필요한 탭(버튼)만 추출
     let existingGroups = new Set();
     records.forEach(r => existingGroups.add(catGroupMap[r.type] || 'etc'));
 
-    // 🌟 상단 가로 스크롤 필터 탭 UI 그리기
     let html = `<div style="display:flex; gap:8px; overflow-x:auto; padding-bottom:12px; margin-bottom:12px; scrollbar-width:none; border-bottom:1px solid var(--border);">`;
     
-    // [전체] 버튼
     const isAllActive = window.currentOpenFilter === 'all';
     html += `<button onclick="window.setOpenFilter('all')" style="flex-shrink:0; padding:6px 14px; border-radius:20px; font-size:13px; font-weight:900; cursor:pointer; border:1px solid ${isAllActive ? '#3182F6' : 'var(--border)'}; background:${isAllActive ? '#E8F3FF' : 'var(--bg-card)'}; color:${isAllActive ? '#3182F6' : 'var(--text-s)'}; transition:all 0.2s;">전체 보기</button>`;
     
-    // 존재하는 그룹 버튼들 나열
     Array.from(existingGroups).sort().forEach(group => {
         const isActive = window.currentOpenFilter === group;
         html += `<button onclick="window.setOpenFilter('${group}')" style="flex-shrink:0; padding:6px 14px; border-radius:20px; font-size:13px; font-weight:800; cursor:pointer; border:1px solid ${isActive ? '#3182F6' : 'var(--border)'}; background:${isActive ? '#E8F3FF' : 'var(--bg-card)'}; color:${isActive ? '#3182F6' : 'var(--text-s)'}; transition:all 0.2s;">${catGroupNames[group]}</button>`;
     });
     html += `</div>`;
 
-    // 🌟 선택된 탭에 맞춰 데이터 필터링
     let filteredRecords = window.currentOpenFilter === 'all' ? records : records.filter(r => catGroupMap[r.type] === window.currentOpenFilter);
 
     if (filteredRecords.length === 0) {
@@ -5010,6 +5336,8 @@ function renderOpenRecords() {
         return endA - endB;
     });
 
+    let expiredCount = 0; // 🚨 만료 아이템 카운팅
+
     filteredRecords.forEach(r => {
         const openD = new Date(r.openDate);
         openD.setHours(0,0,0,0);
@@ -5021,33 +5349,44 @@ function renderOpenRecords() {
         let borderColor = 'var(--border)';
 
         if (remainDays < 0) {
-            statusHtml = `<span style="color:#F04452; font-weight:900; font-size:12.5px;">🚨 기한 만료 (폐기 권장)</span>`;
+            statusHtml = `<span style="color:#F04452; font-weight:900; font-size:12.5px; white-space:nowrap;">🚨 기한 만료</span>`;
             borderColor = '#FCA5A5';
+            expiredCount++; 
         } else if (remainDays <= 5) {
-            statusHtml = `<span style="color:#FF823A; font-weight:800; font-size:12.5px;">⚠️ D-${remainDays} (곧 만료)</span>`;
+            statusHtml = `<span style="color:#FF823A; font-weight:800; font-size:12.5px; white-space:nowrap;">⚠️ D-${remainDays}</span>`;
             borderColor = '#FDBA74';
         } else {
-            statusHtml = `<span style="color:#00B37A; font-weight:800; font-size:12.5px;">✅ D-${remainDays} (여유)</span>`;
+            statusHtml = `<span style="color:#00B37A; font-weight:800; font-size:12.5px; white-space:nowrap;">✅ D-${remainDays} (여유)</span>`;
         }
 
         html += `
         <div style="display:flex; justify-content:space-between; align-items:center; padding:16px; background:#FFFFFF; border:1px solid ${borderColor}; border-radius:16px; margin-bottom:8px; box-shadow:0 2px 6px rgba(0,0,0,0.02);">
-            <div style="display:flex; align-items:center; gap:12px;">
-                <div style="font-size:24px; background:var(--bg-sub); width:44px; height:44px; border-radius:12px; display:flex; align-items:center; justify-content:center;">${r.emoji}</div>
-                <div>
-                    <div style="font-size:14.5px; font-weight:900; color:var(--text-m); margin-bottom:4px;">${r.name}</div>
+            <div style="display:flex; align-items:center; gap:12px; flex:1; min-width:0;">
+                <div style="font-size:24px; background:var(--bg-sub); width:44px; height:44px; border-radius:12px; display:flex; align-items:center; justify-content:center; flex-shrink:0;">${r.emoji}</div>
+                <div style="flex:1; min-width:0;">
+                    <div style="font-size:14.5px; font-weight:900; color:var(--text-m); margin-bottom:4px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${r.name}</div>
                     <div style="display:flex; align-items:center; gap:6px;">
                         ${statusHtml}
-                        <span style="font-size:11.5px; color:var(--text-s); font-weight:600;">(오픈: ${r.openDate})</span>
+                        <span style="font-size:11.5px; color:var(--text-s); font-weight:600; white-space:nowrap;">(오픈: ${r.openDate})</span>
                     </div>
                 </div>
             </div>
-            <button onclick="deleteOpenRecord('${r.id}')" style="background:#F2F5F8; border:none; border-radius:10px; width:40px; height:40px; color:#8B95A1; cursor:pointer; font-size:15px; display:flex; justify-content:center; align-items:center; transition:0.2s;">❌</button>
+            <div style="display:flex; gap:6px; flex-shrink:0; margin-left:8px;">
+                <button onclick="window.renewOpenRecord('${r.id}')" style="background:#E8F3FF; border:1px solid #B1D6FF; border-radius:10px; width:40px; height:40px; color:#3182F6; cursor:pointer; font-size:16px; display:flex; justify-content:center; align-items:center; transition:0.2s;" title="오늘 새로 뜯음">🔄</button>
+                <button onclick="window.deleteOpenRecord('${r.id}')" style="background:#F2F5F8; border:none; border-radius:10px; width:40px; height:40px; color:#8B95A1; cursor:pointer; font-size:15px; display:flex; justify-content:center; align-items:center; transition:0.2s;" title="삭제">❌</button>
+            </div>
         </div>`;
     });
 
+    if (expiredCount > 0) {
+        html += `
+        <button onclick="window.clearExpiredRecords()" style="width:100%; padding:14px; margin-top:12px; background:#FFF0F1; color:#F04452; border:1px dashed #F04452; border-radius:14px; font-size:13.5px; font-weight:900; cursor:pointer; display:flex; justify-content:center; align-items:center; gap:6px;">
+            🧹 기한 지난 ${expiredCount}개 한 번에 비우기
+        </button>`;
+    }
+
     container.innerHTML = html;
-}
+};
 
 window.addOpenRecord = addOpenRecord;
 window.deleteOpenRecord = deleteOpenRecord;
@@ -5588,41 +5927,18 @@ window.changeUserRole = function(role) {
 };
 
 // ==========================================
-// ⚡ 기저귀 [둘 다] 퀵 저장 엔진
+// ⚡ 기저귀 퀵버튼 (시트 바로 열기) 엔진
 // ==========================================
-window.saveQuickBoth = async function() {
-    const now = new Date();
-    const timeStr = `${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`;
-    
-    // '둘 다' 데이터 세팅
-    let record = { 
-        id: 'trk_' + now.getTime(), 
-        time: timeStr, 
-        timestamp: now.getTime(), 
-        type: 'diaper', 
-        subType: '소변+대변', // 통계 화면과 완벽 호환되는 키워드
-        status: '' // 퀵 저장이므로 황금변/녹변 상태는 일단 비워둠 (나중에 수정 가능)
-    };
+window.saveQuickBoth = function() {
+    window.openTrackerSheet('diaper', null, '둘 다');
+};
 
-    let records = JSON.parse(localStorage.getItem('tosil_tracker_records')) || [];
-    records.unshift(record); // 맨 앞에 추가
-    if(records.length > 100) records.pop();
+window.saveQuickPee = function() {
+    window.openTrackerSheet('diaper', null, '소변');
+};
 
-    // 🚀 파트너님의 갓벽한 실시간 파이어베이스 연동 로직 태우기!
-    if (typeof saveTrackerToFirebase === 'function') {
-        await saveTrackerToFirebase(records);
-    } else {
-        localStorage.setItem('tosil_tracker_records', JSON.stringify(records));
-        if(typeof window.updateTrackerDashboard === 'function') window.updateTrackerDashboard();
-    }
-
-    // 퀵 모달 닫기 (화면에 떠 있는 모달 강제 종료)
-    const activeModals = document.querySelectorAll('[id*="modal"], [id*="sheet"]');
-    activeModals.forEach(m => m.style.display = 'none');
-
-    // 성공 메시지 띄우기 및 영수증 버튼 체크
-    window.showToast("💧💩 소변과 대변 모두 기록되었습니다!");
-    if (typeof window.checkReceiptVisibility === 'function') window.checkReceiptVisibility();
+window.saveQuickPoop = function() {
+    window.openTrackerSheet('diaper', null, '대변');
 };
 
 // 지금 누른 게 '대변'인지 '둘 다'인지 기억해두는 메모장
@@ -5636,7 +5952,6 @@ window.openPoopAI = function(type) {
         showPoopAI(); 
     }
 };
-
 // ==========================================
 // 🔗 부부 연동 해지 기능
 // ==========================================
@@ -6502,3 +6817,4 @@ window.initDrumPicker = function(timeStr) {
         setTimeout(() => { hourContainer.style.scrollBehavior = 'smooth'; minContainer.style.scrollBehavior = 'smooth'; }, 50);
     }, 10);
 };
+

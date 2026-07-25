@@ -330,11 +330,11 @@ padding-bottom: 24px;      /* 하단 버튼이 폰 베젤에 씹히지 않게 �
             <span style="font-size: 13.5px; font-weight: 800; color: var(--text-m);">수면</span>
             <span id="btn-sub-sleep" style="font-size: 11px; font-weight: 700; color: #A855F7;">-</span>
         </button>
-        <button onclick="openDiaperSheet()" class="box-main" style="border-radius: 18px; padding: 16px 0; display: flex; flex-direction: column; align-items: center; gap: 4px; cursor: pointer; box-shadow: 0 4px 12px rgba(0,0,0,0.02); transition: transform 0.2s;">
-            <span style="font-size: 28px; line-height: 1;">💩</span>
-            <span style="font-size: 13.5px; font-weight: 800; color: var(--text-m);">기저귀</span>
-            <span id="btn-sub-diaper" style="font-size: 11px; font-weight: 700; color: #F04452;">-</span>
-        </button>
+        <button onclick="window.openTrackerSheet('diaper')" class="box-main" style="border-radius: 18px; padding: 16px 0; display: flex; flex-direction: column; align-items: center; gap: 4px; cursor: pointer; box-shadow: 0 4px 12px rgba(0,0,0,0.02); transition: transform 0.2s;">
+    <span style="font-size: 28px; line-height: 1;">💩</span>
+    <span style="font-size: 13.5px; font-weight: 800; color: var(--text-m);">기저귀</span>
+    <span id="btn-sub-diaper" style="font-size: 11px; font-weight: 700; color: #F04452;">-</span>
+</button>
     </div>
    
             <!-- 가로형 영수증 롱버튼 -->
@@ -446,117 +446,125 @@ padding-bottom: 24px;      /* 하단 버튼이 폰 베젤에 씹히지 않게 �
             </div>
           
 
+       <!-- ========================================== -->
+            <!-- 💰 하이엔드 가계부 (머니로그) 패널 -->
+            <!-- ========================================== -->
             <div id="panel-money" class="panel-block active" style="box-shadow:none !important; border:none !important; padding:0 !important; background:transparent !important; margin-top:24px;">
-                
-                <div class="box-main" style="border-radius: 20px; padding: 20px; margin-bottom: 16px; box-shadow: 0 4px 16px rgba(0,0,0,0.02);">
+
+                <!-- 💳 1. 하이엔드 대시보드 & 빠른 입력 -->
+                <div class="box-main" style="border-radius: 28px; padding: 24px; margin-bottom: 20px; box-shadow: 0 8px 24px rgba(0,0,0,0.04); position: relative; overflow: hidden;">
                     
-                    <div style="display:flex; justify-content:space-between; align-items:flex-end; margin-bottom:16px; gap:8px;">
-                        <div style="flex:1; min-width:0;">
-                            <div style="font-size: 13px; font-weight: 800; color: var(--text-s); margin-bottom: 8px; white-space:nowrap;">🎯 이번 달 예산 한도</div>
-                            <div style="display:flex; align-items:baseline; border-bottom: 2px solid var(--primary); padding-bottom: 4px;">
-                                <input type="text" inputmode="numeric" id="v-budget" placeholder="500,000" onkeyup="formatNum(this)" onchange="analyzeMoney()" style="flex:1; min-width:0; font-size:24px; font-weight:900; border:none; outline:none; background:transparent; color:var(--text-m); text-align:right; padding:0;">
-                                <span style="font-size:15px; font-weight:800; color:var(--primary); margin-left:4px; flex-shrink:0;">원</span>
+                    <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom: 20px;">
+                        <div style="flex: 1;">
+                            <div style="font-size: 13.5px; font-weight: 800; color: var(--text-s); margin-bottom: 6px;">이번 달 누적 지출 💸</div>
+                            <div style="display:flex; align-items:baseline; gap: 4px;">
+                                <div id="money-total-display" style="font-size: 34px; font-weight: 900; color: var(--text-m); letter-spacing: -1px; line-height: 1;">0</div>
+                                <div style="font-size: 18px; font-weight: 800; color: var(--text-m);">원</div>
                             </div>
                         </div>
-                        
-                        <div class="box-tint-green" style="text-align:center; padding: 10px 12px; border-radius: 12px; flex-shrink:0; white-space:nowrap;">
-                            <div style="font-size: 11px; font-weight: 800; color: #059669; margin-bottom: 4px;">🎁 달성률</div>
-                            <div style="font-size: 20px; font-weight: 900; color:#00B37A; line-height: 1;" id="v-goal-percent">0%</div>
+                        <div style="text-align: right;">
+                            <div style="font-size: 11.5px; font-weight: 800; color: var(--primary); margin-bottom: 6px; background: #EBF4FF; display: inline-block; padding: 4px 10px; border-radius: 12px;">이번 달 예산 🎯</div>
+                            <!-- 👇 밑줄(border-bottom) 완전히 삭제! -->
+                            <div style="display: flex; align-items: baseline; justify-content: flex-end;">
+                                <input type="text" inputmode="numeric" id="v-budget" placeholder="500,000" onkeyup="formatNum(this)" onchange="window.analyzeMoney()" style="width: 120px; font-size: 18px; font-weight: 900; border: none; outline: none; background: transparent; color: var(--text-m); text-align: right; padding: 0;">
+                                <span style="font-size: 14px; font-weight: 800; color: var(--text-s); margin-left: 4px;">원</span>
+                            </div>
                         </div>
                     </div>
-                    
-                    <div class="box-sub" style="border-radius:14px; padding:16px;">
-                        <input type="text" id="v-goal-text" placeholder="예: 우리아기 전집 세트 구매" onchange="saveGoal()" style="background:transparent; border:none; border-bottom:1px dashed var(--border); color:var(--text-m); font-size: 14px; font-weight: 800; width: 100%; outline:none; padding:0 0 8px 0; margin-bottom:12px; box-sizing:border-box;">
-                        <div style="display:flex; align-items:center; justify-content:space-between; gap: 8px;">
-                            <span style="font-size:13.5px; font-weight:800; color:var(--text-s); flex-shrink:0; white-space:nowrap;">목표 저축액:</span>
-                            <div style="display:flex; align-items:center; flex:1; justify-content:flex-end;">
-                                <input type="text" inputmode="numeric" id="v-goal-amount" placeholder="100,000" onkeyup="formatNum(this); saveGoal();" style="background:transparent; border:none; color:var(--text-m); font-size: 16px; font-weight: 900; width:100%; min-width:0; text-align:right; outline:none;">
-                                <span style="font-size:14px; font-weight:800; color:var(--text-m); margin-left:4px; flex-shrink:0;">원</span>
-                            </div>
+
+                    <div style="background: var(--bg-sub); border-radius: 20px; padding: 16px; border: 1px solid var(--border);">
+                        <div style="display:flex; align-items:center; gap:8px; margin-bottom:16px;">
+                            <input type="text" inputmode="numeric" id="v-input-amount" placeholder="빠른 금액 입력 (예: 15000)" onkeyup="formatNum(this)" style="flex:1; min-width:0; padding:8px 0; border:none; border-bottom: 2px solid var(--text-m); font-size:20px; font-weight:900; text-align:left; color:var(--text-m); outline:none; background:transparent;">
+                            <span style="font-size:16px; font-weight:800; color:var(--text-s); flex-shrink:0;">원</span>
+                        </div>
+                        <div style="display:flex; gap:8px; width:100%;">
+                            <button class="btn-main" onclick="window.addDailyExpense(false)" style="flex:1; padding:14px 0; border-radius:14px; background: #FFF0F1 !important; color: #F04452 !important; border: 1px solid #FFE3E3 !important; font-weight:900; font-size:14px; cursor:pointer; margin:0; box-shadow: none !important;">생활비 지출 💸</button>
+                            <button class="btn-main" onclick="window.addDailyExpense(true)" style="flex:1; padding:14px 0; border-radius:14px; background:#3182F6 !important; color:#FFF !important; font-weight:900; font-size:14px; border:none; box-shadow:0 4px 12px rgba(49,130,246,0.2) !important; cursor:pointer; margin:0;">목표 저축 💰</button>
                         </div>
                     </div>
                 </div>
 
-                <div class="box-main" style="border-radius: 20px; padding: 20px; margin-bottom: 16px; box-shadow: 0 4px 16px rgba(0,0,0,0.02);">
-                    <div style="font-size:14px; font-weight:900; color:var(--text-m); margin-bottom:12px;">💰 빠른 금액 입력</div>
-                    <div style="display:flex; align-items:center; gap:8px; margin-bottom:16px;">
-                        <input type="text" inputmode="numeric" id="v-input-amount" class="box-tint-blue" placeholder="예: 15000" onkeyup="formatNum(this)" style="flex:1; min-width:0; padding:16px 14px; border-radius:12px; font-size:18px; font-weight:800; text-align:right; color:var(--primary); outline:none;">
-                        <span style="font-size:16px; font-weight:800; color:var(--text-m); flex-shrink:0;">원</span>
+               <!-- 🎁 2. 목표 저금통 -->
+                <div class="box-main" style="border-radius: 20px; padding: 20px; margin-bottom: 20px; box-shadow: 0 4px 16px rgba(0,0,0,0.02); display: flex; align-items: center; justify-content: space-between; gap: 12px;">
+                    <div style="display:flex; align-items:center; gap:12px; flex: 1; min-width: 0;">
+                        <div style="font-size: 32px; background: var(--bg-sub); width: 56px; height: 56px; border-radius: 16px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; border: 1px solid var(--border);">🎁</div>
+                        <div style="flex: 1; min-width: 0;">
+                            <input type="text" id="v-goal-text" placeholder="아기 전집 사기" onchange="window.saveGoal()" style="background:transparent; border:none; color:var(--text-m); font-size: 15px; font-weight: 900; width: 100%; outline:none; margin-bottom: 4px; padding: 0;">
+                            <!-- 👇 초록색 밑줄 완전히 삭제! 깔끔한 텍스트 폼 -->
+                            <div style="display: inline-flex; align-items: baseline; justify-content: flex-start;">
+                                <span style="font-size: 12px; font-weight: 700; color: var(--text-s); margin-right: 4px;">목표액  :</span>
+                                <input type="text" inputmode="numeric" id="v-goal-amount" placeholder="1,000,000" onkeyup="formatNum(this); window.saveGoal(); window.resizeInput(this);" style="background:transparent; border:none; color:#00B37A; font-size: 15px; font-weight: 900; width: 9ch; text-align: right; outline:none; padding: 0;">
+                                <span style="font-size: 12px; font-weight: 800; color: var(--text-m); margin-left: 2px;">원</span>
+                            </div>
+                        </div>
                     </div>
-                    <div style="display:flex; gap:6px; width:100%;">
-                        <button class="btn-main box-sub" onclick="addDailyExpense(false)" style="flex:1; min-width:0; padding:14px 0; border-radius:12px; font-weight:800; font-size:12px; cursor:pointer; margin:0; word-break:keep-all; letter-spacing:-0.5px;">💸 썼어요(지출)</button>
-                        <button class="btn-main" onclick="addDailyExpense(true)" style="flex:1; min-width:0; padding:14px 0; border-radius:12px; background:#3182F6 !important; color:#FFF !important; font-weight:800; font-size:12px; border:none; box-shadow:0 4px 12px rgba(49,130,246,0.2); cursor:pointer; margin:0; word-break:keep-all; letter-spacing:-0.5px;">💰 아꼈어요(저금)</button>
+                    <!-- 달성률 -->
+                    <div style="display: flex; flex-direction: column; justify-content: center; align-items: center; background: #E6F7F2; padding: 12px 14px; border-radius: 16px; border: 1px solid #A7F3D0; flex-shrink: 0; min-width: 65px; box-sizing: border-box;">
+                        <div style="font-size: 11px; font-weight: 900; color: #059669; margin-bottom: 4px;">달성률</div>
+                        <div style="font-size: 18px; font-weight: 900; color:#00B37A; line-height: 1;" id="v-goal-percent">0%</div>
                     </div>
                 </div>
 
-                <!-- ✨ 다크모드 CSS가 덮어씌우지 못하도록 강제 투명(transparent) 및 선 없음(none) 속성 방패를 달아줍니다! -->
-<div style="display:flex; flex-direction:column; gap:10px; border:none !important; background:transparent !important;">
-    <details class="flat-accordion box-main" style="border-radius:20px; overflow:hidden;">
-        <summary style="padding:16px 20px; font-size:14.5px; font-weight:800; color:var(--text-m); cursor:pointer; list-style:none; display:flex; justify-content:space-between; align-items:center; gap:12px;">
-            <span style="flex:1; word-break:keep-all; line-height:1.4; text-align:left;">📊 소비 패턴 진단 (카테고리별)</span>
-        <span class="box-tint-blue" style="font-size:12px; color:var(--primary); padding:4px 10px; border-radius:8px; white-space:nowrap; flex-shrink:0;">열어보기 ▾</span>
-    </summary>
-    <div class="lib-content" style="padding:0 20px 20px 20px;">
-        <div style="display:flex; justify-content:flex-end; margin-bottom:12px;">
-            <button onclick="resetMoneyAll()" class="box-tint-red" style="padding: 4px 10px; color:var(--danger); font-size:11px; border-radius:6px; font-weight:800; cursor:pointer;">데이터 리셋</button>
-        </div>
-        <div style="display:flex; justify-content:space-between; align-items:center; padding: 12px 0; border-bottom: 1px dashed var(--border);">
-            <div style="display:flex; align-items:center; gap:8px;"><div style="font-size:18px;">🧻</div><div style="font-size:13px; font-weight:800; color:var(--text-m);">기저귀/위생용품</div></div>
-            <div style="display:flex; align-items:center;"><input type="text" inputmode="numeric" id="v-diaper" placeholder="0" onkeyup="formatNum(this)" style="width:100px; font-size:15px; font-weight:800; border:none; outline:none; background:transparent; text-align:right; color:var(--text-m);"><span style="font-size:13px; color:var(--text-s); font-weight:700; margin-left:4px;">원</span></div>
-        </div>
-        <div style="display:flex; justify-content:space-between; align-items:center; padding: 12px 0; border-bottom: 1px dashed var(--border);">
-            <div style="display:flex; align-items:center; gap:8px;"><div style="font-size:18px;">🍼</div><div style="font-size:13px; font-weight:800; color:var(--text-m);">분유/이유식/식비</div></div>
-            <div style="display:flex; align-items:center;"><input type="text" inputmode="numeric" id="v-food" placeholder="0" onkeyup="formatNum(this)" style="width:100px; font-size:15px; font-weight:800; border:none; outline:none; background:transparent; text-align:right; color:var(--text-m);"><span style="font-size:13px; color:var(--text-s); font-weight:700; margin-left:4px;">원</span></div>
-        </div>
-        <div style="display:flex; justify-content:space-between; align-items:center; padding: 12px 0; margin-bottom: 16px;">
-            <div style="display:flex; align-items:center; gap:8px;"><div style="font-size:18px;">🧸</div><div style="font-size:13px; font-weight:800; color:var(--text-m);">의류/장난감/기타</div></div>
-            <div style="display:flex; align-items:center;"><input type="text" inputmode="numeric" id="v-etc" placeholder="0" onkeyup="formatNum(this)" style="width:100px; font-size:15px; font-weight:800; border:none; outline:none; background:transparent; text-align:right; color:var(--text-m);"><span style="font-size:13px; color:var(--text-s); font-weight:700; margin-left:4px;">원</span></div>
-        </div>
-        <button class="btn-main" onclick="analyzeMoney()" style="font-size:14px; padding:14px; width:100%; margin:0; background:var(--text-m) !important; color:var(--bg-card) !important; box-shadow:none !important;">🔍 분석 리포트 확인</button>
-        
-        <div id="money-result" style="display:none; margin-top:20px; padding-top:20px; border-top:1px solid var(--border);">
-            <div id="capture-area" style="text-align:center;">
-                <div class="stat-badge" style="display:inline-block; font-size:11px; font-weight:800; background:var(--text-m); color:var(--bg-card); padding:4px 10px; border-radius:10px; margin-bottom:8px;">월간 지출 진단</div>
-                <div id="money-total" style="font-size:28px; font-weight:900; letter-spacing:-1px; color:var(--primary);">0</div>
-                <div style="font-size:14px; font-weight:800; color:var(--text-m); margin-bottom:4px;">원 지출</div>
-                <div id="money-diff" style="font-size:13px; font-weight:800; margin-bottom:16px; color:var(--text-s);"></div>
-                <div style="width: 100%; max-width: 180px; height: 180px; margin: 0 auto 16px auto; position: relative;"><canvas id="donutChart"></canvas></div>
-                <div id="money-avg-percent" style="font-size:13px; font-weight:800; color:#FFF; background:var(--primary); padding:10px; border-radius:10px; margin-bottom:12px;"></div>
-                <div id="money-insight-detail" class="box-sub" style="text-align:left; font-size:13px; line-height:1.6; padding:14px; border-radius:10px; font-weight:600; margin-bottom:16px;"></div>
-            </div>
-            
-            <div style="margin-top: 16px; padding-top: 16px; border-top: 1px dashed var(--border);">
-                <div style="display: flex; justify-content: space-between; align-items: center;">
-                    <div style="font-size: 13.5px; font-weight: 800; color: var(--text-m);">📅 지난달 지출 모아보기</div>
-                    <button onclick="toggleHistory()" style="background: #F2F5F8; color: #4E5968; border: none; padding: 6px 12px; border-radius: 8px; font-size: 12px; font-weight: 800; cursor: pointer;">
-                        열기 〉
-                    </button>
+                <!-- 📊 3. 소비 패턴 진단 -->
+                <div class="box-main" style="border-radius:24px; padding: 24px; box-shadow: 0 4px 16px rgba(0,0,0,0.02); margin-bottom: 24px;">
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
+                        <div style="font-size: 16px; font-weight: 900; color: var(--text-m);">📊 이번 달 소비 패턴</div>
+                        <button onclick="window.resetMoneyAll()" style="background: #FFF0F1; color: #F04452; border: 1px solid #FFE3E3; padding: 6px 12px; border-radius: 8px; font-size: 11.5px; font-weight: 800; cursor: pointer;">초기화</button>
+                    </div>
+
+                    <div style="display:flex; flex-direction: column; gap: 12px; margin-bottom: 20px;">
+                        <div style="display:flex; justify-content:space-between; align-items:center; background: var(--bg-sub); padding: 14px 16px; border-radius: 16px; border: 1px solid var(--border);">
+                            <div style="display:flex; align-items:center; gap:10px;"><div style="font-size:20px;">🧻</div><div style="font-size:14px; font-weight:800; color:var(--text-m);">기저귀/위생</div></div>
+                            <div style="display:flex; align-items:center;"><input type="text" inputmode="numeric" id="v-diaper" placeholder="0" onkeyup="formatNum(this)" style="width:90px; font-size:16px; font-weight:900; border:none; outline:none; background:transparent; text-align:right; color:#3182F6;"><span style="font-size:14px; color:var(--text-s); font-weight:800; margin-left:6px;">원</span></div>
+                        </div>
+                        <div style="display:flex; justify-content:space-between; align-items:center; background: var(--bg-sub); padding: 14px 16px; border-radius: 16px; border: 1px solid var(--border);">
+                            <div style="display:flex; align-items:center; gap:10px;"><div style="font-size:20px;">🍼</div><div style="font-size:14px; font-weight:800; color:var(--text-m);">분유/식비</div></div>
+                            <div style="display:flex; align-items:center;"><input type="text" inputmode="numeric" id="v-food" placeholder="0" onkeyup="formatNum(this)" style="width:90px; font-size:16px; font-weight:900; border:none; outline:none; background:transparent; text-align:right; color:#10B981;"><span style="font-size:14px; color:var(--text-s); font-weight:800; margin-left:6px;">원</span></div>
+                        </div>
+                        <div style="display:flex; justify-content:space-between; align-items:center; background: var(--bg-sub); padding: 14px 16px; border-radius: 16px; border: 1px solid var(--border);">
+                            <div style="display:flex; align-items:center; gap:10px;"><div style="font-size:20px;">🧸</div><div style="font-size:14px; font-weight:800; color:var(--text-m);">장난감/기타</div></div>
+                            <div style="display:flex; align-items:center;"><input type="text" inputmode="numeric" id="v-etc" placeholder="0" onkeyup="formatNum(this)" style="width:90px; font-size:16px; font-weight:900; border:none; outline:none; background:transparent; text-align:right; color:#FF823A;"><span style="font-size:14px; color:var(--text-s); font-weight:800; margin-left:6px;">원</span></div>
+                        </div>
+                    </div>
+
+                    <button class="btn-main" onclick="window.analyzeMoney()" style="font-size:15px; padding:16px; width:100%; margin:0; background:var(--text-m) !important; color:var(--bg-card) !important; border-radius: 16px; font-weight: 900; box-shadow: 0 4px 12px rgba(0,0,0,0.1) !important;">🔍 분석 리포트 확인</button>
+
+                  <!-- 👇 🍩 결과 차트 영역 (선 깎아내기 & 디자인 다듬기) -->
+                    <div id="money-result" style="display:none; margin-top:24px; padding-top:24px; border-top:1px dashed var(--border);">
+                        <div id="capture-area">
+                            <div style="display: flex; justify-content: center; margin-bottom: 24px;">
+                                <div style="width: 100%; height: 220px; position: relative;">
+                                    <canvas id="donutChart"></canvas>
+                                </div>
+                            </div>
+                            <!-- 퍼센트 뱃지: 그림자 살짝 줄이고 더 둥글게 -->
+                            <div id="money-avg-percent" style="font-size:13.5px; font-weight:900; color:#FFF; background:var(--primary); padding:12px; border-radius:14px; margin-bottom:16px; box-shadow: 0 2px 8px rgba(49, 130, 246, 0.15); text-align: center;"></div>
+                            
+                            <!-- 인사이트 박스: 테두리 선(border) 삭제, 배경색으로만 깔끔하게 -->
+                            <div id="money-insight-detail" style="font-size:13.5px; line-height:1.6; padding:18px; border-radius:16px; font-weight:700; background: var(--bg-sub); border: none; color: var(--text-m);"></div>
+                        </div>
+                    </div>
                 </div>
-                <div id="history-list-area" style="display: none; margin-top: 12px;">
+
+                <!-- 📋 4. 실시간 타임라인 머니로그 -->
+                <div style="display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 12px; padding: 0 8px;">
+                    <div style="font-size: 16px; font-weight: 900; color: var(--text-m);">📋 최근 머니로그</div>
+                    <div style="display: flex; gap: 12px; align-items: center;">
+                        <button onclick="window.toggleHistory()" style="background: transparent; color: #8B95A1; border: none; font-size: 12px; font-weight: 800; cursor: pointer;">지난달 내역 〉</button>
+                    </div>
+                </div>
+
+                <div id="history-list-area" style="display: none; margin-bottom: 16px; background: var(--bg-card); padding: 16px; border-radius: 16px; border: 1px solid var(--border);">
                     <div id="history-items"></div>
                 </div>
-            </div>
-            
-        </div>
-    </div>
-</details>
 
-                    <details class="flat-accordion box-main" style="border-radius:20px; overflow:hidden;">
-                      <summary style="padding:16px 20px; font-size:14.5px; font-weight:800; color:var(--text-m); cursor:pointer; list-style:none; display:flex; justify-content:space-between; align-items:center; gap:12px;">
-                        <span style="flex:1; word-break:keep-all; text-align:left;">📋 실시간 타임라인 머니로그</span>
-                        <span class="box-sub" style="font-size:12px; padding:4px 10px; border-radius:8px; white-space:nowrap; flex-shrink:0;">기록보기 ▾</span>
-                      </summary>
-                        <div style="text-align: right; padding: 12px 20px 0;">
-                            <button onclick="event.stopPropagation(); resetMoneyAll();" class="box-tint-red" style="color:var(--danger); padding:4px 10px; border-radius:6px; font-size:11px; font-weight:800; cursor:pointer;">
-                                기록 리셋
-                            </button>
-                        </div>
-                        <div class="lib-content" style="padding:0 20px 20px 20px;">
-                            <div id="ledger-history-list" style="display:flex; flex-direction:column; gap:8px; margin-top: 15px;"></div>
-                        </div>
-                    </details>
+                <div class="box-main" style="border-radius: 24px; padding: 20px; box-shadow: 0 4px 16px rgba(0,0,0,0.02); min-height: 150px; margin-bottom: 24px;">
+                    <div id="ledger-history-list" style="display:flex; flex-direction:column; gap:10px;">
+                        <!-- JS에서 이 위치에 입출금 내역을 꽂아줍니다. -->
+                    </div>
                 </div>
-            </div>
+
+            </div> <!-- panel-money 닫기 -->
 
             <div id="panel-fever" class="panel-block" style="display:none; padding-top:24px; padding-bottom: 24px;">
             
@@ -2201,165 +2209,6 @@ padding-bottom: 24px;      /* 하단 버튼이 폰 베젤에 씹히지 않게 �
 </div>
 <!-- ▲▲▲ 주간 육아 리포트 팝업(모달) 끝 ▲▲▲ -->
 
-<script>
-    let selectedPoopColor = '';
-    let selectedPoopStatus = '';
-    
-    // 🌟 지금 누른 버튼이 '대변'인지 '소변+대변'인지 기억해두는 메모장!
-    window.currentPoopType = '대변'; 
-
-    window.openDiaperSheet = function() {
-        document.getElementById('diaper-bottom-sheet').style.display = 'flex';
-        document.getElementById('poop-ai-area').style.display = 'none';
-        document.getElementById('ai-poop-result').style.display = 'none';
-        
-        document.querySelectorAll('.ai-poop-btn').forEach(b => {
-            b.style.transform = 'scale(1)'; 
-            b.style.boxShadow = 'none';
-            if (b.innerText === '흰/회색') {
-                b.style.border = '1px solid var(--border)';
-            } else {
-                b.style.border = 'none';
-            }
-        });
-        selectedPoopColor = '';
-        selectedPoopStatus = '';
-    };
-
-    window.closeDiaperSheet = function() {
-        document.getElementById('diaper-bottom-sheet').style.display = 'none';
-    };
-
-    window.saveQuickPee = function() {
-        saveToMainTracker('diaper', '소변', '');
-        closeDiaperSheet();
-        window.showToast("💧 소변 기록이 저장되었습니다!");
-    };
-
-    // 🌟 대변 & 둘 다 버튼을 눌렀을 때 켜지는 AI 엔진
-    window.openPoopAI = function(type) {
-        window.currentPoopType = type; // '대변' 또는 '소변+대변' 저장해둠
-        document.getElementById('poop-ai-area').style.display = 'block';
-    };
-
-// 🌟 대변 색깔 분석 엔진 (수유 단계별 스마트 판독 + 회색 필터 완벽 적용!)
-    window.analyzePoop = function(color, btn, defaultStatus) {
-        selectedPoopColor = color;
-
-        // 1. 모든 버튼을 회색빛으로 죽이기
-        document.querySelectorAll('.ai-poop-btn').forEach(b => {
-            b.style.transform = 'scale(1)'; 
-            b.style.boxShadow = 'none';
-            b.style.opacity = '0.35'; 
-            b.style.filter = 'grayscale(100%)'; 
-            b.style.border = 'none';
-            if(b.innerText.includes('흰')) b.style.border = '1px solid #E5E8EB'; 
-        });
-
-        // 2. 누른 버튼만 생기 돌게 팝업!
-        btn.style.transform = 'scale(1.05)';
-        btn.style.boxShadow = '0 4px 12px rgba(0,0,0,0.2)';
-        btn.style.opacity = '1';
-        btn.style.filter = 'grayscale(0%)';
-        btn.style.border = '2px solid #191F28'; 
-
-        const resultBox = document.getElementById('ai-poop-result');
-        resultBox.style.display = 'block';
-
-        // 💡 3. 핵심 로직: 현재 아기의 수유 단계 가져오기
-        const feedingStage = localStorage.getItem('tosil_feedingStage') || '모유/분유';
-        const isSolidFood = feedingStage.includes('이유식');
-
-        let finalStatus = defaultStatus;
-        let resultHtml = '';
-
-        // 4. 색상별 스마트 판독 텍스트 (이유식 단계에 따른 갈색 변 분기)
-        if (color === '황금색' || color === '황금') {
-            finalStatus = 'good';
-            resultHtml = '🟢 <b>완벽한 황금 변입니다!</b><br>아기의 소화 상태가 아주 훌륭하네요.';
-        } 
-        else if (color === '녹색') {
-            finalStatus = 'good';
-            resultHtml = '🟢 <b>지극히 정상입니다!</b><br>담즙, 철분 분유 또는 녹색 채소의 영향일 수 있습니다.';
-        } 
-        else if (color === '갈색') {
-            // 🚨 수유 단계에 따른 [갈색 변] 분기 처리!
-            if (isSolidFood) {
-                finalStatus = 'good';
-                resultHtml = '🟢 <b>건강한 갈색 변입니다!</b><br>이유식을 먹으면서 어른처럼 변이 짙어지는 자연스러운 과정입니다.';
-            } else {
-                finalStatus = 'bad';
-                resultHtml = '⚠️ <b>수분 부족 / 변비 의심!</b><br>모유/분유만 먹는데 짙은 갈색에 딱딱하다면 수분 부족일 수 있습니다. (배 마사지 권장)';
-            }
-        } 
-        else if (color === '흰/회색') {
-            finalStatus = 'bad';
-            resultHtml = '🚨 <b>소아과 방문 요망!</b><br>담도폐쇄증이 의심될 수 있는 색상입니다. 기저귀를 챙겨 병원 진료를 권장합니다.';
-        } 
-        else if (color === '붉은색') {
-            finalStatus = 'bad';
-            resultHtml = '🚨 <b>혈변 주의!</b><br>피가 섞여 나왔을 수 있습니다. 사진을 찍고 소아과 진료를 권장합니다.';
-        } 
-        else if (color === '검은색') {
-            finalStatus = 'bad';
-            resultHtml = '🚨 <b>위장 출혈 의심!</b><br>위나 장 위쪽의 출혈로 인해 검게 변했을 수 있습니다. 진료가 필요합니다.';
-        }
-
-        selectedPoopStatus = finalStatus;
-
-        // 5. 결과창 디자인 입히기
-        if (finalStatus === 'good') {
-            resultBox.className = 'box-tint-green';
-            resultBox.style.color = 'var(--success)';
-        } else {
-            resultBox.className = 'box-tint-red';
-            resultBox.style.color = 'var(--danger)';
-        }
-        resultBox.innerHTML = resultHtml;
-    };
-
-    // 🌟 하드코딩 되어있던 '대변' 글자를 떼어내고, currentPoopType을 꽂아줌! (대표님 코드 원본 그대로 안전 유지)
-    window.saveAiPoopRecord = function() {
-        if(!selectedPoopColor) return alert("똥 색깔을 먼저 선택해주세요!");
-        saveToMainTracker('diaper', window.currentPoopType, selectedPoopColor);
-        closeDiaperSheet();
-        
-        let msg = window.currentPoopType === '소변+대변' ? "💧💩 소변과 대변 기록이 저장되었습니다!" : "💩 대변 기록이 저장되었습니다!";
-        window.showToast(msg);
-    };
-
-    // 🌟 파이어베이스 실시간 연동 & 영수증 띄우기가 추가된 통합 저장 엔진!
-    async function saveToMainTracker(type, subType, status) {
-        const now = new Date();
-        const timeStr = `${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`;
-        const timestamp = now.getTime();
-
-        let record = { 
-            id: 'trk_' + timestamp, 
-            time: timeStr, 
-            timestamp: timestamp, 
-            type: type,
-            subType: subType,
-            status: status 
-        };
-
-        let records = JSON.parse(localStorage.getItem('tosil_tracker_records')) || [];
-        records.push(record);
-        records.sort((a, b) => b.timestamp - a.timestamp); 
-        
-        if(records.length > 100) records.pop();
-        
-        // 부부 폰 연동 (파이어베이스 슛!)
-        if (typeof saveTrackerToFirebase === 'function') {
-            await saveTrackerToFirebase(records);
-        } else {
-            localStorage.setItem('tosil_tracker_records', JSON.stringify(records));
-            if (typeof window.updateTrackerDashboard === 'function') window.updateTrackerDashboard();
-        }
-        
-        // 3번 이상 쓰면 🧾 영수증 버튼 띄우기
-        if (typeof window.checkReceiptVisibility === 'function') window.checkReceiptVisibility();
-    }
 </script>
 </body>
 </html>
