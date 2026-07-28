@@ -7048,6 +7048,13 @@ function getGrowthDeltaMessage(records) {
 // 📝 글쓰기 모달 열기/닫기 기능
 // ==========================================
 window.openWriteModal = function() {
+    // 🔥 [로그인 철통 방어 1] 글쓰기
+    if (!localStorage.getItem('kakao_id')) {
+        return window.showConfirm("안전하고 클린한 커뮤니티를 위해<br>로그인한 유저만 글을 쓸 수 있어요!<br><span style='font-size:12px; color:#8B95A1; font-weight:600;'>카카오로 3초 만에 시작해볼까요?</span>", function() {
+            if (typeof window.switchTab === 'function') window.switchTab('settings', document.getElementById('nav-settings'));
+        }, "💬", "로그인 하러가기", "#3182F6");
+    }
+
     document.getElementById('writeOverlay').classList.add('show');
     document.getElementById('writeModal').classList.add('show');
     document.body.style.overflow = 'hidden'; 
@@ -7255,7 +7262,7 @@ window.submitPost = function() {
     if (!content.trim()) { return window.showToast('⚠️ 내용을 입력해주세요!'); }
 
     const authorName = isAnonymous ? '익명마미' : (localStorage.getItem('community_nickname') || localStorage.getItem('kakao_nickname') || '육아메이트');
-    const authorIcon = isAnonymous ? '👻' : '👑';
+    const authorIcon = window.getCurrentUserProfileIcon(isAnonymous);
     const timestamp = new Date().getTime();
 
     const newPost = {
@@ -7295,136 +7302,6 @@ window.submitPost = function() {
     if (typeof window.db !== 'undefined' && typeof window.setDoc === 'function') {
         window.setDoc(window.doc(window.db, "community", "posts"), { records: posts }).catch(e=>{});
     }
-};
-
-window.renderCommunityFeed = function() {
-    const container = document.getElementById('community-feed');
-    if(!container) return;
-
-    let posts = JSON.parse(localStorage.getItem('tosil_community_posts')) || [];
-
-    if (window.currentCommCategory !== 'all') {
-        posts = posts.filter(p => p.category === window.currentCommCategory);
-    }
-
-    if (window.currentCommSort === 'popular') {
-        posts.sort((a, b) => (b.likes || 0) - (a.likes || 0) || b.timestamp - a.timestamp);
-    } else {
-        posts.sort((a, b) => b.timestamp - a.timestamp);
-    }
-
-    let html = `
-        <div style="background: linear-gradient(135deg, #F3F8FF 0%, #E0EDFF 100%); border: 1px solid #B1D6FF; border-radius: 16px; padding: 18px; margin-bottom: 20px; display: flex; align-items: flex-start; gap: 14px; box-shadow: 0 4px 12px rgba(49, 130, 246, 0.05);">
-            <div style="font-size: 26px; animation: bounce 2s infinite;">📢</div>
-            <div>
-                <div style="font-size: 14px; font-weight: 900; color: #1C64F2; margin-bottom: 6px;">맘수다 커뮤니티 오픈 준비 중!</div>
-                <div style="font-size: 12.5px; font-weight: 600; color: #3F83F8; line-height: 1.5; word-break: keep-all;">현재 서버 증설 및 안정화 작업 중입니다. 정식 출시 전까지 작성된 글은 내 스마트폰에서만 보이며, 업데이트 시 초기화될 수 있습니다.</div>
-            </div>
-        </div>
-        
-        <div style="display: flex; justify-content: flex-end; margin-bottom: 16px; padding: 0 4px;">
-            <div style="display: inline-flex; background: var(--bg-card); padding: 4px; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.03); border: 1px solid var(--border);">
-                <button onclick="window.setCommSort('latest')" style="padding: 6px 12px; border: none; border-radius: 8px; font-size: 12px; font-weight: 800; cursor: pointer; transition: 0.2s; background: ${window.currentCommSort === 'latest' ? '#F2F5F8' : 'transparent'}; color: ${window.currentCommSort === 'latest' ? '#191F28' : '#8B95A1'};">⏳ 최신순</button>
-                <button onclick="window.setCommSort('popular')" style="padding: 6px 12px; border: none; border-radius: 8px; font-size: 12px; font-weight: 800; cursor: pointer; transition: 0.2s; background: ${window.currentCommSort === 'popular' ? '#FFF0F1' : 'transparent'}; color: ${window.currentCommSort === 'popular' ? '#F04452' : '#8B95A1'};">🔥 인기순</button>
-            </div>
-        </div>
-    `;
-
-    if (window.currentCommCategory === 'all' || window.currentCommCategory === 'talk') {
-        html += `
-        <div class="feed-card" style="background: #FFFFFF; border-radius: 24px; padding: 20px; margin-bottom: 20px; box-shadow: 0 6px 20px rgba(0,0,0,0.04); border: 2px solid #F2F5F8;">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px;">
-                <span style="font-size: 11px; font-weight: 900; padding: 6px 12px; border-radius: 10px; color: #FFFFFF; background: #3182F6;">📢 운영자 공지</span>
-                <span style="font-size: 12px; color: #3182F6; font-weight: 800;">📌 고정됨</span>
-            </div>
-            <div style="font-size: 18px; font-weight: 900; color: var(--text-title); margin-bottom: 10px; letter-spacing: -0.5px; line-height: 1.4; word-break: keep-all;">
-                안녕하세요! 맘수다 게시판은 현재 정식 오픈 준비 중입니다 🚀
-            </div>
-            <div style="font-size: 14.5px; color: var(--text-body); line-height: 1.5; margin-bottom: 18px; word-break: keep-all; opacity: 0.9;">
-                엄빠님들과 따뜻한 소통을 나눌 수 있는 '맘수다' 커뮤니티가 곧 정식으로 찾아옵니다!<br><br>
-                유저분들의 트래픽을 감당할 수 있는 쾌적하고 안전한 서버 환경을 만들기 위해 열심히 구축하고 있어요. 조금만 기다려 주시면 더 유용한 기능들과 함께 짠! 하고 오픈하겠습니다 🤍<br><br>
-                <span style="color:#8B95A1; font-size:12.5px;">* 현재 글쓰기 및 댓글 기능은 테스트용으로 내 기기에서만 정상 작동합니다.</span>
-            </div>
-            <div style="display: flex; justify-content: space-between; align-items: center; border-top: 1px solid #F2F5F8; padding-top: 16px;">
-                <div style="display: flex; align-items: center; gap: 8px;">
-                    <div style="width: 28px; height: 28px; background: #FFF4E6; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 14px; border: 1px solid #FFE8CC;">👑</div>
-                    <span style="font-size: 13px; font-weight: 900; color: #191F28;">육아메이트 </span>
-                    <span style="font-size: 11px; font-weight: 800; color: #3182F6;"> 하윤맘</span>
-                </div>
-                <div style="display: flex; gap: 14px; font-size: 13px; font-weight: 800; color: var(--text-sub);">
-                    <div style="display: flex; align-items: center; gap: 4px; padding: 4px 10px; background: #FFF0F1; border-radius: 12px; border: 1px solid #FFE5E8;">
-                        <span style="color: #FF5A5F; font-size: 14px;">❤️</span> <span style="color: #F04452;">999+</span>
-                    </div>
-                </div>
-            </div>
-        </div>
-        `;
-    }
-
-    if (posts.length === 0) {
-        html += `
-            <div style="text-align:center; padding:40px 20px; background:transparent;">
-                <div style="font-size:32px; margin-bottom:12px; opacity:0.5;">💨</div>
-                <div style="font-size:14.5px; font-weight:800; color:var(--text-sub); margin-bottom:6px;">아직 등록된 유저 게시글이 없어요!</div>
-                <div style="font-size:13px; font-weight:600; color:var(--text-s);">베타 테스트로 자유롭게 글을 작성해 보세요 ✍️</div>
-            </div>`;
-        container.innerHTML = html;
-        return;
-    }
-
-    posts.forEach(post => {
-        let categoryName = ''; let categoryStyle = '';
-        if (post.category === 'qna') { categoryName = '💡 육아질문'; categoryStyle = 'color: #3182F6; background: #EBF4FF;'; }
-        else if (post.category === 'talk') { categoryName = '☕ 일상수다'; categoryStyle = 'color: #8B5CF6; background: #F3E8FF;'; }
-        else if (post.category === 'market') { categoryName = '🥕 나눔/중고'; categoryStyle = 'color: #00B37A; background: #E6F7F2;'; }
-        else if (post.category === 'hotdeal') { categoryName = '🛒 핫딜정보'; categoryStyle = 'color: #FF8A00; background: #FFF4E6;'; }
-
-        const diffMins = Math.floor((new Date().getTime() - post.timestamp) / 60000);
-        let timeStr = '방금 전';
-        if (diffMins >= 1440) timeStr = `${Math.floor(diffMins/1440)}일 전`;
-        else if (diffMins >= 60) timeStr = `${Math.floor(diffMins/60)}시간 전`;
-        else if (diffMins > 0) timeStr = `${diffMins}분 전`;
-
-        let imageHtml = '';
-        if (post.images && post.images.length > 0) {
-            let swipeItems = post.images.map(img => `<div class="swipe-item" style="width: 100%; flex-shrink: 0; scroll-snap-align: start;"><img src="${img}" style="width: 100%; height: 260px; object-fit: cover; border-radius: 16px; border: 1px solid rgba(0,0,0,0.03);"></div>`).join('');
-            imageHtml = `<div class="image-swipe-wrapper" onclick="event.stopPropagation()" style="display: flex; overflow-x: auto; scroll-snap-type: x mandatory; gap: 8px; margin-bottom: 16px; border-radius: 16px; scrollbar-width: none;">${swipeItems}</div>`;
-        }
-
-        html += `
-        <div class="feed-card" onclick="window.openPostDetail('${post.id}')" style="cursor: pointer; animation: slideDownFade 0.4s ease forwards; background: var(--bg-card); border-radius: 24px; padding: 20px; margin-bottom: 20px; box-shadow: 0 6px 20px rgba(0,0,0,0.04); border: 1px solid rgba(0,0,0,0.02);">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px;">
-                <span style="font-size: 11px; font-weight: 900; padding: 6px 12px; border-radius: 10px; ${categoryStyle}">${categoryName}</span>
-                <span style="font-size: 12px; color: var(--text-s); font-weight: 700;">${timeStr}</span>
-            </div>
-            <div style="font-size: 18px; font-weight: 900; color: var(--text-title); margin-bottom: 8px; letter-spacing: -0.5px; line-height: 1.4; word-break: keep-all;">
-                ${post.title}
-            </div>
-            <div style="font-size: 14.5px; color: var(--text-body); line-height: 1.5; margin-bottom: 18px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; word-break: keep-all; opacity: 0.9;">
-                ${post.content.replace(/\n/g, '<br>')}
-            </div>
-            ${imageHtml}
-            <div style="display: flex; justify-content: space-between; align-items: center; border-top: 1px solid #F2F5F8; padding-top: 16px;">
-                <div style="display: flex; align-items: center; gap: 8px;">
-                    <div style="width: 28px; height: 28px; background: #F2F4F6; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 14px;">${post.authorIcon}</div>
-                    <span style="font-size: 13px; font-weight: 800; color: var(--text-m);">${post.authorName}</span>
-                    <span style="font-size: 11px; font-weight: 600; color: var(--text-s);">· ${post.region}</span>
-                </div>
-                <div style="display: flex; gap: 14px; font-size: 13px; font-weight: 800; color: var(--text-sub);">
-                    <div class="like-btn" onclick="window.toggleRealLike('${post.id}', this, event)" style="display: flex; align-items: center; gap: 4px; cursor: pointer; padding: 4px 8px; background: #F8F9FA; border-radius: 12px;">
-                        <span class="heart-icon" style="color: ${post.liked ? '#FF5A5F' : '#CBD5E1'}; font-size: 14px; transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);">${post.liked ? '❤️' : '🤍'}</span>
-                        <span class="like-count" style="color: ${post.liked ? '#FF5A5F' : '#8B95A1'};">${post.likes || 0}</span>
-                    </div>
-                    <div style="display: flex; align-items: center; gap: 4px; padding: 4px 8px; background: #F8F9FA; border-radius: 12px;">
-                        <span style="color: var(--brand-primary); font-size: 14px;">💬</span> 
-                        <span style="color: var(--text-s);">${post.comments || 0}</span>
-                    </div>
-                </div>
-            </div>
-        </div>
-        `;
-    });
-    container.innerHTML = html;
 };
 
 // ==========================================
@@ -7533,6 +7410,7 @@ window.closePostDetail = function() {
 };
 
 window.toggleRealLike = function(postId, btnEl, event) {
+    if (!localStorage.getItem('kakao_id')) return window.showToast("🚨 로그인이 필요한 기능입니다.");
     if(event) event.stopPropagation();
     let posts = JSON.parse(localStorage.getItem('tosil_community_posts')) || [];
     let post = posts.find(p => p.id === postId);
@@ -7552,6 +7430,7 @@ window.toggleRealLike = function(postId, btnEl, event) {
 };
 
 window.toggleScrap = function(postId, btnEl, event) {
+    if (!localStorage.getItem('kakao_id')) return window.showToast("🚨 로그인이 필요한 기능입니다.");
     if(event) event.stopPropagation();
     let posts = JSON.parse(localStorage.getItem('tosil_community_posts')) || [];
     let post = posts.find(p => p.id === postId);
@@ -7569,6 +7448,14 @@ window.toggleScrap = function(postId, btnEl, event) {
 };
 
 window.addComment = function() { 
+    // 🔥 [로그인 철통 방어 2] 댓글 쓰기
+    if (!localStorage.getItem('kakao_id')) {
+        return window.showConfirm("따뜻한 소통을 위해<br>로그인 후 댓글을 남겨주세요!<br><span style='font-size:12px; color:#8B95A1; font-weight:600;'>카카오로 3초 만에 시작해볼까요?</span>", function() {
+            window.closePostDetail(); // 상세창 닫기
+            if (typeof window.switchTab === 'function') window.switchTab('settings', document.getElementById('nav-settings'));
+        }, "💬", "로그인 하러가기", "#3182F6");
+    }
+
     const inputField = document.getElementById('newCommentInput');
     if(!inputField) return;
 
@@ -7582,7 +7469,7 @@ window.addComment = function() {
     }
 
     const myName = localStorage.getItem('community_nickname') || localStorage.getItem('kakao_nickname') || '육아메이트';
-    const myIcon = '👑'; 
+    const myIcon = window.getCurrentUserProfileIcon(false);
 
     const newComment = {
         id: 'cmt_' + new Date().getTime(),
@@ -7627,6 +7514,10 @@ window.renderComments = function(postId) {
 
     let allComments = JSON.parse(localStorage.getItem('tosil_community_comments')) || [];
     let postComments = allComments.filter(c => c.postId === postId); 
+
+    // 🔥 [핵심 추가] 차단한 유저의 댓글은 여기서 아예 빼버립니다!
+    let blockedUsers = JSON.parse(localStorage.getItem('tosil_blocked_users')) || [];
+    postComments = postComments.filter(c => !blockedUsers.includes(c.authorName));
 
     if (postComments.length === 0) {
         listContainer.innerHTML = `<div style="text-align:center; padding: 40px 0; color: #8B95A1; font-size: 13px; font-weight: 700;">첫 번째 댓글을 남겨주세요! ✨</div>`;
@@ -7675,6 +7566,7 @@ window.renderComments = function(postId) {
 };
 
 window.toggleCommentLike = function(commentId, postId, event) {
+    if (!localStorage.getItem('kakao_id')) return window.showToast("🚨 로그인이 필요한 기능입니다.");
     if (event) event.stopPropagation();
 
     let comments = JSON.parse(localStorage.getItem('tosil_community_comments')) || [];
@@ -7701,9 +7593,9 @@ window.toggleCommentLike = function(commentId, postId, event) {
 };
 
 // ==========================================
-// 👑 슈퍼 관리자 검증 엔진 (타인 권한 탈취 원천 차단)
+// 👑 파이어베이스 연동형 슈퍼 관리자 검증 및 옵션 창
 // ==========================================
-window.showPostOptions = function() {
+window.showPostOptions = async function() {
     const postId = window.currentActivePostId; 
     if (!postId) return;
 
@@ -7712,38 +7604,39 @@ window.showPostOptions = function() {
     if (!post) return;
 
     const myName = localStorage.getItem('community_nickname') || localStorage.getItem('kakao_nickname') || '육아메이트';
-    
-    // 🛡️ [보안 패치] 닉네임 문자열 비교 전면 폐기! 
-    // 오직 대표님 폰의 로컬스토리지에 'tosil_is_master = true'가 세팅되어 있어야만 관리자로 인정합니다.
-    const isMasterAdmin = localStorage.getItem('tosil_is_master') === 'true';
-    
-    // 일반 유저 기준 내 글인지 판단
     const isMyPost = (post.authorName === myName || post.authorName === '익명마미');
+
+    let isMasterAdmin = false;
+    try {
+        if (typeof window.db !== 'undefined' && typeof window.getDoc === 'function') {
+            const myKakaoId = localStorage.getItem('kakao_id') || 'MasterAdminKey';
+            const adminSnap = await window.getDoc(window.doc(window.db, "admins", String(myKakaoId)));
+            if (adminSnap.exists() && adminSnap.data().allowed === true) isMasterAdmin = true;
+        }
+    } catch (e) { console.warn("관리자 권한 확인 에러", e); }
+    if (localStorage.getItem('tosil_is_master') === 'true') isMasterAdmin = true;
 
     let existing = document.getElementById('post-action-sheet');
     if(existing) existing.remove();
 
     let menuHtml = '';
     
-    // 👑 1. 진짜 관리자(대표님)인 경우에만 강제 수정/삭제 권한 부여
+    // 👑 1. 관리자 모드
     if (isMasterAdmin) {
         menuHtml = `
-            <div style="padding: 0 0 16px 0; font-size: 13px; font-weight: 900; color: #3182F6; text-align: center;">👑 최고 관리자 모드 활성화됨</div>
+            <div style="padding: 0 0 16px 0; font-size: 13px; font-weight: 900; color: #3182F6; text-align: center;">👑 육아메이트 대표이사</div>
             <div onclick="window.editPost('${postId}')" style="padding: 16px 0; font-size: 16px; font-weight: 700; color: #333D4B; border-bottom: 1px solid #F2F4F6; cursor: pointer; display: flex; align-items: center; gap: 12px;">
                 <span style="font-size: 20px;">✏️</span> 글 강제 수정하기
             </div>
             <div onclick="window.deletePost('${postId}'); document.getElementById('post-action-sheet').remove();" style="padding: 16px 0; font-size: 16px; font-weight: 700; color: #F04452; border-bottom: 1px solid #F2F4F6; cursor: pointer; display: flex; align-items: center; gap: 12px;">
                 <span style="font-size: 20px;">🗑️</span> 글 강제 삭제하기
             </div>
-            <div onclick="window.showToast('🚨 [관리자] 신고 접수 내역을 확인합니다.'); document.getElementById('post-action-sheet').remove();" style="padding: 16px 0; font-size: 16px; font-weight: 700; color: #F04452; border-bottom: 1px solid #F2F4F6; cursor: pointer; display: flex; align-items: center; gap: 12px;">
-                <span style="font-size: 20px;">🚨</span> 이 글 신고 내역 보기
-            </div>
-            <div onclick="window.showToast('🚫 [관리자] 해당 사용자를 영구 차단했습니다.'); document.getElementById('post-action-sheet').remove();" style="padding: 16px 0; font-size: 16px; font-weight: 700; color: #333D4B; cursor: pointer; display: flex; align-items: center; gap: 12px;">
+            <div onclick="window.blockUser('${post.authorName}')" style="padding: 16px 0; font-size: 16px; font-weight: 700; color: #333D4B; cursor: pointer; display: flex; align-items: center; gap: 12px;">
                 <span style="font-size: 20px;">🚫</span> 이 사용자 영구 차단
             </div>
         `;
     } 
-    // 🧍‍♂️ 2. 내가 쓴 일반 글인 경우 (수정/삭제만 가능)
+    // 🧍‍♂️ 2. 내 글
     else if (isMyPost) {
         menuHtml = `
             <div onclick="window.editPost('${postId}')" style="padding: 16px 0; font-size: 16px; font-weight: 700; color: #333D4B; border-bottom: 1px solid #F2F4F6; cursor: pointer; display: flex; align-items: center; gap: 12px;">
@@ -7754,13 +7647,13 @@ window.showPostOptions = function() {
             </div>
         `;
     } 
-    // 🧍‍♂️ 3. 남이 쓴 일반 글인 경우 (신고/차단만 가능)
+    // 🧍‍♂️ 3. 남의 글
     else {
         menuHtml = `
             <div onclick="window.showToast('🚨 신고가 정상적으로 접수되었습니다.'); document.getElementById('post-action-sheet').remove();" style="padding: 16px 0; font-size: 16px; font-weight: 700; color: #F04452; border-bottom: 1px solid #F2F4F6; cursor: pointer; display: flex; align-items: center; gap: 12px;">
                 <span style="font-size: 20px;">🚨</span> 이 글 신고하기
             </div>
-            <div onclick="window.showToast('🚫 해당 사용자를 차단했습니다.'); document.getElementById('post-action-sheet').remove();" style="padding: 16px 0; font-size: 16px; font-weight: 700; color: #333D4B; cursor: pointer; display: flex; align-items: center; gap: 12px;">
+            <div onclick="window.blockUser('${post.authorName}')" style="padding: 16px 0; font-size: 16px; font-weight: 700; color: #333D4B; cursor: pointer; display: flex; align-items: center; gap: 12px;">
                 <span style="font-size: 20px;">🚫</span> 이 사용자 차단하기
             </div>
         `;
@@ -7775,7 +7668,6 @@ window.showPostOptions = function() {
             </div>
         </div>
     `;
-    
     document.body.insertAdjacentHTML('beforeend', sheetHtml);
     setTimeout(() => {
         const sheet = document.getElementById('post-action-sheet');
@@ -7979,46 +7871,525 @@ window.closeMyPage = function() {
     }
 };
 
-// 🌟 맘수다 닉네임 변경 엔진 (과거 글/댓글 닉네임까지 일괄 업데이트!)
+// ==========================================
+// 닉네임 [변경] 버튼을 눌렀을 때 작동하는 함수
+// ==========================================
 window.changeNickname = function() {
     const input = document.getElementById('comm-nickname-input');
     if(!input) return;
     
     const newName = input.value.trim();
-    if(newName.length < 2) {
-        return window.showToast('⚠️ 닉네임은 2글자 이상 입력해주세요!');
-    }
-    
-    const oldName = localStorage.getItem('community_nickname') || localStorage.getItem('kakao_nickname') || '육아메이트';
-    if(newName === oldName) {
-        return window.showToast('⚠️ 이미 사용 중인 닉네임입니다.');
+
+    // 🕵️ [대표님 전용 비밀 명령어] 
+    // 닉네임 칸에 #내아이디# 라고 치고 변경을 누르면, 화면에는 안 남고 경고창(Alert)으로만 내 카카오 ID를 띄워줍니다!
+    if (newName === '#내아이디#') {
+        const myId = localStorage.getItem('kakao_id');
+        if (myId) {
+            alert(`[관리자 전용] 이 계정의 카카오 고유 ID는 아래와 같습니다.\n\n${myId}\n\n이 숫자를 파이어베이스 admins에 등록하세요.`);
+        } else {
+            alert("카카오 로그인 정보가 없습니다.");
+        }
+        input.value = ''; // 입력창 초기화
+        return; // 닉네임이 실제로 바뀌지 않게 멈춤
     }
 
-    // 1. 닉네임 저장
+    if(!newName) return window.showToast("🚨 닉네임을 입력해주세요!");
+    if(newName.length > 10) return window.showToast("🚨 닉네임은 10자 이내로 예쁘게 지어주세요.");
+
+    // 🚫 [철통 방어: 등급별 금칙어 시스템]
+    const isMaster = localStorage.getItem('tosil_is_master') === 'true';
+    const isSubAdmin = localStorage.getItem('tosil_is_subadmin') === 'true';
+
+    // 관리자가 아니면 '육아메이트', '대표', '운영진' 등 절대 사용 불가
+    if (!isMaster && !isSubAdmin && (newName.includes('육아메이트') || newName.includes('대표') || newName.includes('관리자') || newName.includes('운영자') || newName.includes('운영진') || newName.includes('admin') || newName.includes('master'))) {
+        return window.showToast("🚨 해당 단어는 사칭 방지를 위해 사용할 수 없습니다.");
+    }
+    
+    // 검증 통과! 닉네임 일괄 업데이트
+    const oldName = localStorage.getItem('community_nickname');
     localStorage.setItem('community_nickname', newName);
     
-    // 2. 내가 썼던 과거 게시글 닉네임 싹 다 바꾸기
     let posts = JSON.parse(localStorage.getItem('tosil_community_posts')) || [];
-    posts.forEach(p => {
-        if(p.authorName === oldName) {
-            p.authorName = newName;
-        }
-    });
+    posts.forEach(p => { if(p.authorName === oldName) p.authorName = newName; });
     localStorage.setItem('tosil_community_posts', JSON.stringify(posts));
 
-    // 3. 내가 달았던 과거 댓글 닉네임 싹 다 바꾸기
     let comments = JSON.parse(localStorage.getItem('tosil_community_comments')) || [];
-    comments.forEach(c => {
-        if(c.authorName === oldName) {
-            c.authorName = newName;
-        }
-    });
+    comments.forEach(c => { if(c.authorName === oldName) c.authorName = newName; });
     localStorage.setItem('tosil_community_comments', JSON.stringify(comments));
+
+    window.showToast(`✨ [${newName}]님으로 닉네임이 변경되었습니다!`);
     
-    // 4. 피드 새로고침해서 바뀐 이름 즉시 적용!
-    if(typeof window.renderCommunityFeed === 'function') {
-        window.renderCommunityFeed();
-    }
+    window.updateMyPageProfile(); 
+    if(typeof window.renderCommunityFeed === 'function') window.renderCommunityFeed(); 
     
-    window.showToast(`✅ 커뮤니티 닉네임이 [${newName}](으)로 변경되었습니다!`);
+    // 🔥 [명부 동기화] 닉네임을 바꾸면 파이어베이스 users 폴더에도 즉시 내 이름 업데이트!
+    if(typeof window.saveUserInfoToFirebase === 'function') window.saveUserInfoToFirebase(); 
 };
+
+// ==========================================
+// 🛠️ 글 수정, 삭제, 차단, 친구초대 엔진
+// ==========================================
+window.editingPostId = null;
+
+window.editPost = function(postId) {
+    let existingSheet = document.getElementById('post-action-sheet');
+    if(existingSheet) existingSheet.remove();
+
+    let posts = JSON.parse(localStorage.getItem('tosil_community_posts')) || [];
+    let post = posts.find(p => p.id === postId);
+    if(!post) return;
+
+    window.editingPostId = postId;
+    
+    // 데이터 불러오기
+    document.getElementById('writeCategory').value = post.category;
+    document.getElementById('writeTitle').value = post.title;
+    document.getElementById('writeContent').value = post.content;
+    const anonEl = document.getElementById('writeAnonymous');
+    if(anonEl) anonEl.checked = (post.authorName === '익명마미');
+    window.attachedImages = post.images ? [...post.images] : [];
+
+    window.closePostDetail();
+    setTimeout(() => {
+        window.openWriteModal();
+        window.renderPreviewImages();
+    }, 300);
+};
+
+window.deletePost = function(postId) {
+    window.showConfirm("이 게시글을 정말 삭제하시겠습니까?", function() {
+        let posts = JSON.parse(localStorage.getItem('tosil_community_posts')) || [];
+        posts = posts.filter(p => p.id !== postId);
+        localStorage.setItem('tosil_community_posts', JSON.stringify(posts));
+
+        if (typeof window.db !== 'undefined' && typeof window.setDoc === 'function') {
+            window.setDoc(window.doc(window.db, "community", "posts"), { records: posts }).catch(e=>{});
+        }
+        window.closePostDetail(); 
+        window.showToast('🗑️ 게시글이 깔끔하게 삭제되었습니다.');
+        window.renderCommunityFeed(); 
+    }, "🗑️", "삭제", "#F04452");
+};
+
+// 🚫 유저 차단 시스템
+window.blockUser = function(authorName) {
+    if(authorName === '육아메이트' || authorName === '육아천재대표님') return window.showToast("🚨 최고 관리자는 차단할 수 없습니다.");
+    
+    window.showConfirm(`'${authorName}'님의 글과 댓글을<br>더 이상 보지 않으시겠습니까?`, function() {
+        let blockedUsers = JSON.parse(localStorage.getItem('tosil_blocked_users')) || [];
+        if(!blockedUsers.includes(authorName)) {
+            blockedUsers.push(authorName);
+            localStorage.setItem('tosil_blocked_users', JSON.stringify(blockedUsers));
+        }
+        
+        document.getElementById('post-action-sheet')?.remove();
+        window.closePostDetail();
+        window.renderCommunityFeed();
+        window.showToast(`🚫 '${authorName}'님이 차단되었습니다.`);
+    }, "🚫", "차단하기", "#333D4B");
+};
+
+// 🚫 차단 목록 보기
+window.openBlockedUsers = function() {
+    const listArea = document.getElementById('blockedUsersList');
+    if(!listArea) return;
+    
+    let blockedUsers = JSON.parse(localStorage.getItem('tosil_blocked_users')) || [];
+    
+    if(blockedUsers.length === 0) {
+        listArea.innerHTML = `
+            <div style="text-align: center; padding-top: 100px;">
+                <div style="font-size: 40px; margin-bottom: 16px;">🌿</div>
+                <div style="font-size: 16px; font-weight: 800; color: var(--text-m); margin-bottom: 8px;">차단한 사용자가 없어요!</div>
+                <div style="font-size: 13.5px; color: var(--text-s);">클린한 육아메이트 커뮤니티입니다.</div>
+            </div>`;
+    } else {
+        let html = '';
+        blockedUsers.forEach(name => {
+            html += `
+                <div style="display: flex; justify-content: space-between; align-items: center; padding: 16px; background: var(--bg-card); border: 1px solid var(--border); border-radius: 16px; margin-bottom: 8px;">
+                    <div style="font-size: 15px; font-weight: 800; color: var(--text-m);">👤 ${name}</div>
+                    <button onclick="window.unblockUser('${name}')" style="background: #F2F5F8; color: #4E5968; border: none; padding: 8px 14px; border-radius: 10px; font-size: 13px; font-weight: 800; cursor: pointer;">차단 해제</button>
+                </div>
+            `;
+        });
+        listArea.innerHTML = html;
+    }
+    document.getElementById('commBlockOverlay').classList.add('active');
+};
+
+window.unblockUser = function(name) {
+    let blockedUsers = JSON.parse(localStorage.getItem('tosil_blocked_users')) || [];
+    blockedUsers = blockedUsers.filter(u => u !== name);
+    localStorage.setItem('tosil_blocked_users', JSON.stringify(blockedUsers));
+    
+    window.openBlockedUsers(); // 새로고침
+    window.renderCommunityFeed(); // 피드 원상복구
+    window.showToast(`✅ '${name}'님 차단이 해제되었습니다.`);
+};
+
+// 🎁 친구 초대
+window.inviteMamsudaFriend = function() {
+    const text = "동네 엄빠들과의 육아 꿀팁, 나눔, 핫딜 정보까지! 맘수다에서 우리 같이 수다 떨어요 ☕🤍";
+    const url = "https://happy-baby0303.github.io/"; 
+    
+    if (typeof Kakao !== 'undefined' && Kakao.isInitialized()) {
+        Kakao.Share.sendDefault({
+            objectType: 'feed',
+            content: {
+                title: '💬 맘수다 커뮤니티 초대장',
+                description: text,
+                imageUrl: 'https://cdn-icons-png.flaticon.com/512/3135/3135715.png',
+                link: { mobileWebUrl: url, webUrl: url },
+            },
+            buttons: [{ title: '맘수다 놀러가기', link: { mobileWebUrl: url, webUrl: url } }]
+        });
+    } else if (navigator.share) {
+        navigator.share({ title: '육아메이트 맘수다 초대', text: text, url: url }).catch(() => {});
+    } else {
+        prompt("아래 텍스트를 복사해서 친구에게 보내주세요!", text + " " + url);
+    }
+};
+
+// ==========================================
+// 🎨 하이엔드 피드 렌더링 엔진 (당근마켓 + 블라인드 감성 & 공지글 부활)
+// ==========================================
+window.renderCommunityFeed = function() {
+    const container = document.getElementById('community-feed');
+    if(!container) return;
+
+    let posts = JSON.parse(localStorage.getItem('tosil_community_posts')) || [];
+    let blockedUsers = JSON.parse(localStorage.getItem('tosil_blocked_users')) || [];
+
+    // 차단 유저 필터링
+    posts = posts.filter(p => !blockedUsers.includes(p.authorName));
+
+    if (window.currentCommCategory !== 'all') {
+        posts = posts.filter(p => p.category === window.currentCommCategory);
+    }
+
+    if (window.currentCommSort === 'popular') {
+        posts.sort((a, b) => (b.likes || 0) - (a.likes || 0) || b.timestamp - a.timestamp);
+    } else {
+        posts.sort((a, b) => b.timestamp - a.timestamp);
+    }
+
+    // 🌟 상단 오픈 준비 중 배너 및 정렬 버튼
+    let html = `
+        <div style="background: linear-gradient(135deg, #F0F7FF 0%, #E0EDFF 100%); border-radius: 16px; padding: 18px 20px; margin-bottom: 24px; display: flex; align-items: center; gap: 14px; box-shadow: 0 4px 12px rgba(49, 130, 246, 0.08);">
+            <div style="font-size: 24px; animation: bounce 2s infinite;">🚀</div>
+            <div style="flex: 1;">
+                <div style="font-size: 14px; font-weight: 900; color: #1C64F2; margin-bottom: 4px;">맘수다 커뮤니티 오픈 준비 중!</div>
+                <div style="font-size: 12.5px; font-weight: 600; color: #3F83F8; line-height: 1.4; word-break: keep-all;">현재 베타 테스트 중입니다. 작성된 글은 내 스마트폰에서만 보입니다.</div>
+            </div>
+        </div>
+        
+        <div style="display: flex; justify-content: flex-end; margin-bottom: 16px; padding: 0 4px;">
+            <div style="display: flex; gap: 8px;">
+                <button onclick="window.setCommSort('latest')" style="padding: 6px 14px; border: none; border-radius: 20px; font-size: 12px; font-weight: 800; cursor: pointer; transition: 0.2s; background: ${window.currentCommSort === 'latest' ? '#333D4B' : 'transparent'}; color: ${window.currentCommSort === 'latest' ? '#FFFFFF' : '#8B95A1'};">최신순</button>
+                <button onclick="window.setCommSort('popular')" style="padding: 6px 14px; border: none; border-radius: 20px; font-size: 12px; font-weight: 800; cursor: pointer; transition: 0.2s; background: ${window.currentCommSort === 'popular' ? '#F04452' : 'transparent'}; color: ${window.currentCommSort === 'popular' ? '#FFFFFF' : '#8B95A1'};">인기순</button>
+            </div>
+        </div>
+    `;
+
+    // 🔥 운영자 공지글 부활 (전체보기나 일상수다 탭에서만 노출)
+    if (window.currentCommCategory === 'all' || window.currentCommCategory === 'talk') {
+        html += `
+        <div class="feed-card" style="background: #F8FAFC; border-radius: 20px; padding: 20px; margin-bottom: 16px; border: 1px solid #E2E8F0; box-shadow: 0 4px 16px rgba(0,0,0,0.02);">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                <span style="font-size: 11px; font-weight: 900; padding: 4px 10px; border-radius: 8px; color: #FFFFFF; background: #3182F6;">📢 운영자 공지</span>
+                <span style="font-size: 12px; color: #3182F6; font-weight: 800;">📌 고정됨</span>
+            </div>
+            <div style="font-size: 16.5px; font-weight: 900; color: #191F28; margin-bottom: 8px; letter-spacing: -0.5px; line-height: 1.4; word-break: keep-all;">
+                안녕하세요! 맘수다 게시판은 현재 정식 오픈 준비 중입니다 🚀
+            </div>
+            <div style="font-size: 14px; color: #4E5968; line-height: 1.5; margin-bottom: 16px; word-break: keep-all; font-weight: 500;">
+                엄빠님들과 따뜻한 소통을 나눌 수 있는 '맘수다' 커뮤니티가 곧 정식으로 찾아옵니다!<br><br>
+                유저분들의 트래픽을 감당할 수 있는 쾌적하고 안전한 서버 환경을 만들기 위해 열심히 구축하고 있어요. 조금만 기다려 주시면 더 유용한 기능들과 함께 짠! 하고 오픈하겠습니다 🤍<br>
+                <span style="color:#8B95A1; font-size:12px; margin-top: 8px; display: block;">* 현재 글쓰기 및 댓글 기능은 테스트용으로 내 기기에서만 작동합니다.</span>
+            </div>
+            <div style="display: flex; justify-content: space-between; align-items: center; border-top: 1px dashed rgba(0,0,0,0.05); padding-top: 14px;">
+                <div style="display: flex; align-items: center; gap: 6px;">
+                    <div style="width: 24px; height: 24px; background: #EBF4FF; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px;">👑</div>
+                    <span style="font-size: 12.5px; font-weight: 800; color: #191F28;">육아메이트</span>
+                </div>
+                <div style="display: flex; gap: 12px; font-size: 13px; font-weight: 700; color: var(--text-sub);">
+                    <div style="display: flex; align-items: center; gap: 4px; padding: 4px 8px; background: #FFF0F1; border-radius: 10px;">
+                        <span style="color: #FF5A5F; font-size: 13px;">❤️</span> <span style="color: #F04452;">999+</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        `;
+    }
+
+    if (posts.length === 0) {
+        html += `
+            <div style="text-align:center; padding:60px 20px; background:transparent;">
+                <div style="font-size:40px; margin-bottom:16px; opacity:0.3;">💬</div>
+                <div style="font-size:16px; font-weight:800; color:var(--text-sub); margin-bottom:8px;">아직 등록된 유저 게시글이 없어요!</div>
+                <div style="font-size:13.5px; font-weight:600; color:var(--text-s);">가장 먼저 일상을 공유해 보세요 ✍️</div>
+            </div>`;
+        container.innerHTML = html;
+        return;
+    }
+
+    // 일반 게시글 렌더링
+    posts.forEach(post => {
+        let catName = ''; let catColor = ''; let catBg = '';
+        if (post.category === 'qna') { catName = '육아질문'; catColor = 'var(--brand-primary)'; catBg = 'var(--brand-light)'; }
+        else if (post.category === 'talk') { catName = '일상수다'; catColor = '#8B5CF6'; catBg = '#F3E8FF'; }
+        else if (post.category === 'market') { catName = '나눔/중고'; catColor = '#00B37A'; catBg = '#E6F7F2'; }
+        else if (post.category === 'hotdeal') { catName = '핫딜정보'; catColor = '#FF8A00'; catBg = '#FFF4E6'; }
+
+        const diffMins = Math.floor((new Date().getTime() - post.timestamp) / 60000);
+        let timeStr = '방금 전';
+        if (diffMins >= 1440) timeStr = `${Math.floor(diffMins/1440)}일 전`;
+        else if (diffMins >= 60) timeStr = `${Math.floor(diffMins/60)}시간 전`;
+        else if (diffMins > 0) timeStr = `${diffMins}분 전`;
+
+        let imageHtml = '';
+        if (post.images && post.images.length > 0) {
+            let swipeItems = post.images.map(img => `<div class="swipe-item" style="width: 100%; flex-shrink: 0; scroll-snap-align: start;"><img src="${img}" style="width: 100%; height: 200px; object-fit: cover; border-radius: 12px; border: 1px solid rgba(0,0,0,0.04);"></div>`).join('');
+            imageHtml = `<div class="image-swipe-wrapper" onclick="event.stopPropagation()" style="display: flex; overflow-x: auto; scroll-snap-type: x mandatory; gap: 8px; margin-top: 14px; border-radius: 12px; scrollbar-width: none;">${swipeItems}</div>`;
+        }
+
+        html += `
+        <div class="feed-card" onclick="window.openPostDetail('${post.id}')" style="background: var(--bg-card); border-radius: 20px; padding: 20px; margin-bottom: 16px; border: 1px solid rgba(0,0,0,0.03); box-shadow: 0 4px 16px rgba(0,0,0,0.03); cursor: pointer; transition: transform 0.2s ease;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                <span style="font-size: 11.5px; font-weight: 800; color: ${catColor}; background: ${catBg}; padding: 4px 10px; border-radius: 8px;">${catName}</span>
+                <span style="font-size: 12px; color: var(--text-s); font-weight: 600;">${timeStr}</span>
+            </div>
+            
+            <div style="font-size: 16.5px; font-weight: 900; color: var(--text-title); margin-bottom: 8px; line-height: 1.4; word-break: keep-all; letter-spacing: -0.5px;">
+                ${post.title}
+            </div>
+            
+            <div style="font-size: 14px; color: var(--text-body); line-height: 1.5; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; word-break: keep-all; font-weight: 500;">
+                ${post.content.replace(/\n/g, ' ')}
+            </div>
+            
+            ${imageHtml}
+            
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 16px; padding-top: 14px; border-top: 1px dashed rgba(0,0,0,0.05);">
+                <div style="display: flex; align-items: center; gap: 6px;">
+                    <div style="width: 24px; height: 24px; background: #F2F4F6; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px;">${post.authorIcon}</div>
+                    <span style="font-size: 12.5px; font-weight: 700; color: var(--text-body);">${post.authorName}</span>
+                    <span style="font-size: 11px; font-weight: 600; color: var(--text-s);">· ${post.region}</span>
+                </div>
+                <div style="display: flex; gap: 12px; font-size: 13px; font-weight: 700; color: var(--text-sub);">
+                    <div class="like-btn" onclick="window.toggleRealLike('${post.id}', this, event)" style="display: flex; align-items: center; gap: 4px; cursor: pointer; background: #F8F9FA; padding: 4px 8px; border-radius: 10px;">
+                        <span class="heart-icon" style="color: ${post.liked ? '#FF5A5F' : '#CBD5E1'}; font-size: 13px; transition: 0.2s;">${post.liked ? '❤️' : '🤍'}</span>
+                        <span class="like-count" style="color: ${post.liked ? '#FF5A5F' : '#8B95A1'};">${post.likes || 0}</span>
+                    </div>
+                    <div style="display: flex; align-items: center; gap: 4px; background: #F8F9FA; padding: 4px 8px; border-radius: 10px;">
+                        <span style="color: var(--brand-primary); font-size: 13px;">💬</span> 
+                        <span>${post.comments || 0}</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        `;
+    });
+    container.innerHTML = html;
+};
+
+// ==========================================
+// 👤 맘수다 프로필 프사 & 등급별 아이콘 자동화 엔진
+// ==========================================
+
+window.getCurrentUserProfileIcon = function(isAnonymous = false) {
+    if (isAnonymous) return '☁️'; 
+
+    const customImg = localStorage.getItem('community_profile_image');
+    if (customImg) {
+        return `<img src="${customImg}" style="width:100%; height:100%; object-fit:cover; border-radius:50%;">`;
+    }
+
+    const isMaster = localStorage.getItem('tosil_is_master') === 'true';
+    const isSubAdmin = localStorage.getItem('tosil_is_subadmin') === 'true';
+
+    if (isMaster) return '👑'; // 최고 관리자
+    if (isSubAdmin) return '🌟'; // 일반 관리자
+    return '🧸'; // 일반 회원
+};
+
+window.triggerProfileImageUpload = function() {
+    let fileInput = document.getElementById('profileImageInput');
+    if (!fileInput) {
+        fileInput = document.createElement('input');
+        fileInput.type = 'file';
+        fileInput.id = 'profileImageInput';
+        fileInput.accept = 'image/*';
+        fileInput.style.display = 'none';
+        fileInput.onchange = window.handleProfileImageSelection;
+        document.body.appendChild(fileInput);
+    }
+    fileInput.click();
+};
+
+window.handleProfileImageSelection = function(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        const img = new Image();
+        img.onload = function() {
+            const canvas = document.createElement('canvas');
+            const maxSize = 150; 
+            let width = img.width;
+            let height = img.height;
+
+            if (width > height) {
+                if (width > maxSize) { height *= maxSize / width; width = maxSize; }
+            } else {
+                if (height > maxSize) { width *= maxSize / height; height = maxSize; }
+            }
+
+            canvas.width = width;
+            canvas.height = height;
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(img, 0, 0, width, height);
+
+            const dataUrl = canvas.toDataURL('image/jpeg', 0.8);
+            localStorage.setItem('community_profile_image', dataUrl); 
+
+            const profileCircle = document.getElementById('mypage-profile-icon');
+            if(profileCircle) {
+                profileCircle.innerHTML = window.getCurrentUserProfileIcon(false);
+                profileCircle.style.background = '#FFF'; 
+            }
+            
+            if(typeof window.renderCommunityFeed === 'function') window.renderCommunityFeed();
+            window.showToast('📸 내 프로필 사진이 멋지게 변경되었습니다!');
+        };
+        img.src = e.target.result;
+    };
+    reader.readAsDataURL(file);
+    event.target.value = ''; 
+};
+
+// ==========================================
+// 👤 마이페이지 프로필 & 실시간 활동 데이터 연동 엔진 (타입 완벽 방어 패치)
+// ==========================================
+
+window.updateMyPageProfile = async function() {
+    let myNickname = localStorage.getItem('community_nickname');
+    if (!myNickname) {
+        myNickname = "익명의 곰돌이"; 
+        localStorage.setItem('community_nickname', myNickname);
+    }
+    const nicknameInput = document.getElementById('comm-nickname-input');
+    if (nicknameInput) nicknameInput.value = myNickname;
+
+    const rawKakaoId = localStorage.getItem('kakao_id');
+    const myKakaoId = rawKakaoId ? String(rawKakaoId).trim() : null;
+
+    // 🛡️ [보안 패치] 카카오 로그아웃 상태면 무조건 관리자 권한 즉시 박탈!
+    if (!myKakaoId) {
+        localStorage.removeItem('tosil_is_master');
+        localStorage.removeItem('tosil_is_subadmin');
+    } else {
+        // 👑 [1순위 직통 방어] 대표님과 사모님 카카오 ID (숫자/문자열 무엇이든 통과하도록 String 변환 후 비교)
+        const MASTER_IDS = ["4995493811", "대표님카카오ID숫자"]; 
+        
+        // 대소문자 및 타입 완벽 일치 검사
+        const isHardcodedMaster = MASTER_IDS.some(id => String(id).trim() === myKakaoId);
+
+        if (isHardcodedMaster) {
+            localStorage.setItem('tosil_is_master', 'true');
+            localStorage.removeItem('tosil_is_subadmin');
+        } else {
+            // 🔥 [2순위 파이어베이스 검증 로직] 🔥
+            if (typeof window.db !== 'undefined' && typeof window.getDoc === 'function') {
+                try {
+                    const adminSnap = await window.getDoc(window.doc(window.db, "admins", myKakaoId));
+                    if (adminSnap.exists()) {
+                        const role = adminSnap.data().role;
+                        if (role === 'master_admin') {
+                            localStorage.setItem('tosil_is_master', 'true');
+                            localStorage.removeItem('tosil_is_subadmin');
+                        } else if (role === 'admin') {
+                            localStorage.setItem('tosil_is_subadmin', 'true');
+                            localStorage.removeItem('tosil_is_master');
+                        }
+                    } else {
+                        localStorage.removeItem('tosil_is_master');
+                        localStorage.removeItem('tosil_is_subadmin');
+                    }
+                } catch (e) {
+                    console.warn("관리자 검증 중 에러 발생 (오프라인 모드)");
+                }
+            }
+        }
+    }
+
+    // 2. 권한별 직급 표시
+    const isMaster = localStorage.getItem('tosil_is_master') === 'true';
+    const isSubAdmin = localStorage.getItem('tosil_is_subadmin') === 'true';
+    
+    let roleName = "🧸 일반 회원";
+    if (isMaster) roleName = "👑 최고 관리자(대표이사)";
+    else if (isSubAdmin) roleName = "🌟 관리자";
+
+    const userInfo = document.getElementById('mypage-user-info');
+    if (userInfo) userInfo.innerText = `${roleName} · 환영합니다!`;
+
+    // 3. 내 활동 내역 카운트
+    const posts = JSON.parse(localStorage.getItem('tosil_community_posts') || '[]');
+    const comments = JSON.parse(localStorage.getItem('tosil_community_comments') || '[]');
+    
+    let myPostCount = posts.filter(p => p.authorName === myNickname).length;
+    let myCommentCount = comments.filter(c => c.authorName === myNickname).length;
+    let myScrapCount = posts.filter(p => p.isScrapped === true).length;
+
+    const postEl = document.getElementById('mypage-post-count');
+    const commentEl = document.getElementById('mypage-comment-count');
+    const scrapEl = document.getElementById('mypage-scrap-count');
+
+    if (postEl) postEl.innerText = myPostCount;
+    if (commentEl) commentEl.innerText = myCommentCount;
+    if (scrapEl) scrapEl.innerText = myScrapCount;
+
+    // 4. 프사 업데이트
+    const profileCircle = document.getElementById('mypage-profile-icon');
+    if(profileCircle && typeof window.getCurrentUserProfileIcon === 'function') {
+        profileCircle.innerHTML = window.getCurrentUserProfileIcon(false);
+        profileCircle.style.background = localStorage.getItem('community_profile_image') ? '#FFF' : '#FFF4E6';
+    }
+};
+
+// ==========================================
+// 📇 전체 유저 명부 파이어베이스 자동 기록 엔진
+// ==========================================
+window.saveUserInfoToFirebase = async function() {
+    const myKakaoId = localStorage.getItem('kakao_id');
+    let myNickname = localStorage.getItem('community_nickname') || '익명의 곰돌이';
+
+    // 파이어베이스 DB가 연결되어 있고, 카카오 ID가 있을 때만 실행
+    if (typeof window.db !== 'undefined' && typeof window.setDoc === 'function' && myKakaoId) {
+        try {
+            // 'users' 라는 컬렉션(폴더)에 카카오 ID를 이름으로 하는 문서 생성
+            await window.setDoc(window.doc(window.db, "users", String(myKakaoId)), {
+                kakao_id: myKakaoId,
+                nickname: myNickname,
+                last_login: new Date().toISOString()
+            }, { merge: true }); // 기존 데이터(작성 글 수 등)가 있다면 덮어쓰지 않고 유지
+            
+            console.log("✅ 유저 정보 파이어베이스 동기화 완료");
+        } catch (e) {
+            console.warn("🚨 유저 정보 동기화 실패 (오프라인 모드일 수 있음)", e);
+        }
+    }
+};
+
+// 앱 로딩 직후(1.5초 뒤) 및 닉네임 변경 시 자동으로 명부 업데이트 실행
+setTimeout(() => { 
+    if (typeof window.saveUserInfoToFirebase === 'function') {
+        window.saveUserInfoToFirebase(); 
+    }
+}, 1500);
+
+// (참고: 기존 changeNickname 함수 맨 마지막 줄인 window.updateMyPageProfile(); 밑에 
+// window.saveUserInfoToFirebase(); 를 한 줄 추가해주시면 닉네임 바꿀 때마다 DB도 즉시 업데이트됩니다!)

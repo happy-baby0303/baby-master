@@ -1996,47 +1996,64 @@ body {
         
         <!-- 내 프로필 카드 (맨 위로 바짝 밀착) -->
         <div class="box-main" style="background: var(--bg-card); border-radius: 20px; padding: 24px; display: flex; flex-direction: column; align-items: center; box-shadow: 0 4px 12px rgba(0,0,0,0.02); margin-bottom: 16px;">
-            <div style="width: 64px; height: 64px; background: #FFF4E6; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 32px; margin-bottom: 16px;">👑</div>
+            <div id="mypage-profile-icon" onclick="window.triggerProfileImageUpload()" style="cursor:pointer; width: 64px; height: 64px; background: #FFF4E6; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 32px; margin-bottom: 16px; overflow: hidden; border: 1px solid #E5E8EB;">🧸</div>
             <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 6px;">
-                <input type="text" id="comm-nickname-input" value="육아천재대표님" style="font-size: 18px; font-weight: 900; color: var(--text-title); border: none; border-bottom: 2px solid #E5E8EB; outline: none; background: transparent; text-align: center; width: 140px; transition: 0.2s;" onfocus="this.style.borderColor='var(--brand-primary)'" onblur="this.style.borderColor='#E5E8EB'">
+                <!-- value를 비우고 JS에서 자동으로 채우도록 세팅 -->
+                <input type="text" id="comm-nickname-input" placeholder="닉네임 입력" style="font-size: 18px; font-weight: 900; color: var(--text-title); border: none; border-bottom: 2px solid #E5E8EB; outline: none; background: transparent; text-align: center; width: 140px; transition: 0.2s;" onfocus="this.style.borderColor='var(--brand-primary)'" onblur="this.style.borderColor='#E5E8EB'">
                 <button onclick="window.changeNickname()" style="padding: 6px 10px; background: var(--text-title); color: #FFF; font-weight: 800; font-size: 12px; border: none; border-radius: 8px; cursor: pointer;">변경</button>
             </div>
-            <div style="font-size: 13px; color: var(--text-sub); font-weight: 600;">동탄맘 · 가입 30일차</div>
+            <!-- 동탄맘 삭제! 유저 등급과 다정한 인사말로 교체 -->
+            <div id="mypage-user-info" style="font-size: 13px; color: var(--text-sub); font-weight: 600;">일반 회원 · 육아메이트와 함께하는 중!</div>
         </div>
 
-        <!-- 활동 요약 보드 -->
+        <!-- 활동 요약 보드 (실제 카운트가 들어가도록 id 부여 완료!) -->
         <div class="box-main" style="background: var(--bg-card); border-radius: 20px; padding: 20px 0; display: flex; box-shadow: 0 4px 12px rgba(0,0,0,0.02); margin-bottom: 24px;">
             <div style="flex: 1; text-align: center; border-right: 1px solid var(--border); cursor: pointer;" onclick="window.openMyActivity('posts')">
-                <div style="font-size: 20px; font-weight: 900; color: var(--text-title);">12</div>
+                <div id="mypage-post-count" style="font-size: 20px; font-weight: 900; color: var(--text-title);">0</div>
                 <div style="font-size: 12.5px; font-weight: 700; color: var(--text-sub); margin-top: 4px;">내가 쓴 글</div>
             </div>
             <div style="flex: 1; text-align: center; border-right: 1px solid var(--border); cursor: pointer;" onclick="window.openMyActivity('comments')">
-                <div style="font-size: 20px; font-weight: 900; color: var(--text-title);">48</div>
+                <div id="mypage-comment-count" style="font-size: 20px; font-weight: 900; color: var(--text-title);">0</div>
                 <div style="font-size: 12.5px; font-weight: 700; color: var(--text-sub); margin-top: 4px;">댓글 단 글</div>
             </div>
             <div style="flex: 1; text-align: center; cursor: pointer;" onclick="window.openMyActivity('scraps')">
-                <div style="font-size: 20px; font-weight: 900; color: var(--text-title);">5</div>
+                <div id="mypage-scrap-count" style="font-size: 20px; font-weight: 900; color: var(--text-title);">0</div>
                 <div style="font-size: 12.5px; font-weight: 700; color: var(--text-sub); margin-top: 4px;">스크랩</div>
             </div>
         </div>
 
         <!-- 메뉴 리스트 -->
         <div class="box-main" style="background: var(--bg-card); border-radius: 20px; padding: 0 20px; box-shadow: 0 4px 12px rgba(0,0,0,0.02); margin-bottom: 32px;">
-            <div style="display: flex; justify-content: space-between; align-items: center; padding: 20px 0; border-bottom: 1px solid var(--border); font-size: 15px; font-weight: 800; color: var(--text-title); cursor: pointer;" onclick="window.showToast('준비 중인 기능입니다.')">
+            <div style="display: flex; justify-content: space-between; align-items: center; padding: 20px 0; border-bottom: 1px solid var(--border); font-size: 15px; font-weight: 800; color: var(--text-title); cursor: pointer;" onclick="window.openMyActivity('scraps')">
                 <span>📌 내가 스크랩한 글</span>
                 <span style="color: var(--text-sub);">〉</span>
             </div>
-            <div style="display: flex; justify-content: space-between; align-items: center; padding: 20px 0; border-bottom: 1px solid var(--border); font-size: 15px; font-weight: 800; color: var(--text-title); cursor: pointer;" onclick="window.showToast('준비 중인 기능입니다.')">
+            <div style="display: flex; justify-content: space-between; align-items: center; padding: 20px 0; border-bottom: 1px solid var(--border); font-size: 15px; font-weight: 800; color: var(--text-title); cursor: pointer;" onclick="window.openBlockedUsers()">
                 <span>🚫 차단한 사용자 관리</span>
                 <span style="color: var(--text-sub);">〉</span>
             </div>
-            <div style="display: flex; justify-content: space-between; align-items: center; padding: 20px 0; font-size: 15px; font-weight: 800; color: var(--text-title); cursor: pointer;" onclick="window.showToast('준비 중인 기능입니다.')">
-                <span>🎁 맘수다 친구 초대하기</span>
+            <div style="display: flex; justify-content: space-between; align-items: center; padding: 20px 0; font-size: 15px; font-weight: 800; color: var(--text-title); cursor: pointer;" onclick="window.inviteMamsudaFriend()">
+                <span>🎁 맘수다 동네 친구 초대하기</span>
                 <span style="color: var(--text-sub);">〉</span>
             </div>
         </div>
     </div>
 </div>
+
+<!-- 🚫 차단한 사용자 관리 오버레이 (새로 추가) -->
+<div id="commBlockOverlay" style="position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: var(--bg-main); z-index: 99999; transform: translateX(100%); transition: transform 0.3s cubic-bezier(0.25, 0.8, 0.25, 1); display: flex; flex-direction: column;">
+    <div style="display: flex; justify-content: space-between; align-items: center; padding: 16px 20px; border-bottom: 1px solid var(--border); background: var(--bg-card);">
+        <svg onclick="document.getElementById('commBlockOverlay').classList.remove('active')" style="cursor:pointer;" width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#333D4B" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg>
+        <span style="font-size: 17px; font-weight: 800; color: #333D4B;">차단한 사용자 관리</span>
+        <span style="width: 26px;"></span>
+    </div>
+    <div id="blockedUsersList" style="flex: 1; padding: 20px; overflow-y: auto; background: var(--bg-main);"></div>
+</div>
+
+<style>
+/* 🚨 오버레이 열림 강제 스타일 추가 */
+#commBlockOverlay.active { transform: translateX(0) !important; }
+</style>
 
 
 </div> <!-- 여기가 전체 화면(wrapper) 닫히는 곳! -->
