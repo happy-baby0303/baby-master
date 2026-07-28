@@ -642,22 +642,27 @@ window.analyzeMoney = function() {
 
     const budgetPercent = Math.round((detailsTotal / userBudget) * 100);
     
-    // 1. 예산 대비 소진율 문구 다듬기 (퍼센트별로 다르게 반응!)
-    let percentMsg = `이번 달 예산의 <strong>${budgetPercent}%</strong>를 썼어요 💸`;
-    let percentStyle = `background: #E8F3FF; color: #1B64DA;`; // 기본 파란색
+    // 1. 예산 대비 소진율 그라데이션 바 업데이트! 🌟
+    const progressBox = document.getElementById('v-budget-progress');
+    const statusText = document.getElementById('budget-status-text');
 
-    if (budgetPercent >= 100) {
-        percentMsg = `예산을 초과했어요! 지갑 지킴이 출동 🚨`;
-        percentStyle = `background: #FFF0F1; color: #F04452;`; // 빨간색
-    } else if (budgetPercent >= 80) {
-        percentMsg = `예산이 얼마 안 남았어요! (${budgetPercent}%) ⚠️`;
-        percentStyle = `background: #FFF4E6; color: #F76B1C;`; // 주황색
-    }
+    if (progressBox && statusText) {
+        let visualPercent = Math.min(budgetPercent, 100); // 100%가 넘어도 배경색이 삐져나가지 않게 제한
 
-    const avgPercentEl = document.getElementById('money-avg-percent');
-    if(avgPercentEl) {
-        avgPercentEl.innerHTML = `<div style="padding: 2px 0;">${percentMsg}</div>`;
-        avgPercentEl.style.cssText = `font-size:14px; font-weight:700; padding:14px; border-radius:12px; margin-bottom:16px; text-align: center; box-shadow: 0 2px 8px rgba(0,0,0,0.03); ${percentStyle}`;
+        if (budgetPercent >= 90) {
+            // 90% 이상: 경고 메시지와 빨간색 그라데이션 🚨
+            statusText.innerText = budgetPercent >= 100 
+                ? `예산을 초과했어요! 지갑 지킴이 출동 🚨 (${budgetPercent}%)` 
+                : `예산이 얼마 안 남았어요! ⚠️ (${budgetPercent}%)`;
+            
+            progressBox.style.background = `linear-gradient(90deg, #FCA5A5 ${visualPercent}%, #FEF2F2 ${visualPercent}%)`;
+            statusText.style.color = '#EF4444';
+        } else {
+            // 90% 미만: 시원한 파란색 게이지 🌊
+            statusText.innerText = `이번 달 예산의 ${budgetPercent}%를 썼어요 💸`;
+            progressBox.style.background = `linear-gradient(90deg, #BFDBFE ${visualPercent}%, #EBF4FF ${visualPercent}%)`;
+            statusText.style.color = '#2563EB';
+        }
     }
 
     // 2. 인사이트 문구 & 여백 시원하게 뚫어주기 (flex와 gap 사용)
@@ -1242,24 +1247,59 @@ function renderFeverTimeline() {
     feverTimerInterval = setInterval(() => updateFeverTimer(records), 1000);
 }
 
+// ==========================================
+// ✨ [UX 패치] 스마트 해열제 타이머 (교차 복용 넛지 & 흑백 잠금)
+// ==========================================
 function updateFeverTimer(records) {
     const redBtn = document.getElementById('btn-pill-red'), blueBtn = document.getElementById('btn-pill-blue');
     const timerRedEl = document.getElementById('timer-red'), timerBlueEl = document.getElementById('timer-blue');
     
-    // 🚨 핵심 패치: 기록이 비어있으면 즉시 타이머 문구와 잠금(투명도)을 원상복구!
+    // 1. 기록 없을 때 완벽 초기화
     if (!records || records.length === 0) {
-        if (timerRedEl) { timerRedEl.innerText = "✅ 즉시 복용 가능"; timerRedEl.style.color = "#2ECC71"; }
-        if (timerBlueEl) { timerBlueEl.innerText = "✅ 즉시 복용 가능"; timerBlueEl.style.color = "#2ECC71"; }
-        if (redBtn) { redBtn.style.cursor = 'pointer'; redBtn.style.opacity = '1'; }
-        if (blueBtn) { blueBtn.style.cursor = 'pointer'; blueBtn.style.opacity = '1'; }
+        if (timerRedEl) { timerRedEl.innerHTML = "✅ 즉시 복용 가능"; timerRedEl.style.color = "#2ECC71"; }
+        if (timerBlueEl) { timerBlueEl.innerHTML = "✅ 즉시 복용 가능"; timerBlueEl.style.color = "#2ECC71"; }
+        if (redBtn) { redBtn.style.cursor = 'pointer'; redBtn.style.opacity = '1'; redBtn.style.filter = 'none'; }
+        if (blueBtn) { blueBtn.style.cursor = 'pointer'; blueBtn.style.opacity = '1'; blueBtn.style.filter = 'none'; }
         return;
     }
 
     const redLock = checkPillLock('red'), blueLock = checkPillLock('blue');
-    if (timerRedEl) { timerRedEl.innerText = redLock.locked ? redLock.reason.split('\n')[1] : "✅ 즉시 복용 가능"; timerRedEl.style.color = redLock.locked ? "var(--danger)" : "#2ECC71"; }
-    if (timerBlueEl) { timerBlueEl.innerText = blueLock.locked ? blueLock.reason.split('\n')[1] : "✅ 즉시 복용 가능"; timerBlueEl.style.color = blueLock.locked ? "var(--danger)" : "#2ECC71"; }
-    if (redBtn) { redBtn.style.cursor = redLock.locked ? 'not-allowed' : 'pointer'; redBtn.style.opacity = redLock.locked ? '0.3' : '1'; }
-    if (blueBtn) { blueBtn.style.cursor = blueLock.locked ? 'not-allowed' : 'pointer'; blueBtn.style.opacity = blueLock.locked ? '0.3' : '1'; }
+
+    // 🔴 2. 빨간약(아세트) 상태 매직
+    if (redLock.locked) {
+        if (timerRedEl) { timerRedEl.innerHTML = `🔒 ${redLock.reason.split('\n')[1]}`; timerRedEl.style.color = "var(--danger)"; }
+        // 잠기면 흑백으로 죽여버리기!
+        if (redBtn) { redBtn.style.cursor = 'not-allowed'; redBtn.style.opacity = '0.3'; redBtn.style.filter = 'grayscale(100%)'; }
+    } else {
+        if (timerRedEl) {
+            // 파란약은 잠겼는데 빨간약이 풀렸다면 -> 교차 복용 골든 타임! 💡
+            if (blueLock.locked) {
+                timerRedEl.innerHTML = `<span style="background:#FFF0F1; color:#F04452; padding:4px 8px; border-radius:8px; font-size:11.5px; font-weight:900; box-shadow:0 2px 6px rgba(240,68,82,0.2); display:inline-block; animation:pulseSOS 1.5s infinite;">💡 교차 복용 가능</span>`;
+            } else {
+                timerRedEl.innerHTML = "✅ 즉시 복용 가능";
+                timerRedEl.style.color = "#2ECC71";
+            }
+        }
+        if (redBtn) { redBtn.style.cursor = 'pointer'; redBtn.style.opacity = '1'; redBtn.style.filter = 'none'; }
+    }
+
+    // 🔵 3. 파란약(이부) 상태 매직
+    if (blueLock.locked) {
+        if (timerBlueEl) { timerBlueEl.innerHTML = `🔒 ${blueLock.reason.split('\n')[1]}`; timerBlueEl.style.color = "var(--danger)"; }
+        // 잠기면 흑백으로 죽여버리기!
+        if (blueBtn) { blueBtn.style.cursor = 'not-allowed'; blueBtn.style.opacity = '0.3'; blueBtn.style.filter = 'grayscale(100%)'; }
+    } else {
+        if (timerBlueEl) {
+            // 빨간약은 잠겼는데 파란약이 풀렸다면 -> 교차 복용 골든 타임! 💡
+            if (redLock.locked) {
+                timerBlueEl.innerHTML = `<span style="background:#EBF4FF; color:#3182F6; padding:4px 8px; border-radius:8px; font-size:11.5px; font-weight:900; box-shadow:0 2px 6px rgba(49,130,246,0.2); display:inline-block; animation:pulseSOS 1.5s infinite;">💡 교차 복용 가능</span>`;
+            } else {
+                timerBlueEl.innerHTML = "✅ 즉시 복용 가능";
+                timerBlueEl.style.color = "#2ECC71";
+            }
+        }
+        if (blueBtn) { blueBtn.style.cursor = 'pointer'; blueBtn.style.opacity = '1'; blueBtn.style.filter = 'none'; }
+    }
 }
 
 // ✨ [니치 패치 2] 체온 입력 시 실시간 색상 변화 엔진
@@ -1473,12 +1513,13 @@ function getPercentile(z) {
     return Math.round((1 / (1 + Math.exp(-z * 1.702))) * 100);
 }
 
+
 // ==========================================
-// 📈 영유아 종합 성장 마스터 (카우프 지수 + 성장 차트 연동)
+// 📈 [UX 패치] 영유아 종합 성장 마스터 (AI 로딩 딜레이 + 전교 등수 게이지 바 애니메이션)
 // ==========================================
 let growthChartObj = null;
 
-function calcHealthMaster() {
+window.calcHealthMaster = function() {
     const b = document.getElementById('v-birth').value;
     const gender = document.getElementById('v-gender').value;
     const hVal = document.getElementById('v-height').value;
@@ -1504,19 +1545,18 @@ function calcHealthMaster() {
     document.getElementById('res-week').innerText = week;
 
    // 원더윅스 로직
-    // 💡 도약기는 보통 기준(절정) 주차보다 4주 전부터 시작되므로 범위를 -4로 대폭 넓힙니다.
     let curWW = wwList.find(x => week >= (x.w - 1) && week <= (x.w + 1));
     let nxtWW = wwList.find(x => x.w > week);
     
     let st = document.getElementById('ww-status');
     if(st) {
         if(curWW) { 
-            st.className = 'ww-status-box box-tint-red'; // 🚀 스마트 클래스 적용!
-            st.removeAttribute('style'); // 촌스러운 인라인 스타일 강제 삭제
+            st.className = 'ww-status-box box-tint-red'; 
+            st.removeAttribute('style'); 
             st.style.padding = '20px'; st.style.borderRadius = '16px'; st.style.marginBottom = '12px'; 
             st.innerHTML = `<div style="font-size:14.5px; font-weight:900; color:var(--danger); margin-bottom:6px;">🚨 현재 ${curWW.t} 폭풍우 구간!</div><strong style="color:var(--text-m);">특성:</strong> <span style="color:var(--text-s);">${curWW.d}</span>.<br><span style="color:var(--text-s); margin-top:4px; display:inline-block;">이유 없는 보챔과 수면퇴행이 올 수 있는 도약기입니다. 아기를 많이 안아주세요!</span>`; 
         } else { 
-            st.className = 'ww-status-box box-tint-green'; // 🚀 스마트 클래스 적용!
+            st.className = 'ww-status-box box-tint-green'; 
             st.removeAttribute('style');
             st.style.padding = '20px'; st.style.borderRadius = '16px'; st.style.marginBottom = '12px';
             st.innerHTML = `<div style="font-size:14.5px; font-weight:900; color:var(--success); margin-bottom:6px;">☀️ 맑음! 평온기 유지 중</div><span style="font-size:13px; color:var(--text-s);">${nxtWW ? '👉 다음 도약기: <strong style="color:var(--text-m);">' + nxtWW.t + ' (' + nxtWW.w + '주차)</strong> 대기 중' : '모든 도약기를 이수 완료했습니다.'}</span>`; 
@@ -1549,11 +1589,39 @@ function calcHealthMaster() {
     };
 
     let pctHeight = null, pctWeight = null;
-    if (h) { pctHeight = getPercentile((h - std.h) / sdHeight); document.getElementById('pct-height').innerText = `상위 ${100 - pctHeight}%`; document.getElementById('desc-height').innerText = getDesc(pctHeight); } 
-    else { document.getElementById('pct-height').innerText = `-`; document.getElementById('desc-height').innerText = `미입력`; }
+    
+    // ✨ [게이지 바 매직] 텍스트 대신 화려한 애니메이션 막대 생성!
+    if (h) { 
+        pctHeight = getPercentile((h - std.h) / sdHeight); 
+        const rank = 100 - pctHeight;
+        document.getElementById('pct-height').innerHTML = `
+            <span style="font-size:18px;">상위 <strong>${rank}%</strong></span>
+            <div style="margin-top:10px; width:100%; height:10px; background:#F2F5F8; border-radius:5px; position:relative; overflow:hidden;">
+                <div style="position:absolute; left:0; top:0; height:100%; background:linear-gradient(90deg, #BFDBFE, #3182F6); border-radius:5px; animation: fillGrowthH${rank} 1.5s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;"></div>
+            </div>
+            <style>@keyframes fillGrowthH${rank} { from { width: 0%; } to { width: ${100 - rank}%; } }</style>
+        `;
+        document.getElementById('desc-height').innerText = getDesc(pctHeight); 
+    } else { 
+        document.getElementById('pct-height').innerText = `-`; 
+        document.getElementById('desc-height').innerText = `미입력`; 
+    }
 
-    if (w) { pctWeight = getPercentile((w - std.w) / sdWeight); document.getElementById('pct-weight').innerText = `상위 ${100 - pctWeight}%`; document.getElementById('desc-weight').innerText = getDesc(pctWeight); } 
-    else { document.getElementById('pct-weight').innerText = `-`; document.getElementById('desc-weight').innerText = `미입력`; }
+    if (w) { 
+        pctWeight = getPercentile((w - std.w) / sdWeight); 
+        const rankW = 100 - pctWeight;
+        document.getElementById('pct-weight').innerHTML = `
+            <span style="font-size:18px;">상위 <strong>${rankW}%</strong></span>
+            <div style="margin-top:10px; width:100%; height:10px; background:#F2F5F8; border-radius:5px; position:relative; overflow:hidden;">
+                <div style="position:absolute; left:0; top:0; height:100%; background:linear-gradient(90deg, #A7F3D0, #10B981); border-radius:5px; animation: fillGrowthW${rankW} 1.5s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;"></div>
+            </div>
+            <style>@keyframes fillGrowthW${rankW} { from { width: 0%; } to { width: ${100 - rankW}%; } }</style>
+        `;
+        document.getElementById('desc-weight').innerText = getDesc(pctWeight); 
+    } else { 
+        document.getElementById('pct-weight').innerText = `-`; 
+        document.getElementById('desc-weight').innerText = `미입력`; 
+    }
 
     // ✨ 카우프 지수 (비만도) 연산 및 친절한 멘트 출력 ✨
     const kaupBadge = document.getElementById('kaup-badge');
@@ -1609,15 +1677,23 @@ function calcHealthMaster() {
         pctWeight: pctWeight ? (100 - pctWeight) : 0
     };
 
+    // ✨ [대기업 앱 UX] 결과창 띄우기 전 'AI 로딩 중' 딜레이 추가
     const gRes = document.getElementById('growth-result');
     if(gRes) {
-        gRes.style.display = 'block';
-        setTimeout(() => { gRes.scrollIntoView({ behavior: 'smooth', block: 'center' }); }, 100);
+        gRes.style.display = 'none'; // 먼저 닫아놓고
+        
+        // 돋보기 아이콘과 함께 로딩 멘트 노출
+        if(typeof showToast === 'function') showToast("🔍 AI가 또래 100명의 성장 데이터와 비교 분석 중입니다...");
+        else alert("분석 중입니다...");
+
+        // 0.8초 뒤에 짠! 하고 나타나면서 스크롤 부드럽게 이동
+        setTimeout(() => {
+            gRes.style.display = 'block';
+            gRes.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }, 800);
     }
 }
-window.calcHealthMaster = calcHealthMaster;
 
-// ✨ 성장 기록 저장 및 파이어베이스 연동 (안전장치 완비)
 // ✨ 성장 기록 저장 및 파이어베이스 연동 (폭풍성장 이스터에그 패치!)
 async function saveGrowthRecord() {
     console.log("1. 저장 버튼 클릭됨! 데이터 확인:", window.tempGrowthData);
@@ -1772,7 +1848,7 @@ function renderGrowthHistory() {
     if (listContainer) {
         let html = '';
         
-        // 🌟 [니치 패치 3] 마지막 계측일 넛지 배지 추가!
+       // 🌟 [니치 패치 3] 마지막 계측일 넛지 배지 추가! (+ 증감폭 계산기 연동)
         const sortedRecords = [...records].sort((a,b) => new Date(b.date) - new Date(a.date));
         const lastRecord = sortedRecords[0];
         const today = new Date();
@@ -1781,13 +1857,16 @@ function renderGrowthHistory() {
         lastDate.setHours(0,0,0,0);
         const diffDays = Math.floor((today - lastDate) / (1000 * 60 * 60 * 24));
         
+        // 🎯 방금 만든 스마트 멘트 생성기로 메세지를 뽑아옵니다!
+        const smartMessage = getGrowthDeltaMessage(sortedRecords);
+        
         let badgeHtml = '';
         if (diffDays === 0) {
-            badgeHtml = `<div style="background:#E6F7F2; color:#00B37A; border:1px solid #A7F3D0; padding:8px 12px; border-radius:12px; font-size:12.5px; font-weight:800; margin-bottom:16px; text-align:center;">✨ 오늘 계측 완료! 폭풍 성장 중 🌿</div>`;
+            // 오늘 쟀을 땐 똑똑하게 계산된 증감폭 멘트 출력!
+            badgeHtml = `<div style="background:#E6F7F2; color:#059669; border:1px solid #A7F3D0; padding:10px 12px; border-radius:12px; font-size:13px; margin-bottom:16px; text-align:center;">${smartMessage}</div>`;
         } else if (diffDays <= 14) {
             badgeHtml = `<div style="background:#F8F9FA; color:#8B95A1; border:1px solid #E5E8EB; padding:8px 12px; border-radius:12px; font-size:12.5px; font-weight:800; margin-bottom:16px; text-align:center;">마지막 계측: ${diffDays}일 전</div>`;
         } else {
-            // 2주(14일) 이상 안 쟀으면 빨간색으로 재라고 꼬시기!
             badgeHtml = `<div style="background:#FFF0F1; color:#F04452; border:1px dashed #F04452; padding:8px 12px; border-radius:12px; font-size:12.5px; font-weight:800; margin-bottom:16px; text-align:center;">🚨 앗! 계측한 지 ${diffDays}일이나 지났어요. 오늘 한 번 재볼까요?</div>`;
         }
         
@@ -2554,7 +2633,7 @@ function updateSmartBanner() {
                 <div style="display: flex; align-items: center; gap: 14px; flex: 1; min-width: 0;">
                     <div style="font-size: 26px; flex-shrink: 0;">💌</div>
                     <div style="flex: 1; min-width: 0; text-align: left;">
-                        <div style="font-size: 12px; font-weight: 800; color: #6B4EFF; margin-bottom: 4px;">짝꿍의 SOS 요청!</div>
+                        <div style="font-size: 12px; font-weight: 800; color: #6B4EFF; margin-bottom: 4px;">긴급 SOS 요청 !</div>
                         <div style="font-size: 15.5px; font-weight: 900; color: var(--text-m); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; letter-spacing: -0.3px;">"${urgentBaton.text}"</div>
                     </div>
                 </div>
@@ -3636,7 +3715,7 @@ window.updateTrackerDashboard = function() {
             });
             let historyHtml = '<div style="max-height:300px; overflow-y:auto; padding-right:4px;">';
             for(let date in grouped) {
-                historyHtml += `<div style="font-size:12.5px; font-weight:900; color:#8B95A1; margin:16px 0 8px 0; border-bottom:1px solid #F2F5F8; padding-bottom:6px;">📅 ${date}</div>`;
+            historyHtml += `<div style="position: sticky; top: -1px; z-index: 10; background: var(--bg-card); font-size:12.5px; font-weight:900; color:#8B95A1; margin:16px 0 8px 0; border-bottom:1px solid #F2F5F8; padding:6px 0;">📅 ${date}</div>`;
                 grouped[date].forEach(r => {
     let icon = '✨';
     // 👇 이 부분이 핵심입니다! 이유식이면 숟가락, 아니면 젖병!
@@ -3886,9 +3965,16 @@ window.updateTrackerDashboard = function() {
     const getRelativeTime = (latestRecord) => {
         if (!latestRecord) return '기록 없음';
         const m = Math.floor((nowTime - latestRecord.timestamp) / 60000);
+        
         if (m < 1) return '방금 전';
         if (m < 60) return `${m}분 전`;
-        return `${Math.floor(m/60)}시간 전`;
+        
+        // ✨ 아내분 CS 반영: 시간과 분을 함께 표시!
+        const hours = Math.floor(m / 60);
+        const mins = m % 60;
+        
+        if (mins === 0) return `${hours}시간 전`;
+        return `${hours}시간 ${mins}분 전`;
     };
 
   // 💡 [수면 투트랙] 수면 버튼 문구 (한국어 패치 적용)
@@ -4467,6 +4553,8 @@ window.initRealtimeSync = () => {
     
     if (typeof startTrackerRealtimeSync === 'function') startTrackerRealtimeSync();
     if (typeof startRoutineRealtimeSync === 'function') startRoutineRealtimeSync();
+    if (typeof startCommunityRealtimeSync === 'function') startCommunityRealtimeSync();
+    if (typeof startCommentRealtimeSync === 'function') startCommentRealtimeSync();
 };
 
 // 앱 로딩 시 리스너 수동 실행 방어 코드
@@ -4697,23 +4785,6 @@ window.addEventListener('load', function() {
     window.checkReceiptVisibility();
 });
 
-// 🍞 토스트 팝업 띄우기 함수 (alert 대체)
-window.showToast = function(message) {
-    const container = document.getElementById('toast-container');
-    if(!container) return;
-    
-    const toast = document.createElement('div');
-    toast.className = 'toast-msg';
-    toast.innerHTML = message;
-    
-    container.appendChild(toast);
-    
-    // 2.5초 뒤에 스르륵 사라짐
-    setTimeout(() => {
-        toast.style.animation = 'toastFadeOut 0.3s ease-in forwards';
-        setTimeout(() => { toast.remove(); }, 300);
-    }, 2500);
-};
 
 // 🚨 커스텀 확인창 띄우기 함수 (타이핑 안전장치 포함!)
 window.showConfirm = function(message, onConfirm, icon = '🚨', confirmText = '확인', confirmColor = 'var(--primary)', requireKeyword = null) {
@@ -5849,7 +5920,7 @@ window.loginWithKakao = function() {
 };
 
 // ==========================================
-// ⚙️ [설정 탭] 전체 UI 렌더링 엔진 (엄마/아빠 역할 스위치 추가!)
+// ⚙️ [설정 탭] 전체 UI 렌더링 엔진 (엄마/아빠 역할 스위치 & 디자인 최적화)
 // ==========================================
 window.renderSettingsTab = function() {
     const container = document.getElementById('tab-settings');
@@ -5927,8 +5998,9 @@ window.renderSettingsTab = function() {
 
     // 🌟 3. 전체 화면 조립하기 
     container.innerHTML = `
-        <div style="padding: 20px;">
-            <div style="font-size: 22px; font-weight: 900; color: var(--text-m); margin-bottom: 24px;">설정</div>
+        <div style="padding: 20px 20px 40px 20px;">
+            <!-- 🔥 수정된 부분: 설정 타이틀 크기를 키우고 margin-bottom을 16px로 줄여 밀착! -->
+            <div style="font-size: 26px; font-weight: 900; color: var(--text-m); margin-bottom: 16px; letter-spacing: -0.5px; padding-left: 4px;">설정</div>
 
             <!-- 계정 및 프로필 -->
             ${profileHtml}
@@ -6247,7 +6319,7 @@ window.showRoleOnboarding = function() {
     overlay.innerHTML = `
         <div style="background:var(--bg-card, #fff); width:100%; max-width:340px; border-radius:24px; padding:36px 24px; text-align:center; box-shadow:0 15px 35px rgba(0,0,0,0.25); animation: popIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);">
             <div style="font-size:45px; margin-bottom:16px; animation: bounce 2s infinite;">👋</div>
-            <div style="font-size:22px; font-weight:900; color:var(--text-m, #191f28); margin-bottom:10px;">반가워요, 육아동지님!</div>
+            <div style="font-size:22px; font-weight:900; color:var(--text-m, #191f28); margin-bottom:10px;">반가워요, 육아메이트님</div>
             <div style="font-size:14px; font-weight:600; color:var(--text-s, #8b95a1); margin-bottom:32px; line-height:1.5;">최적화된 화면을 준비해 드릴게요.<br>어떤 역할을 맡고 계신가요?</div>
             
             <div style="display:flex; gap:12px;">
@@ -6845,52 +6917,73 @@ window.copySymptomMemo = function() {
 };
 
 // ==========================================
-// ⏰ [하이엔드 패치] 스와이프 휠(드럼 피커) 엔진
+// ⏰ [하이엔드 패치] 무한 스와이프 휠(드럼 피커) 엔진
 // ==========================================
 window.initDrumPicker = function(timeStr) {
     const hourContainer = document.getElementById('picker-hour');
     const minContainer = document.getElementById('picker-minute');
     if(!hourContainer || !minContainer) return;
 
-    const itemHeight = 44; // 강조 박스 높이와 동일하게 맞춤
-    const paddingHeight = 53; // 위아래 여백을 줘서 첫 숫자와 끝 숫자가 가운데 올 수 있게 함
+    const itemHeight = 44; 
+    const paddingHeight = 53; 
+    
+    // ✨ 무한 휠 트릭: 숫자를 5세트 만들어두고 유저는 항상 3번째 세트(가운데)에서 시작!
+    const REPEAT_COUNT = 5; 
+    const CENTER_INDEX = 2; 
 
-    // 숫자 리스트 찍어내기
-    const generateItems = (max) => {
+    // 숫자 리스트 무한으로 찍어내기
+    const generateInfiniteItems = (max) => {
         let html = `<div style="height:${paddingHeight}px; flex-shrink:0;"></div>`;
-        for(let i=0; i<=max; i++) {
-            let val = String(i).padStart(2, '0');
-            html += `<div class="picker-item" style="height:${itemHeight}px; line-height:${itemHeight}px; font-size:20px; font-weight:700; color:#B0B8C1; scroll-snap-align:center; flex-shrink:0; transition:all 0.2s;">${val}</div>`;
+        for(let loop = 0; loop < REPEAT_COUNT; loop++) {
+            for(let i=0; i<=max; i++) {
+                let val = String(i).padStart(2, '0');
+                html += `<div class="picker-item" style="height:${itemHeight}px; line-height:${itemHeight}px; font-size:20px; font-weight:700; color:#B0B8C1; scroll-snap-align:center; flex-shrink:0; transition:all 0.2s;">${val}</div>`;
+            }
         }
         html += `<div style="height:${paddingHeight}px; flex-shrink:0;"></div>`;
         return html;
     };
 
-    hourContainer.innerHTML = generateItems(23);
-    minContainer.innerHTML = generateItems(59);
+    hourContainer.innerHTML = generateInfiniteItems(23);
+    minContainer.innerHTML = generateInfiniteItems(59);
 
     // 스크롤이 멈췄을 때 실행되는 함수
     const updateHiddenInput = () => {
-        let hIdx = Math.round(hourContainer.scrollTop / itemHeight);
-        let mIdx = Math.round(minContainer.scrollTop / itemHeight);
+        let hRawIdx = Math.round(hourContainer.scrollTop / itemHeight);
+        let mRawIdx = Math.round(minContainer.scrollTop / itemHeight);
         
-        if(hIdx < 0) hIdx = 0; if(hIdx > 23) hIdx = 23;
-        if(mIdx < 0) mIdx = 0; if(mIdx > 59) mIdx = 59;
+        // 🚨 무한 루프 마법: 너무 위나 아래로 스크롤하면, 유저 몰래 다시 한가운데 세트로 원상복구!
+        if (hRawIdx < 24 || hRawIdx >= 24 * 4) {
+            hourContainer.style.scrollBehavior = 'auto'; // 애니메이션 끄기
+            hRawIdx = (hRawIdx % 24) + (24 * CENTER_INDEX);
+            hourContainer.scrollTop = hRawIdx * itemHeight;
+            setTimeout(() => hourContainer.style.scrollBehavior = 'smooth', 10);
+        }
+        if (mRawIdx < 60 || mRawIdx >= 60 * 4) {
+            minContainer.style.scrollBehavior = 'auto';
+            mRawIdx = (mRawIdx % 60) + (60 * CENTER_INDEX);
+            minContainer.scrollTop = mRawIdx * itemHeight;
+            setTimeout(() => minContainer.style.scrollBehavior = 'smooth', 10);
+        }
+
+        // 실제 추출할 값 (0~23, 0~59)
+        let hVal = hRawIdx % 24;
+        let mVal = mRawIdx % 60;
 
         // 선택된 숫자만 크고 파란색으로 뽝! 강조
         hourContainer.querySelectorAll('.picker-item').forEach((el, i) => { 
-            el.style.color = i === hIdx ? '#3182F6' : '#B0B8C1'; 
-            el.style.fontWeight = i === hIdx ? '900' : '700'; 
-            el.style.fontSize = i === hIdx ? '26px' : '20px'; 
+            el.style.color = i === hRawIdx ? '#3182F6' : '#B0B8C1'; 
+            el.style.fontWeight = i === hRawIdx ? '900' : '700'; 
+            el.style.fontSize = i === hRawIdx ? '26px' : '20px'; 
         });
         minContainer.querySelectorAll('.picker-item').forEach((el, i) => { 
-            el.style.color = i === mIdx ? '#3182F6' : '#B0B8C1'; 
-            el.style.fontWeight = i === mIdx ? '900' : '700'; 
-            el.style.fontSize = i === mIdx ? '26px' : '20px'; 
+            el.style.color = i === mRawIdx ? '#3182F6' : '#B0B8C1'; 
+            el.style.fontWeight = i === mRawIdx ? '900' : '700'; 
+            el.style.fontSize = i === mRawIdx ? '26px' : '20px'; 
         });
 
-        let hh = String(hIdx).padStart(2, '0');
-        let mm = String(mIdx).padStart(2, '0');
+        let hh = String(hVal).padStart(2, '0');
+        let mm = String(mVal).padStart(2, '0');
 
         // 기존 시스템이 읽어가는 숨겨진 input 업데이트
         const hiddenEl = document.getElementById('v-tracker-time');
@@ -6910,16 +7003,1022 @@ window.initDrumPicker = function(timeStr) {
     hourContainer.addEventListener('scroll', onScroll);
     minContainer.addEventListener('scroll', onScroll);
 
-    // 창이 처음 열렸을 때 현재 시간으로 스크롤 딱! 맞춰놓기
+    // 창이 처음 열렸을 때 현재 시간으로 스크롤 딱! 맞춰놓기 (한가운데 세트로 점프)
     const [initH, initM] = timeStr.split(':').map(Number);
     setTimeout(() => {
-        hourContainer.style.scrollBehavior = 'auto'; // 처음엔 애니메이션 없이 팍 이동
+        hourContainer.style.scrollBehavior = 'auto'; 
         minContainer.style.scrollBehavior = 'auto';
-        hourContainer.scrollTop = initH * itemHeight;
-        minContainer.scrollTop = initM * itemHeight;
+        
+        hourContainer.scrollTop = (initH + (24 * CENTER_INDEX)) * itemHeight;
+        minContainer.scrollTop = (initM + (60 * CENTER_INDEX)) * itemHeight;
+        
         updateHiddenInput();
+        
         // 이동 후에는 부드럽게 굴러가도록 원상복구
         setTimeout(() => { hourContainer.style.scrollBehavior = 'smooth'; minContainer.style.scrollBehavior = 'smooth'; }, 50);
     }, 10);
 };
 
+// ==========================================
+// 📊 [UX 패치] 직전 기록과 비교해서 증감폭 알려주는 멘트 생성기
+// ==========================================
+function getGrowthDeltaMessage(records) {
+    if (!records || records.length < 2) return "✨ 첫 계측 완료! 앞으로의 폭풍 성장이 기대돼요 🌱";
+    const latest = records[0]; 
+    const prev = records[1];   
+    let messages = [];
+
+    if (latest.height && prev.height) {
+        const diffH = (latest.height - prev.height).toFixed(1);
+        if (diffH > 0) messages.push(`키 <span style="color:#3182F6;">+${diffH}cm</span> 쑥쑥🦒`);
+        else if (diffH < 0) messages.push(`키 <span style="color:#8B95A1;">${diffH}cm</span>`);
+    }
+
+    if (latest.weight && prev.weight) {
+        const diffW = (latest.weight - prev.weight).toFixed(2);
+        if (diffW > 0) messages.push(`몸무게 <span style="color:#00B37A;">+${diffW}kg</span> 튼튼🐻`);
+        else if (diffW < 0) messages.push(`몸무게 <span style="color:#8B95A1;">${diffW}kg</span>`);
+    }
+
+    if (messages.length === 0) return "✨ 오늘 계측 완료! 폭풍 성장 중 🌿";
+    return `✨ 지난번보다 <strong>${messages.join(', ')}</strong>`;
+}
+
+// ==========================================
+// 📝 글쓰기 모달 열기/닫기 기능
+// ==========================================
+window.openWriteModal = function() {
+    document.getElementById('writeOverlay').classList.add('show');
+    document.getElementById('writeModal').classList.add('show');
+    document.body.style.overflow = 'hidden'; 
+};
+
+window.closeWriteModal = function() {
+    document.getElementById('writeOverlay').classList.remove('show');
+    document.getElementById('writeModal').classList.remove('show');
+    document.body.style.overflow = 'auto'; 
+
+    setTimeout(() => {
+        if(document.getElementById('writeTitle')) document.getElementById('writeTitle').value = '';
+        if(document.getElementById('writeContent')) document.getElementById('writeContent').value = '';
+        if(document.getElementById('writeCategory')) document.getElementById('writeCategory').value = '';
+        if(document.getElementById('writeAnonymous')) document.getElementById('writeAnonymous').checked = false;
+        
+        window.attachedImages = []; 
+        if(typeof window.renderPreviewImages === 'function') window.renderPreviewImages();
+    }, 300);
+};
+
+window.showComingSoon = function(feature) {
+    if (navigator.vibrate) navigator.vibrate([10, 30, 10]); // 경쾌한 진동
+    window.showToast(`🚀 <b>${feature}</b> 기능은 열심히 준비 중이에요!<br>조금만 기다려주세요 🤍`);
+};
+
+// ==========================================
+// 🍞 무적의 토스트 알람 마스터 (CSS 씹힘 100% 차단)
+// ==========================================
+window.showToast = function(message) {
+    const oldToast = document.getElementById('super-toast-msg');
+    if (oldToast) oldToast.remove();
+
+    const toast = document.createElement('div');
+    toast.id = 'super-toast-msg';
+    toast.innerHTML = message;
+    
+    toast.style.cssText = `
+        position: fixed;
+        bottom: -50px; 
+        left: 50%;
+        transform: translateX(-50%);
+        background: rgba(49, 51, 63, 0.95);
+        color: #ffffff;
+        padding: 14px 24px;
+        border-radius: 30px;
+        font-size: 14px;
+        font-weight: 800;
+        box-shadow: 0 8px 24px rgba(0,0,0,0.2);
+        z-index: 9999999;
+        opacity: 0;
+        transition: opacity 0.3s ease, bottom 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        white-space: nowrap;
+        pointer-events: none;
+    `;
+    document.body.appendChild(toast);
+
+    setTimeout(() => {
+        toast.style.opacity = '1';
+        toast.style.bottom = '100px'; 
+    }, 10);
+
+    setTimeout(() => {
+        toast.style.opacity = '0';
+        toast.style.bottom = '-50px';
+        setTimeout(() => { toast.remove(); }, 300);
+    }, 2500);
+};
+
+// ==========================================
+// 📸 맘수다 갤러리 (사진 첨부 및 미리보기) 압축 엔진 
+// ==========================================
+window.attachedImages = []; 
+
+window.triggerImageUpload = function() {
+    let fileInput = document.getElementById('commImageInput');
+    if (!fileInput) {
+        fileInput = document.createElement('input');
+        fileInput.type = 'file';
+        fileInput.id = 'commImageInput';
+        fileInput.accept = 'image/*';
+        fileInput.multiple = true; 
+        fileInput.style.display = 'none';
+        fileInput.onchange = window.handleImageSelection;
+        document.body.appendChild(fileInput);
+    }
+    fileInput.click();
+};
+
+window.handleImageSelection = function(event) {
+    const files = event.target.files;
+    if (files.length === 0) return;
+    
+    if (window.attachedImages.length + files.length > 5) {
+        return window.showToast('⚠️ 사진은 최대 5장까지만 첨부할 수 있어요!');
+    }
+
+    Array.from(files).forEach(file => {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            const img = new Image();
+            img.onload = function() {
+                const canvas = document.createElement('canvas');
+                const maxSize = 800; 
+                let width = img.width;
+                let height = img.height;
+
+                if (width > height) {
+                    if (width > maxSize) { height *= maxSize / width; width = maxSize; }
+                } else {
+                    if (height > maxSize) { width *= maxSize / height; height = maxSize; }
+                }
+
+                canvas.width = width;
+                canvas.height = height;
+                const ctx = canvas.getContext('2d');
+                ctx.drawImage(img, 0, 0, width, height);
+
+                const dataUrl = canvas.toDataURL('image/jpeg', 0.7);
+                window.attachedImages.push(dataUrl); 
+                window.renderPreviewImages(); 
+            };
+            img.src = e.target.result;
+        };
+        reader.readAsDataURL(file);
+    });
+    event.target.value = ''; 
+};
+
+window.renderPreviewImages = function() {
+    let previewArea = document.getElementById('commPreviewArea');
+    if (!previewArea) {
+        const textarea = document.getElementById('writeContent');
+        if(!textarea) return;
+        previewArea = document.createElement('div');
+        previewArea.id = 'commPreviewArea';
+        previewArea.style.display = 'flex';
+        previewArea.style.gap = '10px';
+        previewArea.style.padding = '0 20px 20px';
+        previewArea.style.overflowX = 'auto';
+        textarea.parentNode.appendChild(previewArea);
+    }
+
+    if (window.attachedImages.length === 0) {
+        previewArea.style.display = 'none';
+        return;
+    }
+
+    previewArea.style.display = 'flex';
+    let html = '';
+    window.attachedImages.forEach((imgSrc, index) => {
+        html += `
+            <div style="position:relative; width: 70px; height: 70px; border-radius: 12px; overflow: hidden; flex-shrink: 0; border: 1px solid #E5E8EB;">
+                <img src="${imgSrc}" style="width: 100%; height: 100%; object-fit: cover;">
+                <button onclick="window.removeAttachedImage(${index})" style="position: absolute; top: 4px; right: 4px; background: rgba(0,0,0,0.6); color: white; border: none; border-radius: 50%; width: 20px; height: 20px; font-size: 10px; cursor: pointer;">✕</button>
+            </div>
+        `;
+    });
+    previewArea.innerHTML = html;
+};
+
+window.removeAttachedImage = function(index) {
+    window.attachedImages.splice(index, 1);
+    window.renderPreviewImages();
+};
+
+// ==========================================
+// 🚀 맘수다 글쓰기 & 커뮤니티 마스터 엔진 
+// ==========================================
+window.currentCommCategory = 'all'; 
+window.currentCommSort = 'latest'; 
+
+window.switchCommTab = function(btn, categoryId) {
+    document.querySelectorAll('.category-chip').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    if (navigator.vibrate) navigator.vibrate(10);
+    window.currentCommCategory = categoryId;
+    window.renderCommunityFeed(); 
+};
+
+window.setCommSort = function(sortType) {
+    window.currentCommSort = sortType;
+    if (navigator.vibrate) navigator.vibrate(10);
+    window.renderCommunityFeed();
+};
+
+window.submitPost = function() { 
+    const catEl = document.getElementById('writeCategory');
+    const titleEl = document.getElementById('writeTitle');
+    const contentEl = document.getElementById('writeContent');
+    const anonEl = document.getElementById('writeAnonymous');
+
+    if (!catEl || !titleEl || !contentEl) {
+        alert('글쓰기 화면을 찾을 수 없습니다. 새로고침 후 다시 시도해주세요.');
+        return;
+    }
+
+    const category = catEl.value;
+    const title = titleEl.value;
+    const content = contentEl.value;
+    const isAnonymous = anonEl ? anonEl.checked : false;
+
+    if (!category) { return window.showToast('⚠️ 게시판 카테고리를 선택해주세요!'); }
+    if (!title.trim()) { return window.showToast('⚠️ 게시글 제목을 입력해주세요!'); }
+    if (!content.trim()) { return window.showToast('⚠️ 내용을 입력해주세요!'); }
+
+    const authorName = isAnonymous ? '익명마미' : (localStorage.getItem('community_nickname') || localStorage.getItem('kakao_nickname') || '육아메이트');
+    const authorIcon = isAnonymous ? '👻' : '👑';
+    const timestamp = new Date().getTime();
+
+    const newPost = {
+        id: 'post_' + timestamp,
+        category: category,
+        title: title,
+        content: content,
+        images: window.attachedImages ? [...window.attachedImages] : [], 
+        authorName: authorName,
+        authorIcon: authorIcon,
+        region: '동탄동',
+        timestamp: timestamp,
+        likes: 0,
+        comments: 0
+    };
+
+    let posts = JSON.parse(localStorage.getItem('tosil_community_posts')) || [];
+    posts.unshift(newPost);
+    
+    try {
+        localStorage.setItem('tosil_community_posts', JSON.stringify(posts));
+    } catch (e) {
+        console.error(e);
+        return window.showToast('⚠️ 용량이 꽉 찼습니다! 기기의 캐시를 비우거나 사진 갯수를 줄여주세요.');
+    }
+
+    catEl.value = ''; titleEl.value = ''; contentEl.value = '';
+    if(anonEl) anonEl.checked = false;
+    
+    window.attachedImages = []; 
+    window.renderPreviewImages();
+
+    window.closeWriteModal();
+    window.showToast('🎉 게시글이 성공적으로 등록되었습니다!');
+    window.renderCommunityFeed(); 
+
+    if (typeof window.db !== 'undefined' && typeof window.setDoc === 'function') {
+        window.setDoc(window.doc(window.db, "community", "posts"), { records: posts }).catch(e=>{});
+    }
+};
+
+window.renderCommunityFeed = function() {
+    const container = document.getElementById('community-feed');
+    if(!container) return;
+
+    let posts = JSON.parse(localStorage.getItem('tosil_community_posts')) || [];
+
+    if (window.currentCommCategory !== 'all') {
+        posts = posts.filter(p => p.category === window.currentCommCategory);
+    }
+
+    if (window.currentCommSort === 'popular') {
+        posts.sort((a, b) => (b.likes || 0) - (a.likes || 0) || b.timestamp - a.timestamp);
+    } else {
+        posts.sort((a, b) => b.timestamp - a.timestamp);
+    }
+
+    let html = `
+        <div style="background: linear-gradient(135deg, #F3F8FF 0%, #E0EDFF 100%); border: 1px solid #B1D6FF; border-radius: 16px; padding: 18px; margin-bottom: 20px; display: flex; align-items: flex-start; gap: 14px; box-shadow: 0 4px 12px rgba(49, 130, 246, 0.05);">
+            <div style="font-size: 26px; animation: bounce 2s infinite;">📢</div>
+            <div>
+                <div style="font-size: 14px; font-weight: 900; color: #1C64F2; margin-bottom: 6px;">맘수다 커뮤니티 오픈 준비 중!</div>
+                <div style="font-size: 12.5px; font-weight: 600; color: #3F83F8; line-height: 1.5; word-break: keep-all;">현재 서버 증설 및 안정화 작업 중입니다. 정식 출시 전까지 작성된 글은 내 스마트폰에서만 보이며, 업데이트 시 초기화될 수 있습니다.</div>
+            </div>
+        </div>
+        
+        <div style="display: flex; justify-content: flex-end; margin-bottom: 16px; padding: 0 4px;">
+            <div style="display: inline-flex; background: var(--bg-card); padding: 4px; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.03); border: 1px solid var(--border);">
+                <button onclick="window.setCommSort('latest')" style="padding: 6px 12px; border: none; border-radius: 8px; font-size: 12px; font-weight: 800; cursor: pointer; transition: 0.2s; background: ${window.currentCommSort === 'latest' ? '#F2F5F8' : 'transparent'}; color: ${window.currentCommSort === 'latest' ? '#191F28' : '#8B95A1'};">⏳ 최신순</button>
+                <button onclick="window.setCommSort('popular')" style="padding: 6px 12px; border: none; border-radius: 8px; font-size: 12px; font-weight: 800; cursor: pointer; transition: 0.2s; background: ${window.currentCommSort === 'popular' ? '#FFF0F1' : 'transparent'}; color: ${window.currentCommSort === 'popular' ? '#F04452' : '#8B95A1'};">🔥 인기순</button>
+            </div>
+        </div>
+    `;
+
+    if (window.currentCommCategory === 'all' || window.currentCommCategory === 'talk') {
+        html += `
+        <div class="feed-card" style="background: #FFFFFF; border-radius: 24px; padding: 20px; margin-bottom: 20px; box-shadow: 0 6px 20px rgba(0,0,0,0.04); border: 2px solid #F2F5F8;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px;">
+                <span style="font-size: 11px; font-weight: 900; padding: 6px 12px; border-radius: 10px; color: #FFFFFF; background: #3182F6;">📢 운영자 공지</span>
+                <span style="font-size: 12px; color: #3182F6; font-weight: 800;">📌 고정됨</span>
+            </div>
+            <div style="font-size: 18px; font-weight: 900; color: var(--text-title); margin-bottom: 10px; letter-spacing: -0.5px; line-height: 1.4; word-break: keep-all;">
+                안녕하세요! 맘수다 게시판은 현재 정식 오픈 준비 중입니다 🚀
+            </div>
+            <div style="font-size: 14.5px; color: var(--text-body); line-height: 1.5; margin-bottom: 18px; word-break: keep-all; opacity: 0.9;">
+                엄빠님들과 따뜻한 소통을 나눌 수 있는 '맘수다' 커뮤니티가 곧 정식으로 찾아옵니다!<br><br>
+                유저분들의 트래픽을 감당할 수 있는 쾌적하고 안전한 서버 환경을 만들기 위해 열심히 구축하고 있어요. 조금만 기다려 주시면 더 유용한 기능들과 함께 짠! 하고 오픈하겠습니다 🤍<br><br>
+                <span style="color:#8B95A1; font-size:12.5px;">* 현재 글쓰기 및 댓글 기능은 테스트용으로 내 기기에서만 정상 작동합니다.</span>
+            </div>
+            <div style="display: flex; justify-content: space-between; align-items: center; border-top: 1px solid #F2F5F8; padding-top: 16px;">
+                <div style="display: flex; align-items: center; gap: 8px;">
+                    <div style="width: 28px; height: 28px; background: #FFF4E6; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 14px; border: 1px solid #FFE8CC;">👑</div>
+                    <span style="font-size: 13px; font-weight: 900; color: #191F28;">육아메이트 </span>
+                    <span style="font-size: 11px; font-weight: 800; color: #3182F6;"> 하윤맘</span>
+                </div>
+                <div style="display: flex; gap: 14px; font-size: 13px; font-weight: 800; color: var(--text-sub);">
+                    <div style="display: flex; align-items: center; gap: 4px; padding: 4px 10px; background: #FFF0F1; border-radius: 12px; border: 1px solid #FFE5E8;">
+                        <span style="color: #FF5A5F; font-size: 14px;">❤️</span> <span style="color: #F04452;">999+</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        `;
+    }
+
+    if (posts.length === 0) {
+        html += `
+            <div style="text-align:center; padding:40px 20px; background:transparent;">
+                <div style="font-size:32px; margin-bottom:12px; opacity:0.5;">💨</div>
+                <div style="font-size:14.5px; font-weight:800; color:var(--text-sub); margin-bottom:6px;">아직 등록된 유저 게시글이 없어요!</div>
+                <div style="font-size:13px; font-weight:600; color:var(--text-s);">베타 테스트로 자유롭게 글을 작성해 보세요 ✍️</div>
+            </div>`;
+        container.innerHTML = html;
+        return;
+    }
+
+    posts.forEach(post => {
+        let categoryName = ''; let categoryStyle = '';
+        if (post.category === 'qna') { categoryName = '💡 육아질문'; categoryStyle = 'color: #3182F6; background: #EBF4FF;'; }
+        else if (post.category === 'talk') { categoryName = '☕ 일상수다'; categoryStyle = 'color: #8B5CF6; background: #F3E8FF;'; }
+        else if (post.category === 'market') { categoryName = '🥕 나눔/중고'; categoryStyle = 'color: #00B37A; background: #E6F7F2;'; }
+        else if (post.category === 'hotdeal') { categoryName = '🛒 핫딜정보'; categoryStyle = 'color: #FF8A00; background: #FFF4E6;'; }
+
+        const diffMins = Math.floor((new Date().getTime() - post.timestamp) / 60000);
+        let timeStr = '방금 전';
+        if (diffMins >= 1440) timeStr = `${Math.floor(diffMins/1440)}일 전`;
+        else if (diffMins >= 60) timeStr = `${Math.floor(diffMins/60)}시간 전`;
+        else if (diffMins > 0) timeStr = `${diffMins}분 전`;
+
+        let imageHtml = '';
+        if (post.images && post.images.length > 0) {
+            let swipeItems = post.images.map(img => `<div class="swipe-item" style="width: 100%; flex-shrink: 0; scroll-snap-align: start;"><img src="${img}" style="width: 100%; height: 260px; object-fit: cover; border-radius: 16px; border: 1px solid rgba(0,0,0,0.03);"></div>`).join('');
+            imageHtml = `<div class="image-swipe-wrapper" onclick="event.stopPropagation()" style="display: flex; overflow-x: auto; scroll-snap-type: x mandatory; gap: 8px; margin-bottom: 16px; border-radius: 16px; scrollbar-width: none;">${swipeItems}</div>`;
+        }
+
+        html += `
+        <div class="feed-card" onclick="window.openPostDetail('${post.id}')" style="cursor: pointer; animation: slideDownFade 0.4s ease forwards; background: var(--bg-card); border-radius: 24px; padding: 20px; margin-bottom: 20px; box-shadow: 0 6px 20px rgba(0,0,0,0.04); border: 1px solid rgba(0,0,0,0.02);">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px;">
+                <span style="font-size: 11px; font-weight: 900; padding: 6px 12px; border-radius: 10px; ${categoryStyle}">${categoryName}</span>
+                <span style="font-size: 12px; color: var(--text-s); font-weight: 700;">${timeStr}</span>
+            </div>
+            <div style="font-size: 18px; font-weight: 900; color: var(--text-title); margin-bottom: 8px; letter-spacing: -0.5px; line-height: 1.4; word-break: keep-all;">
+                ${post.title}
+            </div>
+            <div style="font-size: 14.5px; color: var(--text-body); line-height: 1.5; margin-bottom: 18px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; word-break: keep-all; opacity: 0.9;">
+                ${post.content.replace(/\n/g, '<br>')}
+            </div>
+            ${imageHtml}
+            <div style="display: flex; justify-content: space-between; align-items: center; border-top: 1px solid #F2F5F8; padding-top: 16px;">
+                <div style="display: flex; align-items: center; gap: 8px;">
+                    <div style="width: 28px; height: 28px; background: #F2F4F6; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 14px;">${post.authorIcon}</div>
+                    <span style="font-size: 13px; font-weight: 800; color: var(--text-m);">${post.authorName}</span>
+                    <span style="font-size: 11px; font-weight: 600; color: var(--text-s);">· ${post.region}</span>
+                </div>
+                <div style="display: flex; gap: 14px; font-size: 13px; font-weight: 800; color: var(--text-sub);">
+                    <div class="like-btn" onclick="window.toggleRealLike('${post.id}', this, event)" style="display: flex; align-items: center; gap: 4px; cursor: pointer; padding: 4px 8px; background: #F8F9FA; border-radius: 12px;">
+                        <span class="heart-icon" style="color: ${post.liked ? '#FF5A5F' : '#CBD5E1'}; font-size: 14px; transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);">${post.liked ? '❤️' : '🤍'}</span>
+                        <span class="like-count" style="color: ${post.liked ? '#FF5A5F' : '#8B95A1'};">${post.likes || 0}</span>
+                    </div>
+                    <div style="display: flex; align-items: center; gap: 4px; padding: 4px 8px; background: #F8F9FA; border-radius: 12px;">
+                        <span style="color: var(--brand-primary); font-size: 14px;">💬</span> 
+                        <span style="color: var(--text-s);">${post.comments || 0}</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        `;
+    });
+    container.innerHTML = html;
+};
+
+// ==========================================
+// 📄 상세 페이지 및 댓글 기능
+// ==========================================
+window.currentActivePostId = null; 
+
+window.openPostDetail = function(postId) {
+    window.currentActivePostId = postId; 
+    const detailPage = document.getElementById('postDetailPage');
+    if(!detailPage) return;
+    
+    const posts = JSON.parse(localStorage.getItem('tosil_community_posts')) || [];
+    const post = posts.find(p => p.id === postId);
+    if (!post) return window.showToast('⚠️ 삭제되었거나 찾을 수 없는 게시글입니다.');
+
+    const headerTitle = document.getElementById('detail-header-title');
+    if (headerTitle) {
+        let catName = '☕ 일상수다';
+        if (post.category === 'qna') catName = '💡 육아질문';
+        else if (post.category === 'market') catName = '🥕 나눔/중고';
+        else if (post.category === 'hotdeal') catName = '🛒 핫딜정보';
+        headerTitle.innerText = catName;
+    }
+
+    const diffMins = Math.floor((new Date().getTime() - post.timestamp) / 60000);
+    let timeStr = '방금 전';
+    if (diffMins >= 1440) timeStr = `${Math.floor(diffMins/1440)}일 전`;
+    else if (diffMins >= 60) timeStr = `${Math.floor(diffMins/60)}시간 전`;
+    else if (diffMins > 0) timeStr = `${diffMins}분 전`;
+
+    let imageHtml = '';
+    if (post.images && post.images.length > 0) {
+        let swipeItems = post.images.map(img => `<div class="swipe-item" style="width: 100%; flex-shrink: 0; scroll-snap-align: start;"><img src="${img}" style="width: 100%; height: 300px; object-fit: cover; border-radius: 12px; border: 1px solid rgba(0,0,0,0.05);"></div>`).join('');
+        imageHtml = `<div class="image-swipe-wrapper" style="display: flex; overflow-x: auto; scroll-snap-type: x mandatory; gap: 8px; margin-bottom: 24px; border-radius: 12px; scrollbar-width: none;">${swipeItems}</div>`;
+    }
+
+    const postContentArea = detailPage.querySelector('div[style*="padding: 24px 20px"]');
+    if(postContentArea) {
+        postContentArea.innerHTML = `
+            <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 20px;">
+                <div style="width: 40px; height: 40px; background: #FFF4E6; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 20px;">${post.authorIcon}</div>
+                <div>
+                    <div style="font-size: 15px; font-weight: 800; color: var(--text-title);">${post.authorName}</div>
+                    <div style="font-size: 13px; color: var(--text-sub);">${post.region} · ${timeStr}</div>
+                </div>
+            </div>
+            
+            <h2 style="font-size: 22px; font-weight: 800; color: var(--text-title); margin: 0 0 16px 0; line-height: 1.4;">${post.title}</h2>
+            <p style="font-size: 16px; color: var(--text-body); line-height: 1.6; margin: 0 0 24px 0; word-break: keep-all;">
+                ${post.content.replace(/\n/g, '<br>')}
+            </p>
+            ${imageHtml}
+            
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                <div class="like-btn" onclick="window.toggleRealLike('${post.id}', this, event)" style="display: flex; align-items: center; gap: 4px; cursor: pointer; font-size: 14px; font-weight: 700; color: var(--text-sub);">
+                    <span class="heart-icon" style="color: ${post.liked ? '#FF5A5F' : '#CBD5E1'}; font-size: 18px; transition: 0.2s;">${post.liked ? '❤️' : '🤍'}</span> 
+                    <span class="like-count">${post.likes || 0}</span>명 공감
+                </div>
+                <div onclick="window.toggleScrap('${post.id}', this, event)" style="font-size: 13px; font-weight: 800; cursor: pointer; padding: 6px 12px; border-radius: 8px; transition: 0.2s; color: ${post.isScrapped ? 'var(--brand-primary)' : 'var(--text-sub)'}; background: ${post.isScrapped ? 'var(--brand-light)' : 'var(--bg-main)'};">
+                    ${post.isScrapped ? '📌 스크랩 됨' : '🔖 스크랩'}
+                </div>
+            </div>
+            
+            <div style="display: flex; justify-content: space-between; align-items: center; padding: 16px 0 8px 0; border-top: 1px solid var(--border);">
+                <span style="font-size: 15px; font-weight: 800; color: var(--text-title);">댓글 <span id="detail-comment-count" style="color: var(--brand-primary);">${post.comments || 0}</span></span>
+                <div style="display: flex; gap: 12px; font-size: 13px; font-weight: 800; color: var(--text-sub);">
+                    <span id="sort-latest" style="color: var(--text-title); cursor: pointer;" onclick="window.sortComments('${post.id}', 'latest')">최신순</span>
+                    <span id="sort-popular" style="cursor: pointer;" onclick="window.sortComments('${post.id}', 'popular')">인기순</span>
+                </div>
+            </div>
+        `;
+    }
+
+    if(typeof window.renderComments === 'function') {
+        window.renderComments(post.id, 'latest'); 
+    }
+    
+    const commentInput = document.getElementById('newCommentInput');
+    if(commentInput) commentInput.setAttribute('data-post-id', post.id);
+
+    detailPage.classList.add('active'); 
+    if (navigator.vibrate) navigator.vibrate(20);
+};
+
+window.sortComments = function(postId, sortType) {
+    const latestBtn = document.getElementById('sort-latest');
+    const popularBtn = document.getElementById('sort-popular');
+    if(sortType === 'latest') {
+        latestBtn.style.color = 'var(--text-title)';
+        popularBtn.style.color = 'var(--text-sub)';
+    } else {
+        latestBtn.style.color = 'var(--text-sub)';
+        popularBtn.style.color = 'var(--text-title)';
+    }
+    if(typeof window.renderComments === 'function') {
+        window.renderComments(postId, sortType);
+    }
+};
+
+window.closePostDetail = function() {
+    const detailPage = document.getElementById('postDetailPage');
+    if(detailPage) detailPage.classList.remove('active'); 
+    const commentInput = document.getElementById('newCommentInput');
+    if(commentInput) commentInput.value = '';
+};
+
+window.toggleRealLike = function(postId, btnEl, event) {
+    if(event) event.stopPropagation();
+    let posts = JSON.parse(localStorage.getItem('tosil_community_posts')) || [];
+    let post = posts.find(p => p.id === postId);
+    if(!post) return;
+
+    post.liked = !post.liked;
+    post.likes = post.liked ? (post.likes || 0) + 1 : Math.max(0, (post.likes || 0) - 1);
+    localStorage.setItem('tosil_community_posts', JSON.stringify(posts));
+
+    const heartIcon = btnEl.querySelector('.heart-icon');
+    const countEl = btnEl.querySelector('.like-count');
+    if(heartIcon && countEl) {
+        heartIcon.innerText = post.liked ? '❤️' : '🤍';
+        heartIcon.style.color = post.liked ? '#FF5A5F' : '#CBD5E1';
+        countEl.innerText = post.likes;
+    }
+};
+
+window.toggleScrap = function(postId, btnEl, event) {
+    if(event) event.stopPropagation();
+    let posts = JSON.parse(localStorage.getItem('tosil_community_posts')) || [];
+    let post = posts.find(p => p.id === postId);
+    if(!post) return;
+
+    post.isScrapped = !post.isScrapped;
+    localStorage.setItem('tosil_community_posts', JSON.stringify(posts));
+
+    if(btnEl) {
+        btnEl.innerHTML = post.isScrapped ? '📌 스크랩 됨' : '🔖 스크랩';
+        btnEl.style.color = post.isScrapped ? 'var(--brand-primary)' : 'var(--text-sub)';
+        btnEl.style.background = post.isScrapped ? 'var(--brand-light)' : 'var(--bg-main)';
+    }
+    window.showToast(post.isScrapped ? '📌 내 스크랩에 저장되었어요!' : '🔖 스크랩이 해제되었습니다.');
+};
+
+window.addComment = function() { 
+    const inputField = document.getElementById('newCommentInput');
+    if(!inputField) return;
+
+    const commentText = inputField.value.trim();
+    const postId = inputField.getAttribute('data-post-id'); 
+
+    if (!commentText) {
+        window.showToast('⚠️ 댓글 내용을 입력해주세요!');
+        inputField.focus();
+        return;
+    }
+
+    const myName = localStorage.getItem('community_nickname') || localStorage.getItem('kakao_nickname') || '육아메이트';
+    const myIcon = '👑'; 
+
+    const newComment = {
+        id: 'cmt_' + new Date().getTime(),
+        postId: postId,
+        text: commentText,
+        authorName: myName,
+        authorIcon: myIcon,
+        timestamp: new Date().getTime(),
+        likes: 0, 
+        liked: false
+    };
+
+    let comments = JSON.parse(localStorage.getItem('tosil_community_comments')) || [];
+    comments.push(newComment);
+    localStorage.setItem('tosil_community_comments', JSON.stringify(comments));
+
+    let posts = JSON.parse(localStorage.getItem('tosil_community_posts')) || [];
+    let postIdx = posts.findIndex(p => p.id === postId);
+    if(postIdx > -1) {
+        posts[postIdx].comments = (posts[postIdx].comments || 0) + 1;
+        posts[postIdx].hasMyComment = true; 
+        localStorage.setItem('tosil_community_posts', JSON.stringify(posts));
+        const commentCountEl = document.getElementById('detail-comment-count');
+        if(commentCountEl) commentCountEl.innerText = posts[postIdx].comments;
+    }
+
+    inputField.value = '';
+    if (navigator.vibrate) navigator.vibrate(20);
+
+    window.renderComments(postId);
+    window.showToast('💖 따뜻한 댓글이 등록되었습니다!');
+
+    if (typeof window.db !== 'undefined' && typeof window.setDoc === 'function') {
+        window.setDoc(window.doc(window.db, "community", "comments"), { records: comments }).catch(e=>{});
+        window.setDoc(window.doc(window.db, "community", "posts"), { records: posts }).catch(e=>{}); 
+    }
+};
+
+window.renderComments = function(postId) {
+    const listContainer = document.getElementById('commentList');
+    if(!listContainer) return;
+
+    let allComments = JSON.parse(localStorage.getItem('tosil_community_comments')) || [];
+    let postComments = allComments.filter(c => c.postId === postId); 
+
+    if (postComments.length === 0) {
+        listContainer.innerHTML = `<div style="text-align:center; padding: 40px 0; color: #8B95A1; font-size: 13px; font-weight: 700;">첫 번째 댓글을 남겨주세요! ✨</div>`;
+        return;
+    }
+
+    postComments.sort((a, b) => {
+        if ((b.likes || 0) !== (a.likes || 0)) return (b.likes || 0) - (a.likes || 0);
+        return a.timestamp - b.timestamp;
+    });
+
+    let html = '';
+    postComments.forEach(c => {
+        const diffMins = Math.floor((new Date().getTime() - c.timestamp) / 60000);
+        let timeStr = '방금 전';
+        if (diffMins >= 1440) timeStr = `${Math.floor(diffMins/1440)}일 전`;
+        else if (diffMins >= 60) timeStr = `${Math.floor(diffMins/60)}시간 전`;
+        else if (diffMins > 0) timeStr = `${diffMins}분 전`;
+
+        let likeColor = c.liked ? '#FF5A5F' : '#CBD5E1';
+        let likeTextColor = c.liked ? '#FF5A5F' : '#8B95A1';
+        let likeIcon = c.liked ? '❤️' : '🤍';
+
+        html += `
+            <div style="padding: 16px 0; border-bottom: 1px solid #F2F4F6; animation: slideDownFade 0.3s ease forwards; display: flex; justify-content: space-between; align-items: flex-start;">
+                <div style="display: flex; gap: 10px; flex: 1;">
+                    <div style="width: 32px; height: 32px; background: #FFF4E6; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 15px; flex-shrink: 0;">${c.authorIcon}</div>
+                    <div style="flex: 1; padding-top: 2px;">
+                        <div style="display: flex; align-items: center; gap: 6px; margin-bottom: 4px;">
+                            <span style="font-size: 14px; font-weight: 800; color: #333D4B;">${c.authorName}</span>
+                            <span style="font-size: 12px; color: #8B95A1;">${timeStr}</span>
+                        </div>
+                        <div style="font-size: 15px; color: #4E5968; line-height: 1.5; word-break: keep-all; padding-right: 12px;">
+                            ${c.text.replace(/\n/g, '<br>')}
+                        </div>
+                    </div>
+                </div>
+                <div onclick="window.toggleCommentLike('${c.id}', '${postId}', event)" style="display: flex; flex-direction: column; align-items: center; justify-content: flex-start; cursor: pointer; padding-top: 4px; min-width: 30px; flex-shrink: 0;">
+                    <span style="color: ${likeColor}; font-size: 14px; margin-bottom: 4px; transition: 0.2s;">${likeIcon}</span>
+                    <span style="color: ${likeTextColor}; font-size: 11px; font-weight: 700;">${c.likes || 0}</span>
+                </div>
+            </div>
+        `;
+    });
+    listContainer.innerHTML = html;
+};
+
+window.toggleCommentLike = function(commentId, postId, event) {
+    if (event) event.stopPropagation();
+
+    let comments = JSON.parse(localStorage.getItem('tosil_community_comments')) || [];
+    let cIdx = comments.findIndex(c => c.id === commentId);
+    
+    if (cIdx > -1) {
+        let isLiked = comments[cIdx].liked || false;
+        if (isLiked) {
+            comments[cIdx].liked = false;
+            comments[cIdx].likes = Math.max(0, (comments[cIdx].likes || 0) - 1);
+            if (navigator.vibrate) navigator.vibrate(10);
+        } else {
+            comments[cIdx].liked = true;
+            comments[cIdx].likes = (comments[cIdx].likes || 0) + 1;
+            if (navigator.vibrate) navigator.vibrate([15, 60, 15]);
+        }
+        localStorage.setItem('tosil_community_comments', JSON.stringify(comments));
+        window.renderComments(postId);
+
+        if (typeof window.db !== 'undefined' && typeof window.setDoc === 'function') {
+            window.setDoc(window.doc(window.db, "community", "comments"), { records: comments }).catch(e=>{});
+        }
+    }
+};
+
+// ==========================================
+// 👑 슈퍼 관리자 검증 엔진 (타인 권한 탈취 원천 차단)
+// ==========================================
+window.showPostOptions = function() {
+    const postId = window.currentActivePostId; 
+    if (!postId) return;
+
+    const posts = JSON.parse(localStorage.getItem('tosil_community_posts')) || [];
+    const post = posts.find(p => p.id === postId);
+    if (!post) return;
+
+    const myName = localStorage.getItem('community_nickname') || localStorage.getItem('kakao_nickname') || '육아메이트';
+    
+    // 🛡️ [보안 패치] 닉네임 문자열 비교 전면 폐기! 
+    // 오직 대표님 폰의 로컬스토리지에 'tosil_is_master = true'가 세팅되어 있어야만 관리자로 인정합니다.
+    const isMasterAdmin = localStorage.getItem('tosil_is_master') === 'true';
+    
+    // 일반 유저 기준 내 글인지 판단
+    const isMyPost = (post.authorName === myName || post.authorName === '익명마미');
+
+    let existing = document.getElementById('post-action-sheet');
+    if(existing) existing.remove();
+
+    let menuHtml = '';
+    
+    // 👑 1. 진짜 관리자(대표님)인 경우에만 강제 수정/삭제 권한 부여
+    if (isMasterAdmin) {
+        menuHtml = `
+            <div style="padding: 0 0 16px 0; font-size: 13px; font-weight: 900; color: #3182F6; text-align: center;">👑 최고 관리자 모드 활성화됨</div>
+            <div onclick="window.editPost('${postId}')" style="padding: 16px 0; font-size: 16px; font-weight: 700; color: #333D4B; border-bottom: 1px solid #F2F4F6; cursor: pointer; display: flex; align-items: center; gap: 12px;">
+                <span style="font-size: 20px;">✏️</span> 글 강제 수정하기
+            </div>
+            <div onclick="window.deletePost('${postId}'); document.getElementById('post-action-sheet').remove();" style="padding: 16px 0; font-size: 16px; font-weight: 700; color: #F04452; border-bottom: 1px solid #F2F4F6; cursor: pointer; display: flex; align-items: center; gap: 12px;">
+                <span style="font-size: 20px;">🗑️</span> 글 강제 삭제하기
+            </div>
+            <div onclick="window.showToast('🚨 [관리자] 신고 접수 내역을 확인합니다.'); document.getElementById('post-action-sheet').remove();" style="padding: 16px 0; font-size: 16px; font-weight: 700; color: #F04452; border-bottom: 1px solid #F2F4F6; cursor: pointer; display: flex; align-items: center; gap: 12px;">
+                <span style="font-size: 20px;">🚨</span> 이 글 신고 내역 보기
+            </div>
+            <div onclick="window.showToast('🚫 [관리자] 해당 사용자를 영구 차단했습니다.'); document.getElementById('post-action-sheet').remove();" style="padding: 16px 0; font-size: 16px; font-weight: 700; color: #333D4B; cursor: pointer; display: flex; align-items: center; gap: 12px;">
+                <span style="font-size: 20px;">🚫</span> 이 사용자 영구 차단
+            </div>
+        `;
+    } 
+    // 🧍‍♂️ 2. 내가 쓴 일반 글인 경우 (수정/삭제만 가능)
+    else if (isMyPost) {
+        menuHtml = `
+            <div onclick="window.editPost('${postId}')" style="padding: 16px 0; font-size: 16px; font-weight: 700; color: #333D4B; border-bottom: 1px solid #F2F4F6; cursor: pointer; display: flex; align-items: center; gap: 12px;">
+                <span style="font-size: 20px;">✏️</span> 글 수정하기
+            </div>
+            <div onclick="window.deletePost('${postId}'); document.getElementById('post-action-sheet').remove();" style="padding: 16px 0; font-size: 16px; font-weight: 700; color: #F04452; cursor: pointer; display: flex; align-items: center; gap: 12px;">
+                <span style="font-size: 20px;">🗑️</span> 글 삭제하기
+            </div>
+        `;
+    } 
+    // 🧍‍♂️ 3. 남이 쓴 일반 글인 경우 (신고/차단만 가능)
+    else {
+        menuHtml = `
+            <div onclick="window.showToast('🚨 신고가 정상적으로 접수되었습니다.'); document.getElementById('post-action-sheet').remove();" style="padding: 16px 0; font-size: 16px; font-weight: 700; color: #F04452; border-bottom: 1px solid #F2F4F6; cursor: pointer; display: flex; align-items: center; gap: 12px;">
+                <span style="font-size: 20px;">🚨</span> 이 글 신고하기
+            </div>
+            <div onclick="window.showToast('🚫 해당 사용자를 차단했습니다.'); document.getElementById('post-action-sheet').remove();" style="padding: 16px 0; font-size: 16px; font-weight: 700; color: #333D4B; cursor: pointer; display: flex; align-items: center; gap: 12px;">
+                <span style="font-size: 20px;">🚫</span> 이 사용자 차단하기
+            </div>
+        `;
+    }
+
+    const sheetHtml = `
+        <div id="post-action-sheet" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.4); z-index: 99999; display: flex; flex-direction: column; justify-content: flex-end; opacity: 0; transition: opacity 0.2s ease;" onclick="this.remove()">
+            <div style="background: #ffffff; border-radius: 20px 20px 0 0; padding: 24px 20px 32px 20px; transform: translateY(100%); transition: transform 0.3s cubic-bezier(0.1, 1, 0.2, 1);" onclick="event.stopPropagation()">
+                <div style="width: 40px; height: 4px; background: #E5E8EB; border-radius: 2px; margin: 0 auto 20px auto;"></div>
+                ${menuHtml}
+                <div onclick="document.getElementById('post-action-sheet').remove();" style="margin-top: 16px; padding: 16px 0; font-size: 16px; font-weight: 700; color: #8B95A1; text-align: center; background: #F2F4F6; border-radius: 12px; cursor: pointer;">닫기</div>
+            </div>
+        </div>
+    `;
+    
+    document.body.insertAdjacentHTML('beforeend', sheetHtml);
+    setTimeout(() => {
+        const sheet = document.getElementById('post-action-sheet');
+        if(sheet) { sheet.style.opacity = '1'; sheet.firstElementChild.style.transform = 'translateY(0)'; }
+    }, 10);
+};
+
+window.editPost = function(postId) {
+    window.showToast('🛠️ 글 수정 기능은 준비 중입니다!');
+    document.getElementById('post-action-sheet').remove();
+};
+
+window.deletePost = function(postId) {
+    if (!confirm('이 게시글을 정말 삭제하시겠습니까?')) return;
+    let posts = JSON.parse(localStorage.getItem('tosil_community_posts')) || [];
+    posts = posts.filter(p => p.id !== postId);
+    localStorage.setItem('tosil_community_posts', JSON.stringify(posts));
+
+    if (typeof window.db !== 'undefined' && typeof window.setDoc === 'function') {
+        window.setDoc(window.doc(window.db, "community", "posts"), { records: posts }).catch(e=>{});
+    }
+
+    window.closePostDetail(); 
+    window.showToast('🗑️ 게시글이 깔끔하게 삭제되었습니다.');
+    window.renderCommunityFeed(); 
+};
+
+// 7. 검색 및 모달 관리, My 활동 내역
+window.doCommSearch = function() {
+    const inputEl = document.getElementById('commSearchInput');
+    const emptyState = document.getElementById('commSearchEmptyState');
+    const resultArea = document.getElementById('commSearchResults');
+    if(!inputEl || !emptyState || !resultArea) return;
+    
+    const keyword = inputEl.value.trim().toLowerCase();
+    if(keyword === '') { emptyState.style.display = 'flex'; resultArea.innerHTML = ''; return; }
+    
+    let allPosts = JSON.parse(localStorage.getItem('tosil_community_posts')) || [];
+    let filtered = allPosts.filter(p => (p.title && p.title.toLowerCase().includes(keyword)) || (p.content && p.content.toLowerCase().includes(keyword)));
+    emptyState.style.display = 'none';
+    
+    if(filtered.length === 0) {
+        resultArea.innerHTML = `<div style="text-align: center; padding: 40px 20px;"><div style="font-size: 15px; font-weight: 800; color: var(--text-sub);">'${keyword}'에 대한 검색 결과가 없어요.</div></div>`;
+        return;
+    }
+    
+    let html = '';
+    filtered.forEach(post => {
+        const diffMins = Math.floor((new Date().getTime() - post.timestamp) / 60000);
+        let timeStr = '방금 전';
+        if (diffMins >= 1440) timeStr = `${Math.floor(diffMins/1440)}일 전`;
+        else if (diffMins >= 60) timeStr = `${Math.floor(diffMins/60)}시간 전`;
+        else if (diffMins > 0) timeStr = `${diffMins}분 전`;
+
+        let catName = '☕ 일상수다'; let catColor = '#8B5CF6'; let catBg = '#F3E8FF';
+        if (post.category === 'qna') { catName = '💡 육아질문'; catColor = 'var(--brand-primary)'; catBg = 'var(--brand-light)'; }
+        else if (post.category === 'market') { catName = '🥕 나눔/중고'; catColor = '#00B37A'; catBg = '#E6F7F2'; }
+        else if (post.category === 'hotdeal') { catName = '🛒 핫딜정보'; catColor = '#FF823A'; catBg = '#FFF4ED'; }
+
+        html += `
+            <div class="feed-card" onclick="window.closeSearchAndOpenPost('${post.id}')" style="cursor: pointer; margin-bottom: 16px;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                    <span style="font-size: 11.5px; font-weight: 800; color: ${catColor}; background: ${catBg}; padding: 4px 10px; border-radius: 8px;">${catName}</span>
+                    <span style="font-size: 12px; color: var(--text-sub); font-weight: 600;">${timeStr}</span>
+                </div>
+                <div style="font-size: 16px; font-weight: 800; color: var(--text-title); margin-bottom: 8px; line-height: 1.4; word-break: keep-all;">${post.title}</div>
+                <div style="font-size: 14px; color: var(--text-body); line-height: 1.5; margin-bottom: 16px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;">${post.content}</div>
+                <div style="display: flex; justify-content: space-between; align-items: center; border-top: 1px solid rgba(0,0,0,0.05); padding-top: 12px;">
+                    <div style="display: flex; align-items: center; gap: 6px;">
+                        <div style="width: 24px; height: 24px; background: #F2F4F6; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px;">${post.authorIcon || '👑'}</div>
+                        <span style="font-size: 12px; font-weight: 700; color: var(--text-body);">${post.authorName}</span>
+                    </div>
+                    <div style="display: flex; gap: 10px; font-size: 12px; font-weight: 700; color: var(--text-sub);">
+                        <span style="display: flex; align-items: center; gap: 4px;"><span style="color: ${post.liked ? '#FF5A5F' : '#CBD5E1'};">❤️</span> ${post.likes || 0}</span>
+                        <span style="display: flex; align-items: center; gap: 4px;"><span style="color: var(--brand-primary);">💬</span> ${post.comments || 0}</span>
+                    </div>
+                </div>
+            </div>
+        `;
+    });
+    resultArea.innerHTML = html;
+};
+
+window.closeSearchAndOpenPost = function(postId) {
+    document.getElementById('commSearchOverlay').classList.remove('active');
+    setTimeout(() => { if(typeof window.openPostDetail === 'function') window.openPostDetail(postId); }, 150);
+};
+
+window.openMyActivity = function(type) {
+    const overlay = document.getElementById('commActivityOverlay');
+    const titleEl = document.getElementById('activity-title');
+    const contentArea = overlay.querySelector('div:nth-child(2)'); 
+    if(!overlay || !titleEl || !contentArea) return;
+
+    if (type === 'posts') titleEl.innerText = '내가 쓴 글';
+    else if (type === 'comments') titleEl.innerText = '댓글 단 글';
+    else if (type === 'scraps') titleEl.innerText = '스크랩한 글';
+
+    let allPosts = JSON.parse(localStorage.getItem('tosil_community_posts')) || [];
+    let myNickname = localStorage.getItem('community_nickname') || localStorage.getItem('kakao_nickname') || '육아메이트'; 
+
+    let filtered = [];
+    if (type === 'posts') filtered = allPosts.filter(p => p.authorName === myNickname);
+    else if (type === 'comments') filtered = allPosts.filter(p => p.hasMyComment === true);
+    else if (type === 'scraps') filtered = allPosts.filter(p => p.isScrapped === true);
+
+    if (filtered.length === 0) {
+        contentArea.style.padding = '20px'; contentArea.style.background = 'var(--bg-main)';
+        contentArea.innerHTML = `
+            <div style="font-size: 48px; margin-bottom: 16px;">📝</div>
+            <div style="font-size: 16px; font-weight: 800; color: var(--text-title); margin-bottom: 8px;">아직 내역이 없어요!</div>
+            <div style="font-size: 13.5px; color: var(--text-sub);">다양한 활동을 시작해보세요.</div>
+        `;
+    } else {
+        contentArea.style.padding = '20px'; contentArea.style.background = 'var(--bg-main)'; contentArea.style.overflowY = 'auto'; contentArea.style.justifyContent = 'flex-start'; 
+        let html = '<div style="width: 100%;">';
+        filtered.forEach(post => {
+            let catName = '☕ 일상수다'; let catColor = '#8B5CF6'; let catBg = '#F3E8FF';
+            if (post.category === 'qna') { catName = '💡 육아질문'; catColor = 'var(--brand-primary)'; catBg = 'var(--brand-light)'; }
+            else if (post.category === 'market') { catName = '🥕 나눔/중고'; catColor = '#00B37A'; catBg = '#E6F7F2'; }
+            
+            html += `
+                <div class="feed-card" onclick="window.closeActivityAndOpenPost('${post.id}')" style="cursor: pointer; margin-bottom: 16px; background: var(--bg-card); padding: 16px; border-radius: 16px; box-shadow: 0 2px 8px rgba(0,0,0,0.02);">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                        <span style="font-size: 11.5px; font-weight: 800; color: ${catColor}; background: ${catBg}; padding: 4px 10px; border-radius: 8px;">${catName}</span>
+                    </div>
+                    <div style="font-size: 16px; font-weight: 800; color: var(--text-title); margin-bottom: 8px; line-height: 1.4; word-break: keep-all;">${post.title}</div>
+                    <div style="display: flex; gap: 10px; font-size: 12px; font-weight: 700; color: var(--text-sub);">
+                        <span style="display: flex; align-items: center; gap: 4px;"><span style="color: #FF5A5F;">❤️</span> ${post.likes || 0}</span>
+                        <span style="display: flex; align-items: center; gap: 4px;"><span style="color: var(--brand-primary);">💬</span> ${post.comments || 0}</span>
+                    </div>
+                </div>
+            `;
+        });
+        html += '</div>';
+        contentArea.innerHTML = html;
+    }
+    overlay.classList.add('active');
+};
+
+window.closeActivityAndOpenPost = function(postId) {
+    document.getElementById('commActivityOverlay').classList.remove('active');
+    setTimeout(() => { if(typeof window.openPostDetail === 'function') window.openPostDetail(postId); }, 150);
+};
+
+// ==========================================
+// 🔄 파이어베이스 실시간 "수신" 리스너 (게시글 & 댓글)
+// ==========================================
+let commUnsubscribe = null;
+window.startCommunityRealtimeSync = function() {
+    if (typeof window.doc === 'undefined' || typeof window.db === 'undefined') return;
+    const docRef = window.doc(window.db, "community", "posts");
+    if (commUnsubscribe) commUnsubscribe();
+    commUnsubscribe = window.onSnapshot(docRef, (docSnap) => {
+        if (docSnap.exists()) {
+            const data = docSnap.data();
+            localStorage.setItem('tosil_community_posts', JSON.stringify(data.records || []));
+            window.renderCommunityFeed(); 
+        }
+    });
+};
+
+let commentUnsubscribe = null;
+window.startCommentRealtimeSync = function() {
+    if (typeof window.doc === 'undefined' || typeof window.db === 'undefined') return;
+    const docRef = window.doc(window.db, "community", "comments");
+    if (commentUnsubscribe) commentUnsubscribe();
+    commentUnsubscribe = window.onSnapshot(docRef, (docSnap) => {
+        if (docSnap.exists()) {
+            const data = docSnap.data();
+            localStorage.setItem('tosil_community_comments', JSON.stringify(data.records || []));
+            const inputField = document.getElementById('newCommentInput');
+            if (inputField && document.getElementById('postDetailPage').classList.contains('active')) {
+                const currentPostId = inputField.getAttribute('data-post-id');
+                if (currentPostId) window.renderComments(currentPostId);
+            }
+        }
+    });
+};
+
+// ==========================================
+// 👤 맘수다 전용 마이페이지 (프로필/스크랩/활동내역 설정)
+// ==========================================
+window.openMyPage = function() {
+    // 맘수다 마이페이지 탭 열기
+    if (typeof window.switchTab === 'function') {
+        window.switchTab('mypage', null);
+    }
+    
+    // 현재 저장된 커뮤니티 닉네임 불러오기
+    const input = document.getElementById('comm-nickname-input');
+    if(input) {
+        input.value = localStorage.getItem('community_nickname') || localStorage.getItem('kakao_nickname') || '육아메이트';
+    }
+    window.scrollTo(0, 0);
+};
+
+window.closeMyPage = function() {
+    if (typeof window.switchTab === 'function') {
+        window.switchTab('home', document.getElementById('nav-home'));
+    }
+};
+
+// 🌟 맘수다 닉네임 변경 엔진 (과거 글/댓글 닉네임까지 일괄 업데이트!)
+window.changeNickname = function() {
+    const input = document.getElementById('comm-nickname-input');
+    if(!input) return;
+    
+    const newName = input.value.trim();
+    if(newName.length < 2) {
+        return window.showToast('⚠️ 닉네임은 2글자 이상 입력해주세요!');
+    }
+    
+    const oldName = localStorage.getItem('community_nickname') || localStorage.getItem('kakao_nickname') || '육아메이트';
+    if(newName === oldName) {
+        return window.showToast('⚠️ 이미 사용 중인 닉네임입니다.');
+    }
+
+    // 1. 닉네임 저장
+    localStorage.setItem('community_nickname', newName);
+    
+    // 2. 내가 썼던 과거 게시글 닉네임 싹 다 바꾸기
+    let posts = JSON.parse(localStorage.getItem('tosil_community_posts')) || [];
+    posts.forEach(p => {
+        if(p.authorName === oldName) {
+            p.authorName = newName;
+        }
+    });
+    localStorage.setItem('tosil_community_posts', JSON.stringify(posts));
+
+    // 3. 내가 달았던 과거 댓글 닉네임 싹 다 바꾸기
+    let comments = JSON.parse(localStorage.getItem('tosil_community_comments')) || [];
+    comments.forEach(c => {
+        if(c.authorName === oldName) {
+            c.authorName = newName;
+        }
+    });
+    localStorage.setItem('tosil_community_comments', JSON.stringify(comments));
+    
+    // 4. 피드 새로고침해서 바뀐 이름 즉시 적용!
+    if(typeof window.renderCommunityFeed === 'function') {
+        window.renderCommunityFeed();
+    }
+    
+    window.showToast(`✅ 커뮤니티 닉네임이 [${newName}](으)로 변경되었습니다!`);
+};

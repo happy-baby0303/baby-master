@@ -34,7 +34,22 @@ body.dark-mode #v-budget { color: var(--primary) !important; }
 .system-status { display: inline-flex; align-items: center; gap: 5px; font-size: 11.5px; font-weight: 800; color: var(--primary); padding: 5px 12px; border-radius: 12px; }
 .status-dot { width: 6px; height: 6px; background-color: var(--primary); border-radius: 50%; }
 
-.bottom-nav { position: fixed; bottom: 0; left: 50%; transform: translateX(-50%); width: 100%; max-width: 500px; background: rgba(255,255,255,0.85); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); display: flex; justify-content: space-around; padding: 12px 0 calc(12px + env(safe-area-inset-bottom)); z-index: 3000; border-top: 1px solid rgba(0,0,0,0.05); transition: 0.2s; }
+.bottom-nav { 
+    position: fixed; 
+    bottom: 0; 
+    left: 50%; 
+    transform: translateX(-50%); 
+    width: 100%; 
+    max-width: 480px; /* 👈 500px에서 480px로 변경! */
+    background: rgba(255,255,255,0.85); 
+    backdrop-filter: blur(12px); 
+    -webkit-backdrop-filter: blur(12px); 
+    display: flex; 
+    justify-content: space-around; 
+    padding: 12px 0 calc(12px + env(safe-area-inset-bottom)); 
+    z-index: 3000; 
+    border-top: 1px solid rgba(0,0,0,0.05); 
+    transition: 0.2s; }
 body.dark-mode .bottom-nav { background: rgba(31, 41, 55, 0.85) !important; border-top: 1px solid rgba(255, 255, 255, 0.05); }
 .nav-item { flex: 1; text-align: center; color: var(--text-sub); cursor: pointer; transition: 0.2s; }
 .nav-item .icon { font-size: 22px; margin-bottom: 4px; display: block; filter: grayscale(100%); opacity: 0.45; }
