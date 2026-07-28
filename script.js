@@ -25,10 +25,10 @@ const babyTips = [
 ];
 
 // ==========================================
-// 2. 화면 내비게이션 엔진 (쫀득한 애니메이션 패치)
+// 2. 화면 내비게이션 엔진 (설정 탭 렌더링 자동화 패치)
 // ==========================================
 function switchTab(id, el) {
-    if(navigator.vibrate) navigator.vibrate(10); // 📱 탭 넘길 때 기분 좋은 미세 진동
+    if(navigator.vibrate) navigator.vibrate(10); 
 
     document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
     document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
@@ -41,7 +41,6 @@ function switchTab(id, el) {
     
     if (targetNav) {
         targetNav.classList.add('active');
-        // ✨ 아이콘 바운스 애니메이션
         const icon = targetNav.querySelector('.icon');
         if (icon) {
             icon.style.transition = 'transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1)';
@@ -49,6 +48,14 @@ function switchTab(id, el) {
             setTimeout(() => { icon.style.transform = 'scale(1) translateY(0)'; }, 200);
         }
     }
+
+    // ✨ [핵심 해결책] 설정 탭('settings')으로 이동할 때 빈 화면이 안 뜨도록 내부 렌더링 함수 자동 실행!
+    if (id === 'settings') {
+        if (typeof window.renderSettingsTab === 'function') {
+            window.renderSettingsTab();
+        }
+    }
+
     window.scrollTo(0,0);
 }
 
@@ -7044,14 +7051,14 @@ function getGrowthDeltaMessage(records) {
     return `✨ 지난번보다 <strong>${messages.join(', ')}</strong>`;
 }
 
-// ==========================================
-// 📝 글쓰기 모달 열기/닫기 기능
-// ==========================================
 window.openWriteModal = function() {
     // 🔥 [로그인 철통 방어 1] 글쓰기
     if (!localStorage.getItem('kakao_id')) {
         return window.showConfirm("안전하고 클린한 커뮤니티를 위해<br>로그인한 유저만 글을 쓸 수 있어요!<br><span style='font-size:12px; color:#8B95A1; font-weight:600;'>카카오로 3초 만에 시작해볼까요?</span>", function() {
-            if (typeof window.switchTab === 'function') window.switchTab('settings', document.getElementById('nav-settings'));
+            // 이제 switchTab 하나만 부르면 탭 이동 + 내용물 렌더링까지 완벽하게 처리됩니다!
+            if (typeof window.switchTab === 'function') {
+                window.switchTab('settings');
+            }
         }, "💬", "로그인 하러가기", "#3182F6");
     }
 
@@ -7273,7 +7280,6 @@ window.submitPost = function() {
         images: window.attachedImages ? [...window.attachedImages] : [], 
         authorName: authorName,
         authorIcon: authorIcon,
-        region: '동탄동',
         timestamp: timestamp,
         likes: 0,
         comments: 0
@@ -7451,14 +7457,17 @@ window.addComment = function() {
     // 🔥 [로그인 철통 방어 2] 댓글 쓰기
     if (!localStorage.getItem('kakao_id')) {
         return window.showConfirm("따뜻한 소통을 위해<br>로그인 후 댓글을 남겨주세요!<br><span style='font-size:12px; color:#8B95A1; font-weight:600;'>카카오로 3초 만에 시작해볼까요?</span>", function() {
-            window.closePostDetail(); // 상세창 닫기
-            if (typeof window.switchTab === 'function') window.switchTab('settings', document.getElementById('nav-settings'));
+            if (typeof window.closePostDetail === 'function') window.closePostDetail();
+            
+            if (typeof window.switchTab === 'function') {
+                window.switchTab('settings');
+            }
         }, "💬", "로그인 하러가기", "#3182F6");
     }
 
     const inputField = document.getElementById('newCommentInput');
     if(!inputField) return;
-
+    // (이하 기존 댓글 코드 계속...)
     const commentText = inputField.value.trim();
     const postId = inputField.getAttribute('data-post-id'); 
 
