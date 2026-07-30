@@ -2055,12 +2055,6 @@ body {
         <!-- 비워둠 -->
     </div>
 
- <!-- 4. ✍️ 글쓰기 플로팅 버튼 (신형 FAB) -->
-<button class="fab-write" onclick="window.openWriteModal()">
-    <span style="font-size: 18px;">✏️</span> 글쓰기
-</button>
-</div>
-
 <!-- ========================================== -->
 <!-- 👤 맘수다 전용 프로필 (미니멀 디자인 적용) -->
 <!-- ========================================== -->
@@ -2134,12 +2128,16 @@ body {
 
 
 <footer style="text-align: center; padding: 40px 16px 80px 16px; font-size: 11px; color: var(--text-s); line-height: 1.6; margin-top: 40px; border-top: 1px solid var(--border);">
-    <div style="margin-bottom: 24px;">
-            
+    <!-- 🚨 열리고 닫히지 않았던 문제의 <div> 삭제 완료 -->
     <div style="font-size: 10.5px; color: var(--text-s); line-height: 1.5; word-break: keep-all;">
         <p style="margin-bottom: 6px; font-weight: 800;">© 2026. 토실이 육아 메이트. All rights reserved.</p>
     </div>
 </footer>
+
+<!-- ✏️ 글로벌 플로팅 글쓰기 버튼 (모든 탭 바깥으로 독립시킴) -->
+<button id="global-fab-write" onclick="window.openWriteModal()" style="display: none; position: fixed; bottom: 90px; right: 20px; background: #3182F6; color: #FFF; border: none; padding: 15px 24px; border-radius: 30px; font-size: 16px; font-weight: 900; box-shadow: 0 6px 16px rgba(49,130,246,0.4); cursor: pointer; z-index: 9999; align-items: center; gap: 8px; transition: transform 0.2s cubic-bezier(0.2, 0.8, 0.2, 1);" onmousedown="this.style.transform='scale(0.92)'" onmouseup="this.style.transform='scale(1)'" ontouchstart="this.style.transform='scale(0.92)'" ontouchend="this.style.transform='scale(1)'">
+    ✏️ 글쓰기
+</button>
 
 <nav class="bottom-nav">
     <div id="nav-home" class="nav-item active" onclick="switchTab('home', this)"><span class="icon">🏠</span><span class="label">홈</span></div>
@@ -2147,12 +2145,10 @@ body {
     <div id="nav-hotplace" class="nav-item" onclick="switchTab('hotplace', this)"><span class="icon">🗺️</span><span class="label">나들이</span></div>
     <div id="nav-info" class="nav-item" onclick="switchTab('info', this)"><span class="icon">📚</span><span class="label">육아정보</span></div>
     
-    <!-- 👇 기존 <div id="nav-community"...> 부분을 지우고 이걸로 덮어쓰세요! 👇 -->
     <div id="nav-community" class="nav-item" onclick="switchTab('community', this)">
         <span class="icon" style="position: relative;">💬</span>
         <span class="label">맘수다</span>
     </div>
-
 </nav>
 
 <!-- 🎒 외출 준비물 체크리스트 모달 -->

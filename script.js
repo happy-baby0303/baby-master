@@ -83,6 +83,18 @@ function switchTab(id, el) {
         }
     }
 
+    // 👇👇👇 여기에 플로팅 버튼 제어 엔진을 추가하세요! 👇👇👇
+    const fabBtn = document.getElementById('global-fab-write');
+    if (fabBtn) {
+        if (id === 'community') {  // 🚨 여기를 comm 에서 community 로 수정!
+            fabBtn.style.display = 'flex'; // 버튼 나타남!
+        } else {
+            fabBtn.style.display = 'none'; // 다른 탭에선 숨김!
+        }
+    }
+
+    // 👆👆👆 여기까지 👆👆👆
+
     // 탭 바뀔 때 스크롤 맨 위로 부드럽게 이동
     window.scrollTo({ top: 0, behavior: 'smooth' });
 }
@@ -9513,38 +9525,35 @@ window.animateNumber = function(elementId, start, end, duration) {
 };
 
 // ==========================================
-// 🚗 [Phase 2] 아빠 카톡으로 카카오내비 직행 쏘기 (바이럴 엔진)
+// 🚗 [Phase 2] 아빠 카톡으로 카카오내비 직행 쏘기 (에러 완벽 해결본)
 // ==========================================
 window.sendNaviToDad = function(placeName, address) {
     if (typeof Kakao === 'undefined' || !Kakao.isInitialized()) {
         return window.showToast("🚨 카카오톡 연동이 필요합니다.");
     }
 
-    // 도착지 텍스트 인코딩
-    const encodedPlace = encodeURIComponent(placeName);
-    
-    // 카카오맵/내비 URL (모바일에서 누르면 내비로 즉시 연결됨)
-    const naviUrl = `https://map.kakao.com/link/search/${encodedPlace}`;
+    // 🚨 1. 주소는 빼고 장소 이름만 깔끔하게 인코딩해야 카카오맵이 정확히 찾습니다!
+    const searchQuery = encodeURIComponent(placeName);
+    const naviUrl = `https://map.kakao.com/link/search/${searchQuery}`;
 
     Kakao.Share.sendDefault({
-        objectType: 'location',
-        address: address || '상세 주소 없음',
-        addressTitle: placeName,
+        objectType: 'feed',
         content: {
-            title: `🚗 이번 주말 나들이는 여기야!`,
-            description: `여보! 길 안내 켜놨어. 아기 짐 챙겨서 바로 출발하자 🤍\n\n목적지: ${placeName}`,
-            imageUrl: 'https://cdn-icons-png.flaticon.com/512/3204/3204933.png', // 귀여운 자동차 아이콘
+            // 🚨 2. 타이틀에 장소 이름을 뽝! 박아서 절대 안 짤리게 만듭니다.
+            title: `🚗 목적지: ${placeName}`,
+            description: `여보! 아기 짐 챙겨서 바로 출발하자 🤍 길 안내 켜놨어!`,
+            // 🚨 3. 무조건 뜨는 가볍고 귀여운 자동차 아이콘으로 고정!
+            imageUrl: 'https://cdn-icons-png.flaticon.com/512/3204/3204933.png', 
             link: { mobileWebUrl: naviUrl, webUrl: naviUrl },
         },
         buttons: [
             {
-                title: '📍 카카오내비로 안내 시작',
+                title: '📍 카카오내비 시작하기',
                 link: { mobileWebUrl: naviUrl, webUrl: naviUrl },
             }
         ],
     });
     
-    // 누르는 순간 화면에 쾌감을 주는 피드백!
     if(navigator.vibrate) navigator.vibrate([20, 50, 20]);
     window.showToast("🚀 남편 카톡으로 내비게이션을 발사했습니다!");
 };
