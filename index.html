@@ -660,27 +660,23 @@ body {
     </div>
 </div>
 
-<header class="global-header" style="padding: 15px 16px;">
+<header class="global-header" style="padding: 12px 20px; background: var(--bg-main); position: sticky; top: 0; z-index: 100;">
     <div class="header-inner" style="display:flex; justify-content:space-between; align-items:center; width:100%;">
         
-        <div class="brand-logo" style="font-size: 1.15rem; margin: 0; font-weight: normal; white-space: nowrap; letter-spacing: -0.5px; display: flex; align-items: center; gap: 6px;">
-    <img src="icon-192x192.png" alt="육아메이트 로고" style="width: 22px; height: 22px; border-radius: 50%; object-fit: cover; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
-    육아메이트
-</div>
+        <!-- 좌측: 깔끔한 로고 & 앱 이름 -->
+        <div class="brand-logo" style="font-size: 18px; font-weight: 900; color: #191F28; letter-spacing: -0.5px; display: flex; align-items: center; gap: 8px;">
+            <img src="icon-192x192.png" alt="육아메이트 로고" style="width: 28px; height: 28px; border-radius: 8px; box-shadow: 0 2px 6px rgba(0,0,0,0.08); object-fit: cover;">
+            육아메이트
+        </div>
         
-        <div style="display:flex; align-items:center; gap:6px;">
-            <!-- 👇 세련된 SVG 아이콘으로 교체된 마이페이지 버튼 👇 -->
-            <button onclick="openMyPage()" style="background:#F2F5F8; border:none; width:30px; height:30px; border-radius:50%; cursor:pointer; display:flex; align-items:center; justify-content:center; box-shadow:0 1px 3px rgba(0,0,0,0.05); padding:0; transition:0.2s;">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#4E5968" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
-                    <circle cx="12" cy="7" r="4"></circle>
-                </svg>
-            </button>
-            <button onclick="switchTab('settings', null); window.renderSettingsTab();" style="background:none; border:none; font-size:16px; cursor:pointer; padding:0;">⚙️</button>
-             <button id="sync-badge-btn" onclick="openFamilySyncModal()" class="box-tint-blue" style="border: none; padding: 5px 8px; border-radius: 20px; font-size: 11px; font-weight: 700; cursor: pointer; display: flex; align-items: center; gap: 3px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); white-space: nowrap;">
+        <!-- 우측: 연동 배지 + ⚙️ 설정 딱 2개만 남겨서 여백의 미 확보! -->
+        <div style="display:flex; align-items:center; gap: 10px;">
+            <button id="sync-badge-btn" onclick="openFamilySyncModal()" style="background: #F2F5F8; color: #4E5968; border: none; padding: 6px 10px; border-radius: 20px; font-size: 12px; font-weight: 800; cursor: pointer; display: flex; align-items: center; gap: 4px; transition: 0.2s;">
                 <span id="sync-status-icon">🔗</span><span id="sync-status-text">연동설정</span>
             </button>
-            <div class="system-status box-tint-blue" style="white-space: nowrap; font-size: 11px; padding: 5px 8px; border:none; letter-spacing: -0.3px;"><span class="status-dot"></span>LIVE</div>
+            <button onclick="switchTab('settings', null); window.renderSettingsTab();" style="background:none; border:none; font-size: 20px; cursor:pointer; padding: 0; display: flex; align-items: center; justify-content: center; transition: 0.2s;">
+                ⚙️
+            </button>
         </div>
         
     </div>
@@ -688,6 +684,13 @@ body {
 
 <div class="wrapper">
     <div id="tab-home" class="tab-content active">
+
+     <!-- 📢 [수정] 홈 화면 실시간 공지 배너 (평소엔 숨김) -->
+        <div id="home-main-banner-wrapper" style="display: none; margin: 16px 20px 0 20px; background: var(--bg-card); border: 1px solid var(--border); border-radius: 16px; padding: 14px 16px; align-items: center; gap: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.02);">
+            <div style="font-size: 20px;">📢</div>
+            <div id="home-main-banner-text" style="font-size: 14px; font-weight: 800; color: var(--text-m); word-break: keep-all; line-height: 1.4;"></div>
+        </div>
+
     <div style="margin-bottom: 24px;">
         
         <!-- 1. 시간대별 감성 헤더 -->
@@ -920,25 +923,24 @@ body {
                <!-- 💳 1. 하이엔드 대시보드 & 빠른 입력 -->
                 <div class="box-main" style="border-radius: 28px; padding: 24px 20px; margin-bottom: 20px; box-shadow: 0 8px 24px rgba(0,0,0,0.04); position: relative; overflow: hidden;">
                     
-                    <!-- 상단 지출/예산 요약 (레이아웃 깨짐 방지 패치) -->
-<div style="display:flex; justify-content:space-between; align-items:flex-end; margin-bottom: 28px; padding-bottom: 20px; border-bottom: 1px dashed var(--border); gap: 10px;">
+                   <!-- 상단 지출/예산 요약 (레이아웃 깨짐 방지 패치) -->
+<div style="display:flex; justify-content:space-between; align-items:flex-end; margin-bottom: 28px; padding-bottom: 20px; border-bottom: 1px dashed var(--border); gap: 10px; flex-wrap: wrap;">
     
-    <!-- 왼쪽: 누적 지출 영역 (min-width: 0으로 찌그러짐 방지) -->
-    <div style="flex: 1; min-width: 0;">
-        <!-- 🚨 핵심 패치: white-space: nowrap을 넣어서 절대 세 줄로 안 깨집니다! -->
-        <div style="font-size: 13px; font-weight: 800; color: var(--text-s); margin-bottom: 6px; white-space: nowrap;">이번 달 누적 지출 💸</div>
-        <div style="display:flex; align-items:baseline; gap: 4px; flex-wrap: wrap;">
-            <div id="money-total-display" style="font-size: 32px; font-weight: 900; color: var(--text-m); letter-spacing: -1px; line-height: 1;">0</div>
-            <div style="font-size: 16px; font-weight: 800; color: var(--text-m);">원</div>
+    <!-- 왼쪽: 누적 지출 영역 (화면 작아지면 자동 축소) -->
+    <div style="flex: 1 1 50%; min-width: 120px;">
+        <div style="font-size: 13px; font-weight: 800; color: var(--text-s); margin-bottom: 6px;">이번 달 누적 지출 💸</div>
+        <div style="display:flex; align-items:baseline; gap: 4px;">
+            <div id="money-total-display" style="font-size: clamp(24px, 8vw, 32px); font-weight: 900; color: var(--text-m); letter-spacing: -1px; line-height: 1; word-break: break-all;">0</div>
+            <div style="font-size: 16px; font-weight: 800; color: var(--text-m); flex-shrink: 0;">원</div>
         </div>
     </div>
 
-    <!-- 오른쪽: 예산 영역 (flex-shrink: 0으로 자리 뺏기지 않게 방어) -->
-    <div style="text-align: right; flex-shrink: 0;">
+    <!-- 오른쪽: 예산 영역 -->
+    <div style="flex: 1 1 40%; text-align: right; min-width: 100px;">
         <div style="font-size: 11px; font-weight: 800; color: var(--primary); margin-bottom: 6px; background: #EBF4FF; display: inline-block; padding: 4px 10px; border-radius: 12px; white-space: nowrap;">이번 달 예산 🎯</div>
         <div style="display: flex; align-items: baseline; justify-content: flex-end;">
-            <input type="text" inputmode="numeric" id="v-budget" placeholder="500,000" onkeyup="formatNum(this); window.analyzeMoney(); window.resizeInput(this);" style="font-size: 18px; font-weight: 900; border: none; outline: none; background: transparent; color: var(--text-m); text-align: right; padding: 0; min-width: 60px;">
-            <span style="font-size: 14px; font-weight: 800; color: var(--text-s); margin-left: 4px;">원</span>
+            <input type="text" inputmode="numeric" id="v-budget" placeholder="500,000" onkeyup="formatNum(this); window.analyzeMoney(); window.resizeInput(this);" style="font-size: clamp(16px, 5vw, 18px); font-weight: 900; border: none; outline: none; background: transparent; color: var(--text-m); text-align: right; padding: 0; min-width: 50px; width: 80px;">
+            <span style="font-size: 14px; font-weight: 800; color: var(--text-s); margin-left: 4px; flex-shrink: 0;">원</span>
         </div>
     </div>
     
@@ -1652,29 +1654,78 @@ body {
             <h2 class="app-title" style="font-size: 24px; font-weight: 900; color: #191F28; margin: 0 0 6px 0; letter-spacing: -0.5px;">📚 육아 백과사전</h2>
             <p class="app-desc" style="font-size: 14px; font-weight: 600; color: #8B95A1; margin-bottom: 24px; letter-spacing: -0.3px;">위급 상황 대처 및 맞춤형 육아 정보</p>
 
-            <div class="sos-banner box-tint-red" onclick="openSOSModal()" style="border-radius: 20px; padding: 20px; display: flex; align-items: center; gap: 16px; cursor: pointer;">
-                <div class="sos-banner-icon" style="font-size: 38px;">🚨</div>
-                <div>
-                    <div class="sos-banner-title" style="font-size: 16.5px; font-weight: 900; color: var(--danger);">한밤중 긴급 SOS 센터</div>
-                    <div class="sos-banner-desc" style="font-size: 13.5px; font-weight: 700; color: var(--danger); opacity: 0.8;">응급 상담 콜 / 자지러지는 오열 원인 체크</div>
-                </div>
-            </div>
+            <!-- 🚨 위급 상황 대처 (흰색 배경 박스로 3개 기능 그룹화) -->
+<div style="background: #FFFFFF; border-radius: 20px; box-shadow: 0 4px 12px rgba(0,0,0,0.03); padding: 16px; margin-bottom: 32px;">
+    
+    <!-- 1. 기존 SOS 배너 -->
+    <div class="sos-banner box-tint-red" onclick="openSOSModal()" style="border-radius: 20px; padding: 20px; display: flex; align-items: center; gap: 16px; cursor: pointer;">
+        <div class="sos-banner-icon" style="font-size: 38px;">🚨</div>
+        <div>
+            <div class="sos-banner-title" style="font-size: 16.5px; font-weight: 900; color: var(--danger);">한밤중 긴급 SOS 센터</div>
+            <div class="sos-banner-desc" style="font-size: 13.5px; font-weight: 700; color: var(--danger); opacity: 0.8;">응급 상담 콜 / 자지러지는 오열 원인 체크</div>
+        </div>
+    </div>
 
-             <div style="display: flex; gap: 12px; margin-top: 12px;">
-                <div onclick="window.openEmergencyModal('heimlich')" style="flex: 1; border-radius: 16px; padding: 22px 12px; text-align: center; background: rgba(240,68,82,0.1); border: 1px solid rgba(240,68,82,0.3); cursor: pointer; transition: 0.2s; display: flex; flex-direction: column; justify-content: center;">
-                    <div style="font-size: 12.5px; font-weight: 800; color: var(--danger); margin-bottom: 6px;">이물질·기도 폐쇄</div>
-                    <div style="font-size: 16px; font-weight: 900; color: var(--text-m);">하임리히법 〉</div>
-                </div>
-                <div onclick="window.openEmergencyModal('cpr')" style="flex: 1; border-radius: 16px; padding: 22px 12px; text-align: center; background: rgba(49,130,246,0.1); border: 1px solid rgba(49,130,246,0.3); cursor: pointer; transition: 0.2s; display: flex; flex-direction: column; justify-content: center;">
-                    <div style="font-size: 12.5px; font-weight: 800; color: var(--primary); margin-bottom: 6px;">의식·호흡 없을 때</div>
-                    <div style="font-size: 16px; font-weight: 900; color: var(--text-m);">심폐소생술 〉</div>
-                </div>
-            </div>
+    <!-- 2. 기존 하임리히법 & 심폐소생술 버튼 -->
+    <div style="display: flex; gap: 12px; margin-top: 12px;">
+        <div onclick="window.openEmergencyModal('heimlich')" style="flex: 1; border-radius: 16px; padding: 22px 12px; text-align: center; background: rgba(240,68,82,0.1); border: 1px solid rgba(240,68,82,0.3); cursor: pointer; transition: 0.2s; display: flex; flex-direction: column; justify-content: center;">
+            <div style="font-size: 12.5px; font-weight: 800; color: var(--danger); margin-bottom: 6px;">이물질·기도 폐쇄</div>
+            <div style="font-size: 16px; font-weight: 900; color: var(--text-m);">하임리히법 〉</div>
+        </div>
+        <div onclick="window.openEmergencyModal('cpr')" style="flex: 1; border-radius: 16px; padding: 22px 12px; text-align: center; background: rgba(49,130,246,0.1); border: 1px solid rgba(49,130,246,0.3); cursor: pointer; transition: 0.2s; display: flex; flex-direction: column; justify-content: center;">
+            <div style="font-size: 12.5px; font-weight: 800; color: var(--primary); margin-bottom: 6px;">의식·호흡 없을 때</div>
+            <div style="font-size: 16px; font-weight: 900; color: var(--text-m);">심폐소생술 〉</div>
+        </div>
+    </div>
+    
+</div>
 
             <div style="font-size:15px; font-weight:900; color:var(--text-m); margin-top:32px; margin-bottom:12px; padding: 0 4px;">
                 <span>🤖 우리 아기 맞춤형 생존 처방전</span>
             </div>
             
+<!-- 💡 내부 기능 유도형 프리미엄 인앱 롤링 배너 -->
+<div class="premium-banner-wrap" style="position: relative; margin-bottom: 32px; background: #232932; border-radius: 16px; overflow: hidden; box-shadow: 0 8px 16px rgba(0,0,0,0.1);">
+    
+    <!-- 슬라이드 트랙 -->
+    <div class="banner-track" style="display: flex; width: 300%; transition: transform 0.5s cubic-bezier(0.25, 0.8, 0.25, 1);">
+        
+        <!-- 💳 1번: 종합 AI 매칭 유도 -> (유모차 폴더로 연결) -->
+        <a href="./stroller/index.html" style="width: 33.333%; text-decoration: none; padding: 22px 20px 36px 20px; display: flex; justify-content: space-between; align-items: center; box-sizing: border-box;">
+            <div>
+                <div style="color: #4ADE80; font-size: 13px; font-weight: 700; margin-bottom: 6px;">✨ 맞춤형 AI 큐레이션</div>
+                <div style="color: #FFFFFF; font-size: 17px; font-weight: 800; line-height: 1.4;">우리 아기 개월수에 딱 맞는<br>필수 국민템 5종 찾기 〉</div>
+            </div>
+            <div style="font-size: 44px; filter: drop-shadow(0 4px 6px rgba(0,0,0,0.3));">🤖</div>
+        </a>
+
+        <!-- 💳 2번: 배앓이/수유 고민 해결 -> (젖병 폴더로 연결) -->
+        <a href="./bottle/index.html" style="width: 33.333%; text-decoration: none; padding: 22px 20px 36px 20px; display: flex; justify-content: space-between; align-items: center; box-sizing: border-box;">
+            <div>
+                <div style="color: #FBBF24; font-size: 13px; font-weight: 700; margin-bottom: 6px;">🌙 새벽에 자주 깬다면?</div>
+                <div style="color: #FFFFFF; font-size: 17px; font-weight: 800; line-height: 1.4;">혹시 배앓이 때문일까?<br>원인 찾고 꿀잠 재우기 〉</div>
+            </div>
+            <div style="font-size: 44px; filter: drop-shadow(0 4px 6px rgba(0,0,0,0.3));">🍼</div>
+        </a>
+
+        <!-- 💳 3번: 유모차/카시트 -> (카시트 폴더로 연결) -->
+        <a href="./carseat/index.html" style="width: 33.333%; text-decoration: none; padding: 22px 20px 36px 20px; display: flex; justify-content: space-between; align-items: center; box-sizing: border-box;">
+            <div>
+                <div style="color: #60A5FA; font-size: 13px; font-weight: 700; margin-bottom: 6px;">🚗 첫 외출 완벽 가이드</div>
+                <div style="color: #FFFFFF; font-size: 17px; font-weight: 800; line-height: 1.4;">절대 실패 없는 유모차&카시트<br>안전 매칭 테스트 〉</div>
+            </div>
+            <div style="font-size: 44px; filter: drop-shadow(0 4px 6px rgba(0,0,0,0.3));">🚙</div>
+        </a>
+
+    </div>
+
+    <!-- 📍 인디케이터 (하단 점 3개) -->
+    <div style="position: absolute; bottom: 14px; left: 0; right: 0; display: flex; justify-content: center; gap: 6px;">
+        <div class="banner-dot" style="width: 14px; height: 5px; background: #FFFFFF; border-radius: 4px; transition: 0.3s;"></div>
+        <div class="banner-dot" style="width: 5px; height: 5px; background: rgba(255,255,255,0.3); border-radius: 50%; transition: 0.3s;"></div>
+        <div class="banner-dot" style="width: 5px; height: 5px; background: rgba(255,255,255,0.3); border-radius: 50%; transition: 0.3s;"></div>
+    </div>
+</div>
             <!-- 🌟 5개의 처방전 카드를 하나로 묶은 대통합 카드 (아이폰 설정창 스타일) -->
 <div class="ai-matrix-container" style="background: #FFFFFF; border-radius: 20px; box-shadow: 0 4px 12px rgba(0,0,0,0.03); display: flex; flex-direction: column; margin-bottom: 32px; overflow: hidden;">
     
@@ -1951,19 +2002,36 @@ body {
      ========================================== -->
 <div id="tab-community" class="tab-content" style="background: var(--bg-sub); min-height: 100vh; padding-bottom: 100px;">
     
-    <!-- 1. 🌐 상단 헤더 (전국구 전환 & 검색/알림 허브) -->
-    <div style="position: sticky; top: 0; z-index: 50; background: var(--bg-card); padding: 14px 20px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border);">
-        <div style="font-size: 20px; font-weight: 900; color: var(--text-title); letter-spacing: -0.5px;">
-            💬  맘수다
+    <!-- 1. 🌐 맘수다 감성 헤더 (대기업 앱 스타일) -->
+    <div style="position: sticky; top: 0; z-index: 50; background: var(--bg-main); padding: 16px 20px 4px 20px; display: flex; justify-content: space-between; align-items: flex-start;">
+        <div>
+            <h2 class="app-title" style="font-size: 24px; font-weight: 900; color: #191F28; margin: 0 0 6px 0; letter-spacing: -0.5px;">💬 맘수다</h2>
+            <p class="app-desc" style="font-size: 14px; font-weight: 600; color: #8B95A1; margin-bottom: 16px; letter-spacing: -0.3px;">동네 엄빠들과 나누는 생생한 육아 정보</p>
         </div>
-        <div style="display: flex; gap: 16px; font-size: 20px; align-items: center;">
-            <!-- 검색 버튼 -->
-            <span style="cursor: pointer;" title="검색" onclick="document.getElementById('commSearchOverlay').classList.add('active')">🔍</span>
-            <!-- 알림 버튼 (빨간 점 추가) -->
-            <span style="cursor: pointer; position: relative;" title="알림" onclick="document.getElementById('commNotiOverlay').classList.add('active')">
-                🔔
-                <span style="position: absolute; top: -2px; right: -2px; width: 8px; height: 8px; background: #F04452; border-radius: 50%; border: 2px solid #FFF;"></span>
-            </span>
+        
+        <div style="display: flex; gap: 16px; align-items: center; margin-top: 4px;">
+            <!-- 세련된 검색 SVG 아이콘 -->
+            <svg onclick="document.getElementById('commSearchOverlay').classList.add('active')" style="cursor: pointer; transition: 0.2s;" width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#191F28" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="11" cy="11" r="8"></circle>
+                <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+            </svg>
+            
+            <!-- 세련된 알림(종) SVG 아이콘 -->
+            <div onclick="document.getElementById('commNotiOverlay').classList.add('active')" style="cursor: pointer; position: relative; display: flex; align-items: center;">
+                <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#191F28" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
+                    <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
+                </svg>
+                <span style="position: absolute; top: 0px; right: 2px; width: 6px; height: 6px; background: #FF5A5F; border-radius: 50%; box-shadow: 0 0 0 2px var(--bg-main);"></span>
+            </div>
+
+            <!-- 👤 마이페이지 아이콘이 일로 이사왔습니다! -->
+            <button onclick="openMyPage()" style="background:#F2F5F8; border:1px solid #E5E8EB; width:36px; height:36px; border-radius:50%; cursor:pointer; display:flex; align-items:center; justify-content:center; padding:0; transition:0.2s;">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#4E5968" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                    <circle cx="12" cy="7" r="4"></circle>
+                </svg>
+            </button>
         </div>
     </div>
 
@@ -1976,6 +2044,12 @@ body {
         <div class="category-chip" onclick="window.switchCommTab(this, 'hotdeal')">🛒 핫딜정보</div>
     </div>
 
+   <!-- 📢 [수정] 맘수다 상단 실시간 공지사항 (평소엔 숨김) -->
+    <div id="community-notice-wrapper" style="display: none; background: rgba(49, 130, 246, 0.08); padding: 12px 20px; border-bottom: 1px solid rgba(49, 130, 246, 0.15); align-items: center; gap: 10px;">
+        <span style="font-size: 16px;">📢</span>
+        <div id="community-notice-text" style="font-size: 13.5px; font-weight: 800; color: #3182F6; word-break: keep-all;"></div>
+    </div>
+    
     <!-- 3. 📜 게시글 피드 시작 (내부를 텅 비워야 JS가 공지사항을 채워 넣습니다!) -->
     <div id="community-feed" style="padding: 20px; background: var(--bg-main);">
         <!-- 비워둠 -->
@@ -2791,7 +2865,7 @@ body {
 <div style="display: flex; justify-content: space-between; align-items: center; padding: 12px 20px 16px; border-bottom: 1px solid #F2F4F6;">
     <span style="font-size: 24px; cursor: pointer; color: #8B95A1; font-weight: 300; line-height: 1;" onclick="window.closeWriteModal()">✕</span>
     <span style="font-size: 16px; font-weight: 800; color: #333D4B;">글쓰기</span>
-    <button onclick="window.submitPost()" style="background: var(--brand-primary); color: white; border: none; padding: 8px 16px; border-radius: 8px; font-weight: 700; font-size: 14px; cursor: pointer; box-shadow: 0 2px 8px rgba(49, 130, 246, 0.2); transition: 0.2s;" onmousedown="this.style.transform='scale(0.95)'" onmouseup="this.style.transform='scale(1)'">등록</button>
+    <button onclick="window.submitPost(this)" style="background: var(--brand-primary); color: white; border: none; padding: 8px 16px; border-radius: 8px; font-weight: 700; font-size: 14px; cursor: pointer; box-shadow: 0 2px 8px rgba(49, 130, 246, 0.2); transition: 0.2s;" onmousedown="this.style.transform='scale(0.95)'" onmouseup="this.style.transform='scale(1)'">등록</button>
 </div>
 
     <!-- 글쓰기 입력 영역 -->
@@ -2862,9 +2936,17 @@ body {
     <!-- 2. 본문 및 댓글 리스트 영역 (스크롤 가능) -->
     <div style="flex: 1; overflow-y: auto; padding: 0;">
         
-        <!-- 📝 JS가 진짜 본문 데이터와 '최신순/인기순' 필터를 자동으로 그려주는 빈 공간 -->
+        <!-- 📝 JS가 게시글 본문(좋아요/댓글 포함)을 그리는 공간 -->
         <div style="padding: 24px 20px; border-bottom: 8px solid #F2F4F6;">
-            <!-- 유령 글 삭제 완료! -->
+            <!-- 게시글 들어가는 자리 -->
+        </div>
+
+        <!-- 🚨 [핵심 패치] 최신순/인기순 버튼을 게시글 밖으로 빼서 댓글창 바로 위로 밀착! -->
+        <div style="display: flex; justify-content: flex-end; padding: 16px 20px 8px 20px;">
+            <div style="display: flex; gap: 12px; font-size: 13px; font-weight: 800; color: var(--text-sub);">
+                <span id="sort-latest" style="color: var(--text-title); cursor: pointer;" onclick="window.sortComments(window.currentActivePostId, 'latest')">최신순</span>
+                <span id="sort-popular" style="cursor: pointer;" onclick="window.sortComments(window.currentActivePostId, 'popular')">인기순</span>
+            </div>
         </div>
 
         <!-- 💬 JS가 진짜 댓글들을 자동으로 꽂아넣는 빈 공간 -->

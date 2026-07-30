@@ -25,38 +25,66 @@ const babyTips = [
 ];
 
 // ==========================================
-// 2. 화면 내비게이션 엔진 (설정 탭 렌더링 자동화 패치)
+// 2. 화면 내비게이션 엔진 (설정 탭 렌더링 자동화 패치 + 쫀득한 바운스 추가)
 // ==========================================
 function switchTab(id, el) {
     if(navigator.vibrate) navigator.vibrate(10); 
 
-    document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
-    document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+    // 모든 탭 내용 숨기기
+    document.querySelectorAll('.tab-content').forEach(c => {
+        c.classList.remove('active');
+        c.style.opacity = '0'; // 페이드아웃
+        c.style.transform = 'translateY(5px)'; // 살짝 아래로
+        setTimeout(() => { c.style.display = 'none'; }, 200); // 0.2초 뒤 완전 숨김
+    });
     
-    const targetTab = document.getElementById('tab-' + id);
-    if(targetTab) targetTab.classList.add('active');
+    // 모든 탭 버튼 비활성화 및 아이콘 원상복구
+    document.querySelectorAll('.nav-item').forEach(n => {
+        n.classList.remove('active');
+        const icon = n.querySelector('img'); // 이미지 아이콘인 경우
+        const emoji = n.querySelector('span'); // 이모지 아이콘인 경우
+        if (icon) icon.style.transform = 'scale(1) translateY(0)';
+        if (emoji) emoji.style.transform = 'scale(1) translateY(0)';
+    });
+    
+    // 0.2초 뒤에 선택한 탭 내용 보여주기 (페이드인)
+    setTimeout(() => {
+        const targetTab = document.getElementById('tab-' + id);
+        if(targetTab) {
+            targetTab.style.display = 'block';
+            // 아주 약간의 시차를 두고 애니메이션 적용해야 스무스하게 뜹니다.
+            setTimeout(() => {
+                targetTab.classList.add('active');
+                targetTab.style.opacity = '1';
+                targetTab.style.transform = 'translateY(0)';
+            }, 50);
+        }
+    }, 200);
     
     let targetNav = el;
     if (!targetNav) targetNav = document.getElementById('nav-' + id);
     
     if (targetNav) {
         targetNav.classList.add('active');
-        const icon = targetNav.querySelector('.icon');
+        // 💎 하이엔드 바운스 애니메이션
+        const icon = targetNav.querySelector('img') || targetNav.querySelector('span'); // img 태그나 이모지 span 둘 다 대응
         if (icon) {
             icon.style.transition = 'transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1)';
-            icon.style.transform = 'scale(1.3) translateY(-4px)';
-            setTimeout(() => { icon.style.transform = 'scale(1) translateY(0)'; }, 200);
+            icon.style.transform = 'scale(1.2) translateY(-4px)';
+            // 위로 튀어 올랐다가 살짝 가라앉으면서 정착!
+            setTimeout(() => { icon.style.transform = 'scale(1.05) translateY(-2px)'; }, 200);
         }
     }
 
-    // ✨ [핵심 해결책] 설정 탭('settings')으로 이동할 때 빈 화면이 안 뜨도록 내부 렌더링 함수 자동 실행!
+    // 설정 탭 내부 렌더링
     if (id === 'settings') {
         if (typeof window.renderSettingsTab === 'function') {
             window.renderSettingsTab();
         }
     }
 
-    window.scrollTo(0,0);
+    // 탭 바뀔 때 스크롤 맨 위로 부드럽게 이동
+    window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
 function directGoOuting(subType) {
@@ -337,36 +365,52 @@ function filterPlaces() {
             }
             let mapUrl = `https://map.kakao.com/link/search/${encodeURIComponent(p.query || p.title)}`;
             
-            // 🌟 [핵심 패치] '경기외곽' 버리고 주소(addr)에서 진짜 동네 이름 뽑기!
+     // 🌟 [핵심 패치] '경기외곽' 버리고 주소(addr)에서 진짜 동네 이름 뽑기!
             let realLocation = p.locText || '지역';
             if (p.addr) {
                 const addrParts = p.addr.split(' ');
-                // 보통 주소가 "경기도 남양주시 다산순환로" 형식이므로 두 번째 단어(남양주시)를 가져옴
                 if (addrParts.length > 1) {
-                    // '시', '구', '군' 글자를 지워서 깔끔하게 "남양주"로 만듦
                     realLocation = addrParts[1].replace('시', '').replace('구', '').replace('군', '');
                 }
             }
 
             htmlString += `
-                <div class="box-main" style="border-radius: 20px; padding: 20px; margin-bottom: 16px; box-shadow: 0 4px 12px rgba(0,0,0,0.03); border: 1px solid var(--border); text-align: left; background: var(--bg-card);">
+                <div class="box-main" style="border-radius: 20px; padding: 22px; margin-bottom: 16px; box-shadow: 0 4px 12px rgba(0,0,0,0.03); border: 1px solid var(--border); text-align: left; background: var(--bg-card);">
+                    
+                    <!-- 상단: 지역 배지 & 타이틀 -->
                     <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 10px;">
                         <div style="display: flex; align-items: center; gap: 8px;">
-                            <!-- 👇 이제 경기외곽 대신 '남양주'가 예쁘게 들어갑니다! -->
                             <span style="background:#EBF4FF; color:#3182F6; padding:4px 8px; border-radius:6px; font-size:11px; font-weight:900;">${realLocation}</span>
                             <div style="font-size: 17px; font-weight: 900; color: var(--text-m);">${p.title} ${p.emoji || '📍'}</div>
                         </div>
                     </div>
+
+                    <!-- 설명 텍스트 -->
                     <div style="font-size: 13.5px; color: var(--text-s); font-weight: 600; margin-bottom: 12px; line-height: 1.5; word-break: keep-all;">
                         ${p.desc || ''}
                     </div>
-                    <div style="margin-bottom: 12px;">${tagsHTML}</div>
-                    <div class="place-review" style="font-size:12.5px; color:var(--text-s); background:var(--bg-sub); padding:12px; border-radius:10px; margin-bottom:16px;">
+
+                    <!-- 해시태그 -->
+                    <div style="margin-bottom: 12px; display: flex; flex-wrap: wrap; gap: 4px;">
+                        ${tagsHTML}
+                    </div>
+
+                    <!-- 토실이 검증 박스 -->
+                    <div class="place-review" style="font-size:12.5px; color:var(--text-s); background:var(--bg-sub); padding:12px; border-radius:10px; margin-bottom:16px; border: 1px dashed var(--border);">
                         <strong>💬 토실이 검증:</strong> "${p.review || '유모차와 함께하기 좋은 곳이에요!'}"
                     </div>
-                    <a href="${mapUrl}" target="_blank" style="display: block; width: 100%; text-align: center; padding: 14px; background: #FEE500; color: #191F28; border-radius: 12px; font-weight: 900; font-size: 14.5px; text-decoration: none; box-shadow: 0 2px 8px rgba(254, 229, 0, 0.2);">
-                        📍 카카오맵으로 위치/길찾기 〉
-                    </a>
+
+                    <!-- 하단 액션 버튼 (맵 열기 + 아빠한테 내비 쏘기 2분할) -->
+                    <div style="display: flex; gap: 10px;">
+                        <a href="${mapUrl}" target="_blank" style="flex: 1; text-align: center; padding: 14px; background: #F2F5F8; color: #4E5968; border-radius: 12px; font-weight: 800; font-size: 14px; text-decoration: none; transition: 0.2s;">
+                            맵 열기 〉
+                        </a>
+                        <button onclick="window.sendNaviToDad('${p.title}', '${p.addr || ''}')" style="flex: 1.5; padding: 14px; background: #FEE500; color: #191F28; border: none; border-radius: 12px; font-weight: 900; font-size: 14px; cursor: pointer; box-shadow: 0 4px 10px rgba(254, 229, 0, 0.2); transition: 0.2s; display: flex; align-items: center; justify-content: center; gap: 6px;">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M12 3c-5.523 0-10 3.535-10 7.896 0 2.766 1.767 5.19 4.418 6.586l-1.127 4.195c-.092.342.278.618.575.434l4.908-3.232c.404.056.817.086 1.226.086 5.523 0 10-3.535 10-7.896C22 6.535 17.523 3 12 3z"/></svg>
+                            아빠한테 내비 쏘기
+                        </button>
+                    </div>
+
                 </div>
             `;
         });
@@ -850,7 +894,7 @@ window.updateLedgerUI = function() {
     const ledger = JSON.parse(localStorage.getItem('tosil_ledger_data')) || { total: 0, savedTotal: 0, goal: "", goalAmount: 100000, history: [] };
     
     const moneyTotalEl = document.getElementById('money-total-display');
-    if(moneyTotalEl) moneyTotalEl.innerText = Number(ledger.total).toLocaleString();
+    if(moneyTotalEl) window.animateNumber('money-total-display', 0, ledger.total, 800);
 
     const goalInput = document.getElementById('v-goal-text');
     if(goalInput && document.activeElement !== goalInput && ledger.goal) goalInput.value = ledger.goal;
@@ -6066,7 +6110,9 @@ window.renderSettingsTab = function() {
                     <div style="font-size: 14.5px; font-weight: 800; color: var(--text-m);">🛡️ 개인정보 처리방침 및 이용약관</div>
                     <div style="color: #8B95A1; font-size: 12px;">〉</div>
                 </div>
-                <div style="display: flex; justify-content: space-between; align-items: center; padding: 16px 20px;">
+             
+            <!-- 🔥 [수정] 버전 정보 영역에 비밀 스위치(handleSecretAdminClick) 장착! 🔥 -->
+                <div onclick="window.handleSecretAdminClick()" style="display: flex; justify-content: space-between; align-items: center; padding: 16px 20px; cursor: pointer; -webkit-tap-highlight-color: transparent;">
                     <div style="font-size: 14.5px; font-weight: 800; color: var(--text-m);">현재 버전</div>
                     <div style="font-size: 13.5px; font-weight: 800; color: #3182F6;">v1.0.0 최신</div>
                 </div>
@@ -7248,7 +7294,26 @@ window.setCommSort = function(sortType) {
     window.renderCommunityFeed();
 };
 
-window.submitPost = function() { 
+window.submitPost = function(btnElement) { 
+    // 🚨 1. 누르는 순간 버튼 비활성화 & 로딩 UI 변환 (따닥 방어막 가동!)
+    if (btnElement) {
+        if (btnElement.disabled) return; // 이미 처리 중이면 막아버림 (중복 등록 방지)
+        btnElement.disabled = true;
+        btnElement.innerText = '⏳ 저장중...';
+        btnElement.style.opacity = '0.6';
+        btnElement.style.cursor = 'not-allowed';
+    }
+
+    // 💡 에러 나서 튕길 때 버튼을 다시 살려주는 복구 함수
+    const resetBtn = () => {
+        if (btnElement) {
+            btnElement.disabled = false;
+            btnElement.innerText = window.editingPostId ? '수정 완료' : '등록'; 
+            btnElement.style.opacity = '1';
+            btnElement.style.cursor = 'pointer';
+        }
+    };
+
     const catEl = document.getElementById('writeCategory');
     const titleEl = document.getElementById('writeTitle');
     const contentEl = document.getElementById('writeContent');
@@ -7256,6 +7321,7 @@ window.submitPost = function() {
 
     if (!catEl || !titleEl || !contentEl) {
         alert('글쓰기 화면을 찾을 수 없습니다. 새로고침 후 다시 시도해주세요.');
+        resetBtn(); // 에러 시 버튼 복구
         return;
     }
 
@@ -7264,47 +7330,77 @@ window.submitPost = function() {
     const content = contentEl.value;
     const isAnonymous = anonEl ? anonEl.checked : false;
 
-    if (!category) { return window.showToast('⚠️ 게시판 카테고리를 선택해주세요!'); }
-    if (!title.trim()) { return window.showToast('⚠️ 게시글 제목을 입력해주세요!'); }
-    if (!content.trim()) { return window.showToast('⚠️ 내용을 입력해주세요!'); }
-
-    const authorName = isAnonymous ? '익명마미' : (localStorage.getItem('community_nickname') || localStorage.getItem('kakao_nickname') || '육아메이트');
-    const authorIcon = window.getCurrentUserProfileIcon(isAnonymous);
-    const timestamp = new Date().getTime();
-
-    const newPost = {
-        id: 'post_' + timestamp,
-        category: category,
-        title: title,
-        content: content,
-        images: window.attachedImages ? [...window.attachedImages] : [], 
-        authorName: authorName,
-        authorIcon: authorIcon,
-        timestamp: timestamp,
-        likes: 0,
-        comments: 0
-    };
+    // 빈칸 검증 시에도 버튼을 꼭 살려줘야 유저가 다시 누를 수 있습니다.
+    if (!category) { resetBtn(); return window.showToast('⚠️ 게시판 카테고리를 선택해주세요!'); }
+    if (!title.trim()) { resetBtn(); return window.showToast('⚠️ 게시글 제목을 입력해주세요!'); }
+    if (!content.trim()) { resetBtn(); return window.showToast('⚠️ 내용을 입력해주세요!'); }
 
     let posts = JSON.parse(localStorage.getItem('tosil_community_posts')) || [];
-    posts.unshift(newPost);
+    const myName = localStorage.getItem('community_nickname') || localStorage.getItem('kakao_nickname') || '육아메이트';
+    const authorName = isAnonymous ? '익명마미' : myName;
+    const authorIcon = window.getCurrentUserProfileIcon(isAnonymous);
+
+    if (window.editingPostId) {
+        // 👉 [기존 글 수정]
+        const postIdx = posts.findIndex(p => p.id === window.editingPostId);
+        if (postIdx > -1) {
+            posts[postIdx].category = category;
+            posts[postIdx].title = title;
+            posts[postIdx].content = content;
+            posts[postIdx].images = window.attachedImages ? [...window.attachedImages] : [];
+            posts[postIdx].authorName = authorName; 
+            posts[postIdx].authorIcon = authorIcon;
+        }
+        window.showToast('📝 게시글이 성공적으로 수정되었습니다!');
+    } else {
+        // 👉 [새로운 글 등록]
+        const timestamp = new Date().getTime();
+        const newPost = {
+            id: 'post_' + timestamp,
+            category: category,
+            title: title,
+            content: content,
+            images: window.attachedImages ? [...window.attachedImages] : [], 
+            authorName: authorName,
+            authorIcon: authorIcon,
+            timestamp: timestamp,
+            likes: 0,
+            comments: 0
+        };
+        posts.unshift(newPost);
+        window.showToast('🎉 게시글이 성공적으로 등록되었습니다!');
+    }
     
     try {
         localStorage.setItem('tosil_community_posts', JSON.stringify(posts));
     } catch (e) {
         console.error(e);
+        resetBtn();
         return window.showToast('⚠️ 용량이 꽉 찼습니다! 기기의 캐시를 비우거나 사진 갯수를 줄여주세요.');
     }
 
+    // 폼 초기화
     catEl.value = ''; titleEl.value = ''; contentEl.value = '';
     if(anonEl) anonEl.checked = false;
     
     window.attachedImages = []; 
     window.renderPreviewImages();
+    localStorage.removeItem('tosil_post_draft');
+    
+    window.editingPostId = null; 
 
-    window.closeWriteModal();
-    window.showToast('🎉 게시글이 성공적으로 등록되었습니다!');
-    window.renderCommunityFeed(); 
+    // 🚨 2. 저장이 무사히 끝나면 0.5초(500ms) 뒤에 창을 닫습니다. (유저에게 '저장 중'이라는 안도감 부여)
+    setTimeout(() => {
+        resetBtn(); // 버튼 원상복구
+        window.closeWriteModal();
+        window.renderCommunityFeed(); 
 
+        if (document.getElementById('postDetailPage')?.classList.contains('active')) {
+            window.openPostDetail(window.currentActivePostId);
+        }
+    }, 500);
+
+    // 파이어베이스 비동기 처리
     if (typeof window.db !== 'undefined' && typeof window.setDoc === 'function') {
         window.setDoc(window.doc(window.db, "community", "posts"), { records: posts }).catch(e=>{});
     }
@@ -7345,38 +7441,41 @@ window.openPostDetail = function(postId) {
         imageHtml = `<div class="image-swipe-wrapper" style="display: flex; overflow-x: auto; scroll-snap-type: x mandatory; gap: 8px; margin-bottom: 24px; border-radius: 12px; scrollbar-width: none;">${swipeItems}</div>`;
     }
 
-    const postContentArea = detailPage.querySelector('div[style*="padding: 24px 20px"]');
+  const postContentArea = detailPage.querySelector('div[style*="padding: 24px 20px"]');
     if(postContentArea) {
         postContentArea.innerHTML = `
-            <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 20px;">
-                <div style="width: 40px; height: 40px; background: #FFF4E6; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 20px;">${post.authorIcon}</div>
-                <div>
-                    <div style="font-size: 15px; font-weight: 800; color: var(--text-title);">${post.authorName}</div>
-                    <div style="font-size: 13px; color: var(--text-sub);">${post.region} · ${timeStr}</div>
+            <!-- 👤 상단 영역 (작성자 정보 & 스크랩) -->
+            <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 20px;">
+                <div style="display: flex; align-items: center; gap: 10px;">
+                    <div style="width: 40px; height: 40px; background: #FFF4E6; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 20px;">${post.authorIcon || '🧸'}</div>
+                    <div>
+                        <div style="font-size: 15px; font-weight: 800; color: var(--text-title);">${post.authorName}</div>
+                        <div style="font-size: 13px; color: var(--text-sub);">${post.region ? post.region + ' · ' : ''}${timeStr}</div>
+                    </div>
+                </div>
+                
+                <div onclick="window.toggleScrap('${post.id}', this, event)" style="cursor: pointer; display: flex; align-items: center; gap: 4px; font-size: 13px; font-weight: 800; padding: 6px 10px; border-radius: 8px; transition: 0.2s; color: ${post.isScrapped ? 'var(--brand-primary)' : 'var(--text-sub)'}; background: ${post.isScrapped ? 'var(--brand-light)' : 'var(--bg-main)'}; border: 1px solid ${post.isScrapped ? 'var(--brand-primary)' : 'var(--border)'};">
+                    ${post.isScrapped ? '📌 스크랩됨' : '🔖 스크랩'}
                 </div>
             </div>
             
+            <!-- 📝 본문 제목 및 내용 -->
             <h2 style="font-size: 22px; font-weight: 800; color: var(--text-title); margin: 0 0 16px 0; line-height: 1.4;">${post.title}</h2>
             <p style="font-size: 16px; color: var(--text-body); line-height: 1.6; margin: 0 0 24px 0; word-break: keep-all;">
                 ${post.content.replace(/\n/g, '<br>')}
             </p>
             ${imageHtml}
             
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-                <div class="like-btn" onclick="window.toggleRealLike('${post.id}', this, event)" style="display: flex; align-items: center; gap: 4px; cursor: pointer; font-size: 14px; font-weight: 700; color: var(--text-sub);">
-                    <span class="heart-icon" style="color: ${post.liked ? '#FF5A5F' : '#CBD5E1'}; font-size: 18px; transition: 0.2s;">${post.liked ? '❤️' : '🤍'}</span> 
-                    <span class="like-count">${post.likes || 0}</span>명 공감
+            <!-- 🚨 좋아요/댓글 (게시글 본문 제일 바닥에 좌측 밀착, 최신순/인기순 중복 텍스트 삭제 완료!) -->
+            <div style="display: flex; align-items: center; gap: 16px; margin-top: 40px;">
+                <div class="like-btn" onclick="window.toggleRealLike('${post.id}', this, event)" style="display: flex; align-items: center; gap: 6px; cursor: pointer; color: var(--text-sub);">
+                    <span class="heart-icon" style="color: ${post.liked ? '#FF5A5F' : 'var(--text-sub)'}; font-size: 17px; transition: 0.2s;">${post.liked ? '❤️' : '🤍'}</span> 
+                    <span style="font-size: 14px; font-weight: 700;">좋아요 <span class="like-count">${post.likes || 0}</span></span>
                 </div>
-                <div onclick="window.toggleScrap('${post.id}', this, event)" style="font-size: 13px; font-weight: 800; cursor: pointer; padding: 6px 12px; border-radius: 8px; transition: 0.2s; color: ${post.isScrapped ? 'var(--brand-primary)' : 'var(--text-sub)'}; background: ${post.isScrapped ? 'var(--brand-light)' : 'var(--bg-main)'};">
-                    ${post.isScrapped ? '📌 스크랩 됨' : '🔖 스크랩'}
-                </div>
-            </div>
-            
-            <div style="display: flex; justify-content: space-between; align-items: center; padding: 16px 0 8px 0; border-top: 1px solid var(--border);">
-                <span style="font-size: 15px; font-weight: 800; color: var(--text-title);">댓글 <span id="detail-comment-count" style="color: var(--brand-primary);">${post.comments || 0}</span></span>
-                <div style="display: flex; gap: 12px; font-size: 13px; font-weight: 800; color: var(--text-sub);">
-                    <span id="sort-latest" style="color: var(--text-title); cursor: pointer;" onclick="window.sortComments('${post.id}', 'latest')">최신순</span>
-                    <span id="sort-popular" style="cursor: pointer;" onclick="window.sortComments('${post.id}', 'popular')">인기순</span>
+                
+                <div style="display: flex; align-items: center; gap: 6px; color: var(--text-sub);">
+                    <span style="font-size: 17px;">💬</span>
+                    <span style="font-size: 14px; font-weight: 700;">댓글 <span id="detail-comment-count">${post.comments || 0}</span></span>
                 </div>
             </div>
         `;
@@ -7415,6 +7514,9 @@ window.closePostDetail = function() {
     if(commentInput) commentInput.value = '';
 };
 
+// ==========================================
+// ❤️ 공감 팝핑(Popping) & 햅틱 애니메이션 엔진
+// ==========================================
 window.toggleRealLike = function(postId, btnEl, event) {
     if (!localStorage.getItem('kakao_id')) return window.showToast("🚨 로그인이 필요한 기능입니다.");
     if(event) event.stopPropagation();
@@ -7432,6 +7534,18 @@ window.toggleRealLike = function(postId, btnEl, event) {
         heartIcon.innerText = post.liked ? '❤️' : '🤍';
         heartIcon.style.color = post.liked ? '#FF5A5F' : '#CBD5E1';
         countEl.innerText = post.likes;
+        countEl.style.color = post.liked ? '#FF5A5F' : '#8B95A1';
+        
+        // 💥 하트 팝핑 애니메이션 및 햅틱 진동
+        if (post.liked) {
+            if (navigator.vibrate) navigator.vibrate([15, 60, 15]);
+            heartIcon.style.transform = 'scale(1.8)';
+            setTimeout(() => { heartIcon.style.transform = 'scale(1)'; }, 250);
+        } else {
+            if (navigator.vibrate) navigator.vibrate(10);
+            heartIcon.style.transform = 'scale(0.8)';
+            setTimeout(() => { heartIcon.style.transform = 'scale(1)'; }, 200);
+        }
     }
 };
 
@@ -7517,63 +7631,6 @@ window.addComment = function() {
     }
 };
 
-window.renderComments = function(postId) {
-    const listContainer = document.getElementById('commentList');
-    if(!listContainer) return;
-
-    let allComments = JSON.parse(localStorage.getItem('tosil_community_comments')) || [];
-    let postComments = allComments.filter(c => c.postId === postId); 
-
-    // 🔥 [핵심 추가] 차단한 유저의 댓글은 여기서 아예 빼버립니다!
-    let blockedUsers = JSON.parse(localStorage.getItem('tosil_blocked_users')) || [];
-    postComments = postComments.filter(c => !blockedUsers.includes(c.authorName));
-
-    if (postComments.length === 0) {
-        listContainer.innerHTML = `<div style="text-align:center; padding: 40px 0; color: #8B95A1; font-size: 13px; font-weight: 700;">첫 번째 댓글을 남겨주세요! ✨</div>`;
-        return;
-    }
-
-    postComments.sort((a, b) => {
-        if ((b.likes || 0) !== (a.likes || 0)) return (b.likes || 0) - (a.likes || 0);
-        return a.timestamp - b.timestamp;
-    });
-
-    let html = '';
-    postComments.forEach(c => {
-        const diffMins = Math.floor((new Date().getTime() - c.timestamp) / 60000);
-        let timeStr = '방금 전';
-        if (diffMins >= 1440) timeStr = `${Math.floor(diffMins/1440)}일 전`;
-        else if (diffMins >= 60) timeStr = `${Math.floor(diffMins/60)}시간 전`;
-        else if (diffMins > 0) timeStr = `${diffMins}분 전`;
-
-        let likeColor = c.liked ? '#FF5A5F' : '#CBD5E1';
-        let likeTextColor = c.liked ? '#FF5A5F' : '#8B95A1';
-        let likeIcon = c.liked ? '❤️' : '🤍';
-
-        html += `
-            <div style="padding: 16px 0; border-bottom: 1px solid #F2F4F6; animation: slideDownFade 0.3s ease forwards; display: flex; justify-content: space-between; align-items: flex-start;">
-                <div style="display: flex; gap: 10px; flex: 1;">
-                    <div style="width: 32px; height: 32px; background: #FFF4E6; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 15px; flex-shrink: 0;">${c.authorIcon}</div>
-                    <div style="flex: 1; padding-top: 2px;">
-                        <div style="display: flex; align-items: center; gap: 6px; margin-bottom: 4px;">
-                            <span style="font-size: 14px; font-weight: 800; color: #333D4B;">${c.authorName}</span>
-                            <span style="font-size: 12px; color: #8B95A1;">${timeStr}</span>
-                        </div>
-                        <div style="font-size: 15px; color: #4E5968; line-height: 1.5; word-break: keep-all; padding-right: 12px;">
-                            ${c.text.replace(/\n/g, '<br>')}
-                        </div>
-                    </div>
-                </div>
-                <div onclick="window.toggleCommentLike('${c.id}', '${postId}', event)" style="display: flex; flex-direction: column; align-items: center; justify-content: flex-start; cursor: pointer; padding-top: 4px; min-width: 30px; flex-shrink: 0;">
-                    <span style="color: ${likeColor}; font-size: 14px; margin-bottom: 4px; transition: 0.2s;">${likeIcon}</span>
-                    <span style="color: ${likeTextColor}; font-size: 11px; font-weight: 700;">${c.likes || 0}</span>
-                </div>
-            </div>
-        `;
-    });
-    listContainer.innerHTML = html;
-};
-
 window.toggleCommentLike = function(commentId, postId, event) {
     if (!localStorage.getItem('kakao_id')) return window.showToast("🚨 로그인이 필요한 기능입니다.");
     if (event) event.stopPropagation();
@@ -7586,17 +7643,18 @@ window.toggleCommentLike = function(commentId, postId, event) {
         if (isLiked) {
             comments[cIdx].liked = false;
             comments[cIdx].likes = Math.max(0, (comments[cIdx].likes || 0) - 1);
-            if (navigator.vibrate) navigator.vibrate(10);
         } else {
             comments[cIdx].liked = true;
             comments[cIdx].likes = (comments[cIdx].likes || 0) + 1;
-            if (navigator.vibrate) navigator.vibrate([15, 60, 15]);
         }
         localStorage.setItem('tosil_community_comments', JSON.stringify(comments));
+        
+        // 댓글 다시 그리기
         window.renderComments(postId);
 
-        if (typeof window.db !== 'undefined' && typeof window.setDoc === 'function') {
-            window.setDoc(window.doc(window.db, "community", "comments"), { records: comments }).catch(e=>{});
+        // 댓글 다시 그린 후에 하트 아이콘 찾아서 팝핑 효과 (살짝 딜레이)
+        if (comments[cIdx].liked && navigator.vibrate) {
+            navigator.vibrate([15, 60, 15]);
         }
     }
 };
@@ -7656,13 +7714,13 @@ window.showPostOptions = async function() {
             </div>
         `;
     } 
-    // 🧍‍♂️ 3. 남의 글
+   // 🧍‍♂️ 3. 남의 글
     else {
         menuHtml = `
-            <div onclick="window.showToast('🚨 신고가 정상적으로 접수되었습니다.'); document.getElementById('post-action-sheet').remove();" style="padding: 16px 0; font-size: 16px; font-weight: 700; color: #F04452; border-bottom: 1px solid #F2F4F6; cursor: pointer; display: flex; align-items: center; gap: 12px;">
+            <div onclick="window.reportContent('post', '${postId}', '${post.authorId}'); document.getElementById('post-action-sheet').remove();" style="padding: 16px 0; font-size: 16px; font-weight: 700; color: #F04452; border-bottom: 1px solid #F2F4F6; cursor: pointer; display: flex; align-items: center; gap: 12px;">
                 <span style="font-size: 20px;">🚨</span> 이 글 신고하기
             </div>
-            <div onclick="window.blockUser('${post.authorName}')" style="padding: 16px 0; font-size: 16px; font-weight: 700; color: #333D4B; cursor: pointer; display: flex; align-items: center; gap: 12px;">
+            <div onclick="window.blockUser('${post.authorId}', '${post.authorName}'); document.getElementById('post-action-sheet').remove();" style="padding: 16px 0; font-size: 16px; font-weight: 700; color: #333D4B; cursor: pointer; display: flex; align-items: center; gap: 12px;">
                 <span style="font-size: 20px;">🚫</span> 이 사용자 차단하기
             </div>
         `;
@@ -7858,27 +7916,111 @@ window.startCommentRealtimeSync = function() {
 };
 
 // ==========================================
-// 👤 맘수다 전용 마이페이지 (프로필/스크랩/활동내역 설정)
+// 👤 맘수다 전용 마이페이지 (관리자 권한 자동 갱신 100% 패치)
 // ==========================================
+
+// 🚨 하단 탭 메뉴를 누를 때마다 무조건 권한을 재확인하도록 기본 내비게이션 엔진 가로채기!
+const originalSwitchTab = window.switchTab;
+window.switchTab = function(id, el) {
+    if (typeof originalSwitchTab === 'function') {
+        originalSwitchTab(id, el);
+    }
+    // 마이페이지 탭이 열리면 즉시 프로필과 직급을 갱신!
+    if (id === 'mypage') {
+        if (typeof window.updateMyPageProfile === 'function') window.updateMyPageProfile();
+    }
+};
+
 window.openMyPage = function() {
-    // 맘수다 마이페이지 탭 열기
-    if (typeof window.switchTab === 'function') {
-        window.switchTab('mypage', null);
-    }
+    if (typeof window.switchTab === 'function') window.switchTab('mypage', null);
     
-    // 현재 저장된 커뮤니티 닉네임 불러오기
     const input = document.getElementById('comm-nickname-input');
-    if(input) {
-        input.value = localStorage.getItem('community_nickname') || localStorage.getItem('kakao_nickname') || '육아메이트';
-    }
+    if(input) input.value = localStorage.getItem('community_nickname') || localStorage.getItem('kakao_nickname') || '육아메이트';
     window.scrollTo(0, 0);
 };
 
 window.closeMyPage = function() {
-    if (typeof window.switchTab === 'function') {
-        window.switchTab('home', document.getElementById('nav-home'));
-    }
+    if (typeof window.switchTab === 'function') window.switchTab('home', document.getElementById('nav-home'));
 };
+
+// 🚨 파이어베이스 v8 호환 & 비동기 딜레이를 완벽히 해결한 권한 갱신 엔진
+window.updateMyPageProfile = function() {
+    let myNickname = localStorage.getItem('community_nickname') || '익명의 곰돌이';
+    const nicknameInput = document.getElementById('comm-nickname-input');
+    if (nicknameInput) nicknameInput.value = myNickname;
+
+    const myKakaoId = localStorage.getItem('kakao_id');
+
+    // UI 직급 텍스트 즉시 변경 함수
+    const renderAdminUI = () => {
+        const isMaster = localStorage.getItem('tosil_is_master') === 'true';
+        const isSubAdmin = localStorage.getItem('tosil_is_subadmin') === 'true';
+        
+        let roleName = "🧸 일반 회원";
+        if (isMaster) roleName = "👑 최고 관리자(대표이사)";
+        else if (isSubAdmin) roleName = "🌟 관리자";
+
+        // 대표님 화면(스크린샷)에 맞춰 텍스트 교체
+        const userInfo = document.getElementById('mypage-user-info');
+        if (userInfo) userInfo.innerText = `${roleName} · 육아메이트와 함께하는 중!`;
+        
+        const profileCircle = document.getElementById('mypage-profile-icon');
+        if(profileCircle && typeof window.getCurrentUserProfileIcon === 'function') {
+            profileCircle.innerHTML = window.getCurrentUserProfileIcon(false);
+            profileCircle.style.background = localStorage.getItem('community_profile_image') ? '#FFF' : '#FFF4E6';
+        }
+    };
+
+    // 1. 로그인 안 되어 있으면 일반 회원
+    if (!myKakaoId) {
+        localStorage.removeItem('tosil_is_master');
+        localStorage.removeItem('tosil_is_subadmin');
+        renderAdminUI();
+        return;
+    } 
+    
+    // 2. 대표님 카카오ID면 무조건 프리패스 (서버 기다릴 필요 없음)
+    const MASTER_IDS = ["4995493811", "대표님카카오ID숫자"]; 
+    if (MASTER_IDS.includes(String(myKakaoId).trim())) {
+        localStorage.setItem('tosil_is_master', 'true');
+        renderAdminUI();
+        return;
+    }
+
+    // 3. 서버(Firebase)에서 직급 불러오기 (v8 문법)
+    if (window.db) {
+        window.db.collection("admins").doc(String(myKakaoId)).get()
+        .then(doc => {
+            if (doc.exists) {
+                const role = doc.data().role;
+                if (role === 'master_admin') {
+                    localStorage.setItem('tosil_is_master', 'true');
+                    localStorage.removeItem('tosil_is_subadmin');
+                } else if (role === 'admin') {
+                    localStorage.setItem('tosil_is_subadmin', 'true');
+                    localStorage.removeItem('tosil_is_master');
+                }
+            } else {
+                localStorage.removeItem('tosil_is_master');
+                localStorage.removeItem('tosil_is_subadmin');
+            }
+            renderAdminUI(); // 서버에서 데이터 가져온 후 UI 한번 더 갱신!
+        }).catch(() => { renderAdminUI(); });
+    } else {
+        renderAdminUI();
+    }
+
+    // 게시글, 댓글, 스크랩 숫자 반영
+    const posts = JSON.parse(localStorage.getItem('tosil_community_posts') || '[]');
+    const comments = JSON.parse(localStorage.getItem('tosil_community_comments') || '[]');
+    if(document.getElementById('mypage-post-count')) document.getElementById('mypage-post-count').innerText = posts.filter(p => p.authorName === myNickname).length;
+    if(document.getElementById('mypage-comment-count')) document.getElementById('mypage-comment-count').innerText = comments.filter(c => c.authorName === myNickname).length;
+    if(document.getElementById('mypage-scrap-count')) document.getElementById('mypage-scrap-count').innerText = posts.filter(p => p.isScrapped === true).length;
+};
+
+document.addEventListener("DOMContentLoaded", () => {
+    setTimeout(() => { if (typeof window.updateMyPageProfile === 'function') window.updateMyPageProfile(); }, 500);
+});
 
 // ==========================================
 // 닉네임 [변경] 버튼을 눌렀을 때 작동하는 함수
@@ -8060,8 +8202,51 @@ window.inviteMamsudaFriend = function() {
     }
 };
 
+
 // ==========================================
-// 🎨 하이엔드 피드 렌더링 엔진 (당근마켓 + 블라인드 감성 & 공지글 부활)
+// 🖼️ 전체화면 이미지 뷰어 엔진 (당근마켓 스타일)
+// ==========================================
+window.openImageViewer = function(src) {
+    let viewer = document.getElementById('global-image-viewer');
+    if (!viewer) {
+        viewer = document.createElement('div');
+        viewer.id = 'global-image-viewer';
+        viewer.style.cssText = 'position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.95); z-index:999999; display:none; justify-content:center; align-items:center; flex-direction:column; opacity:0; transition:opacity 0.2s;';
+        viewer.innerHTML = `
+            <div style="position:absolute; top:20px; left:20px; font-weight:900; color:#FFF; text-shadow:0 2px 4px rgba(0,0,0,0.5);">📷 상세 보기</div>
+            <img id="global-image-viewer-img" style="max-width:100%; max-height:80vh; object-fit:contain; border-radius:12px; transform:scale(0.8); transition:transform 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);">
+            <button onclick="window.closeImageViewer()" style="position:absolute; top:16px; right:16px; background:rgba(255,255,255,0.2); color:#FFF; border:none; width:36px; height:36px; border-radius:50%; font-size:16px; font-weight:900; cursor:pointer; backdrop-filter:blur(4px);">✕</button>
+        `;
+        viewer.onclick = function(e) { if(e.target.id === 'global-image-viewer') window.closeImageViewer(); };
+        document.body.appendChild(viewer);
+    }
+    const imgEl = document.getElementById('global-image-viewer-img');
+    imgEl.src = src;
+    viewer.style.display = 'flex';
+    setTimeout(() => { viewer.style.opacity = '1'; imgEl.style.transform = 'scale(1)'; }, 10);
+};
+
+window.closeImageViewer = function() {
+    const viewer = document.getElementById('global-image-viewer');
+    const imgEl = document.getElementById('global-image-viewer-img');
+    if(viewer) {
+        viewer.style.opacity = '0';
+        imgEl.style.transform = 'scale(0.8)';
+        setTimeout(() => { viewer.style.display = 'none'; }, 200);
+    }
+};
+
+window.searchByTag = function(tag) {
+    const searchInput = document.getElementById('commSearchInput');
+    if (searchInput) {
+        searchInput.value = tag.replace('#', '');
+        document.getElementById('commSearchOverlay').classList.add('active');
+        if(typeof window.doCommSearch === 'function') window.doCommSearch();
+    }
+};
+
+// ==========================================
+// 🎨 하이엔드 피드 렌더링 엔진 (먹통 에러 완전 해결본)
 // ==========================================
 window.renderCommunityFeed = function() {
     const container = document.getElementById('community-feed');
@@ -8083,25 +8268,38 @@ window.renderCommunityFeed = function() {
         posts.sort((a, b) => b.timestamp - a.timestamp);
     }
 
-    // 🌟 상단 오픈 준비 중 배너 및 정렬 버튼
+// 🏷️ 실시간 인기 태그 칩
+    const popularTags = ['#수유텀', '#수면교육', '#당근나눔', '#핫딜공유', '#이유식거부', '#유모차추천'];
+    
+    // 🚨 촌스러운 흰색 배경 삭제! 화면 양끝까지 시원하게 스와이프 되도록 네거티브 마진(-20px) 마법 적용
+    let tagsHtml = `<div style="display: flex; overflow-x: auto; gap: 8px; margin: 0 -20px 20px -20px; padding: 0 20px 8px 20px; scrollbar-width: none;">`;
+    popularTags.forEach(tag => {
+        tagsHtml += `<button onclick="window.searchByTag('${tag}')" style="flex-shrink: 0; padding: 8px 14px; background: #FFFFFF; border: 1px solid #E5E8EB; border-radius: 20px; font-size: 13px; font-weight: 800; color: #4E5968; box-shadow: 0 2px 4px rgba(0,0,0,0.02); cursor: pointer; transition: 0.2s;">${tag}</button>`;
+    });
+    tagsHtml += `</div>`;
+
+    // 🌟 레이아웃 재배치: 태그 -> 정렬 버튼 -> 공지배너 순서로 자연스럽게!
     let html = `
-        <div style="background: linear-gradient(135deg, #F0F7FF 0%, #E0EDFF 100%); border-radius: 16px; padding: 18px 20px; margin-bottom: 24px; display: flex; align-items: center; gap: 14px; box-shadow: 0 4px 12px rgba(49, 130, 246, 0.08);">
+        ${tagsHtml}
+        
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+            <div style="font-size: 15px; font-weight: 900; color: var(--text-m);">🔥 실시간 인기글</div>
+            <div style="display: flex; gap: 8px;">
+                <button onclick="window.setCommSort('latest')" style="padding: 6px 14px; border: none; border-radius: 20px; font-size: 12px; font-weight: 800; cursor: pointer; transition: 0.2s; background: ${window.currentCommSort === 'latest' ? '#333D4B' : 'transparent'}; color: ${window.currentCommSort === 'latest' ? '#FFFFFF' : '#8B95A1'};">최신순</button>
+                <button onclick="window.setCommSort('popular')" style="padding: 6px 14px; border: none; border-radius: 20px; font-size: 12px; font-weight: 800; cursor: pointer; transition: 0.2s; background: ${window.currentCommSort === 'popular' ? '#F04452' : 'transparent'}; color: ${window.currentCommSort === 'popular' ? '#FFFFFF' : '#8B95A1'};">인기순</button>
+            </div>
+        </div>
+
+        <div style="background: linear-gradient(135deg, #F0F7FF 0%, #E0EDFF 100%); border-radius: 16px; padding: 18px 20px; margin-bottom: 20px; display: flex; align-items: center; gap: 14px; box-shadow: 0 4px 12px rgba(49, 130, 246, 0.08);">
             <div style="font-size: 24px; animation: bounce 2s infinite;">🚀</div>
             <div style="flex: 1;">
                 <div style="font-size: 14px; font-weight: 900; color: #1C64F2; margin-bottom: 4px;">맘수다 커뮤니티 오픈 준비 중!</div>
                 <div style="font-size: 12.5px; font-weight: 600; color: #3F83F8; line-height: 1.4; word-break: keep-all;">현재 베타 테스트 중입니다. 작성된 글은 내 스마트폰에서만 보입니다.</div>
             </div>
         </div>
-        
-        <div style="display: flex; justify-content: flex-end; margin-bottom: 16px; padding: 0 4px;">
-            <div style="display: flex; gap: 8px;">
-                <button onclick="window.setCommSort('latest')" style="padding: 6px 14px; border: none; border-radius: 20px; font-size: 12px; font-weight: 800; cursor: pointer; transition: 0.2s; background: ${window.currentCommSort === 'latest' ? '#333D4B' : 'transparent'}; color: ${window.currentCommSort === 'latest' ? '#FFFFFF' : '#8B95A1'};">최신순</button>
-                <button onclick="window.setCommSort('popular')" style="padding: 6px 14px; border: none; border-radius: 20px; font-size: 12px; font-weight: 800; cursor: pointer; transition: 0.2s; background: ${window.currentCommSort === 'popular' ? '#F04452' : 'transparent'}; color: ${window.currentCommSort === 'popular' ? '#FFFFFF' : '#8B95A1'};">인기순</button>
-            </div>
-        </div>
     `;
 
-    // 🔥 운영자 공지글 부활 (전체보기나 일상수다 탭에서만 노출)
+    // 📢 운영자 공지글
     if (window.currentCommCategory === 'all' || window.currentCommCategory === 'talk') {
         html += `
         <div class="feed-card" style="background: #F8FAFC; border-radius: 20px; padding: 20px; margin-bottom: 16px; border: 1px solid #E2E8F0; box-shadow: 0 4px 16px rgba(0,0,0,0.02);">
@@ -8159,7 +8357,7 @@ window.renderCommunityFeed = function() {
 
         let imageHtml = '';
         if (post.images && post.images.length > 0) {
-            let swipeItems = post.images.map(img => `<div class="swipe-item" style="width: 100%; flex-shrink: 0; scroll-snap-align: start;"><img src="${img}" style="width: 100%; height: 200px; object-fit: cover; border-radius: 12px; border: 1px solid rgba(0,0,0,0.04);"></div>`).join('');
+            let swipeItems = post.images.map(img => `<div class="swipe-item" style="width: 100%; flex-shrink: 0; scroll-snap-align: start;"><img src="${img}" onclick="event.stopPropagation(); window.openImageViewer('${img}')" style="width: 100%; height: 200px; object-fit: cover; border-radius: 12px; border: 1px solid rgba(0,0,0,0.04);"></div>`).join('');
             imageHtml = `<div class="image-swipe-wrapper" onclick="event.stopPropagation()" style="display: flex; overflow-x: auto; scroll-snap-type: x mandatory; gap: 8px; margin-top: 14px; border-radius: 12px; scrollbar-width: none;">${swipeItems}</div>`;
         }
 
@@ -8184,16 +8382,14 @@ window.renderCommunityFeed = function() {
                 <div style="display: flex; align-items: center; gap: 6px;">
                     <div style="width: 24px; height: 24px; background: #F2F4F6; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px;">${post.authorIcon}</div>
                     <span style="font-size: 12.5px; font-weight: 700; color: var(--text-body);">${post.authorName}</span>
-                    <span style="font-size: 11px; font-weight: 600; color: var(--text-s);">· ${post.region}</span>
                 </div>
                 <div style="display: flex; gap: 12px; font-size: 13px; font-weight: 700; color: var(--text-sub);">
                     <div class="like-btn" onclick="window.toggleRealLike('${post.id}', this, event)" style="display: flex; align-items: center; gap: 4px; cursor: pointer; background: #F8F9FA; padding: 4px 8px; border-radius: 10px;">
-                        <span class="heart-icon" style="color: ${post.liked ? '#FF5A5F' : '#CBD5E1'}; font-size: 13px; transition: 0.2s;">${post.liked ? '❤️' : '🤍'}</span>
+                        <span class="heart-icon" style="color: ${post.liked ? '#FF5A5F' : '#CBD5E1'}; font-size: 13px; display:inline-block; transition: 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);">${post.liked ? '❤️' : '🤍'}</span>
                         <span class="like-count" style="color: ${post.liked ? '#FF5A5F' : '#8B95A1'};">${post.likes || 0}</span>
                     </div>
                     <div style="display: flex; align-items: center; gap: 4px; background: #F8F9FA; padding: 4px 8px; border-radius: 10px;">
-                        <span style="color: var(--brand-primary); font-size: 13px;">💬</span> 
-                        <span>${post.comments || 0}</span>
+                        <span style="color: var(--brand-primary); font-size: 13px;">💬</span> <span>${post.comments || 0}</span>
                     </div>
                 </div>
             </div>
@@ -8402,3 +8598,1009 @@ setTimeout(() => {
 
 // (참고: 기존 changeNickname 함수 맨 마지막 줄인 window.updateMyPageProfile(); 밑에 
 // window.saveUserInfoToFirebase(); 를 한 줄 추가해주시면 닉네임 바꿀 때마다 DB도 즉시 업데이트됩니다!)
+
+// ==========================================
+// 🔐 카카오 로그아웃 & 회원 탈퇴 엔진 (버그 해결 완료)
+// ==========================================
+window.logoutKakao = function() {
+    window.showConfirm("정말 로그아웃 하시겠습니까?", function() {
+        // 캐시 삭제
+        localStorage.removeItem('kakao_nickname');
+        localStorage.removeItem('kakao_id');
+        localStorage.removeItem('kakao_profile_image');
+        localStorage.removeItem('tosil_is_master');
+        localStorage.removeItem('tosil_is_subadmin');
+        
+        window.showToast("👋 안전하게 로그아웃 되었습니다.");
+        if (typeof window.renderSettingsTab === 'function') window.renderSettingsTab();
+        
+        // 새로고침해서 관리자 권한 완벽 초기화
+        setTimeout(() => location.reload(), 800);
+    }, "👋", "로그아웃", "#8B95A1");
+};
+
+window.unlinkKakao = function() {
+    window.showConfirm("정말 회원 탈퇴를 진행하시겠습니까?<br><span style='font-size:12px; color:#8B95A1;'>모든 데이터가 삭제되며 복구할 수 없습니다.</span>", function() {
+        const answer = prompt("탈퇴하시려면 아래 입력창에 '탈퇴'라고 정확히 적어주세요.");
+        if (answer === '탈퇴') {
+            localStorage.clear(); // 모든 기기 데이터 완벽 삭제
+            window.showToast("💔 회원 탈퇴가 완료되었습니다. 그동안 감사했습니다!");
+            setTimeout(() => location.reload(), 1500);
+        } else if (answer !== null) {
+            alert("입력한 단어가 일치하지 않아 취소되었습니다.");
+        }
+    }, "🚨", "탈퇴하기", "#F04452");
+};
+
+// ==========================================
+// 💾 글쓰기 임시저장(Draft) 방어막 엔진 (진짜 최종 통합본)
+// ==========================================
+
+// 1. 임시저장 실행 & 알림 함수
+window.savePostDraft = function(showToast = false) {
+    const cat = document.getElementById('writeCategory')?.value || '';
+    const title = document.getElementById('writeTitle')?.value || '';
+    const content = document.getElementById('writeContent')?.value || '';
+    const images = window.attachedImages || [];
+    
+    // 내용이 단 한 글자라도 있으면 로컬에 저장
+    if (title.trim() || content.trim() || images.length > 0) {
+        localStorage.setItem('tosil_post_draft', JSON.stringify({ cat, title, content, images }));
+        if (showToast && typeof window.showToast === 'function') {
+            window.showToast("💾 작성 중인 글이 안전하게 임시저장 되었습니다.");
+        }
+    } else {
+        localStorage.removeItem('tosil_post_draft');
+    }
+};
+
+// 2. 글씨 입력할 때마다 실시간 자동저장
+document.addEventListener("DOMContentLoaded", () => {
+    const titleInput = document.getElementById('writeTitle');
+    const contentInput = document.getElementById('writeContent');
+    if (titleInput) titleInput.addEventListener('input', () => window.savePostDraft(false));
+    if (contentInput) contentInput.addEventListener('input', () => window.savePostDraft(false));
+});
+
+// 3. 모달 열기 (불러오기 타이밍 꼬임 해결)
+window.openWriteModal = function() {
+    if (!localStorage.getItem('kakao_id')) {
+        return window.showConfirm("안전하고 클린한 커뮤니티를 위해<br>로그인한 유저만 글을 쓸 수 있어요!", function() {
+            if (typeof window.switchTab === 'function') window.switchTab('settings');
+        }, "💬", "로그인 하러가기", "#3182F6");
+    }
+
+    const executeOpenModal = () => {
+        document.getElementById('writeOverlay').classList.add('show');
+        document.getElementById('writeModal').classList.add('show');
+        document.body.style.overflow = 'hidden'; 
+    };
+
+    const draftStr = localStorage.getItem('tosil_post_draft');
+    if (draftStr && !window.editingPostId) { 
+        const draft = JSON.parse(draftStr);
+        if (draft.title || draft.content || (draft.images && draft.images.length > 0)) {
+            if (confirm("작성 중이던 글이 있습니다.\n이어서 작성하시겠습니까?")) {
+                if(document.getElementById('writeCategory')) document.getElementById('writeCategory').value = draft.cat || '';
+                if(document.getElementById('writeTitle')) document.getElementById('writeTitle').value = draft.title || '';
+                if(document.getElementById('writeContent')) document.getElementById('writeContent').value = draft.content || '';
+                window.attachedImages = draft.images || [];
+                if(typeof window.renderPreviewImages === 'function') window.renderPreviewImages();
+                
+                executeOpenModal(); 
+                if(typeof window.showToast === 'function') window.showToast("✨ 임시저장된 글을 불러왔습니다!");
+            } else {
+                localStorage.removeItem('tosil_post_draft');
+                executeOpenModal();
+            }
+            return;
+        }
+    }
+    executeOpenModal();
+};
+
+// 4. 모달 닫기 (저장 및 알림)
+window.closeWriteModal = function() {
+    if (!window.editingPostId) {
+        const title = document.getElementById('writeTitle')?.value || '';
+        const content = document.getElementById('writeContent')?.value || '';
+        const images = window.attachedImages || [];
+        
+        if (title.trim() || content.trim() || images.length > 0) {
+            if (typeof window.savePostDraft === 'function') window.savePostDraft(true); // 알림 ON
+        } else {
+            if (typeof window.savePostDraft === 'function') window.savePostDraft(false); // 알림 OFF
+        }
+    }
+
+    document.getElementById('writeOverlay').classList.remove('show');
+    document.getElementById('writeModal').classList.remove('show');
+    document.body.style.overflow = 'auto'; 
+
+    setTimeout(() => {
+        if(document.getElementById('writeTitle')) document.getElementById('writeTitle').value = '';
+        if(document.getElementById('writeContent')) document.getElementById('writeContent').value = '';
+        if(document.getElementById('writeCategory')) document.getElementById('writeCategory').value = '';
+        if(document.getElementById('writeAnonymous')) document.getElementById('writeAnonymous').checked = false;
+        
+        window.attachedImages = []; 
+        if(typeof window.renderPreviewImages === 'function') window.renderPreviewImages();
+        window.editingPostId = null; 
+    }, 300);
+};
+
+// ==========================================
+// 👑 [Phase 2] 육아메이트 비밀 조종석 (관제센터) 엔진 (복구 완료!)
+// ==========================================
+window.adminClickCount = 0;
+window.adminClickTimer = null;
+
+// 1. 다다닥! 5번 터치 감지 로직
+window.handleSecretAdminClick = function() {
+    window.adminClickCount++;
+    if (window.adminClickTimer) clearTimeout(window.adminClickTimer);
+    
+    window.adminClickTimer = setTimeout(() => {
+        window.adminClickCount = 0; 
+    }, 2000);
+
+    if (window.adminClickCount >= 5) {
+        window.adminClickCount = 0; 
+        const isMaster = localStorage.getItem('tosil_is_master') === 'true';
+        const isSubAdmin = localStorage.getItem('tosil_is_subadmin') === 'true';
+        
+        if (isMaster || isSubAdmin) {
+            if (navigator.vibrate) navigator.vibrate([50, 50, 100]); 
+            window.openAdminDashboard();
+        } else {
+            window.showToast("👀 개발자 모드는 관리자만 접근할 수 있어요.");
+        }
+    }
+};
+
+// 2. 관제센터 UI 렌더링
+window.openAdminDashboard = function() {
+    let dashboard = document.getElementById('admin-secret-dashboard');
+    if (!dashboard) {
+        dashboard = document.createElement('div');
+        dashboard.id = 'admin-secret-dashboard';
+        dashboard.style.cssText = 'position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.85); z-index:9999999; display:flex; flex-direction:column; justify-content:flex-end; opacity:0; transition:opacity 0.3s; backdrop-filter:blur(10px);';
+        document.body.appendChild(dashboard);
+    }
+
+    const posts = JSON.parse(localStorage.getItem('tosil_community_posts')) || [];
+    const comments = JSON.parse(localStorage.getItem('tosil_community_comments')) || [];
+    
+    dashboard.innerHTML = `
+        <div style="background:#18181B; border-radius:24px 24px 0 0; padding:30px 20px 40px 20px; height:85vh; display:flex; flex-direction:column; transform:translateY(100%); transition:transform 0.4s cubic-bezier(0.2, 0.8, 0.2, 1); border-top:1px solid rgba(255,255,255,0.1);">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:24px;">
+                <div>
+                    <div style="font-size:12px; font-weight:800; color:#38BDF8; margin-bottom:4px;">Tosil Admin System</div>
+                    <div style="font-size:24px; font-weight:900; color:#FFFFFF;">👑 육아메이트 관제센터</div>
+                </div>
+                <button onclick="window.closeAdminDashboard()" style="background:rgba(255,255,255,0.1); border:none; width:36px; height:36px; border-radius:50%; color:#FFF; font-size:16px; cursor:pointer;">✕</button>
+            </div>
+
+            <div style="display:flex; gap:10px; margin-bottom:24px;">
+                <div style="flex:1; background:rgba(255,255,255,0.1); border-radius:16px; padding:16px; text-align:center;">
+                    <div style="font-size:12px; color:#A1A1AA; margin-bottom:6px; font-weight:800;">총 누적 게시글</div>
+                    <div style="font-size:20px; font-weight:900; color:#FFF;">${posts.length}건</div>
+                </div>
+                <div style="flex:1; background:rgba(255,255,255,0.1); border-radius:16px; padding:16px; text-align:center;">
+                    <div style="font-size:12px; color:#A1A1AA; margin-bottom:6px; font-weight:800;">총 누적 댓글</div>
+                    <div style="font-size:20px; font-weight:900; color:#38BDF8;">${comments.length}건</div>
+                </div>
+            </div>
+
+            <div style="font-size:14px; font-weight:800; color:#A1A1AA; margin-bottom:12px;">운영 모듈 제어</div>
+            
+            <div style="display:flex; flex-direction:column; gap:12px; overflow-y:auto; padding-bottom:20px;">
+                <!-- 1. 공지사항 컨트롤 -->
+                <button onclick="window.openNoticeController()" style="background:#27272A; border:1px solid #3F3F46; padding:18px; border-radius:16px; display:flex; align-items:center; gap:16px; text-align:left; cursor:pointer; transition:0.2s;">
+                    <div style="font-size:24px;">📢</div>
+                    <div>
+                        <div style="font-size:15px; font-weight:900; color:#FFF; margin-bottom:4px;">실시간 공지사항 / 배너 관리</div>
+                        <div style="font-size:12px; font-weight:600; color:#A1A1AA;">앱 메인과 맘수다 탭의 공지를 실시간으로 변경합니다.</div>
+                    </div>
+                </button>
+
+                <!-- 2. 신고/유저 관리 -->
+                <button onclick="window.showToast('🛠️ [3순위 진행 예정] 악성 유저 통제소 연동을 준비 중입니다.')" style="background:#27272A; border:1px solid #3F3F46; padding:18px; border-radius:16px; display:flex; align-items:center; gap:16px; text-align:left; cursor:pointer; transition:0.2s;">
+                    <div style="font-size:24px;">🚨</div>
+                    <div>
+                        <div style="font-size:15px; font-weight:900; color:#F87171; margin-bottom:4px;">신고 접수 및 악성 유저 관리</div>
+                        <div style="font-size:12px; font-weight:600; color:#A1A1AA;">신고된 글 블라인드 및 카카오ID 영구 차단 기능</div>
+                    </div>
+                </button>
+
+                <!-- 3. 지도 관리 -->
+                <button onclick="window.showToast('🛠️ [4순위 진행 예정] 육아지도 DB 관리망 연동을 준비 중입니다.')" style="background:#27272A; border:1px solid #3F3F46; padding:18px; border-radius:16px; display:flex; align-items:center; gap:16px; text-align:left; cursor:pointer; transition:0.2s;">
+                    <div style="font-size:24px;">🗺️</div>
+                    <div>
+                        <div style="font-size:15px; font-weight:900; color:#FFF; margin-bottom:4px;">육아지도 핫플 & 행사 등록</div>
+                        <div style="font-size:12px; font-weight:600; color:#A1A1AA;">코드 수정 없이 새로운 장소를 앱에 추가합니다.</div>
+                    </div>
+                </button>
+            </div>
+        </div>
+    `;
+
+    dashboard.style.display = 'flex';
+    setTimeout(() => { dashboard.style.opacity = '1'; dashboard.firstElementChild.style.transform = 'translateY(0)'; }, 10);
+};
+
+window.closeAdminDashboard = function() {
+    const dashboard = document.getElementById('admin-secret-dashboard');
+    if(dashboard) {
+        dashboard.style.opacity = '0';
+        dashboard.firstElementChild.style.transform = 'translateY(100%)';
+        setTimeout(() => { dashboard.style.display = 'none'; }, 400);
+    }
+};
+
+// ==========================================
+// 📢 [Phase 2] 실시간 공지사항 연동 엔진 (v8 & v9 완벽 호환 유니버설 버전)
+// ==========================================
+window.appNotices = JSON.parse(localStorage.getItem('tosil_global_notices')) || { 
+    main: { text: "", isActive: false }, 
+    community: { text: "", isActive: false } 
+};
+
+// 1. 파이어베이스 실시간 수신 감지 (버전 자동 감지)
+window.listenToNotices = function() {
+    if (!window.db) return;
+    
+    // v8 방식 지원
+    if (typeof window.db.collection === 'function') {
+        window.db.collection('app_settings').doc('global_notice').onSnapshot((docSnap) => {
+            if (docSnap.exists) {
+                window.appNotices = docSnap.data();
+                localStorage.setItem('tosil_global_notices', JSON.stringify(window.appNotices));
+                window.applyNoticeToUI(); 
+            }
+        });
+    } 
+    // v9 방식 지원
+    else if (typeof window.doc === 'function' && typeof window.onSnapshot === 'function') {
+        const docRef = window.doc(window.db, "app_settings", "global_notice");
+        window.onSnapshot(docRef, (docSnap) => {
+            if (docSnap.exists()) {
+                window.appNotices = docSnap.data();
+                localStorage.setItem('tosil_global_notices', JSON.stringify(window.appNotices));
+                window.applyNoticeToUI(); 
+            }
+        });
+    }
+};
+
+// 2. 화면에 배너 띄우기 / 숨기기 처리
+window.applyNoticeToUI = function() {
+    const mainWrapper = document.getElementById('home-main-banner-wrapper');
+    const mainText = document.getElementById('home-main-banner-text');
+    if (mainWrapper && mainText) {
+        if (window.appNotices?.main?.isActive && window.appNotices?.main?.text) {
+            mainText.innerText = window.appNotices.main.text;
+            mainWrapper.style.display = 'flex';
+        } else {
+            mainWrapper.style.display = 'none'; 
+        }
+    }
+    
+    const commWrapper = document.getElementById('community-notice-wrapper');
+    const commText = document.getElementById('community-notice-text');
+    if (commWrapper && commText) {
+        if (window.appNotices?.community?.isActive && window.appNotices?.community?.text) {
+            commText.innerText = window.appNotices.community.text;
+            commWrapper.style.display = 'flex';
+        } else {
+            commWrapper.style.display = 'none'; 
+        }
+    }
+};
+
+// 앱 켜지자마자 캐시로 즉시 그리기
+document.addEventListener("DOMContentLoaded", () => {
+    window.applyNoticeToUI();
+});
+
+// DB 연결 대기 후 리스너 부착
+let noticeRetryTimer = setInterval(() => {
+    if (window.db) {
+        clearInterval(noticeRetryTimer);
+        window.listenToNotices();
+    }
+}, 1000);
+
+// ==========================================
+// 🛠️ 관리자 전용 공지사항 컨트롤러 (ON/OFF 스위치)
+// ==========================================
+window.openNoticeController = function() {
+    const mData = window.appNotices?.main || { text: "", isActive: false };
+    const cData = window.appNotices?.community || { text: "", isActive: false };
+    
+    const mBtnStyle = mData.isActive ? "background:#38BDF8; color:#0F172A;" : "background:#3F3F46; color:#A1A1AA;";
+    const mBtnText = mData.isActive ? "ON (켜짐)" : "OFF (꺼짐)";
+    
+    const cBtnStyle = cData.isActive ? "background:#38BDF8; color:#0F172A;" : "background:#3F3F46; color:#A1A1AA;";
+    const cBtnText = cData.isActive ? "ON (켜짐)" : "OFF (꺼짐)";
+
+    const controllerHtml = `
+        <style>.admin-notice-input::placeholder { color: rgba(255,255,255,0.3) !important; font-weight:400; }</style>
+        <div id="notice-controller-overlay" style="position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.85); z-index:99999999; display:flex; flex-direction:column; justify-content:center; align-items:center; padding:20px; backdrop-filter:blur(5px); opacity:0; transition:opacity 0.3s;">
+            <div style="background:#18181B; width:100%; max-width:400px; border-radius:24px; padding:24px; border:1px solid #3F3F46; transform:scale(0.9); transition:transform 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);">
+                <div style="font-size:20px; font-weight:900; color:#FFF; margin-bottom:24px;">📢 배너 & 공지 제어기</div>
+                
+                <div style="margin-bottom:20px; background:#27272A; padding:16px; border-radius:16px;">
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+                        <div style="font-size:14px; font-weight:800; color:#38BDF8;">1. 홈 화면 메인 배너</div>
+                        <button id="btn-toggle-main" data-active="${mData.isActive}" onclick="window.toggleAdminSwitch('main')" style="${mBtnStyle} border:none; padding:6px 14px; border-radius:10px; font-weight:900; font-size:12px; cursor:pointer; transition:0.2s; box-shadow:0 2px 4px rgba(0,0,0,0.2);">
+                            ${mBtnText}
+                        </button>
+                    </div>
+                    <input class="admin-notice-input" id="admin-input-main-notice" type="text" value="${mData.text}" placeholder="(여기에 띄울 글자를 직접 적어주세요)" style="width:100%; background:#18181B !important; border:1px solid #3F3F46 !important; color:#FFFFFF !important; padding:14px; border-radius:12px; font-size:14px; font-weight:800; box-sizing:border-box; outline:none;">
+                </div>
+
+                <div style="margin-bottom:24px; background:#27272A; padding:16px; border-radius:16px;">
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+                        <div style="font-size:14px; font-weight:800; color:#38BDF8;">2. 맘수다 상단 공지</div>
+                        <button id="btn-toggle-comm" data-active="${cData.isActive}" onclick="window.toggleAdminSwitch('comm')" style="${cBtnStyle} border:none; padding:6px 14px; border-radius:10px; font-weight:900; font-size:12px; cursor:pointer; transition:0.2s; box-shadow:0 2px 4px rgba(0,0,0,0.2);">
+                            ${cBtnText}
+                        </button>
+                    </div>
+                    <input class="admin-notice-input" id="admin-input-comm-notice" type="text" value="${cData.text}" placeholder="(여기에 띄울 글자를 직접 적어주세요)" style="width:100%; background:#18181B !important; border:1px solid #3F3F46 !important; color:#FFFFFF !important; padding:14px; border-radius:12px; font-size:14px; font-weight:800; box-sizing:border-box; outline:none;">
+                </div>
+
+                <div style="display:flex; gap:12px;">
+                    <button onclick="window.closeNoticeController()" style="flex:1; padding:14px; background:#3F3F46; color:#E5E8EB; border:none; border-radius:12px; font-weight:800; font-size:15px; cursor:pointer;">닫기</button>
+                    <button onclick="window.saveNoticeToDB()" style="flex:1; padding:14px; background:#38BDF8; color:#0F172A; border:none; border-radius:12px; font-weight:900; font-size:15px; cursor:pointer;">저장 & 라이브 🚀</button>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    document.body.insertAdjacentHTML('beforeend', controllerHtml);
+    setTimeout(() => {
+        const overlay = document.getElementById('notice-controller-overlay');
+        overlay.style.opacity = '1';
+        overlay.firstElementChild.style.transform = 'scale(1)';
+    }, 10);
+};
+
+window.toggleAdminSwitch = function(type) {
+    const btn = document.getElementById('btn-toggle-' + type);
+    if (!btn) return;
+    const isActive = btn.getAttribute('data-active') === 'true';
+    if (isActive) {
+        btn.setAttribute('data-active', 'false');
+        btn.innerText = 'OFF (꺼짐)';
+        btn.style.background = '#3F3F46';
+        btn.style.color = '#A1A1AA';
+    } else {
+        btn.setAttribute('data-active', 'true');
+        btn.innerText = 'ON (켜짐)';
+        btn.style.background = '#38BDF8';
+        btn.style.color = '#0F172A';
+    }
+};
+
+window.closeNoticeController = function() {
+    const overlay = document.getElementById('notice-controller-overlay');
+    if(overlay) {
+        overlay.style.opacity = '0';
+        overlay.firstElementChild.style.transform = 'scale(0.9)';
+        setTimeout(() => overlay.remove(), 300);
+    }
+};
+
+window.saveNoticeToDB = function() {
+    const mainText = document.getElementById('admin-input-main-notice').value.trim();
+    const mainActive = document.getElementById('btn-toggle-main').getAttribute('data-active') === 'true';
+    
+    const commText = document.getElementById('admin-input-comm-notice').value.trim();
+    const commActive = document.getElementById('btn-toggle-comm').getAttribute('data-active') === 'true';
+    
+    if (mainActive && !mainText) return window.showToast("⚠️ 홈 배너에 띄울 내용이 비어있습니다.");
+    if (commActive && !commText) return window.showToast("⚠️ 맘수다 공지에 띄울 내용이 비어있습니다.");
+    
+    if(!window.db) return window.showToast("❌ DB 연결이 되지 않았습니다.");
+
+    const noticePayload = {
+        main: { text: mainText, isActive: mainActive },
+        community: { text: commText, isActive: commActive },
+        updatedAt: new Date().toISOString()
+    };
+
+    if (typeof window.db.collection === 'function') {
+        window.db.collection('app_settings').doc('global_notice').set(noticePayload, { merge: true })
+        .then(() => {
+            window.closeNoticeController();
+            window.showToast("✅ 공지사항 라이브 적용 완료!");
+        })
+        .catch((error) => {
+            console.error("공지 업데이트 에러:", error);
+            window.showToast("❌ 공지 등록 실패.");
+        });
+    } else if (typeof window.setDoc === 'function' && typeof window.doc === 'function') {
+        const docRef = window.doc(window.db, "app_settings", "global_notice");
+        window.setDoc(docRef, noticePayload, { merge: true })
+        .then(() => {
+            window.closeNoticeController();
+            window.showToast("✅ 공지사항 라이브 적용 완료!");
+        })
+        .catch((error) => {
+            console.error("공지 업데이트 에러:", error);
+            window.showToast("❌ 공지 등록 실패.");
+        });
+    } else {
+        window.showToast("❌ Firestore 저장 방식을 찾을 수 없습니다.");
+    }
+};
+
+// ==========================================
+// 🚨 신고하기 함수 (v8 호환 방식)
+// ==========================================
+window.reportContent = async function(type, targetId, reportedUserId) {
+    const myUid = localStorage.getItem('kakao_id');
+    if (!myUid) return window.showToast("로그인이 필요합니다.");
+    if (!window.db) return window.showToast("❌ DB 연결이 되지 않았습니다.");
+
+    try {
+        await window.db.collection("reports").add({
+            reporterId: myUid,
+            reportedUserId: reportedUserId,
+            targetId: targetId,
+            type: type, 
+            reason: "사용자 신고 접수", 
+            createdAt: new Date().toISOString(),
+            status: "pending"
+        });
+        window.showToast('🚨 신고가 정상적으로 접수되었습니다.');
+    } catch (error) {
+        console.error("신고 처리 중 오류:", error);
+        window.showToast("오류가 발생했습니다. 다시 시도해주세요.");
+    }
+};
+
+// ==========================================
+// 💬 댓글 점 3개 (Action Sheet) & 삭제 엔진
+// ==========================================
+window.showCommentOptions = async function(commentId, postId) {
+    let comments = JSON.parse(localStorage.getItem('tosil_community_comments')) || [];
+    let comment = comments.find(c => c.id === commentId);
+    if (!comment) return;
+
+    const myName = localStorage.getItem('community_nickname') || localStorage.getItem('kakao_nickname') || '육아메이트';
+    const isMyComment = (comment.authorName === myName || comment.authorName === '익명마미');
+
+    let isMasterAdmin = localStorage.getItem('tosil_is_master') === 'true';
+
+    let existing = document.getElementById('comment-action-sheet');
+    if(existing) existing.remove();
+
+    let menuHtml = '';
+    
+    if (isMasterAdmin) {
+        menuHtml = `
+            <div style="padding: 0 0 16px 0; font-size: 13px; font-weight: 900; color: #3182F6; text-align: center;">👑 육아메이트 대표이사</div>
+            <div onclick="window.deleteComment('${commentId}', '${postId}'); document.getElementById('comment-action-sheet').remove();" style="padding: 16px 0; font-size: 16px; font-weight: 700; color: #F04452; border-bottom: 1px solid #F2F4F6; cursor: pointer; display: flex; align-items: center; gap: 12px;">
+                <span style="font-size: 20px;">🗑️</span> 댓글 강제 삭제
+            </div>
+            <div onclick="window.blockUser('${comment.authorName}')" style="padding: 16px 0; font-size: 16px; font-weight: 700; color: #333D4B; cursor: pointer; display: flex; align-items: center; gap: 12px;">
+                <span style="font-size: 20px;">🚫</span> 이 사용자 영구 차단
+            </div>
+        `;
+    } else if (isMyComment) {
+        menuHtml = `
+            <div onclick="window.deleteComment('${commentId}', '${postId}'); document.getElementById('comment-action-sheet').remove();" style="padding: 16px 0; font-size: 16px; font-weight: 700; color: #F04452; cursor: pointer; display: flex; align-items: center; gap: 12px;">
+                <span style="font-size: 20px;">🗑️</span> 댓글 삭제하기
+            </div>
+        `;
+    } else {
+        menuHtml = `
+            <div onclick="window.showToast('🚨 댓글 신고가 접수되었습니다.'); document.getElementById('comment-action-sheet').remove();" style="padding: 16px 0; font-size: 16px; font-weight: 700; color: #F04452; border-bottom: 1px solid #F2F4F6; cursor: pointer; display: flex; align-items: center; gap: 12px;">
+                <span style="font-size: 20px;">🚨</span> 이 댓글 신고하기
+            </div>
+            <div onclick="window.blockUser('${comment.authorName}')" style="padding: 16px 0; font-size: 16px; font-weight: 700; color: #333D4B; cursor: pointer; display: flex; align-items: center; gap: 12px;">
+                <span style="font-size: 20px;">🚫</span> 이 사용자 차단하기
+            </div>
+        `;
+    }
+
+    const sheetHtml = `
+        <div id="comment-action-sheet" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.4); z-index: 99999; display: flex; flex-direction: column; justify-content: flex-end; opacity: 0; transition: opacity 0.2s ease;" onclick="this.remove()">
+            <div style="background: #ffffff; border-radius: 20px 20px 0 0; padding: 24px 20px 32px 20px; transform: translateY(100%); transition: transform 0.3s cubic-bezier(0.1, 1, 0.2, 1);" onclick="event.stopPropagation()">
+                <div style="width: 40px; height: 4px; background: #E5E8EB; border-radius: 2px; margin: 0 auto 20px auto;"></div>
+                ${menuHtml}
+                <div onclick="document.getElementById('comment-action-sheet').remove();" style="margin-top: 16px; padding: 16px 0; font-size: 16px; font-weight: 700; color: #8B95A1; text-align: center; background: #F2F4F6; border-radius: 12px; cursor: pointer;">닫기</div>
+            </div>
+        </div>
+    `;
+    
+    document.body.insertAdjacentHTML('beforeend', sheetHtml);
+    setTimeout(() => {
+        const sheet = document.getElementById('comment-action-sheet');
+        if(sheet) { sheet.style.opacity = '1'; sheet.firstElementChild.style.transform = 'translateY(0)'; }
+    }, 10);
+};
+
+// 🗑️ 댓글 삭제 기능
+window.deleteComment = function(commentId, postId) {
+    window.showConfirm("이 댓글을 정말 삭제하시겠습니까?", function() {
+        let comments = JSON.parse(localStorage.getItem('tosil_community_comments')) || [];
+        comments = comments.filter(c => c.id !== commentId);
+        localStorage.setItem('tosil_community_comments', JSON.stringify(comments));
+
+        let posts = JSON.parse(localStorage.getItem('tosil_community_posts')) || [];
+        let postIdx = posts.findIndex(p => p.id === postId);
+        if(postIdx > -1) {
+            posts[postIdx].comments = Math.max(0, (posts[postIdx].comments || 0) - 1);
+            localStorage.setItem('tosil_community_posts', JSON.stringify(posts));
+            
+            const commentCountEl = document.getElementById('detail-comment-count');
+            if(commentCountEl) commentCountEl.innerText = posts[postIdx].comments;
+        }
+
+        if (typeof window.db !== 'undefined' && typeof window.setDoc === 'function') {
+            window.setDoc(window.doc(window.db, "community", "comments"), { records: comments }).catch(e=>{});
+            window.setDoc(window.doc(window.db, "community", "posts"), { records: posts }).catch(e=>{}); 
+        }
+
+        window.renderComments(postId); 
+        window.showToast('🗑️ 댓글이 삭제되었습니다.');
+    }, "🗑️", "삭제", "#F04452");
+};
+
+// ==========================================
+// 🚫 글로벌 차단 시스템 (메뉴판 겹침 버그 완벽 해결 버전)
+// ==========================================
+window.blockUser = function(targetName) {
+    if (!targetName || targetName === '육아메이트' || targetName === '육아천재대표님') {
+        return window.showToast("🚨 최고 관리자는 차단할 수 없습니다.");
+    }
+    
+    // 🧹 1단계: 차단 확인창을 띄우기 전에, 화면에 떠 있는 모든 점 3개 메뉴(Action Sheet)를 즉시 제거합니다!
+    document.getElementById('post-action-sheet')?.remove();
+    document.getElementById('comment-action-sheet')?.remove();
+    
+    // 2단계: 확인창 띄우기
+    window.showConfirm(`정말 <b>${targetName}</b>님을 차단하시겠습니까?<br>앞으로 이 사용자의 글과 댓글이 더 이상 보이지 않습니다.`, function() {
+        let blockedUsers = JSON.parse(localStorage.getItem('tosil_blocked_users')) || [];
+        if (!blockedUsers.includes(targetName)) {
+            blockedUsers.push(targetName);
+            localStorage.setItem('tosil_blocked_users', JSON.stringify(blockedUsers));
+        }
+        
+        // 상세 페이지 닫기 및 피드 새로고침
+        if (typeof window.closePostDetail === 'function') window.closePostDetail();
+        if (typeof window.renderCommunityFeed === 'function') window.renderCommunityFeed();
+        
+        window.showToast(`🚫 '${targetName}'님이 차단되었습니다.`);
+    }, "🚫", "차단하기", "#F04452");
+};
+
+// ==========================================
+// 💬 [업그레이드] 인스타 감성 대댓글 숨기기/펼치기 엔진
+// ==========================================
+window.replyingToCommentId = null; // 대댓글 작성 시 부모 댓글 ID 기억
+
+// 1. 답글 달기 버튼 눌렀을 때
+window.prepareReply = function(commentId, authorName) {
+    window.replyingToCommentId = commentId;
+    const inputField = document.getElementById('newCommentInput');
+    if (inputField) {
+        inputField.placeholder = `@${authorName} 님에게 답글 남기는 중...`;
+        inputField.focus();
+    }
+};
+
+// 2. 댓글 및 대댓글 등록 엔진 (알림 생성 포함)
+window.addComment = function() { 
+    if (!localStorage.getItem('kakao_id')) {
+        return window.showConfirm("따뜻한 소통을 위해<br>로그인 후 댓글을 남겨주세요!", function() {
+            if (typeof window.closePostDetail === 'function') window.closePostDetail();
+            if (typeof window.switchTab === 'function') window.switchTab('settings');
+        }, "💬", "로그인 하러가기", "#3182F6");
+    }
+
+    const inputField = document.getElementById('newCommentInput');
+    if(!inputField) return;
+    const commentText = inputField.value.trim();
+    const postId = inputField.getAttribute('data-post-id'); 
+
+    if (!commentText) {
+        window.showToast('⚠️ 댓글 내용을 입력해주세요!');
+        inputField.focus();
+        return;
+    }
+
+    const myName = localStorage.getItem('community_nickname') || localStorage.getItem('kakao_nickname') || '육아메이트';
+    const myIcon = window.getCurrentUserProfileIcon(false);
+    const timestamp = new Date().getTime();
+
+    // 새 댓글(또는 대댓글) 객체 생성
+    const newComment = {
+        id: 'cmt_' + timestamp,
+        postId: postId,
+        parentId: window.replyingToCommentId, // 일반 댓글이면 null, 대댓글이면 부모 ID
+        text: commentText,
+        authorName: myName,
+        authorIcon: myIcon,
+        timestamp: timestamp,
+        likes: 0, 
+        liked: false
+    };
+
+    let comments = JSON.parse(localStorage.getItem('tosil_community_comments')) || [];
+    comments.push(newComment);
+    localStorage.setItem('tosil_community_comments', JSON.stringify(comments));
+
+    let posts = JSON.parse(localStorage.getItem('tosil_community_posts')) || [];
+    let postIdx = posts.findIndex(p => p.id === postId);
+    if(postIdx > -1) {
+        posts[postIdx].comments = (posts[postIdx].comments || 0) + 1;
+        posts[postIdx].hasMyComment = true; 
+        localStorage.setItem('tosil_community_posts', JSON.stringify(posts));
+        
+        // 🔔 [알림 생성] 내 글에 남이 댓글을 달았을 때
+        if (posts[postIdx].authorName !== myName) {
+            let notis = JSON.parse(localStorage.getItem('tosil_notifications')) || [];
+            notis.unshift({
+                id: 'noti_' + timestamp,
+                type: 'comment',
+                postId: postId,
+                senderName: myName,
+                postTitle: posts[postIdx].title,
+                timestamp: timestamp,
+                isRead: false
+            });
+            localStorage.setItem('tosil_notifications', JSON.stringify(notis));
+        }
+
+        const commentCountEl = document.getElementById('detail-comment-count');
+        if(commentCountEl) commentCountEl.innerText = posts[postIdx].comments;
+    }
+
+    // 대댓글 상태 초기화
+    window.replyingToCommentId = null;
+    inputField.value = '';
+    inputField.placeholder = "따뜻한 댓글을 남겨주세요...";
+    if (navigator.vibrate) navigator.vibrate(20);
+
+    window.renderComments(postId);
+    window.showToast('💖 따뜻한 댓글이 등록되었습니다!');
+
+    // 파이어베이스 동기화
+    if (typeof window.db !== 'undefined' && typeof window.setDoc === 'function') {
+        window.setDoc(window.doc(window.db, "community", "comments"), { records: comments }).catch(e=>{});
+        window.setDoc(window.doc(window.db, "community", "posts"), { records: posts }).catch(e=>{}); 
+    }
+};
+
+// 3. 인스타 감성 대댓글 숨기기/펼치기 렌더링 엔진
+window.renderComments = function(postId) {
+    const listContainer = document.getElementById('commentList');
+    if(!listContainer) return;
+
+    let allComments = JSON.parse(localStorage.getItem('tosil_community_comments')) || [];
+    let postComments = allComments.filter(c => c.postId === postId); 
+    let blockedUsers = JSON.parse(localStorage.getItem('tosil_blocked_users')) || [];
+    postComments = postComments.filter(c => !blockedUsers.includes(c.authorName));
+
+    if (postComments.length === 0) {
+        listContainer.innerHTML = `<div style="text-align:center; padding: 40px 0; color: #8B95A1; font-size: 13px; font-weight: 700;">첫 번째 댓글을 남겨주세요! ✨</div>`;
+        return;
+    }
+
+    // 부모 댓글과 대댓글 분리
+    let parentComments = postComments.filter(c => !c.parentId);
+    let childComments = postComments.filter(c => c.parentId);
+
+    parentComments.sort((a, b) => a.timestamp - b.timestamp); // 기본 최신순
+
+    let html = '';
+    
+    // 개별 댓글 그리기 템플릿
+    const buildCommentHtml = (c, isReply = false) => {
+        const diffMins = Math.floor((new Date().getTime() - c.timestamp) / 60000);
+        let timeStr = '방금 전';
+        if (diffMins >= 1440) timeStr = `${Math.floor(diffMins/1440)}일 전`;
+        else if (diffMins >= 60) timeStr = `${Math.floor(diffMins/60)}시간 전`;
+        else if (diffMins > 0) timeStr = `${diffMins}분 전`;
+
+        let likeColor = c.liked ? '#FF5A5F' : '#CBD5E1';
+        let likeTextColor = c.liked ? '#FF5A5F' : '#8B95A1';
+        let likeIcon = c.liked ? '❤️' : '🤍';
+        
+        let replyStyle = isReply 
+            ? "margin-left: 42px; padding: 12px 0; border-bottom: none; margin-top: 4px;" 
+            : "padding: 16px 0; border-bottom: 1px solid #F2F4F6;";
+
+        return `
+            <div style="${replyStyle} animation: slideDownFade 0.3s ease forwards; display: flex; align-items: flex-start;">
+                <div style="width: ${isReply ? '28px' : '32px'}; height: ${isReply ? '28px' : '32px'}; background: #FFF4E6; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: ${isReply ? '13px' : '15px'}; flex-shrink: 0; margin-right: 10px;">${c.authorIcon || '🧸'}</div>
+                
+                <div style="flex: 1; min-width: 0; padding-top: 2px;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+                        <div style="display: flex; align-items: center; gap: 6px; min-width: 0;">
+                            <span style="font-size: 14px; font-weight: 800; color: #333D4B;">${c.authorName}</span>
+                            <span style="font-size: 12px; color: #8B95A1;">${timeStr}</span>
+                        </div>
+                        <svg onclick="window.showCommentOptions('${c.id}', '${postId}')" style="cursor:pointer; padding: 4px; margin-right: -4px; flex-shrink: 0;" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#8B95A1" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="1.5"></circle><circle cx="12" cy="5" r="1.5"></circle><circle cx="12" cy="19" r="1.5"></circle></svg>
+                    </div>
+
+                    <div style="font-size: 15px; color: #4E5968; line-height: 1.5; word-break: keep-all; padding-right: 4px; margin-bottom: 10px;">
+                        ${c.text.replace(/\n/g, '<br>')}
+                    </div>
+                    
+                    <div style="display: flex; gap: 16px; align-items: center; margin-top: 2px;">
+                        <div onclick="window.toggleCommentLike('${c.id}', '${postId}', event)" style="display: inline-flex; align-items: center; gap: 4px; cursor: pointer;">
+                            <span style="color: ${likeColor}; font-size: 13px; transition: 0.2s;">${likeIcon}</span>
+                            <span style="color: ${likeTextColor}; font-size: 12px; font-weight: 600;">${c.likes || 0}</span>
+                        </div>
+                        ${!isReply ? `<div onclick="window.prepareReply('${c.id}', '${c.authorName}')" style="font-size: 12px; font-weight: 700; color: #8B95A1; cursor: pointer;">답글 달기</div>` : ''}
+                    </div>
+                </div>
+            </div>
+        `;
+    };
+
+    // 부모 그리기 -> 자식이 있으면 '답글 보기' 버튼 생성 -> 그 안에 자식들 숨겨두기
+    parentComments.forEach(parent => {
+        html += buildCommentHtml(parent, false);
+        
+        let replies = childComments.filter(child => child.parentId === parent.id);
+        replies.sort((a, b) => a.timestamp - b.timestamp);
+
+        if (replies.length > 0) {
+            // 🚨 인스타 스타일 '답글 N개 보기' 토글 버튼 (찌꺼기 선 삭제, 화살표 추가)
+            html += `
+                <div id="reply-toggle-btn-${parent.id}" onclick="window.toggleReplies('${parent.id}')" style="margin-left: 42px; margin-top: 4px; margin-bottom: 12px; font-size: 13px; font-weight: 800; color: #8B5CF6; cursor: pointer; display: inline-block;">
+                    답글 ${replies.length}개 보기 ▾
+                </div>
+                
+                <!-- 대댓글이 담길 숨겨진 박스 -->
+                <div id="reply-box-${parent.id}" style="display: none; background: #F9FAFB; border-radius: 12px; padding: 4px 12px 12px 0; margin-left: 42px; margin-bottom: 12px;">
+            `;
+            
+            // 박스 안에 대댓글들 채워 넣기
+            replies.forEach(reply => {
+                let replyHtml = buildCommentHtml(reply, true).replace('margin-left: 42px;', 'margin-left: 12px;'); 
+                html += replyHtml;
+            });
+            
+            html += `</div>`;
+        }
+    });
+
+    listContainer.innerHTML = html;
+};
+
+// 4. 답글 열고 닫는 스위치 함수 (선 삭제, 화살표 추가)
+window.toggleReplies = function(parentId) {
+    const box = document.getElementById('reply-box-' + parentId);
+    const btn = document.getElementById('reply-toggle-btn-' + parentId);
+    
+    if (box && btn) {
+        if (box.style.display === 'none') {
+            box.style.display = 'block';
+            btn.innerText = '답글 숨기기 ▴';
+            btn.style.color = '#8B95A1';
+        } else {
+            box.style.display = 'none';
+            // 안에 들어있는 대댓글 갯수 다시 계산해서 텍스트 복구
+            const replyCount = box.querySelectorAll('div[style*="align-items: flex-start"]').length;
+            btn.innerText = `답글 ${replyCount}개 보기 ▾`;
+            btn.style.color = '#8B5CF6';
+        }
+    }
+};
+
+// 4. 알림 센터 (종 모양) 렌더링 엔진
+window.renderNotifications = function() {
+    const listArea = document.querySelector('#commNotiOverlay div:nth-child(2)'); // 두번째 div가 리스트 영역
+    if (!listArea) return;
+
+    let notis = JSON.parse(localStorage.getItem('tosil_notifications')) || [];
+    
+    // 알림창 열면 '읽음' 처리
+    const unreadCount = notis.filter(n => !n.isRead).length;
+    notis = notis.map(n => ({...n, isRead: true}));
+    localStorage.setItem('tosil_notifications', JSON.stringify(notis));
+    window.updateNotiBadge(); // 빨간점 없애기
+
+    if (notis.length === 0) {
+        listArea.innerHTML = `
+            <div style="flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; width: 100%; height: 100%;">
+                <div style="font-size: 48px; margin-bottom: 16px; filter: grayscale(100%) opacity(0.5);">📭</div>
+                <div style="font-size: 15px; font-weight: 800; color: #8B95A1;">아직 새로운 소식이 없어요</div>
+            </div>
+        `;
+        return;
+    }
+
+    listArea.style.justifyContent = 'flex-start';
+    listArea.style.background = '#FFFFFF';
+    
+    let html = '<div style="width: 100%;">';
+    notis.forEach(n => {
+        const diffMins = Math.floor((new Date().getTime() - n.timestamp) / 60000);
+        let timeStr = '방금 전';
+        if (diffMins >= 1440) timeStr = `${Math.floor(diffMins/1440)}일 전`;
+        else if (diffMins >= 60) timeStr = `${Math.floor(diffMins/60)}시간 전`;
+        else if (diffMins > 0) timeStr = `${diffMins}분 전`;
+
+        html += `
+            <div onclick="window.closeNotiAndOpenPost('${n.postId}')" style="padding: 16px 20px; border-bottom: 1px solid #F2F4F6; cursor: pointer; transition: 0.2s; background: #FFFFFF;" onmouseover="this.style.background='#F9FAFB'" onmouseout="this.style.background='#FFFFFF'">
+                <div style="display: flex; gap: 12px; align-items: flex-start;">
+                    <div style="font-size: 20px; flex-shrink: 0; margin-top: 2px;">💬</div>
+                    <div style="flex: 1; min-width: 0;">
+                        <div style="font-size: 14.5px; font-weight: 800; color: #191F28; margin-bottom: 4px; line-height: 1.4;">
+                            <span style="color: #3182F6;">${n.senderName}</span>님이 내 게시글에 댓글을 남겼습니다.
+                        </div>
+                        <div style="font-size: 13px; color: #8B95A1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-bottom: 6px;">
+                            "${n.postTitle}"
+                        </div>
+                        <div style="font-size: 11.5px; font-weight: 600; color: #B0B8C1;">${timeStr}</div>
+                    </div>
+                </div>
+            </div>
+        `;
+    });
+    html += '</div>';
+    listArea.innerHTML = html;
+};
+
+// 종 모양 알림창 열 때 데이터 그리기
+document.querySelector('[onclick*="commNotiOverlay"]').addEventListener('click', () => {
+    window.renderNotifications();
+});
+
+// 알림창에서 클릭하면 해당 글로 이동
+window.closeNotiAndOpenPost = function(postId) {
+    document.getElementById('commNotiOverlay').classList.remove('active');
+    setTimeout(() => { if(typeof window.openPostDetail === 'function') window.openPostDetail(postId); }, 150);
+};
+
+// 종 모양 배지(빨간 점) 끄고 켜는 함수
+window.updateNotiBadge = function() {
+    let notis = JSON.parse(localStorage.getItem('tosil_notifications')) || [];
+    const unreadCount = notis.filter(n => !n.isRead).length;
+    const badge = document.querySelector('[onclick*="commNotiOverlay"] span');
+    if (badge) {
+        badge.style.display = unreadCount > 0 ? 'block' : 'none';
+    }
+};
+
+// 앱 켜질 때 빨간 점 세팅
+document.addEventListener("DOMContentLoaded", () => {
+    setTimeout(window.updateNotiBadge, 500);
+});
+
+// ==========================================
+// 💎 [Phase 2] 숫자 롤링(Rolling) 애니메이션 엔진 (토스 감성)
+// ==========================================
+window.animateNumber = function(elementId, start, end, duration) {
+    const obj = document.getElementById(elementId);
+    if (!obj) return;
+    
+    // 문자열에서 숫자만 추출 (콤마 제거)
+    const endVal = parseInt(String(end).replace(/[^0-9]/g, '')) || 0;
+    const startVal = parseInt(String(start).replace(/[^0-9]/g, '')) || 0;
+    
+    if (startVal === endVal) {
+        obj.innerText = endVal.toLocaleString();
+        return;
+    }
+    
+    let startTimestamp = null;
+    const step = (timestamp) => {
+        if (!startTimestamp) startTimestamp = timestamp;
+        const progress = Math.min((timestamp - startTimestamp) / duration, 1);
+        
+        // easeOutQuart 에이징 (처음엔 빠르고 끝에서 스르륵 멈춤)
+        const easeProgress = 1 - Math.pow(1 - progress, 4);
+        const currentVal = Math.floor(easeProgress * (endVal - startVal) + startVal);
+        
+        obj.innerText = currentVal.toLocaleString();
+        
+        if (progress < 1) {
+            window.requestAnimationFrame(step);
+        } else {
+            obj.innerText = endVal.toLocaleString(); // 마지막엔 정확한 값 꽂아주기
+        }
+    };
+    window.requestAnimationFrame(step);
+};
+
+// ==========================================
+// 🚗 [Phase 2] 아빠 카톡으로 카카오내비 직행 쏘기 (바이럴 엔진)
+// ==========================================
+window.sendNaviToDad = function(placeName, address) {
+    if (typeof Kakao === 'undefined' || !Kakao.isInitialized()) {
+        return window.showToast("🚨 카카오톡 연동이 필요합니다.");
+    }
+
+    // 도착지 텍스트 인코딩
+    const encodedPlace = encodeURIComponent(placeName);
+    
+    // 카카오맵/내비 URL (모바일에서 누르면 내비로 즉시 연결됨)
+    const naviUrl = `https://map.kakao.com/link/search/${encodedPlace}`;
+
+    Kakao.Share.sendDefault({
+        objectType: 'location',
+        address: address || '상세 주소 없음',
+        addressTitle: placeName,
+        content: {
+            title: `🚗 이번 주말 나들이는 여기야!`,
+            description: `여보! 길 안내 켜놨어. 아기 짐 챙겨서 바로 출발하자 🤍\n\n목적지: ${placeName}`,
+            imageUrl: 'https://cdn-icons-png.flaticon.com/512/3204/3204933.png', // 귀여운 자동차 아이콘
+            link: { mobileWebUrl: naviUrl, webUrl: naviUrl },
+        },
+        buttons: [
+            {
+                title: '📍 카카오내비로 안내 시작',
+                link: { mobileWebUrl: naviUrl, webUrl: naviUrl },
+            }
+        ],
+    });
+    
+    // 누르는 순간 화면에 쾌감을 주는 피드백!
+    if(navigator.vibrate) navigator.vibrate([20, 50, 20]);
+    window.showToast("🚀 남편 카톡으로 내비게이션을 발사했습니다!");
+};
+
+// ==========================================
+// 💰 프리미엄 단일 롤링 배너 자동화 엔진
+// ==========================================
+window.initPremiumBanner = function() {
+    const track = document.querySelector('.banner-track');
+    const dots = document.querySelectorAll('.banner-dot');
+    const wrap = document.querySelector('.premium-banner-wrap');
+    
+    if (!track || dots.length === 0) return;
+
+    let currentIndex = 0;
+    let autoTimer;
+
+    // 슬라이드 이동 및 하단 점(도트) 스타일 변경 함수
+    const moveSlide = (index) => {
+        track.style.transform = `translateX(-${index * 33.333}%)`;
+        
+        dots.forEach((dot, i) => {
+            if (i === index) {
+                dot.style.width = '14px';
+                dot.style.background = '#FFFFFF';
+                dot.style.borderRadius = '4px';
+            } else {
+                dot.style.width = '5px';
+                dot.style.background = 'rgba(255,255,255,0.3)';
+                dot.style.borderRadius = '50%';
+            }
+        });
+    };
+
+    // 3초마다 알아서 넘기는 타이머
+    const startTimer = () => {
+        if (autoTimer) clearInterval(autoTimer);
+        autoTimer = setInterval(() => {
+            currentIndex = (currentIndex + 1) % dots.length;
+            moveSlide(currentIndex);
+        }, 3000); 
+    };
+
+    const stopTimer = () => clearInterval(autoTimer);
+
+    startTimer();
+
+    // 🚨 유저가 배너를 읽으려고 터치 중일 땐 배너가 넘어가지 않도록 멈춤!
+    wrap.addEventListener('touchstart', stopTimer, { passive: true });
+    wrap.addEventListener('mousedown', stopTimer);
+    wrap.addEventListener('touchend', startTimer);
+    wrap.addEventListener('mouseup', startTimer);
+    wrap.addEventListener('mouseleave', startTimer);
+};
+
+// 화면이 그려지고 나서 0.5초 뒤에 스무스하게 롤링 시작
+document.addEventListener("DOMContentLoaded", () => {
+    setTimeout(window.initPremiumBanner, 500); 
+});
