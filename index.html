@@ -2054,6 +2054,7 @@ body {
     <div id="community-feed" style="padding: 20px; background: var(--bg-main);">
         <!-- 비워둠 -->
     </div>
+</div>
 
 <!-- ========================================== -->
 <!-- 👤 맘수다 전용 프로필 (미니멀 디자인 적용) -->
@@ -2117,12 +2118,6 @@ body {
     </div>
     <div id="blockedUsersList" style="flex: 1; padding: 20px; overflow-y: auto; background: var(--bg-main);"></div>
 </div>
-
-<style>
-/* 🚨 오버레이 열림 강제 스타일 추가 */
-#commBlockOverlay.active { transform: translateX(0) !important; }
-</style>
-
 
 </div> <!-- 여기가 전체 화면(wrapper) 닫히는 곳! -->
 
@@ -3028,10 +3023,19 @@ body {
 </div>
 
 <style>
-/* 🚨 !important를 붙여서 어떤 일이 있어도 강제로 열리게 처리 */
+/* 🚨 오버레이 열림 강제 스타일 추가 (화면 깨짐 완벽 방어 패치) */
+body { overflow-x: hidden !important; } /* 가로로 튀어나오는 모든 찌꺼기 원천 차단 */
+
+#commBlockOverlay, #commNotiOverlay, #commActivityOverlay {
+    visibility: hidden; /* 평소엔 투명 망토를 씌워서 공간을 차지하지 않게 만듦 */
+}
+
+#commBlockOverlay.active, #commNotiOverlay.active, #commActivityOverlay.active { 
+    transform: translateX(0) !important; 
+    visibility: visible !important; /* 창이 열릴 때만 투명 망토 해제 */
+}
+
 #commSearchOverlay.active { transform: translateY(0) !important; }
-#commNotiOverlay.active { transform: translateX(0) !important; }
-#commActivityOverlay.active { transform: translateX(0) !important; }
 </style>
 
 
