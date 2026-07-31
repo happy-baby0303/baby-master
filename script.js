@@ -431,14 +431,19 @@ function filterPlaces() {
 }
 
 // ==========================================
-// 🎪 행사 모달창 프리미엄 UI 패치 (하단 쓸데없는 공백 제거 완료!)
+// 🎪 행사 모달창 프리미엄 UI 패치 (티맵/카카오맵 모바일 앱 강제 연동!)
 // ==========================================
 function openFestivalModal(title, dateText, addr, tel, review, query, image) {
     const body = document.getElementById('modal-dynamic-body');
     if(!body) return;
+    
     const naverUrl = 'https://m.map.naver.com/search2/search.naver?query=' + encodeURIComponent(query);
-    const tmapUrl = 'https://search.tmap.co.kr/search.html?keyword=' + encodeURIComponent(query);
-    const kakaoUrl = 'https://map.kakao.com/?q=' + encodeURIComponent(query);
+    
+    // 🚨 [핵심 패치 1] 티맵 웹사이트가 아니라, 스마트폰 티맵 앱을 강제로 열어버리는 전용 주소!
+    const tmapUrl = 'tmap://search?name=' + encodeURIComponent(query);
+    
+    // 🚨 [핵심 패치 2] 카카오맵도 웹사이트 말고 모바일 앱이 바로 켜지도록 최적화
+    const kakaoUrl = 'https://map.kakao.com/link/search/' + encodeURIComponent(query);
     
     const telBtn = tel && tel !== '정보없음' 
         ? `<button onclick="window.location.href='tel:${tel}'" style="flex:1; padding:16px; background:#F2F5F8; color:#4E5968; border-radius:14px; font-weight:900; font-size:15px; border:none; cursor:pointer;">📞 전화 문의</button>` 
@@ -452,7 +457,7 @@ function openFestivalModal(title, dateText, addr, tel, review, query, image) {
         : `<div style="width:100%; height:140px; border-radius:18px; background:linear-gradient(135deg, #EBF4FF, #EAEFF7); margin-bottom:20px; display:flex; align-items:center; justify-content:center; font-size:40px; box-shadow:0 4px 16px rgba(0,0,0,0.06);">🎪</div>`;
 
     body.innerHTML = `
-        <div style="padding: 10px 4px 20px 4px;"> <!-- 🚨 1차 방어 패딩: 40px -> 20px로 다이어트 -->
+        <div style="padding: 10px 4px 20px 4px;">
             <!-- 🏷️ 제목 영역 -->
             <div style="display:flex; align-items:flex-start; gap:10px; margin-bottom:16px;">
                 <span style="font-size:26px; background:#F2F5F8; padding:8px; border-radius:14px; box-shadow:inset 0 1px 3px rgba(0,0,0,0.05);">🌲</span>
@@ -498,23 +503,22 @@ function openFestivalModal(title, dateText, addr, tel, review, query, image) {
                     <div style="width:36px; height:36px; background:#03C75A; border-radius:10px; display:flex; align-items:center; justify-content:center; color:#FFF; font-weight:900; font-size:18px;">N</div>
                     <span style="font-size:11.5px; font-weight:800; color:#4E5968;">네이버 지도</span>
                 </a>
-                <a href="${tmapUrl}" target="_blank" style="flex:1; padding:12px 0; background:#FFF; border:1px solid #E5E8EB; border-radius:14px; cursor:pointer; display:flex; flex-direction:column; align-items:center; gap:8px; box-shadow:0 2px 6px rgba(0,0,0,0.02); text-decoration:none;">
+                <a href="${tmapUrl}" style="flex:1; padding:12px 0; background:#FFF; border:1px solid #E5E8EB; border-radius:14px; cursor:pointer; display:flex; flex-direction:column; align-items:center; gap:8px; box-shadow:0 2px 6px rgba(0,0,0,0.02); text-decoration:none;">
                     <div style="width:36px; height:36px; background:#111111; border-radius:10px; display:flex; align-items:center; justify-content:center; color:#FFF; font-weight:900; font-size:18px;">T</div>
                     <span style="font-size:11.5px; font-weight:800; color:#4E5968;">티맵</span>
                 </a>
                 <a href="${kakaoUrl}" target="_blank" style="flex:1; padding:12px 0; background:#FFF; border:1px solid #E5E8EB; border-radius:14px; cursor:pointer; display:flex; flex-direction:column; align-items:center; gap:8px; box-shadow:0 2px 6px rgba(0,0,0,0.02); text-decoration:none;">
                     <div style="width:36px; height:36px; background:#FEE500; border-radius:10px; display:flex; align-items:center; justify-content:center; color:#191F28; font-weight:900; font-size:18px;">K</div>
-                    <span style="font-size:11.5px; font-weight:800; color:#4E5968;">카카오내비</span>
+                    <span style="font-size:11.5px; font-weight:800; color:#4E5968;">카카오맵</span>
                 </a>
             </div>
 
-            <!-- ✅ 하단 액션 버튼 (margin-bottom 제거) -->
+            <!-- ✅ 하단 액션 버튼 -->
             <div style="display:flex; gap:10px; margin-bottom: 0;">
                 ${telBtn}
                 <button onclick="closeFestivalModalForce()" style="flex:2; padding:16px; background:#3182F6; color:#FFF; border-radius:14px; font-weight:900; font-size:15px; border:none; box-shadow:0 4px 12px rgba(49,130,246,0.3); cursor:pointer;">확인 완료</button>
             </div>
             
-            <!-- 🚨 2차 방어 패딩: 120px 투명 블록을 20px 숨통만 트이게 대폭 축소! -->
             <div style="width: 100%; height: 20px; display: block; clear: both; flex-shrink: 0;"></div>
         </div>
     `;
@@ -1008,44 +1012,107 @@ document.addEventListener("DOMContentLoaded", () => {
 });
 
 // ==========================================
-// 🛍️ 스마트 핫딜 판독기 (나의 역대 최저가 갱신 시스템)
+// 🛍️ 스마트 핫딜 판독기 (역대 최저가 자유 수정 및 완벽 분리 엔진)
 // ==========================================
 
 const ITEM_UNITS = { diaper: '장', wipe: '팩', milk: '통' };
 
-// 카테고리 변경 시 내가 저장한 '최저가' 불러오기 & 수량 단위 텍스트 변경
-function loadPastPrice() {
-    const cat = document.getElementById('hd-category').value;
-    const pastPrice = localStorage.getItem('tosil_hd_best_' + cat);
+// 카테고리 변경 시 내가 저장한 '최저가' 불러오기
+function loadPastPrice(isFromCalc = false) {
+    const catSelect = document.getElementById('hd-category');
+    if (!catSelect) return;
+    const cat = catSelect.value;
+    
+    let pastPrice = localStorage.getItem('tosil_hd_best_' + cat);
+    if (pastPrice && Number(pastPrice) < 50) { 
+        localStorage.removeItem('tosil_hd_best_' + cat);
+        pastPrice = null;
+    }
+
     const inputEl = document.getElementById('hd-standard-price');
     const badgeEl = document.getElementById('hd-past-badge');
     
-    // ✨ [버그 수정 완료] MARKET_STANDARD 대신 ITEM_UNITS 로 정상 호출!
+    // ✨ 단위(장, 팩, 통) 변경
     const unitLabelEl = document.getElementById('hd-unit-label');
     if (unitLabelEl && ITEM_UNITS[cat]) {
         unitLabelEl.innerText = ITEM_UNITS[cat];
     }
 
-    if (pastPrice) {
-        inputEl.value = pastPrice;
-        badgeEl.style.display = 'inline-block';
-    } else {
-        inputEl.value = '';
-        badgeEl.style.display = 'none';
+    // 🎯 카테고리별 현실적인 배경 숫자(Placeholder) 자동 변경
+    const priceInput = document.getElementById('hd-total-price'); 
+    const qtyInput = document.getElementById('hd-count'); 
+    const hdRes = document.getElementById('hd-result');
+
+    if (priceInput && qtyInput) {
+        if (!isFromCalc) {
+            priceInput.value = '';
+            qtyInput.value = '';
+            if (hdRes) hdRes.style.display = 'none';
+        }
+
+        if (cat === 'diaper') {
+            priceInput.placeholder = "45,000";
+            qtyInput.placeholder = "180";
+        } else if (cat === 'wipe') {
+            priceInput.placeholder = "15,000";
+            qtyInput.placeholder = "10";
+        } else if (cat === 'milk') {
+            priceInput.placeholder = "50,000";
+            qtyInput.placeholder = "1";
+        }
+    }
+
+    // 💡 [핵심 패치 1] 역대 최저가 입력창이 절대 잠겨있지 않도록 강제 해제!
+    if (inputEl) {
+        inputEl.removeAttribute('readonly');
+        inputEl.removeAttribute('disabled');
+
+        if (pastPrice) {
+            inputEl.value = pastPrice;
+            if(badgeEl) badgeEl.style.display = 'inline-block';
+        } else {
+            inputEl.value = ''; 
+            if(badgeEl) badgeEl.style.display = 'none';
+        }
     }
 }
-window.loadPastPrice = loadPastPrice; // HTML에서 안전하게 호출되도록 전역 등록
+window.loadPastPrice = loadPastPrice;
 
-// 앱 켤 때 핫딜 초기값 로딩
+// 🚀 앱 켤 때 및 탭 바꿀 때 자동 연동 & 💡 [핵심 패치 2] 최저가 칸을 직접 수정하면 즉시 내셔널 저장!
 document.addEventListener("DOMContentLoaded", () => {
-    if(typeof loadPastPrice === 'function') loadPastPrice();
+    const catSelect = document.getElementById('hd-category');
+    if (catSelect) {
+        catSelect.addEventListener('change', () => {
+            loadPastPrice(false);
+        });
+    }
+
+    const standardInput = document.getElementById('hd-standard-price');
+    if (standardInput) {
+        // 유저가 최저가 숫자를 직접 타이핑해서 바꾸는 순간 로컬스토리지에 곧바로 갱신 저장됨!
+        standardInput.addEventListener('input', () => {
+            const currentCat = document.getElementById('hd-category').value;
+            const newVal = Number(standardInput.value.replace(/,/g, ''));
+            if (newVal > 0) {
+                localStorage.setItem('tosil_hd_best_' + currentCat, newVal);
+            } else {
+                localStorage.removeItem('tosil_hd_best_' + currentCat);
+            }
+        });
+    }
+
+    if(typeof loadPastPrice === 'function') loadPastPrice(false);
 });
 
 function calcHotDeal() {
     const cat = document.getElementById('hd-category').value;
-    const price = Number(document.getElementById('hd-total-price').value.replace(/,/g,''));
-    const count = Number(document.getElementById('hd-count').value);
-    const pastPrice = Number(document.getElementById('hd-standard-price').value); 
+    const priceInput = document.getElementById('hd-total-price');
+    const countInput = document.getElementById('hd-count');
+    const standardInput = document.getElementById('hd-standard-price');
+    
+    const price = Number(priceInput.value.replace(/,/g,''));
+    const count = Number(countInput.value);
+    let pastPrice = Number(standardInput.value.replace(/,/g,'')); 
     
     if(!price || !count) return alert("최종 결제액과 총 수량을 정확히 입력해주세요!");
     
@@ -1056,49 +1123,66 @@ function calcHotDeal() {
     const commentEl = document.getElementById('hd-comment');
     const unitName = ITEM_UNITS[cat];
 
-    if (pastPrice > 0) {
+    // 과거 최저가 기록이 없거나 비정상적일 때
+    if (!pastPrice || pastPrice <= 0) {
+        verdictEl.innerHTML = `✅ 첫 핫딜 기준가 등록 완료!`;
+        verdictEl.style.backgroundColor = "#3182F6"; 
+        commentEl.innerHTML = `이 품목의 첫 체감가는 1${unitName}당 <strong>${unitPrice.toLocaleString()}원</strong>입니다. 이 가격을 내 '역대 최저가'로 안전하게 기억해 둘게요! 📝`;
+        
+        localStorage.setItem('tosil_hd_best_' + cat, unitPrice);
+        standardInput.value = unitPrice;
+    } else {
         const diffPast = pastPrice - unitPrice;
         
         if (diffPast > 0) {
             verdictEl.innerHTML = `🎉 역대 최저가 갱신! 1${unitName}당 <span style="color:#FFF; font-weight:900;">${diffPast.toLocaleString()}원 더 싸요!</span>`;
             verdictEl.style.backgroundColor = "#00B37A"; 
-            commentEl.innerHTML = `기존 내 기록 대비 총 <strong>${(diffPast * count).toLocaleString()}원을 아꼈습니다!</strong> 역대급 핫딜 방어 성공! 👏`;
-            // 더 싸게 샀으므로 최저가 기록 갱신!
+            commentEl.innerHTML = `기존 내 기록(${pastPrice.toLocaleString()}원) 대비 총 <strong>${(diffPast * count).toLocaleString()}원을 아꼈습니다!</strong> 역대급 핫딜 방어 성공! 👏`;
+            // 더 싸게 샀으므로 최저가 자동 갱신
             localStorage.setItem('tosil_hd_best_' + cat, unitPrice);
+            standardInput.value = unitPrice;
         } else if (diffPast < 0) {
             verdictEl.innerHTML = `⚠️ 내 최저가보다 1${unitName}당 <span style="color:#FFF; font-weight:900;">${Math.abs(diffPast).toLocaleString()}원 비싸요.</span>`;
             verdictEl.style.backgroundColor = "#F04452"; 
-            commentEl.innerHTML = `이전에 제일 싸게 샀을 때보다 <strong>총 ${(Math.abs(diffPast) * count).toLocaleString()}원 손해</strong>입니다. 수량이 급한 게 아니라면 조금 더 기다려보세요! 🤔`;
-            // 비싸게 샀으므로 최저가 기록은 갱신하지 않음
+            commentEl.innerHTML = `이전에 설정한 최저가(${pastPrice.toLocaleString()}원)보다 <strong>총 ${(Math.abs(diffPast) * count).toLocaleString()}원 손해</strong>입니다. 수량이 급한 게 아니라면 조금 더 기다려보세요! 🤔`;
         } else {
             verdictEl.innerHTML = `⚖️ 역대 최저가 방어 성공!`;
             verdictEl.style.backgroundColor = "#3182F6"; 
-            commentEl.innerHTML = `이전에 가장 싸게 샀던 그 가격 그대로네요! 이번에도 스마트하게 잘 사셨습니다. 👍`;
+            commentEl.innerHTML = `이전에 설정한 가장 저렴한 가격(${pastPrice.toLocaleString()}원)과 정확히 일치하네요! 이번에도 스마트하게 잘 사셨습니다. 👍`;
         }
-    } else {
-        // 과거 기록이 아예 없는 첫 계산일 때
-        verdictEl.innerHTML = `✅ 첫 핫딜 기준가 등록 완료!`;
-        verdictEl.style.backgroundColor = "#3182F6"; 
-        commentEl.innerHTML = `복잡한 쿠폰을 다 합친 최종 체감가는 1${unitName}당 <strong>${unitPrice.toLocaleString()}원</strong>입니다. 이 가격을 내 '역대 최저가'로 기록해 둘게요! 📝`;
-        // 첫 계산값을 기준 최저가로 등록
-        localStorage.setItem('tosil_hd_best_' + cat, unitPrice);
     }
     
     verdictEl.style.color = "#FFF";
     const hdRes = document.getElementById('hd-result'); if(hdRes) hdRes.style.display = 'block';
     
+    // 🎯 쿠팡 스마트 링크 매칭 시스템
+    let coupangLink = ''; 
+    let btnText = '';
+
+    if (cat === 'diaper') {
+        coupangLink = 'https://link.coupang.com/a/fPSpeiTAD6'; 
+        btnText = '📦 로켓배송 기저귀 최저가 비교하기 〉';
+    } else if (cat === 'wipe') {
+        coupangLink = 'https://link.coupang.com/a/fPSk40HKOi';
+        btnText = '🫧 로켓배송 물티슈 최저가 비교하기 〉';
+    } else if (cat === 'milk') {
+        coupangLink = 'https://link.coupang.com/a/fPSqFEMPcq';
+        btnText = '🍼 로켓배송 우리아기 분유 최저가 보기 〉';
+    }
+
     document.getElementById('hd-action-area').innerHTML = `
-        <button class="btn-main" style="margin-top:20px; background:#191F28 !important; color:#FFF !important; border:none !important; box-shadow:none !important; padding:16px; font-size:14.5px; font-weight:800; border-radius:14px; width:100%;" onclick="sendHotdealToLedger(${price}, '${cat}')">
+        <button class="btn-main" style="margin-top:20px; margin-bottom:8px; background:#F8FAFC !important; color:#191F28 !important; border:1px solid #E2E8F0 !important; box-shadow:0 2px 4px rgba(0,0,0,0.02) !important; padding:16px; font-size:14.5px; font-weight:800; border-radius:14px; width:100%; display:flex; justify-content:center; align-items:center; gap:6px; cursor:pointer;" onclick="window.open('${coupangLink}', '_blank')">
+            ${btnText}
+        </button>
+        <button class="btn-main" style="margin-top:0; background:#191F28 !important; color:#FFF !important; border:none !important; box-shadow:none !important; padding:16px; font-size:14.5px; font-weight:800; border-radius:14px; width:100%; cursor:pointer;" onclick="sendHotdealToLedger(${price}, '${cat}')">
             💰 ${price.toLocaleString()}원 가계부 지출로 연동하기 〉
         </button>
     `;
     
-    // 계산 버튼 누르면 배지 띄워서 갱신/저장됐음을 알림
-    document.getElementById('hd-past-badge').style.display = 'inline-block';
-    loadPastPrice(); // 저장된 최저가로 input 창 최신화
+    const badgeEl = document.getElementById('hd-past-badge');
+    if(badgeEl) badgeEl.style.display = 'inline-block';
 }
 
-// 핫딜을 가계부로 연동 - ✨ 토스트 팝업 적용 완료 ✨
 async function sendHotdealToLedger(price, cat) {
     let targetId = 'v-etc';
     if(cat === 'diaper' || cat === 'wipe') targetId = 'v-diaper';
@@ -1118,8 +1202,7 @@ async function sendHotdealToLedger(price, cat) {
     ledger.history.unshift({ time: timeStr, amount: price, type: 'expense' });
     
     await saveLedgerToFirebase(ledger);
-    
-    showToast(`✅ 핫딜 결제액 ${price.toLocaleString()}원 연동 완료!`); // 👈 엄청 길었던 alert 문구를 깔끔한 토스트로 변경!
+    showToast(`✅ 핫딜 결제액 ${price.toLocaleString()}원 연동 완료!`);
     directGoToolbox('money');
 }
 
@@ -7217,11 +7300,14 @@ window.handleImageSelection = function(event) {
         return window.showToast('⚠️ 사진은 최대 5장까지만 첨부할 수 있어요!');
     }
 
+    // 🚨 사진이 서버로 날아가는 동안 유저가 기다릴 수 있게 알림 띄우기!
+    window.showToast('⏳ 사진을 서버에 안전하게 업로드 중입니다...'); 
+
     Array.from(files).forEach(file => {
         const reader = new FileReader();
         reader.onload = function(e) {
             const img = new Image();
-            img.onload = function() {
+            img.onload = async function() {  // 🚨 async 필수!
                 const canvas = document.createElement('canvas');
                 const maxSize = 800; 
                 let width = img.width;
@@ -7239,8 +7325,28 @@ window.handleImageSelection = function(event) {
                 ctx.drawImage(img, 0, 0, width, height);
 
                 const dataUrl = canvas.toDataURL('image/jpeg', 0.7);
-                window.attachedImages.push(dataUrl); 
-                window.renderPreviewImages(); 
+                
+                // 🚀 [마스터 패치] 글자 뭉치(Base64) 대신, Storage에 올리고 URL 받아오기!
+                if (window.storage && window.uploadString && window.getDownloadURL) {
+                    try {
+                        // 중복 안 되게 랜덤 파일명 생성
+                        const fileName = 'mamsuda/' + new Date().getTime() + '_' + Math.random().toString(36).substring(2, 7) + '.jpg';
+                        const imgRef = window.storageRef(window.storage, fileName);
+                        
+                        await window.uploadString(imgRef, dataUrl, 'data_url'); // 창고에 업로드 슛!
+                        const downloadUrl = await window.getDownloadURL(imgRef); // 인터넷 주소 따오기
+                        
+                        window.attachedImages.push(downloadUrl); // 진짜 인터넷 URL을 꽂아넣음!
+                        window.renderPreviewImages(); 
+                    } catch(err) {
+                        console.error("업로드 에러:", err);
+                        window.showToast("❌ 이미지 업로드에 실패했습니다. (Storage 규칙을 확인하세요)");
+                    }
+                } else {
+                    // 서버 연결 실패 시 오프라인 백업 (기존 로직)
+                    window.attachedImages.push(dataUrl); 
+                    window.renderPreviewImages(); 
+                }
             };
             img.src = e.target.result;
         };
@@ -7412,10 +7518,14 @@ window.submitPost = function(btnElement) {
         }
     }, 500);
 
-    // 파이어베이스 비동기 처리
-    if (typeof window.db !== 'undefined' && typeof window.setDoc === 'function') {
-        window.setDoc(window.doc(window.db, "community", "posts"), { records: posts }).catch(e=>{});
-    }
+   /* 
+      ========================================================
+      💡 [나중에 맘수다 정식 오픈할 때 이 주석을 풀면 서버와 즉시 연동됩니다!]
+      ========================================================
+      if (typeof window.db !== 'undefined' && typeof window.setDoc === 'function') {
+          window.setDoc(window.doc(window.db, "community", "posts"), { records: posts }).catch(e=>{});
+      }
+    */
 };
 
 // ==========================================
@@ -7577,98 +7687,6 @@ window.toggleScrap = function(postId, btnEl, event) {
         btnEl.style.background = post.isScrapped ? 'var(--brand-light)' : 'var(--bg-main)';
     }
     window.showToast(post.isScrapped ? '📌 내 스크랩에 저장되었어요!' : '🔖 스크랩이 해제되었습니다.');
-};
-
-window.addComment = function() { 
-    // 🔥 [로그인 철통 방어 2] 댓글 쓰기
-    if (!localStorage.getItem('kakao_id')) {
-        return window.showConfirm("따뜻한 소통을 위해<br>로그인 후 댓글을 남겨주세요!<br><span style='font-size:12px; color:#8B95A1; font-weight:600;'>카카오로 3초 만에 시작해볼까요?</span>", function() {
-            if (typeof window.closePostDetail === 'function') window.closePostDetail();
-            
-            if (typeof window.switchTab === 'function') {
-                window.switchTab('settings');
-            }
-        }, "💬", "로그인 하러가기", "#3182F6");
-    }
-
-    const inputField = document.getElementById('newCommentInput');
-    if(!inputField) return;
-    // (이하 기존 댓글 코드 계속...)
-    const commentText = inputField.value.trim();
-    const postId = inputField.getAttribute('data-post-id'); 
-
-    if (!commentText) {
-        window.showToast('⚠️ 댓글 내용을 입력해주세요!');
-        inputField.focus();
-        return;
-    }
-
-    const myName = localStorage.getItem('community_nickname') || localStorage.getItem('kakao_nickname') || '육아메이트';
-    const myIcon = window.getCurrentUserProfileIcon(false);
-
-    const newComment = {
-        id: 'cmt_' + new Date().getTime(),
-        postId: postId,
-        text: commentText,
-        authorName: myName,
-        authorIcon: myIcon,
-        timestamp: new Date().getTime(),
-        likes: 0, 
-        liked: false
-    };
-
-    let comments = JSON.parse(localStorage.getItem('tosil_community_comments')) || [];
-    comments.push(newComment);
-    localStorage.setItem('tosil_community_comments', JSON.stringify(comments));
-
-    let posts = JSON.parse(localStorage.getItem('tosil_community_posts')) || [];
-    let postIdx = posts.findIndex(p => p.id === postId);
-    if(postIdx > -1) {
-        posts[postIdx].comments = (posts[postIdx].comments || 0) + 1;
-        posts[postIdx].hasMyComment = true; 
-        localStorage.setItem('tosil_community_posts', JSON.stringify(posts));
-        const commentCountEl = document.getElementById('detail-comment-count');
-        if(commentCountEl) commentCountEl.innerText = posts[postIdx].comments;
-    }
-
-    inputField.value = '';
-    if (navigator.vibrate) navigator.vibrate(20);
-
-    window.renderComments(postId);
-    window.showToast('💖 따뜻한 댓글이 등록되었습니다!');
-
-    if (typeof window.db !== 'undefined' && typeof window.setDoc === 'function') {
-        window.setDoc(window.doc(window.db, "community", "comments"), { records: comments }).catch(e=>{});
-        window.setDoc(window.doc(window.db, "community", "posts"), { records: posts }).catch(e=>{}); 
-    }
-};
-
-window.toggleCommentLike = function(commentId, postId, event) {
-    if (!localStorage.getItem('kakao_id')) return window.showToast("🚨 로그인이 필요한 기능입니다.");
-    if (event) event.stopPropagation();
-
-    let comments = JSON.parse(localStorage.getItem('tosil_community_comments')) || [];
-    let cIdx = comments.findIndex(c => c.id === commentId);
-    
-    if (cIdx > -1) {
-        let isLiked = comments[cIdx].liked || false;
-        if (isLiked) {
-            comments[cIdx].liked = false;
-            comments[cIdx].likes = Math.max(0, (comments[cIdx].likes || 0) - 1);
-        } else {
-            comments[cIdx].liked = true;
-            comments[cIdx].likes = (comments[cIdx].likes || 0) + 1;
-        }
-        localStorage.setItem('tosil_community_comments', JSON.stringify(comments));
-        
-        // 댓글 다시 그리기
-        window.renderComments(postId);
-
-        // 댓글 다시 그린 후에 하트 아이콘 찾아서 팝핑 효과 (살짝 딜레이)
-        if (comments[cIdx].liked && navigator.vibrate) {
-            navigator.vibrate([15, 60, 15]);
-        }
-    }
 };
 
 // ==========================================
@@ -7893,38 +7911,60 @@ window.closeActivityAndOpenPost = function(postId) {
 };
 
 // ==========================================
-// 🔄 파이어베이스 실시간 "수신" 리스너 (게시글 & 댓글)
+// 🔄 커뮤니티 게시글 & 댓글 로컬 전용 모드 (정식 오픈 시 주석 해제)
 // ==========================================
 let commUnsubscribe = null;
 window.startCommunityRealtimeSync = function() {
-    if (typeof window.doc === 'undefined' || typeof window.db === 'undefined') return;
-    const docRef = window.doc(window.db, "community", "posts");
-    if (commUnsubscribe) commUnsubscribe();
-    commUnsubscribe = window.onSnapshot(docRef, (docSnap) => {
-        if (docSnap.exists()) {
-            const data = docSnap.data();
-            localStorage.setItem('tosil_community_posts', JSON.stringify(data.records || []));
-            window.renderCommunityFeed(); 
-        }
-    });
+    if (typeof window.renderCommunityFeed === 'function') {
+        window.renderCommunityFeed();
+    }
+
+    /* 
+      ========================================================
+      💡 [나중에 정식 오픈할 때 아래 주석을 풀면 서버와 즉시 연동됩니다!]
+      ========================================================
+      if (typeof window.doc === 'undefined' || typeof window.db === 'undefined') return;
+      const docRef = window.doc(window.db, "community", "posts");
+      if (commUnsubscribe) commUnsubscribe();
+      commUnsubscribe = window.onSnapshot(docRef, (docSnap) => {
+          if (docSnap.exists()) {
+              const data = docSnap.data();
+              localStorage.setItem('tosil_community_posts', JSON.stringify(data.records || []));
+              window.renderCommunityFeed(); 
+          }
+      });
+    */
 };
 
 let commentUnsubscribe = null;
 window.startCommentRealtimeSync = function() {
-    if (typeof window.doc === 'undefined' || typeof window.db === 'undefined') return;
-    const docRef = window.doc(window.db, "community", "comments");
-    if (commentUnsubscribe) commentUnsubscribe();
-    commentUnsubscribe = window.onSnapshot(docRef, (docSnap) => {
-        if (docSnap.exists()) {
-            const data = docSnap.data();
-            localStorage.setItem('tosil_community_comments', JSON.stringify(data.records || []));
-            const inputField = document.getElementById('newCommentInput');
-            if (inputField && document.getElementById('postDetailPage').classList.contains('active')) {
-                const currentPostId = inputField.getAttribute('data-post-id');
-                if (currentPostId) window.renderComments(currentPostId);
-            }
+    const inputField = document.getElementById('newCommentInput');
+    if (inputField && document.getElementById('postDetailPage')?.classList.contains('active')) {
+        const currentPostId = inputField.getAttribute('data-post-id');
+        if (currentPostId && typeof window.renderComments === 'function') {
+            window.renderComments(currentPostId);
         }
-    });
+    }
+
+    /* 
+      ========================================================
+      💡 [나중에 정식 오픈할 때 아래 주석을 풀면 서버와 즉시 연동됩니다!]
+      ========================================================
+      if (typeof window.doc === 'undefined' || typeof window.db === 'undefined') return;
+      const docRef = window.doc(window.db, "community", "comments");
+      if (commentUnsubscribe) commentUnsubscribe();
+      commentUnsubscribe = window.onSnapshot(docRef, (docSnap) => {
+          if (docSnap.exists()) {
+              const data = docSnap.data();
+              localStorage.setItem('tosil_community_comments', JSON.stringify(data.records || []));
+              const inputField = document.getElementById('newCommentInput');
+              if (inputField && document.getElementById('postDetailPage')?.classList.contains('active')) {
+                  const currentPostId = inputField.getAttribute('data-post-id');
+                  if (currentPostId) window.renderComments(currentPostId);
+              }
+          }
+      });
+    */
 };
 
 // ==========================================
@@ -8612,11 +8652,18 @@ setTimeout(() => {
 // window.saveUserInfoToFirebase(); 를 한 줄 추가해주시면 닉네임 바꿀 때마다 DB도 즉시 업데이트됩니다!)
 
 // ==========================================
-// 🔐 카카오 로그아웃 & 회원 탈퇴 엔진 (버그 해결 완료)
+// 🔐 카카오 로그아웃 & 회원 탈퇴 엔진 (찐 카카오 서버 통신 추가!)
 // ==========================================
 window.logoutKakao = function() {
     window.showConfirm("정말 로그아웃 하시겠습니까?", function() {
-        // 캐시 삭제
+        // 🚨 1. 카카오 서버에서 진짜로 로그아웃 시키기!
+        if (typeof Kakao !== 'undefined' && Kakao.Auth.getAccessToken()) {
+            Kakao.Auth.logout(function() {
+                console.log('카카오 서버 로그아웃 완료');
+            });
+        }
+
+        // 2. 내 폰(캐시)에 남은 정보 삭제
         localStorage.removeItem('kakao_nickname');
         localStorage.removeItem('kakao_id');
         localStorage.removeItem('kakao_profile_image');
@@ -8624,9 +8671,6 @@ window.logoutKakao = function() {
         localStorage.removeItem('tosil_is_subadmin');
         
         window.showToast("👋 안전하게 로그아웃 되었습니다.");
-        if (typeof window.renderSettingsTab === 'function') window.renderSettingsTab();
-        
-        // 새로고침해서 관리자 권한 완벽 초기화
         setTimeout(() => location.reload(), 800);
     }, "👋", "로그아웃", "#8B95A1");
 };
@@ -8635,7 +8679,17 @@ window.unlinkKakao = function() {
     window.showConfirm("정말 회원 탈퇴를 진행하시겠습니까?<br><span style='font-size:12px; color:#8B95A1;'>모든 데이터가 삭제되며 복구할 수 없습니다.</span>", function() {
         const answer = prompt("탈퇴하시려면 아래 입력창에 '탈퇴'라고 정확히 적어주세요.");
         if (answer === '탈퇴') {
-            localStorage.clear(); // 모든 기기 데이터 완벽 삭제
+            // 🚨 1. 카카오 서버에 '앱 연결 끊기' 강제 요청!
+            if (typeof Kakao !== 'undefined' && Kakao.Auth.getAccessToken()) {
+                Kakao.API.request({
+                    url: '/v1/user/unlink',
+                    success: function(res) { console.log('카카오 연결 끊기 성공', res); },
+                    fail: function(err) { console.error('카카오 연결 끊기 실패', err); }
+                });
+            }
+
+            // 2. 내 폰에 있는 모든 데이터 싹 날리기
+            localStorage.clear(); 
             window.showToast("💔 회원 탈퇴가 완료되었습니다. 그동안 감사했습니다!");
             setTimeout(() => location.reload(), 1500);
         } else if (answer !== null) {
@@ -9282,10 +9336,15 @@ window.addComment = function() {
     window.showToast('💖 따뜻한 댓글이 등록되었습니다!');
 
     // 파이어베이스 동기화
-    if (typeof window.db !== 'undefined' && typeof window.setDoc === 'function') {
-        window.setDoc(window.doc(window.db, "community", "comments"), { records: comments }).catch(e=>{});
-        window.setDoc(window.doc(window.db, "community", "posts"), { records: posts }).catch(e=>{}); 
-    }
+    /* 
+      ========================================================
+      💡 [나중에 맘수다 정식 오픈할 때 이 주석을 풀면 서버와 즉시 연동됩니다!]
+      ========================================================
+      if (typeof window.db !== 'undefined' && typeof window.setDoc === 'function') {
+          window.setDoc(window.doc(window.db, "community", "comments"), { records: comments }).catch(e=>{});
+          window.setDoc(window.doc(window.db, "community", "posts"), { records: posts }).catch(e=>{}); 
+      }
+    */
 };
 
 // 3. 인스타 감성 대댓글 숨기기/펼치기 렌더링 엔진
