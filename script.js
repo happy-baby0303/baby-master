@@ -25,54 +25,47 @@ const babyTips = [
 ];
 
 // ==========================================
-// 2. 화면 내비게이션 엔진 (설정 탭 렌더링 자동화 패치 + 쫀득한 바운스 추가)
+// 🚀 [초고속 패치] 렉 없는 즉각 반응형 화면 내비게이션 엔진
 // ==========================================
 function switchTab(id, el) {
-    if(navigator.vibrate) navigator.vibrate(10); 
+    if(navigator.vibrate) navigator.vibrate(10);  
 
-    // 모든 탭 내용 숨기기
+    // 1. 모든 탭 숨기기를 지연 없이 즉시 처리 (0.2초 대기 삭제)
     document.querySelectorAll('.tab-content').forEach(c => {
         c.classList.remove('active');
-        c.style.opacity = '0'; // 페이드아웃
-        c.style.transform = 'translateY(5px)'; // 살짝 아래로
-        setTimeout(() => { c.style.display = 'none'; }, 200); // 0.2초 뒤 완전 숨김
+        c.style.display = 'none';
+        c.style.opacity = '1';
+        c.style.transform = 'translateY(0)';
     });
     
-    // 모든 탭 버튼 비활성화 및 아이콘 원상복구
+    // 2. 모든 탭 버튼 비활성화 및 아이콘 초기화
     document.querySelectorAll('.nav-item').forEach(n => {
         n.classList.remove('active');
-        const icon = n.querySelector('img'); // 이미지 아이콘인 경우
-        const emoji = n.querySelector('span'); // 이모지 아이콘인 경우
+        const icon = n.querySelector('img'); 
+        const emoji = n.querySelector('span'); 
         if (icon) icon.style.transform = 'scale(1) translateY(0)';
         if (emoji) emoji.style.transform = 'scale(1) translateY(0)';
     });
     
-    // 0.2초 뒤에 선택한 탭 내용 보여주기 (페이드인)
-    setTimeout(() => {
-        const targetTab = document.getElementById('tab-' + id);
-        if(targetTab) {
-            targetTab.style.display = 'block';
-            // 아주 약간의 시차를 두고 애니메이션 적용해야 스무스하게 뜹니다.
-            setTimeout(() => {
-                targetTab.classList.add('active');
-                targetTab.style.opacity = '1';
-                targetTab.style.transform = 'translateY(0)';
-            }, 50);
-        }
-    }, 200);
+    // 3. 선택한 탭 즉시 렌더링 (지연 시간 0초)
+    const targetTab = document.getElementById('tab-' + id);
+    if(targetTab) {
+        targetTab.style.display = 'block';
+        targetTab.classList.add('active');
+        targetTab.style.opacity = '1';
+        targetTab.style.transform = 'translateY(0)';
+    }
     
     let targetNav = el;
     if (!targetNav) targetNav = document.getElementById('nav-' + id);
     
     if (targetNav) {
         targetNav.classList.add('active');
-        // 💎 하이엔드 바운스 애니메이션
-        const icon = targetNav.querySelector('img') || targetNav.querySelector('span'); // img 태그나 이모지 span 둘 다 대응
+        const icon = targetNav.querySelector('img') || targetNav.querySelector('span'); 
         if (icon) {
-            icon.style.transition = 'transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1)';
-            icon.style.transform = 'scale(1.2) translateY(-4px)';
-            // 위로 튀어 올랐다가 살짝 가라앉으면서 정착!
-            setTimeout(() => { icon.style.transform = 'scale(1.05) translateY(-2px)'; }, 200);
+            icon.style.transition = 'transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1)';
+            icon.style.transform = 'scale(1.15) translateY(-2px)';
+            setTimeout(() => { icon.style.transform = 'scale(1) translateY(0)'; }, 150);
         }
     }
 
@@ -83,22 +76,19 @@ function switchTab(id, el) {
         }
     }
 
-    // 👇👇👇 여기에 플로팅 버튼 제어 엔진을 추가하세요! 👇👇👇
+    // 플로팅 버튼 제어
     const fabBtn = document.getElementById('global-fab-write');
     if (fabBtn) {
-        if (id === 'community') {  // 🚨 여기를 comm 에서 community 로 수정!
-            fabBtn.style.display = 'flex'; // 버튼 나타남!
+        if (id === 'community') {  
+            fabBtn.style.display = 'flex'; 
         } else {
-            fabBtn.style.display = 'none'; // 다른 탭에선 숨김!
+            fabBtn.style.display = 'none'; 
         }
     }
 
-    // 👆👆👆 여기까지 👆👆👆
-
-    // 탭 바뀔 때 스크롤 맨 위로 부드럽게 이동
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    // 탭 바뀔 때 스크롤 맨 위로 즉시 이동
+    window.scrollTo({ top: 0, behavior: 'auto' });
 }
-
 function directGoOuting(subType) {
     switchTab('hotplace', document.getElementById('nav-hotplace'));
     switchOutingSubTab(subType);
