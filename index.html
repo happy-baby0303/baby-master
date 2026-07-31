@@ -1021,25 +1021,31 @@ body {
                     </div>
                 </div>
 
-                <!-- 📋 4. 실시간 타임라인 머니로그 -->
-                <div style="display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 12px; padding: 0 8px;">
-                    <div style="font-size: 16px; font-weight: 900; color: var(--text-m);">📋 최근 머니로그</div>
-                    <div style="display: flex; gap: 12px; align-items: center;">
-                        <button onclick="window.toggleHistory()" style="background: transparent; color: #8B95A1; border: none; font-size: 12px; font-weight: 800; cursor: pointer;">지난달 내역 〉</button>
-                    </div>
-                </div>
+            <!-- 📋 4. 실시간 타임라인 머니로그 (단일 박스 통합형) -->
+<div class="box-main" style="border-radius: 24px; padding: 20px; box-shadow: 0 4px 16px rgba(0,0,0,0.02); margin-bottom: 24px;">
+    
+    <!-- 타이틀 & 지난달 내역 버튼을 박스 안으로 쏙 집어넣음 -->
+    <div style="display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 16px; padding: 0 4px;">
+        <div style="font-size: 16px; font-weight: 900; color: var(--text-m);">📋 최근 머니로그</div>
+        <div style="display: flex; gap: 12px; align-items: center;">
+            <button onclick="window.toggleHistory()" style="background: transparent; color: #8B95A1; border: none; font-size: 12px; font-weight: 800; cursor: pointer; padding: 0;">지난달 내역 〉</button>
+        </div>
+    </div>
 
-                <div id="history-list-area" style="display: none; margin-bottom: 16px; background: var(--bg-card); padding: 16px; border-radius: 16px; border: 1px solid var(--border);">
-                    <div id="history-items"></div>
-                </div>
+    <!-- 지난달 내역 펼침 영역 -->
+    <div id="history-list-area" style="display: none; margin-bottom: 16px; background: var(--bg-sub); padding: 16px; border-radius: 16px; border: 1px solid var(--border);">
+        <div id="history-items"></div>
+    </div>
 
-                <div class="box-main" style="border-radius: 24px; padding: 20px; box-shadow: 0 4px 16px rgba(0,0,0,0.02); min-height: 150px; margin-bottom: 24px;">
-                    <div id="ledger-history-list" style="display:flex; flex-direction:column; gap:10px;">
-                        <!-- JS에서 이 위치에 입출금 내역을 꽂아줍니다. -->
-                    </div>
-                </div>
+    <!-- 리스트 및 '기록 없음'이 꽂히는 공간 -->
+    <div id="ledger-history-list" style="display:flex; flex-direction:column; gap:10px; min-height: 80px;">
+        <!-- JS에서 이 위치에 입출금 내역을 꽂아줍니다. -->
+    </div>
+
+</div>
 
             </div> <!-- panel-money 닫기 -->
+
 
             <div id="panel-fever" class="panel-block" style="display:none; padding-top:24px; padding-bottom: 24px;">
             
@@ -1263,17 +1269,17 @@ body {
                     <div id="vaccine-info" style="font-size:13.5px; font-weight:700; color:#191F28; line-height:1.6;"></div>
                 </div>
 
-                <details style="background: #F9FAFB; border: 1px solid #F2F5F8; border-radius:16px; overflow:hidden;">
-                    <summary style="padding:16px 20px; font-size:14.5px; font-weight:800; cursor:pointer; list-style:none; display:flex; justify-content:space-between; align-items:center; color: #191F28;">
-                        <span>📅 전체 원더윅스 타임라인</span>
-                        <span style="font-size:12px; background: #FFFFFF; border: 1px solid #E5E8EB; color: #4E5968; padding:6px 12px; border-radius:10px; font-weight:700;">표 보기 ▾</span>
-                    </summary>
-                    <div style="padding:0 20px 20px 20px; border-top: 1px solid #E5E8EB; margin-top: 4px; padding-top: 16px;">
-                        <div style="border-radius:12px; overflow:hidden; border: 1px solid #E5E8EB; background: #FFFFFF;">
-                            <table class="ww-table" id="ww-table" style="width:100%; border-collapse:collapse; font-size:13px; text-align:center;"></table>
-                        </div>
-                    </div>
-                </details>
+                <details style="background: var(--bg-card, #FFFFFF); border: 1px solid var(--border-color, #E5E8EB); border-radius:16px; overflow:hidden; margin-bottom:24px;">
+    <summary style="padding:16px 20px; font-size:14.5px; font-weight:800; cursor:pointer; list-style:none; display:flex; justify-content:space-between; align-items:center; color: var(--text-m, #191F28);">
+        <span>📅 전체 원더윅스 타임라인</span>
+        <span style="font-size:12px; background: var(--bg-sub, #F2F4F6); border: 1px solid var(--border-color, #E5E8EB); color: var(--text-sub, #4E5968); padding:6px 12px; border-radius:10px; font-weight:700;">표 보기 ▾</span>
+    </summary>
+    <div style="padding:0 20px 20px 20px; border-top: 1px solid var(--border-color, #E5E8EB); margin-top: 4px; padding-top: 16px;">
+        <div style="border-radius:12px; overflow:hidden; border: 1px solid var(--border-color, #E5E8EB); background: var(--bg-card, #FFFFFF);">
+            <table class="ww-table" id="ww-table" style="width:100%; border-collapse:collapse; font-size:13px; text-align:center; color: var(--text-m, #333D4B);"></table>
+        </div>
+    </div>
+</details>
             </div>
         </div>
     </div>

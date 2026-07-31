@@ -1796,10 +1796,15 @@ window.calcHealthMaster = function() {
             <div style="font-size:12px; font-weight:800; color:var(--text-s); margin-bottom:6px;">우리아기 체질량 지수(BMI): <span style="color:var(--text-m);">${kaup.toFixed(1)}</span></div>
             <div style="font-size:14px; font-weight:800; color:var(--text-m); line-height:1.55; word-break:keep-all;">${kaupDesc}</div>
         `;
-    } else {
-        kaupBadge.style.display = 'none';
-        insightMsg = "키와 몸무게를 모두 입력하시면 정확한 체형 밸런스(비만도) 진단과 맞춤 조언을 해드립니다!";
-    }
+   } else {
+    kaupBadge.style.display = 'none';
+    // 💡 다크모드와 라이트모드 모두 어울리는 은은한 배경과 텍스트 톤으로 매칭
+    insightMsg = `
+        <div style="background: var(--bg-sub, #F2F4F6); color: var(--text-m, #333D4B); padding: 16px; border-radius: 12px; font-size: 13.5px; font-weight: 700; line-height: 1.5; word-break: keep-all; text-align: center;">
+            키와 몸무게를 모두 입력하시면 정확한 체형 밸런스(비만도) 진단과 맞춤 조언을 해드립니다! 💜
+        </div>
+    `;
+}
 
     document.getElementById('growth-insight').innerHTML = insightMsg; 
     
