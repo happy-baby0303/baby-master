@@ -5956,7 +5956,7 @@ document.addEventListener("DOMContentLoaded", () => {
 });
 
 // ==========================================
-// 🔐 카카오 로그인 & 로그아웃 엔진 (1초 즉시 로그인 복구!)
+// 🔐 카카오 로그인 & 로그아웃 엔진 (에러 복구 완료)
 // ==========================================
 window.loginWithKakao = function() {
     if (typeof Kakao === 'undefined' || !Kakao.isInitialized()) {
@@ -5965,25 +5965,22 @@ window.loginWithKakao = function() {
     }
 
     Kakao.Auth.login({
-        // 🚨 기존에 있던 throughTalk: false; 를 과감하게 삭제했습니다!
-        // 이제 폰에 카카오톡 앱이 깔려있으면 아이디/비번 칠 필요 없이 1초 만에 즉시 로그인됩니다.
+        // 🚨 핵심: 브라우저 충돌을 막기 위해 false로 원상복구! 
+        throughTalk: false, 
         success: function(authObj) {
             Kakao.API.request({
                 url: '/v2/user/me',
                 success: function(res) {
                     const nickname = res.properties.nickname;
                     const profileImage = res.properties.profile_image;
-                    const kakaoId = res.id; // 절대 안 바뀌는 카카오 고유 ID
+                    const kakaoId = res.id;
 
-                    // 1. 폰에 기본 정보 싹 저장
                     localStorage.setItem('kakao_nickname', nickname);
                     localStorage.setItem('kakao_id', kakaoId); 
                     if (profileImage) {
                         localStorage.setItem('kakao_profile_image', profileImage);
                     }
 
-                    // ----------------------------------------------------
-                    // 🪄 [Firestore 불사조 마법] 카카오 ID로 내 연동 코드 찾아오기!
                     const db = window.db || (typeof firebase !== 'undefined' ? firebase.firestore() : null); 
                     if (!db) {
                         window.showToast(`🎉 ${nickname}님 환영합니다!`);
@@ -5997,47 +5994,26 @@ window.loginWithKakao = function() {
                         const currentLocalSyncCode = localStorage.getItem('family_sync_code');
 
                         if (doc.exists && doc.data().family_sync_code) {
-                            // 🌟 [시나리오 A] 캐시가 날아갔는데 다시 로그인한 경우 -> 연동 코드 복구!
                             const restoredCode = doc.data().family_sync_code;
                             localStorage.setItem('family_sync_code', restoredCode);
                             window.showToast(`🎉 ${nickname}님 환영합니다! 데이터를 100% 복구하는 중입니다...✨`);
-                            
-                            if (typeof window.getDoc === 'function' && typeof window.doc === 'function' && window.db) {
-                                window.getDoc(window.doc(window.db, "families", restoredCode)).then((familyDoc) => {
-                                    if(familyDoc.exists()) {
-                                        localStorage.setItem("tosil_babyName", familyDoc.data().babyName);
-                                        localStorage.setItem("tosil_startDate", familyDoc.data().babyBirth);
-                                        localStorage.setItem("tosil_baby", JSON.stringify({ name: familyDoc.data().babyName, birth: familyDoc.data().babyBirth }));
-                                    }
-                                    setTimeout(() => { location.reload(); }, 1500);
-                                }).catch(() => {
-                                    setTimeout(() => { location.reload(); }, 1500);
-                                });
-                            } else {
-                                setTimeout(() => { location.reload(); }, 1500);
-                            }
-                        
+                            setTimeout(() => { location.reload(); }, 1500);
                         } else if (currentLocalSyncCode) {
-                            // 🌟 [시나리오 B] 이미 연동해서 쓰다가 처음으로 카카오 로그인한 경우 -> DB에 백업!
                             userRef.set({
                                 family_sync_code: currentLocalSyncCode,
                                 nickname: nickname
                             }, { merge: true });
                             window.showToast(`🎉 ${nickname}님 환영합니다! (클라우드 백업 완료☁️)`);
                             window.renderSettingsTab(); 
-                        
                         } else {
-                            // 🌟 [시나리오 C] 연동도 안 했고, 첫 방문인 경우
                             window.showToast(`🎉 ${nickname}님 환영합니다!`);
                             window.renderSettingsTab(); 
                         }
-
                     }).catch((error) => {
                         console.error("자동 복구 에러:", error);
                         window.showToast(`🎉 ${nickname}님 환영합니다!`);
                         window.renderSettingsTab();
                     });
-                    // ----------------------------------------------------
                 },
                 fail: function(error) {
                     alert('프로필 정보를 가져오는데 실패했습니다: ' + JSON.stringify(error));
@@ -6045,11 +6021,10 @@ window.loginWithKakao = function() {
             });
         },
         fail: function(err) {
-            alert('로그인에 실패했습니다: ' + JSON.stringify(err));
+            alert('로그인에 실패했습니다. 다시 시도해주세요.');
         }
     });
 };
-
 // ==========================================
 // ⚙️ [설정 탭] 전체 UI 렌더링 엔진 (엄마/아빠 역할 스위치 & 디자인 최적화)
 // ==========================================
