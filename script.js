@@ -5956,7 +5956,7 @@ document.addEventListener("DOMContentLoaded", () => {
 });
 
 // ==========================================
-// 🔐 카카오 로그인 & 로그아웃 엔진 (Firestore 맞춤 불사조 백업 패치!)
+// 🔐 카카오 로그인 & 로그아웃 엔진 (1초 즉시 로그인 복구!)
 // ==========================================
 window.loginWithKakao = function() {
     if (typeof Kakao === 'undefined' || !Kakao.isInitialized()) {
@@ -5965,7 +5965,8 @@ window.loginWithKakao = function() {
     }
 
     Kakao.Auth.login({
-        throughTalk: false, 
+        // 🚨 기존에 있던 throughTalk: false; 를 과감하게 삭제했습니다!
+        // 이제 폰에 카카오톡 앱이 깔려있으면 아이디/비번 칠 필요 없이 1초 만에 즉시 로그인됩니다.
         success: function(authObj) {
             Kakao.API.request({
                 url: '/v2/user/me',
@@ -5983,21 +5984,24 @@ window.loginWithKakao = function() {
 
                     // ----------------------------------------------------
                     // 🪄 [Firestore 불사조 마법] 카카오 ID로 내 연동 코드 찾아오기!
-                    const db = window.db || firebase.firestore(); 
-                    // 'kakao_users'라는 폴더를 하나 만들어서 카카오ID와 연동코드를 매칭해둡니다.
+                    const db = window.db || (typeof firebase !== 'undefined' ? firebase.firestore() : null); 
+                    if (!db) {
+                        window.showToast(`🎉 ${nickname}님 환영합니다!`);
+                        window.renderSettingsTab();
+                        return;
+                    }
+
                     const userRef = db.collection('kakao_users').doc(String(kakaoId));
 
                     userRef.get().then((doc) => {
                         const currentLocalSyncCode = localStorage.getItem('family_sync_code');
 
-                        }).then((doc) => {
                         if (doc.exists && doc.data().family_sync_code) {
                             // 🌟 [시나리오 A] 캐시가 날아갔는데 다시 로그인한 경우 -> 연동 코드 복구!
                             const restoredCode = doc.data().family_sync_code;
                             localStorage.setItem('family_sync_code', restoredCode);
-                            showToast(`🎉 ${nickname}님 환영합니다! 데이터를 100% 복구하는 중입니다...✨`);
+                            window.showToast(`🎉 ${nickname}님 환영합니다! 데이터를 100% 복구하는 중입니다...✨`);
                             
-                            // 🚨 [방어막 패치] 연동 코드로 아기 정보(이름, 생일)까지 서버에서 찾아온 뒤, 앱을 아예 '새로고침' 시켜버림!
                             if (typeof window.getDoc === 'function' && typeof window.doc === 'function' && window.db) {
                                 window.getDoc(window.doc(window.db, "families", restoredCode)).then((familyDoc) => {
                                     if(familyDoc.exists()) {
@@ -6005,7 +6009,6 @@ window.loginWithKakao = function() {
                                         localStorage.setItem("tosil_startDate", familyDoc.data().babyBirth);
                                         localStorage.setItem("tosil_baby", JSON.stringify({ name: familyDoc.data().babyName, birth: familyDoc.data().babyBirth }));
                                     }
-                                    // 1.5초 뒤 강제 새로고침! (이렇게 해야 모든 데이터가 꼬임 없이 서버에서 다시 내려옵니다)
                                     setTimeout(() => { location.reload(); }, 1500);
                                 }).catch(() => {
                                     setTimeout(() => { location.reload(); }, 1500);
@@ -6020,40 +6023,32 @@ window.loginWithKakao = function() {
                                 family_sync_code: currentLocalSyncCode,
                                 nickname: nickname
                             }, { merge: true });
-                            showToast(`🎉 ${nickname}님 환영합니다! (클라우드 백업 완료☁️)`);
-                            
-                            // 설정 탭 화면 즉시 새로고침
+                            window.showToast(`🎉 ${nickname}님 환영합니다! (클라우드 백업 완료☁️)`);
                             window.renderSettingsTab(); 
                         
                         } else {
                             // 🌟 [시나리오 C] 연동도 안 했고, 첫 방문인 경우
-                            showToast(`🎉 ${nickname}님 환영합니다!`);
-                            
-                            // 설정 탭 화면 즉시 새로고침
+                            window.showToast(`🎉 ${nickname}님 환영합니다!`);
                             window.renderSettingsTab(); 
                         }
 
                     }).catch((error) => {
-                        // 🟢 대표님이 짜두셨던 에러 처리 로직 (그대로 유지!)
                         console.error("자동 복구 에러:", error);
-                        showToast(`🎉 ${nickname}님 환영합니다!`);
+                        window.showToast(`🎉 ${nickname}님 환영합니다!`);
                         window.renderSettingsTab();
                     });
                     // ----------------------------------------------------
                 },
                 fail: function(error) {
-                    // 🟢 카카오 프로필 가져오기 실패 로직 (그대로 유지!)
                     alert('프로필 정보를 가져오는데 실패했습니다: ' + JSON.stringify(error));
                 }
             });
         },
         fail: function(err) {
-            // 🟢 카카오 로그인 실패 로직 (그대로 유지!)
             alert('로그인에 실패했습니다: ' + JSON.stringify(err));
         }
     });
 };
-
 
 // ==========================================
 // ⚙️ [설정 탭] 전체 UI 렌더링 엔진 (엄마/아빠 역할 스위치 & 디자인 최적화)
@@ -7181,22 +7176,6 @@ function getGrowthDeltaMessage(records) {
     if (messages.length === 0) return "✨ 오늘 계측 완료! 폭풍 성장 중 🌿";
     return `✨ 지난번보다 <strong>${messages.join(', ')}</strong>`;
 }
-
-window.openWriteModal = function() {
-    // 🔥 [로그인 철통 방어 1] 글쓰기
-    if (!localStorage.getItem('kakao_id')) {
-        return window.showConfirm("안전하고 클린한 커뮤니티를 위해<br>로그인한 유저만 글을 쓸 수 있어요!<br><span style='font-size:12px; color:#8B95A1; font-weight:600;'>카카오로 3초 만에 시작해볼까요?</span>", function() {
-            // 이제 switchTab 하나만 부르면 탭 이동 + 내용물 렌더링까지 완벽하게 처리됩니다!
-            if (typeof window.switchTab === 'function') {
-                window.switchTab('settings');
-            }
-        }, "💬", "로그인 하러가기", "#3182F6");
-    }
-
-    document.getElementById('writeOverlay').classList.add('show');
-    document.getElementById('writeModal').classList.add('show');
-    document.body.style.overflow = 'hidden'; 
-};
 
 window.closeWriteModal = function() {
     document.getElementById('writeOverlay').classList.remove('show');
@@ -8718,10 +8697,10 @@ document.addEventListener("DOMContentLoaded", () => {
     if (contentInput) contentInput.addEventListener('input', () => window.savePostDraft(false));
 });
 
-// 3. 모달 열기 (불러오기 타이밍 꼬임 해결)
+// 3. 모달 열기 (불러오기 타이밍 꼬임 해결 & 로그인 검증)
 window.openWriteModal = function() {
     if (!localStorage.getItem('kakao_id')) {
-        return window.showConfirm("안전하고 클린한 커뮤니티를 위해<br>로그인한 유저만 글을 쓸 수 있어요!", function() {
+        return window.showConfirm("안전하고 클린한 커뮤니티를 위해<br>로그인한 유저만 글을 쓸 수 있어요!<br><span style='font-size:12px; color:#8B95A1; font-weight:600;'>카카오로 3초 만에 시작해볼까요?</span>", function() {
             if (typeof window.switchTab === 'function') window.switchTab('settings');
         }, "💬", "로그인 하러가기", "#3182F6");
     }
