@@ -656,3 +656,663 @@ body.dark-mode .mamma-toggle-container { background: #191F28; border: 1px solid 
 body.dark-mode .toggle-slider { background: #333D4B; }
 body.dark-mode .mamma-toggle-container input[id="tab-milk"]:checked ~ label[for="tab-milk"],
 body.dark-mode .mamma-toggle-container input[id="tab-food"]:checked ~ label[for="tab-food"] { color: #FFF; }
+
+
+/* =========================================================
+   🚑 다크모드 원더윅스 표(Table) 하얀색 찌꺼기 완벽 제거
+   ========================================================= */
+body.dark-mode #ww-table th { background-color: var(--bg-sub) !important; border-bottom: 1px solid var(--border) !important; color: var(--text-m) !important; }
+body.dark-mode #ww-table td { border-bottom: 1px solid var(--border) !important; color: var(--text-s) !important; }
+body.dark-mode #ww-table tr[style*="background:#FFF0F1"] { background-color: rgba(240, 68, 82, 0.15) !important; color: #FF8A8A !important; }
+
+        .panel-block { transition: opacity 0.3s ease; }
+        #cube-list-container .timeline-item, #baton-list-container .timeline-item { 
+            background: #FFF; border: 1px solid #E5E8EB; border-radius: 16px; padding: 16px; display: flex; justify-content: space-between; align-items: center; 
+        }
+        input:focus, select:focus { outline: 2px solid #3182F6 !important; border-color: #3182F6 !important; }
+
+/* ==========================================
+   🎭 엄마/아빠 비대칭 UI 트래픽 컨트롤러
+   ========================================== */
+/* 1. 기본 상태 (엄마 모드): 아빠 전용 숨김, 엄마 전용 보임 */
+.show-on-dad-block { display: none !important; }
+.show-on-mom-block { display: block !important; }
+
+/* 2. 아빠 모드 켜졌을 때: 반대로 작동! */
+body.mode-dad .show-on-dad-block { display: block !important; }
+body.mode-dad .show-on-mom-block { display: none !important; }
+
+/* ==========================================
+   👨‍🍼 아빠 모드 전용 UI 컨트롤 (순정 완벽 버전)
+   ========================================== */
+
+/* 1. 아빠 화면에서는 통계창을 '기본으로' 닫아둡니다. 
+   🚨 주의: 절대 !important를 붙이지 마세요! 붙이면 버튼이 먹통됩니다. */
+body.mode-dad #tracker-stats-container {
+    display: none; 
+}    
+
+/* 데일리 케어 버튼 다크모드 클릭(활성화) 상태 */
+body.dark-mode .routine-btn.active,
+body.dark-mode .care-btn.active {
+    background: rgba(49, 130, 246, 0.2) !important; /* 은은한 파란색 배경 */
+    color: #3182F6 !important; /* 쨍한 파란색 글씨 */
+    border: 1px solid #3182F6 !important;
+}
+
+/* 팝업(모달) 창을 감싸는 div에 아래 스타일 속성을 추가해 주세요 */
+max-height: 85vh;          /* 화면 높이의 85%까지만 팝업이 커지도록 제한 */
+overflow-y: auto;          /* 내용이 길어지면 내부 스크롤 생성 */
+padding-bottom: 24px;      /* 하단 버튼이 폰 베젤에 씹히지 않게 여백 추가 */
+
+/* ========================================== */
+        /* 🌙 다크모드: 해열제 선택 버튼 활성화 색상 살리기 */
+        /* ========================================== */
+        body.dark-mode #btn-pill-red.active {
+            background-color: rgba(239, 68, 68, 0.15) !important;
+            color: #EF4444 !important;
+            border: 1px solid #EF4444 !important;
+        }
+        body.dark-mode #btn-pill-blue.active {
+            background-color: rgba(49, 130, 246, 0.15) !important;
+            color: #3182F6 !important;
+            border: 1px solid #3182F6 !important;
+        }
+   
+    /* ========================================== */
+        /* 🌙 다크모드: 해열제 타이머 및 산출 결과 박스 색상 동기화 */
+        /* ========================================== */
+        body.dark-mode #fever-timer-box,
+        body.dark-mode #fever-result {
+            background-color: var(--bg-card) !important;
+            border: 1px solid var(--border) !important;
+        }
+
+        /* 🌟 육아메이트 디자인 시스템 (색상 & 여백) */
+    :root {
+        /* 브랜드 컬러 */
+        --brand-primary: #3182F6; /* 신뢰감을 주는 모던 블루 */
+        --brand-light: #E8F3FF; /* 부드러운 블루 배경 */
+        
+        /* 텍스트 컬러 */
+        --text-title: #191F28; /* 아주 진한 차콜 (제목용) */
+        --text-body: #4E5968;  /* 부드러운 진회색 (본문용) */
+        --text-sub: #8B95A1;   /* 연회색 (날짜, 부가정보용) */
+        
+        /* 배경 컬러 */
+        --bg-main: #F2F4F6; /* 앱 전체 배경 (연한 회색) */
+        --bg-card: #FFFFFF; /* 카드 배경 (순백색) */
+    }
+
+    /* 🌟 하이엔드 게시글 카드 스타일 */
+    .premium-card {
+        background: var(--bg-card);
+        border-radius: 24px; /* 둥글고 부드러운 모서리 */
+        padding: 24px; /* 시원하고 넉넉한 안쪽 여백 */
+        margin-bottom: 16px;
+        border: 1px solid rgba(0, 0, 0, 0.03); /* 아주 연한 테두리 */
+        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.04); /* 고급스럽고 넓게 퍼지는 그림자 */
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+        cursor: pointer;
+    }
+
+    /* 누를 때 살짝 들어가는 인터랙션 (손맛) */
+    .premium-card:active {
+        transform: scale(0.98);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.02);
+    }
+
+   /* ==========================================
+   🗂️ 카테고리 가로 스크롤 영역 (Scroll Container)
+   ========================================== */
+.category-scroll-container {
+    display: flex;
+    overflow-x: auto;       /* 가로 스크롤 활성화 */
+    white-space: nowrap;    /* 줄바꿈 방지 */
+    gap: 8px;               /* 칩 사이의 간격 */
+    padding: 12px 20px;
+    background: var(--bg-main);
+    
+    /* 🚫 모바일/PC에서 지저분한 기본 스크롤바 숨기기 */
+    -ms-overflow-style: none; /* IE and Edge */
+    scrollbar-width: none;    /* Firefox */
+}
+.category-scroll-container::-webkit-scrollbar {
+    display: none;            /* Chrome, Safari, Opera */
+}
+
+/* ==========================================
+   🔘 카테고리 칩(버튼) 디테일 (Chip UI)
+   ========================================== */
+.category-chip {
+    padding: 8px 16px;
+    background: var(--bg-card);
+    border: 1px solid rgba(0, 0, 0, 0.05);
+    border-radius: 20px;    /* 완전 둥근 알약 모양 */
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text-sub); /* 기본 상태는 연회색 글씨 */
+    cursor: pointer;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.02);
+    transition: all 0.2s ease; /* 색상 변경 시 부드러운 전환 효과 */
+    
+    /* 길게 눌렀을 때 텍스트 선택(파란색 드래그) 방지 */
+    user-select: none; 
+    -webkit-user-select: none;
+}
+
+/* 🌟 활성화된 칩 (현재 선택된 카테고리) */
+.category-chip.active {
+    background: var(--text-title); /* 진한 차콜색으로 확 튀게 */
+    color: #FFFFFF;                /* 글씨는 흰색 */
+    border-color: var(--text-title);
+    font-weight: 700;
+}
+
+/* 👆 터치(클릭) 시 쫀득하게 눌리는 애니메이션 */
+.category-chip:active {
+    transform: scale(0.92);
+}
+
+/* ==========================================
+   ✍️ 플로팅 글쓰기 버튼 (FAB - Floating Action Button)
+   ========================================== */
+.fab-write {
+    position: fixed;
+    bottom: 24px;   /* 화면 아래에서 24px 띄움 */
+    right: 24px;    /* 화면 오른쪽에서 24px 띄움 */
+    background: var(--brand-primary); /* 우리가 정한 쨍한 블루 */
+    color: #ffffff;
+    padding: 16px 24px;
+    border-radius: 30px; /* 부드러운 알약 모양 */
+    font-size: 16px;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    
+    /* 🌟 핵심 포인트: 검은색이 아닌 '파란색 그림자'로 세련된 발광 효과 */
+    box-shadow: 0 8px 24px rgba(49, 130, 246, 0.4); 
+    
+    border: none;
+    cursor: pointer;
+    z-index: 100; /* 다른 게시글들보다 무조건 위에 떠 있도록 설정 */
+    
+    /* 부드러운 애니메이션 준비 */
+    transition: transform 0.2s cubic-bezier(0.2, 0, 0, 1), box-shadow 0.2s ease;
+}
+
+/* 👆 터치(클릭) 시 쫀득하게 눌리는 손맛 */
+.fab-write:active {
+    transform: scale(0.92);
+    box-shadow: 0 4px 12px rgba(49, 130, 246, 0.3); /* 눌렸을 때 그림자도 작아짐 */
+}
+
+/* ==========================================
+   💌 커뮤니티 피드 카드 공통 스타일
+   ========================================== */
+.feed-card {
+    background: var(--bg-card);
+    padding: 18px;
+    border-radius: 20px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.03);
+    border: 1px solid var(--border);
+    margin-bottom: 16px; /* 카드 사이 간격 */
+    cursor: pointer;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+/* 터치했을 때 살짝 눌리는 애니메이션 */
+.feed-card:active {
+    transform: scale(0.98);
+    box-shadow: 0 1px 4px rgba(0,0,0,0.02);
+}
+
+/* ==========================================
+   📝 글쓰기 모달 (하이엔드 감성 통합본 - z-index 최상위)
+   ========================================== */
+/* 1. 배경 어두워지는 효과 (하단 메뉴바 덮어버리게 계급 상향!) */
+.write-modal-overlay {
+    position: fixed;
+    top: 0; left: 0; width: 100%; height: 100%;
+    background: rgba(0, 0, 0, 0.4);
+    z-index: 99998; /* 🌟 하단 바보다 무조건 높게! */
+    opacity: 0;
+    visibility: hidden;
+    transition: all 0.3s ease;
+}
+
+.write-modal-overlay.show {
+    opacity: 1;
+    visibility: visible;
+}
+
+/* 2. 실제 모달창 (시원하게 뻗도록 height 고정 & 계급 최상위 상향!) */
+.write-modal {
+    position: fixed;
+    bottom: 0; /* 🚨 수정됨: -100% 대신 바닥(0)에 닻을 내림 */
+    left: 50%;
+    width: 100%;
+    max-width: 480px;
+    height: 85vh; /* 🌟 쪼그라들지 않게 화면의 85%로 시원하게 확정! */
+    background: #ffffff;
+    border-radius: 24px 24px 0 0;
+    z-index: 99999; /* 🌟 최상위 계급 부여 (하단 바 완벽하게 덮음) */
+    display: flex;
+    flex-direction: column;
+    box-shadow: 0 -10px 40px rgba(0,0,0,0.12);
+    /* 🚀 마법의 코드: bottom 대신 transform을 이용해 화면 밑으로 완벽히 숨김! (모바일 에러 원천 차단) */
+    transform: translate(-50%, 100%); 
+    transition: transform 0.35s cubic-bezier(0.2, 0, 0, 1); /* 🚨 bottom 대신 transform 애니메이션으로 부드럽게 변경 */
+}
+
+.write-modal.show {
+    /* 🚀 올라올 때는 중앙(-50%)을 유지하며 원래 자리(0)로 스르륵! */
+    transform: translate(-50%, 0); 
+}
+
+/* 3. 모달 상단 손잡이 (드래그 핸들 - 앱 같은 디테일) */
+.modal-drag-handle {
+    width: 36px;
+    height: 5px;
+    background: #E5E8EB;
+    border-radius: 3px;
+    margin: 12px auto 0; /* 상단 중앙 배치 */
+}
+
+/* 4. 폼 입력창 스타일 업그레이드 */
+.write-input {
+    width: 100%;
+    border: none;
+    font-size: 16px;
+    outline: none;
+    background: transparent;
+    font-family: inherit;
+    color: var(--text-title);
+}
+.write-input::placeholder {
+    color: #B0B8C1;
+    font-weight: 500;
+}
+
+/* ==========================================
+   🔘 글쓰기 하단 툴바 & 익명 토글 스위치
+   ========================================== */
+.toggle-switch {
+    position: relative;
+    display: inline-block;
+    width: 44px;
+    height: 24px;
+}
+.toggle-switch input { display: none; }
+.toggle-slider {
+    position: absolute; top: 0; left: 0; right: 0; bottom: 0;
+    background-color: #E5E8EB; border-radius: 24px;
+    cursor: pointer; transition: 0.3s;
+}
+.toggle-slider:before {
+    position: absolute; content: "";
+    height: 18px; width: 18px; left: 3px; bottom: 3px;
+    background-color: white; border-radius: 50%;
+    transition: 0.3s; box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+/* 체크되었을 때 파란색으로 변함 */
+.toggle-switch input:checked + .toggle-slider {
+    background-color: var(--brand-primary);
+}
+.toggle-switch input:checked + .toggle-slider:before {
+    transform: translateX(20px);
+}
+
+/* ==========================================
+   ✨ 새 글 등록 애니메이션 (자연스러운 스르륵 효과)
+   ========================================== */
+@keyframes slideDownFade {
+    from { 
+        opacity: 0; 
+        transform: translateY(-20px) scale(0.98); 
+    }
+    to { 
+        opacity: 1; 
+        transform: translateY(0) scale(1); 
+    }
+}
+
+/* ==========================================
+   📄 게시글 상세 페이지 (슬라이드 인 애니메이션)
+   ========================================== */
+.post-detail-page {
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: #ffffff;
+    z-index: 1000; /* 모든 화면(하단바 포함)을 덮도록 설정 */
+    transform: translateX(100%); /* 처음엔 오른쪽 화면 밖에 숨김 */
+    transition: transform 0.3s cubic-bezier(0.25, 0.8, 0.25, 1); /* 쫀득한 타이밍 */
+    display: flex;
+    flex-direction: column;
+}
+.post-detail-page.active {
+    transform: translateX(0); /* active 클래스가 붙으면 화면 안으로 쏙! */
+}
+.comment-input-area {
+    box-sizing: border-box;
+    width: 100%;
+    max-width: 480px; /* 👈 추가: 전체 앱 화면 크기(480px)에 딱 맞추기 */
+    display: flex; align-items: center; gap: 12px;
+    padding: 12px 20px 24px;
+    border-top: 1px solid #F2F4F6; background: #ffffff;
+    
+    /* 👇 sticky 대신 fixed를 쓰고 중앙 정렬 마법을 걸어줍니다 */
+    position: fixed; 
+    bottom: 0;
+    left: 50%;                  /* 👈 추가: 화면 정중앙으로 밀기 */
+    transform: translateX(-50%); /* 👈 추가: 삐뚤어지지 않게 정중앙 핀 꽂기 */
+    z-index: 9999;              /* 👈 추가: 스크롤해도 글자에 안 가려지게 맨 위로 띄우기 */
+}
+
+/* 아래는 기존 코드 그대로 유지! (건드릴 필요 없음) */
+.comment-input {
+    box-sizing: border-box;
+    flex: 1; padding: 14px 20px; border-radius: 24px;
+    border: 1px solid #E5E8EB; background: #F9FAFB;
+    font-size: 15px; outline: none; transition: 0.2s;
+}
+.comment-input:focus {
+    border-color: var(--brand-primary); background: #ffffff;
+}
+
+/* ==========================================
+   📄 게시글 상세 페이지 (PC/모바일 완벽 중앙 정렬 슬라이드)
+   ========================================== */
+.post-detail-page {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0; /* 양끝을 잡고 */
+    margin: 0 auto; /* 자동으로 정중앙에 배치! */
+    width: 100%;
+    max-width: 480px; /* 메인 앱이랑 똑같은 너비 */
+    height: 100vh;
+    background: #ffffff;
+    z-index: 9999;
+    display: flex;
+    flex-direction: column;
+    
+    /* 처음엔 화면 오른쪽 끝(100vw) 너머에 숨겨둠 */
+    transform: translateX(100vw); 
+    transition: transform 0.35s cubic-bezier(0.25, 0.8, 0.25, 1);
+}
+
+.post-detail-page.active {
+    /* active가 붙으면 원래 자리(정중앙)로 스르륵! */
+    transform: translateX(0); 
+}
+
+/* ==========================================
+   💬 2. 댓글용 미니 좋아요 버튼 스타일
+   ========================================== */
+.comment-like-btn {
+    display: inline-flex; align-items: center; gap: 4px;
+    font-size: 13px; font-weight: 600; color: #8B95A1;
+    cursor: pointer; user-select: none; transition: 0.2s;
+    margin-top: 8px; padding: 4px 8px; border-radius: 12px; background: #F9FAFB;
+}
+.comment-like-btn:active {
+    transform: scale(0.9);
+}
+
+/* ==========================================
+   🍞 하단 토스트 팝업 애니메이션
+   ========================================== */
+#toast-container {
+    position: fixed;
+    bottom: -50px; /* 처음엔 화면 아래에 몰래 숨겨둠 */
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(49, 51, 63, 0.9); /* 세련된 반투명 다크 그레이 */
+    color: white;
+    padding: 12px 24px;
+    border-radius: 24px;
+    font-size: 14px;
+    font-weight: 600;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    z-index: 10000; /* 그 어떤 것보다 최상단에 뜨도록 */
+    opacity: 0; /* 처음엔 투명하게 */
+    pointer-events: none; /* 클릭 방해 안 하게 설정 */
+    white-space: nowrap;
+    transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1); /* 통통 튀듯 부드러운 모션 */
+}
+
+#toast-container {
+    position: fixed; bottom: -50px; left: 50%; transform: translateX(-50%);
+    background: rgba(49, 51, 63, 0.9); color: white; padding: 12px 24px;
+    border-radius: 24px; font-size: 14px; font-weight: 600;
+    z-index: 99999; /* 👈 무조건 맨 위에 뜨게 마법의 숫자 투척! */
+    opacity: 0; transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+    pointer-events: none;
+}
+#toast-container.show { bottom: 100px; opacity: 1; }
+
+/* ==========================================
+   🔄 당겨서 새로고침 디자인
+   ========================================== */
+body {
+    overscroll-behavior-y: none; /* 스마트폰 기본 당겨서 새로고침 방지! */
+}
+
+#pull-to-refresh {
+    position: fixed;
+    top: -50px; /* 화면 천장 위로 50px 숨겨둠 */
+    left: 0; width: 100%;
+    text-align: center;
+    padding: 15px 0;
+    font-size: 14px; font-weight: 600; color: #8B95A1;
+    z-index: 100;
+    background-color: #ffffff;
+    transition: top 0.2s ease-out; /* 놓았을 때 튕겨 올라가는 속도 */
+}
+
+/* 빙글빙글 도는 애니메이션 */
+.spinner {
+    display: inline-block;
+    margin-right: 6px;
+}
+.spin-anim {
+    animation: spin 1s linear infinite;
+}
+@keyframes spin { 100% { transform: rotate(360deg); } }
+
+/* ==========================================
+   📸 가로 사진 스와이프 디자인
+   ========================================== */
+.image-swipe-wrapper {
+    display: flex;
+    overflow-x: auto;
+    scroll-snap-type: x mandatory; /* 사진이 자석처럼 딱딱 맞게 멈춤 */
+    gap: 12px;
+    padding: 0 20px 20px 20px;
+    margin: 0 -20px; /* 부모 패딩 무시하고 화면 꽉 차게 */
+    scrollbar-width: none; /* 파이어폭스 스크롤바 숨김 */
+}
+.image-swipe-wrapper::-webkit-scrollbar {
+    display: none; /* 크롬/사파리 스크롤바 숨김 */
+}
+.swipe-item {
+    width: 280px; /* 사진 한 장의 너비 (화면보다 살짝 작게 해서 다음 사진이 보이게) */
+    flex-shrink: 0;
+    scroll-snap-align: center;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+    overflow: hidden;
+}
+.swipe-item img {
+    width: 100%;
+    height: 200px;
+    object-fit: cover; /* 사진 비율 찌그러짐 방지 */
+    display: block;
+}
+
+/* ==========================================
+   ✍️ 플로팅 글쓰기 버튼 (FAB)
+   ========================================== */
+.fab-button {
+    position: fixed;
+    bottom: 90px; /* 하단 메뉴바 위로 띄움 */
+    right: 20px;
+    width: 56px;
+    height: 56px;
+    background-color: var(--brand-primary); /* 브랜드 컬러 (오렌지) */
+    color: white;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 24px;
+    box-shadow: 0 4px 12px rgba(255, 111, 15, 0.4);
+    cursor: pointer;
+    z-index: 900;
+    transition: transform 0.2s;
+}
+.fab-button:active {
+    transform: scale(0.9); /* 누르면 살짝 작아지는 손맛 */
+}
+
+/* PC 화면처럼 480px 넘어가면, 중앙 480px 박스 안쪽에 예쁘게 위치하도록 고정 */
+@media (min-width: 480px) {
+    .fab-button {
+        right: calc(50% - 220px); 
+    }
+}
+
+/* 마이페이지 탭이 켜질 때 정상적으로 표시되도록 설정 */
+#tab-mypage.active {
+    display: block !important;
+}
+
+/* =========================================================
+   🌙 4단계: 맘수다(커뮤니티) 탭 다크모드 완벽 패치
+   ========================================================= */
+
+/* 1. 글쓰기 모달, 상세 페이지, 알림/활동 오버레이 배경 다크화 */
+body.dark-mode .write-modal,
+body.dark-mode .post-detail-page,
+body.dark-mode #commNotiOverlay,
+body.dark-mode #commActivityOverlay,
+body.dark-mode #commSearchOverlay {
+    background-color: var(--bg-main) !important;
+}
+
+/* 2. 상세 페이지 & 글쓰기 모달의 '상단 헤더'와 '하단 툴바' 다크화 */
+body.dark-mode .post-detail-page > div[style*="background: #ffffff"],
+body.dark-mode .post-detail-page > div[style*="background:#ffffff"],
+body.dark-mode .write-modal > div[style*="background: #ffffff"],
+body.dark-mode .write-modal > div[style*="background:#ffffff"] {
+    background-color: var(--bg-main) !important;
+    border-bottom: 1px solid var(--border) !important;
+    border-top: 1px solid var(--border) !important;
+}
+
+/* 3. 댓글 입력창 하단 고정 영역 다크화 */
+body.dark-mode .comment-input-area {
+    background-color: var(--bg-main) !important;
+    border-top: 1px solid var(--border) !important;
+}
+body.dark-mode .comment-input {
+    background-color: var(--bg-sub) !important;
+    color: var(--text-m) !important;
+    border: 1px solid var(--border) !important;
+}
+body.dark-mode .comment-input:focus {
+    background-color: var(--bg-card) !important;
+}
+
+/* 4. 까만색 선으로 된 SVG 아이콘들(돋보기, 종, 뒤로가기, 점3개) 하얗게 반전 */
+body.dark-mode #tab-community svg[stroke="#191F28"],
+body.dark-mode #tab-community svg[stroke="#333D4B"],
+body.dark-mode .post-detail-page svg[stroke="#333D4B"],
+body.dark-mode .post-detail-page svg[stroke="#8B95A1"],
+body.dark-mode .write-modal svg[stroke="#333D4B"],
+body.dark-mode #commNotiOverlay svg[stroke="#333D4B"],
+body.dark-mode #commActivityOverlay svg[stroke="#333D4B"],
+body.dark-mode #commSearchOverlay svg[stroke="var(--text-title)"] {
+    stroke: var(--text-m) !important;
+}
+
+/* 5. 맘수다 상단 우측 마이페이지(사람 모양) 동그란 버튼 다크화 */
+body.dark-mode #tab-community button[style*="background:#F2F5F8"] {
+    background-color: var(--bg-sub) !important;
+    border-color: var(--border) !important;
+}
+body.dark-mode #tab-community button[style*="background:#F2F5F8"] svg {
+    stroke: var(--text-m) !important;
+}
+
+/* 6. 검색창(오버레이 안쪽) 다크화 */
+body.dark-mode #commSearchOverlay div[style*="background: var(--bg-card)"] {
+    background-color: var(--bg-main) !important;
+    border-bottom: 1px solid var(--border) !important;
+}
+
+/* =========================================================
+   🚑 5단계: 맘수다 공지 & 설정 탭 텍스트 증발 + 카카오 버튼 해결
+   ========================================================= */
+
+/* 1. CSS 변수를 다크모드용으로 통째로 교체 (설정 탭 & 빈 화면 글씨 복구의 핵심!) */
+body.dark-mode {
+    --text-title: #F9FAFB !important;
+    --text-body: #D1D6DB !important;
+    --text-sub: #8B95A1 !important;
+    --text-m: #F9FAFB !important;
+    --text-s: #B0B8C1 !important;
+    --bg-main: #000000 !important;
+    --bg-card: #191F28 !important;
+    --border: #333D4B !important;
+}
+
+/* 2. 카카오 로그인/초대 버튼 텍스트 색상 보호 (노란색 배경엔 까만 글씨 고정!) */
+body.dark-mode button[style*="background: #FEE500"],
+body.dark-mode button[style*="background:#FEE500"] {
+    color: #191F28 !important;
+}
+
+/* 3. 맘수다 탭 상단 배너들 다크모드화 */
+/* "오픈 준비 중!" 파란 그라데이션 배너 */
+body.dark-mode [style*="background: linear-gradient(135deg, #F0F7FF 0%, #E0EDFF 100%)"] {
+    background: linear-gradient(135deg, #1E293B, #0F172A) !important;
+    border: 1px solid #333D4B !important;
+    box-shadow: none !important;
+}
+body.dark-mode [style*="background: linear-gradient(135deg, #F0F7FF 0%, #E0EDFF 100%)"] div[style*="color: #1C64F2"] {
+    color: #60A5FA !important;
+}
+
+/* "운영자 공지" 회색 배너 */
+body.dark-mode [style*="background: #F8FAFC"] {
+    background: #191F28 !important;
+    border: 1px solid #333D4B !important;
+    box-shadow: none !important;
+}
+
+/* 4. 마이페이지 (설정) 탭 내부 카드 배경 다크화 */
+body.dark-mode #tab-settings div[style*="background: var(--bg-card)"] {
+    background: #191F28 !important;
+    border-color: #333D4B !important;
+}
+
+/* ==========================================
+   🌙 맘수다 카테고리 탭 다크모드 완벽 패치
+   ========================================== */
+
+/* 1. 활성화된 탭 ('전체' 등) - 하얀 바탕에 까만 글씨로 쨍하게 반전! */
+body.dark-mode .category-chip.active {
+    background-color: #F9FAFB !important;
+    color: #191F28 !important;
+    border: none !important;
+}
+
+/* 2. 비활성화된 탭 - 어두운 바탕에 밝은 회색 글씨로 눈 편안하게 */
+body.dark-mode .category-chip:not(.active) {
+    background-color: #202632 !important;
+    color: #B0B8C1 !important;
+    border: 1px solid #333D4B !important;
+}
