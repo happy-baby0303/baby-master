@@ -52,531 +52,7 @@
         }
     </script>
     <link rel="stylesheet" href="style.css?v=20260706">
-   
- <style>
-        .panel-block { transition: opacity 0.3s ease; }
-        #cube-list-container .timeline-item, #baton-list-container .timeline-item { 
-            background: #FFF; border: 1px solid #E5E8EB; border-radius: 16px; padding: 16px; display: flex; justify-content: space-between; align-items: center; 
-        }
-        input:focus, select:focus { outline: 2px solid #3182F6 !important; border-color: #3182F6 !important; }
 
-/* ==========================================
-   🎭 엄마/아빠 비대칭 UI 트래픽 컨트롤러
-   ========================================== */
-/* 1. 기본 상태 (엄마 모드): 아빠 전용 숨김, 엄마 전용 보임 */
-.show-on-dad-block { display: none !important; }
-.show-on-mom-block { display: block !important; }
-
-/* 2. 아빠 모드 켜졌을 때: 반대로 작동! */
-body.mode-dad .show-on-dad-block { display: block !important; }
-body.mode-dad .show-on-mom-block { display: none !important; }
-
-/* ==========================================
-   👨‍🍼 아빠 모드 전용 UI 컨트롤 (순정 완벽 버전)
-   ========================================== */
-
-/* 1. 아빠 화면에서는 통계창을 '기본으로' 닫아둡니다. 
-   🚨 주의: 절대 !important를 붙이지 마세요! 붙이면 버튼이 먹통됩니다. */
-body.mode-dad #tracker-stats-container {
-    display: none; 
-}    
-
-/* 데일리 케어 버튼 다크모드 클릭(활성화) 상태 */
-body.dark-mode .routine-btn.active,
-body.dark-mode .care-btn.active {
-    background: rgba(49, 130, 246, 0.2) !important; /* 은은한 파란색 배경 */
-    color: #3182F6 !important; /* 쨍한 파란색 글씨 */
-    border: 1px solid #3182F6 !important;
-}
-
-/* 팝업(모달) 창을 감싸는 div에 아래 스타일 속성을 추가해 주세요 */
-max-height: 85vh;          /* 화면 높이의 85%까지만 팝업이 커지도록 제한 */
-overflow-y: auto;          /* 내용이 길어지면 내부 스크롤 생성 */
-padding-bottom: 24px;      /* 하단 버튼이 폰 베젤에 씹히지 않게 여백 추가 */
-
-/* ========================================== */
-        /* 🌙 다크모드: 해열제 선택 버튼 활성화 색상 살리기 */
-        /* ========================================== */
-        body.dark-mode #btn-pill-red.active {
-            background-color: rgba(239, 68, 68, 0.15) !important;
-            color: #EF4444 !important;
-            border: 1px solid #EF4444 !important;
-        }
-        body.dark-mode #btn-pill-blue.active {
-            background-color: rgba(49, 130, 246, 0.15) !important;
-            color: #3182F6 !important;
-            border: 1px solid #3182F6 !important;
-        }
-   
-    /* ========================================== */
-        /* 🌙 다크모드: 해열제 타이머 및 산출 결과 박스 색상 동기화 */
-        /* ========================================== */
-        body.dark-mode #fever-timer-box,
-        body.dark-mode #fever-result {
-            background-color: var(--bg-card) !important;
-            border: 1px solid var(--border) !important;
-        }
-
-        /* 🌟 육아메이트 디자인 시스템 (색상 & 여백) */
-    :root {
-        /* 브랜드 컬러 */
-        --brand-primary: #3182F6; /* 신뢰감을 주는 모던 블루 */
-        --brand-light: #E8F3FF; /* 부드러운 블루 배경 */
-        
-        /* 텍스트 컬러 */
-        --text-title: #191F28; /* 아주 진한 차콜 (제목용) */
-        --text-body: #4E5968;  /* 부드러운 진회색 (본문용) */
-        --text-sub: #8B95A1;   /* 연회색 (날짜, 부가정보용) */
-        
-        /* 배경 컬러 */
-        --bg-main: #F2F4F6; /* 앱 전체 배경 (연한 회색) */
-        --bg-card: #FFFFFF; /* 카드 배경 (순백색) */
-    }
-
-    /* 🌟 하이엔드 게시글 카드 스타일 */
-    .premium-card {
-        background: var(--bg-card);
-        border-radius: 24px; /* 둥글고 부드러운 모서리 */
-        padding: 24px; /* 시원하고 넉넉한 안쪽 여백 */
-        margin-bottom: 16px;
-        border: 1px solid rgba(0, 0, 0, 0.03); /* 아주 연한 테두리 */
-        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.04); /* 고급스럽고 넓게 퍼지는 그림자 */
-        transition: transform 0.2s ease, box-shadow 0.2s ease;
-        cursor: pointer;
-    }
-
-    /* 누를 때 살짝 들어가는 인터랙션 (손맛) */
-    .premium-card:active {
-        transform: scale(0.98);
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.02);
-    }
-
-   /* ==========================================
-   🗂️ 카테고리 가로 스크롤 영역 (Scroll Container)
-   ========================================== */
-.category-scroll-container {
-    display: flex;
-    overflow-x: auto;       /* 가로 스크롤 활성화 */
-    white-space: nowrap;    /* 줄바꿈 방지 */
-    gap: 8px;               /* 칩 사이의 간격 */
-    padding: 12px 20px;
-    background: var(--bg-main);
-    
-    /* 🚫 모바일/PC에서 지저분한 기본 스크롤바 숨기기 */
-    -ms-overflow-style: none; /* IE and Edge */
-    scrollbar-width: none;    /* Firefox */
-}
-.category-scroll-container::-webkit-scrollbar {
-    display: none;            /* Chrome, Safari, Opera */
-}
-
-/* ==========================================
-   🔘 카테고리 칩(버튼) 디테일 (Chip UI)
-   ========================================== */
-.category-chip {
-    padding: 8px 16px;
-    background: var(--bg-card);
-    border: 1px solid rgba(0, 0, 0, 0.05);
-    border-radius: 20px;    /* 완전 둥근 알약 모양 */
-    font-size: 14px;
-    font-weight: 600;
-    color: var(--text-sub); /* 기본 상태는 연회색 글씨 */
-    cursor: pointer;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.02);
-    transition: all 0.2s ease; /* 색상 변경 시 부드러운 전환 효과 */
-    
-    /* 길게 눌렀을 때 텍스트 선택(파란색 드래그) 방지 */
-    user-select: none; 
-    -webkit-user-select: none;
-}
-
-/* 🌟 활성화된 칩 (현재 선택된 카테고리) */
-.category-chip.active {
-    background: var(--text-title); /* 진한 차콜색으로 확 튀게 */
-    color: #FFFFFF;                /* 글씨는 흰색 */
-    border-color: var(--text-title);
-    font-weight: 700;
-}
-
-/* 👆 터치(클릭) 시 쫀득하게 눌리는 애니메이션 */
-.category-chip:active {
-    transform: scale(0.92);
-}
-
-/* ==========================================
-   ✍️ 플로팅 글쓰기 버튼 (FAB - Floating Action Button)
-   ========================================== */
-.fab-write {
-    position: fixed;
-    bottom: 24px;   /* 화면 아래에서 24px 띄움 */
-    right: 24px;    /* 화면 오른쪽에서 24px 띄움 */
-    background: var(--brand-primary); /* 우리가 정한 쨍한 블루 */
-    color: #ffffff;
-    padding: 16px 24px;
-    border-radius: 30px; /* 부드러운 알약 모양 */
-    font-size: 16px;
-    font-weight: 700;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    
-    /* 🌟 핵심 포인트: 검은색이 아닌 '파란색 그림자'로 세련된 발광 효과 */
-    box-shadow: 0 8px 24px rgba(49, 130, 246, 0.4); 
-    
-    border: none;
-    cursor: pointer;
-    z-index: 100; /* 다른 게시글들보다 무조건 위에 떠 있도록 설정 */
-    
-    /* 부드러운 애니메이션 준비 */
-    transition: transform 0.2s cubic-bezier(0.2, 0, 0, 1), box-shadow 0.2s ease;
-}
-
-/* 👆 터치(클릭) 시 쫀득하게 눌리는 손맛 */
-.fab-write:active {
-    transform: scale(0.92);
-    box-shadow: 0 4px 12px rgba(49, 130, 246, 0.3); /* 눌렸을 때 그림자도 작아짐 */
-}
-
-/* ==========================================
-   💌 커뮤니티 피드 카드 공통 스타일
-   ========================================== */
-.feed-card {
-    background: var(--bg-card);
-    padding: 18px;
-    border-radius: 20px;
-    box-shadow: 0 2px 10px rgba(0,0,0,0.03);
-    border: 1px solid var(--border);
-    margin-bottom: 16px; /* 카드 사이 간격 */
-    cursor: pointer;
-    transition: transform 0.2s ease, box-shadow 0.2s ease;
-}
-
-/* 터치했을 때 살짝 눌리는 애니메이션 */
-.feed-card:active {
-    transform: scale(0.98);
-    box-shadow: 0 1px 4px rgba(0,0,0,0.02);
-}
-
-/* ==========================================
-   📝 글쓰기 모달 (하이엔드 감성 통합본 - z-index 최상위)
-   ========================================== */
-/* 1. 배경 어두워지는 효과 (하단 메뉴바 덮어버리게 계급 상향!) */
-.write-modal-overlay {
-    position: fixed;
-    top: 0; left: 0; width: 100%; height: 100%;
-    background: rgba(0, 0, 0, 0.4);
-    z-index: 99998; /* 🌟 하단 바보다 무조건 높게! */
-    opacity: 0;
-    visibility: hidden;
-    transition: all 0.3s ease;
-}
-
-.write-modal-overlay.show {
-    opacity: 1;
-    visibility: visible;
-}
-
-/* 2. 실제 모달창 (시원하게 뻗도록 height 고정 & 계급 최상위 상향!) */
-.write-modal {
-    position: fixed;
-    bottom: -100%;
-    left: 50%;
-    transform: translateX(-50%);
-    width: 100%;
-    max-width: 480px;
-    height: 85vh; /* 🌟 쪼그라들지 않게 화면의 85%로 시원하게 확정! */
-    background: #ffffff;
-    border-radius: 24px 24px 0 0;
-    z-index: 99999; /* 🌟 최상위 계급 부여 (하단 바 완벽하게 덮음) */
-    transition: bottom 0.35s cubic-bezier(0.2, 0, 0, 1);
-    display: flex;
-    flex-direction: column;
-    box-shadow: 0 -10px 40px rgba(0,0,0,0.12);
-}
-
-.write-modal.show {
-    bottom: 0;
-}
-
-/* 3. 모달 상단 손잡이 (드래그 핸들 - 앱 같은 디테일) */
-.modal-drag-handle {
-    width: 36px;
-    height: 5px;
-    background: #E5E8EB;
-    border-radius: 3px;
-    margin: 12px auto 0; /* 상단 중앙 배치 */
-}
-
-/* 4. 폼 입력창 스타일 업그레이드 */
-.write-input {
-    width: 100%;
-    border: none;
-    font-size: 16px;
-    outline: none;
-    background: transparent;
-    font-family: inherit;
-    color: var(--text-title);
-}
-.write-input::placeholder {
-    color: #B0B8C1;
-    font-weight: 500;
-}
-
-/* ==========================================
-   🔘 글쓰기 하단 툴바 & 익명 토글 스위치
-   ========================================== */
-.toggle-switch {
-    position: relative;
-    display: inline-block;
-    width: 44px;
-    height: 24px;
-}
-.toggle-switch input { display: none; }
-.toggle-slider {
-    position: absolute; top: 0; left: 0; right: 0; bottom: 0;
-    background-color: #E5E8EB; border-radius: 24px;
-    cursor: pointer; transition: 0.3s;
-}
-.toggle-slider:before {
-    position: absolute; content: "";
-    height: 18px; width: 18px; left: 3px; bottom: 3px;
-    background-color: white; border-radius: 50%;
-    transition: 0.3s; box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-}
-/* 체크되었을 때 파란색으로 변함 */
-.toggle-switch input:checked + .toggle-slider {
-    background-color: var(--brand-primary);
-}
-.toggle-switch input:checked + .toggle-slider:before {
-    transform: translateX(20px);
-}
-
-/* ==========================================
-   ✨ 새 글 등록 애니메이션 (자연스러운 스르륵 효과)
-   ========================================== */
-@keyframes slideDownFade {
-    from { 
-        opacity: 0; 
-        transform: translateY(-20px) scale(0.98); 
-    }
-    to { 
-        opacity: 1; 
-        transform: translateY(0) scale(1); 
-    }
-}
-
-/* ==========================================
-   📄 게시글 상세 페이지 (슬라이드 인 애니메이션)
-   ========================================== */
-.post-detail-page {
-    position: fixed;
-    top: 0; left: 0; right: 0; bottom: 0;
-    background: #ffffff;
-    z-index: 1000; /* 모든 화면(하단바 포함)을 덮도록 설정 */
-    transform: translateX(100%); /* 처음엔 오른쪽 화면 밖에 숨김 */
-    transition: transform 0.3s cubic-bezier(0.25, 0.8, 0.25, 1); /* 쫀득한 타이밍 */
-    display: flex;
-    flex-direction: column;
-}
-.post-detail-page.active {
-    transform: translateX(0); /* active 클래스가 붙으면 화면 안으로 쏙! */
-}
-.comment-input-area {
-    box-sizing: border-box;
-    width: 100%;
-    max-width: 480px; /* 👈 추가: 전체 앱 화면 크기(480px)에 딱 맞추기 */
-    display: flex; align-items: center; gap: 12px;
-    padding: 12px 20px 24px;
-    border-top: 1px solid #F2F4F6; background: #ffffff;
-    
-    /* 👇 sticky 대신 fixed를 쓰고 중앙 정렬 마법을 걸어줍니다 */
-    position: fixed; 
-    bottom: 0;
-    left: 50%;                  /* 👈 추가: 화면 정중앙으로 밀기 */
-    transform: translateX(-50%); /* 👈 추가: 삐뚤어지지 않게 정중앙 핀 꽂기 */
-    z-index: 9999;              /* 👈 추가: 스크롤해도 글자에 안 가려지게 맨 위로 띄우기 */
-}
-
-/* 아래는 기존 코드 그대로 유지! (건드릴 필요 없음) */
-.comment-input {
-    box-sizing: border-box;
-    flex: 1; padding: 14px 20px; border-radius: 24px;
-    border: 1px solid #E5E8EB; background: #F9FAFB;
-    font-size: 15px; outline: none; transition: 0.2s;
-}
-.comment-input:focus {
-    border-color: var(--brand-primary); background: #ffffff;
-}
-
-/* ==========================================
-   📄 게시글 상세 페이지 (PC/모바일 완벽 중앙 정렬 슬라이드)
-   ========================================== */
-.post-detail-page {
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0; /* 양끝을 잡고 */
-    margin: 0 auto; /* 자동으로 정중앙에 배치! */
-    width: 100%;
-    max-width: 480px; /* 메인 앱이랑 똑같은 너비 */
-    height: 100vh;
-    background: #ffffff;
-    z-index: 9999;
-    display: flex;
-    flex-direction: column;
-    
-    /* 처음엔 화면 오른쪽 끝(100vw) 너머에 숨겨둠 */
-    transform: translateX(100vw); 
-    transition: transform 0.35s cubic-bezier(0.25, 0.8, 0.25, 1);
-}
-
-.post-detail-page.active {
-    /* active가 붙으면 원래 자리(정중앙)로 스르륵! */
-    transform: translateX(0); 
-}
-
-/* ==========================================
-   💬 2. 댓글용 미니 좋아요 버튼 스타일
-   ========================================== */
-.comment-like-btn {
-    display: inline-flex; align-items: center; gap: 4px;
-    font-size: 13px; font-weight: 600; color: #8B95A1;
-    cursor: pointer; user-select: none; transition: 0.2s;
-    margin-top: 8px; padding: 4px 8px; border-radius: 12px; background: #F9FAFB;
-}
-.comment-like-btn:active {
-    transform: scale(0.9);
-}
-
-/* ==========================================
-   🍞 하단 토스트 팝업 애니메이션
-   ========================================== */
-#toast-container {
-    position: fixed;
-    bottom: -50px; /* 처음엔 화면 아래에 몰래 숨겨둠 */
-    left: 50%;
-    transform: translateX(-50%);
-    background: rgba(49, 51, 63, 0.9); /* 세련된 반투명 다크 그레이 */
-    color: white;
-    padding: 12px 24px;
-    border-radius: 24px;
-    font-size: 14px;
-    font-weight: 600;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-    z-index: 10000; /* 그 어떤 것보다 최상단에 뜨도록 */
-    opacity: 0; /* 처음엔 투명하게 */
-    pointer-events: none; /* 클릭 방해 안 하게 설정 */
-    white-space: nowrap;
-    transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1); /* 통통 튀듯 부드러운 모션 */
-}
-
-#toast-container {
-    position: fixed; bottom: -50px; left: 50%; transform: translateX(-50%);
-    background: rgba(49, 51, 63, 0.9); color: white; padding: 12px 24px;
-    border-radius: 24px; font-size: 14px; font-weight: 600;
-    z-index: 99999; /* 👈 무조건 맨 위에 뜨게 마법의 숫자 투척! */
-    opacity: 0; transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
-    pointer-events: none;
-}
-#toast-container.show { bottom: 100px; opacity: 1; }
-
-/* ==========================================
-   🔄 당겨서 새로고침 디자인
-   ========================================== */
-body {
-    overscroll-behavior-y: none; /* 스마트폰 기본 당겨서 새로고침 방지! */
-}
-
-#pull-to-refresh {
-    position: fixed;
-    top: -50px; /* 화면 천장 위로 50px 숨겨둠 */
-    left: 0; width: 100%;
-    text-align: center;
-    padding: 15px 0;
-    font-size: 14px; font-weight: 600; color: #8B95A1;
-    z-index: 100;
-    background-color: #ffffff;
-    transition: top 0.2s ease-out; /* 놓았을 때 튕겨 올라가는 속도 */
-}
-
-/* 빙글빙글 도는 애니메이션 */
-.spinner {
-    display: inline-block;
-    margin-right: 6px;
-}
-.spin-anim {
-    animation: spin 1s linear infinite;
-}
-@keyframes spin { 100% { transform: rotate(360deg); } }
-
-/* ==========================================
-   📸 가로 사진 스와이프 디자인
-   ========================================== */
-.image-swipe-wrapper {
-    display: flex;
-    overflow-x: auto;
-    scroll-snap-type: x mandatory; /* 사진이 자석처럼 딱딱 맞게 멈춤 */
-    gap: 12px;
-    padding: 0 20px 20px 20px;
-    margin: 0 -20px; /* 부모 패딩 무시하고 화면 꽉 차게 */
-    scrollbar-width: none; /* 파이어폭스 스크롤바 숨김 */
-}
-.image-swipe-wrapper::-webkit-scrollbar {
-    display: none; /* 크롬/사파리 스크롤바 숨김 */
-}
-.swipe-item {
-    width: 280px; /* 사진 한 장의 너비 (화면보다 살짝 작게 해서 다음 사진이 보이게) */
-    flex-shrink: 0;
-    scroll-snap-align: center;
-    border-radius: 12px;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.05);
-    overflow: hidden;
-}
-.swipe-item img {
-    width: 100%;
-    height: 200px;
-    object-fit: cover; /* 사진 비율 찌그러짐 방지 */
-    display: block;
-}
-
-/* ==========================================
-   ✍️ 플로팅 글쓰기 버튼 (FAB)
-   ========================================== */
-.fab-button {
-    position: fixed;
-    bottom: 90px; /* 하단 메뉴바 위로 띄움 */
-    right: 20px;
-    width: 56px;
-    height: 56px;
-    background-color: var(--brand-primary); /* 브랜드 컬러 (오렌지) */
-    color: white;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 24px;
-    box-shadow: 0 4px 12px rgba(255, 111, 15, 0.4);
-    cursor: pointer;
-    z-index: 900;
-    transition: transform 0.2s;
-}
-.fab-button:active {
-    transform: scale(0.9); /* 누르면 살짝 작아지는 손맛 */
-}
-
-/* PC 화면처럼 480px 넘어가면, 중앙 480px 박스 안쪽에 예쁘게 위치하도록 고정 */
-@media (min-width: 480px) {
-    .fab-button {
-        right: calc(50% - 220px); 
-    }
-}
-
-/* 마이페이지 탭이 켜질 때 정상적으로 표시되도록 설정 */
-#tab-mypage.active {
-    display: block !important;
-}
-
-</style>
 </head>
 
 <body>
@@ -685,11 +161,11 @@ body {
 <div class="wrapper">
     <div id="tab-home" class="tab-content active">
 
-     <!-- 📢 [수정] 홈 화면 실시간 공지 배너 (평소엔 숨김) -->
-        <div id="home-main-banner-wrapper" style="display: none; margin: 16px 20px 0 20px; background: var(--bg-card); border: 1px solid var(--border); border-radius: 16px; padding: 14px 16px; align-items: center; gap: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.02);">
-            <div style="font-size: 20px;">📢</div>
-            <div id="home-main-banner-text" style="font-size: 14px; font-weight: 800; color: var(--text-m); word-break: keep-all; line-height: 1.4;"></div>
-        </div>
+    <!-- 📢 [수정] 홈 화면 실시간 공지 배너 (평소엔 숨김) -->
+    <div id="home-main-banner-wrapper" style="display: none; margin: 16px 20px 0 20px; background: var(--bg-card); border: 1px solid var(--border); border-radius: 16px; padding: 14px 16px; align-items: center; gap: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.02);">
+        <div style="font-size: 20px;">📢</div>
+        <div id="home-main-banner-text" style="font-size: 14px; font-weight: 800; color: var(--text-m); word-break: keep-all; line-height: 1.4;"></div>
+    </div>
 
     <div style="margin-bottom: 24px;">
         
@@ -699,10 +175,11 @@ body {
             <div style="font-size: 15px; font-weight: 600; color: #8B95A1;">오늘도 육아메이트와 함께 육아팅!</div>
         </div>
 
-        <!-- 2. 메인 아기 사진 (엄마/아빠 누구나 1순위로 이게 보여야 예쁩니다!) -->
+        <!-- 2. 메인 아기 사진 -->
         <div style="padding: 0;">
             <div class="home-hero-card" id="baby-dashboard" onclick="document.getElementById('baby-photo-input').click()" style="position: relative; border-radius: 28px; overflow: hidden; box-shadow: 0 8px 20px rgba(0,0,0,0.04); height: 240px; display: flex; flex-direction: column; cursor:pointer;">
                 <img src="img.jpg" class="home-hero-img" alt="아기 사진" style="position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover;" onerror="this.style.display='none'; this.parentNode.style.background='#D1D6DB';">
+                
                 <div class="home-hero-overlay" style="position: absolute; inset: 0; background: linear-gradient(to top, rgba(0,0,0,0.7) 0%, transparent 40%); padding: 20px; display: flex; flex-direction: column; justify-content: flex-end;">
                     <div>
                         <div style="display:flex; align-items:center; margin-bottom:4px;">
@@ -710,6 +187,12 @@ body {
                         </div>
                         <span id="res-baby-name" style="font-size:14px; color:rgba(255,255,255,0.9); font-weight: 700;">아기를 등록해주세요</span>
                     </div>
+
+                    <!-- 🌟 대표님 원본 코드에 이거 딱 하나만 '절대 위치(absolute)'로 추가했습니다! 🌟 -->
+                    <button id="milestone-btn" onclick="event.stopPropagation(); openMilestoneModal();" style="position: absolute; right: 20px; bottom: 20px; background: rgba(255,255,255,0.25); border: 1px solid rgba(255,255,255,0.4); color: #FFF; padding: 6px 12px; border-radius: 12px; font-size: 13px; font-weight: 800; cursor: pointer; backdrop-filter: blur(4px); box-shadow: 0 4px 10px rgba(0,0,0,0.1); display: flex; align-items: center; gap: 4px; z-index: 10;">
+                        🏅 첫 도감 <span id="milestone-counter">0/30</span> 〉
+                    </button>
+
                 </div>
             </div>
         </div>
@@ -1155,135 +638,144 @@ body {
     </div>
 </div>
 
-            <div id="panel-growth" class="panel-block" style="display:none; padding-top: 24px; padding-bottom: 24px;">
+<div id="panel-growth" class="panel-block" style="display:none; padding-top: 24px; padding-bottom: 24px;">
     
-    <!-- 🏥 첫 번째 카드: 기본 정보 입력 및 차트 확인 -->
-    <div style="background: #FFFFFF; border-radius: 20px; padding: 24px; box-shadow: 0 4px 12px rgba(0,0,0,0.03);">
-        
-        <h2 style="font-size: 20px; font-weight: 900; margin: 0 0 20px 0; color: #191F28; letter-spacing: -0.5px;">📈 영유아 종합 성장/건강 마스터</h2>
-        
-        <!-- 면책 조항 (부드러운 파스텔 옐로우) -->
-        <div style="background: #FFF9E6; padding: 16px; border-radius: 14px; margin-bottom: 24px; border: 1px solid #FFE8A1;">
-            <p style="color:#B78103; font-size:13.5px; font-weight:800; margin-bottom:4px;">🚨 의료 정보 면책 조항</p>
-            <p style="font-size:13px; color:#7A5900; line-height:1.5; margin:0;">질병관리청 표준 성장도표 기반 추정치입니다. 실제 발달 평가는 전문의 검진을 우선하세요.</p>
-        </div>
-
-        <!-- 📊 누적 성장 곡선 아코디언 (차트 도화지 액자 교체) -->
-        <details id="growth-history-accordion" style="display:none; background: #F9FAFB; border: 1px solid #F2F5F8; border-radius:16px; overflow:hidden; margin-bottom:24px;">
-            <summary style="padding:16px 20px; font-size:14.5px; font-weight:800; cursor:pointer; list-style:none; display:flex; justify-content:space-between; align-items:center; color: #191F28;">
-                <span>📊 우리 아기 누적 성장 곡선</span>
-                <span style="font-size:12px; background: #E2F5EB; color: #00B37A; padding:6px 12px; border-radius:10px; font-weight:700;">차트 보기 ▾</span>
-            </summary>
-            <div style="padding:0 20px 20px 20px; border-top: 1px solid #E5E8EB; margin-top: 4px; padding-top: 16px;">
-                <div style="width: 100%; height: 220px; margin-bottom: 16px;"><canvas id="growthChart"></canvas></div>
-                <div id="growth-history-list" style="display:flex; flex-direction:column; gap:8px;"></div>
-            </div>
-        </details>
-
-        <!-- 입력 폼 (모던한 연회색 박스로 묶음) -->
-        <div style="background: #F9FAFB; border-radius: 16px; padding: 20px; border: 1px solid #F2F5F8; margin-bottom: 24px;">
-            <div style="font-size:13px; font-weight:800; color:#00B37A; background: #E2F5EB; padding:10px; border-radius:12px; margin-bottom:20px; text-align:center;">
-                키·몸무게 중 하나만 적어주세요 🤍
-            </div>
-            
-            <div style="display:flex; gap:12px; margin-bottom:16px;">
-                <div style="flex:1.3; min-width:0;">
-                    <label style="font-size:13px; font-weight:800; display:block; margin-bottom:8px; color:var(--text-m);">1. 생년월일</label>
-                    <input type="text" id="v-birth" placeholder="터치해서 선택" onfocus="(this.type='date')" onblur="(this.value === '' ? this.type='text' : this.type='date')" style="width:100%; box-sizing:border-box; padding:14px; border-radius:12px; background: #FFFFFF; border: 1px solid #E5E8EB; font-size:14px; font-weight:700; color:#191F28; outline:none;">
-                </div>
-                <div style="flex:0.7; min-width:0;">
-                    <label style="font-size:13px; font-weight:800; display:block; margin-bottom:8px; color:var(--text-m);">2. 성별</label>
-                    <select id="v-gender" style="width:100%; box-sizing:border-box; padding:14px; border-radius:12px; background: #FFFFFF; border: 1px solid #E5E8EB; font-size:14px; font-weight:700; color:#191F28; outline:none;">
-                        <option value="" disabled selected>선택</option>
-                        <option value="boy">👦 남아</option>
-                        <option value="girl">👧 여아</option>
-                    </select>
-                </div>
-            </div>
-            
-            <div style="display:flex; gap:12px;">
-                <div style="flex:1; min-width:0;">
-                    <label style="font-size:13px; font-weight:800; display:block; margin-bottom:8px; color:var(--text-m);">3. 현재 키 <span style="font-size:11px; color:#8B95A1; font-weight:600;">(cm)</span></label>
-                    <input type="number" id="v-height" step="0.1" placeholder="선택 입력" style="width:100%; box-sizing:border-box; padding:14px; border-radius:12px; background: #FFFFFF; border: 1px solid #E5E8EB; font-size:14px; font-weight:700; text-align:center; color:#191F28; outline:none;">
-                </div>
-                <div style="flex:1; min-width:0;">
-                    <label style="font-size:13px; font-weight:800; display:block; margin-bottom:8px; color:var(--text-m);">4. 체중 <span style="font-size:11px; color:#8B95A1; font-weight:600;">(kg)</span></label>
-                    <input type="number" id="v-weight-growth" step="0.1" placeholder="선택 입력" style="width:100%; box-sizing:border-box; padding:14px; border-radius:12px; background: #FFFFFF; border: 1px solid #E5E8EB; font-size:14px; font-weight:700; text-align:center; color:#191F28; outline:none;">
-                </div>
-            </div>
-        </div>
-
-        <button class="btn-main" onclick="calcHealthMaster()" style="width: 100%; padding: 18px; font-size: 16px; font-weight: 800; border-radius: 14px; border: none; background: #00B37A; color: white; box-shadow: 0 4px 12px rgba(0, 179, 122, 0.25); cursor: pointer; transition: 0.2s;">
-            ✨ 대한민국 100명 중 몇 등? 분석하기
-        </button>
-    </div>
-
-    <!-- 📊 두 번째 카드: 분석 결과창 (처음엔 숨김) -->
-    <div id="growth-result" style="display:none; margin-top:24px;">
-        <div style="background: #FFFFFF; border-radius: 20px; padding: 24px; box-shadow: 0 4px 12px rgba(0,0,0,0.03);">
-            
-            <!-- 생후 D-day -->
-            <div style="text-align:center; margin-bottom:24px; border-bottom:1px dashed #E5E8EB; padding-bottom:24px;">
-                <div style="font-size:13.5px; color:#8B95A1; font-weight:800; margin-bottom:8px;">우리아기 성장 기록일</div>
-                <div style="font-size:38px; font-weight:900; color:#00B37A; letter-spacing:-1px; line-height:1;">D+<span id="res-dday">0</span></div>
-                <div style="display:inline-block; background: #F9FAFB; border: 1px solid #F2F5F8; padding:8px 16px; border-radius:12px; font-size:13px; font-weight:800; color: #333D4B; margin-top:16px;">
-                    생후 <span id="res-month">0</span>개월 (<span id="res-week">0</span>주 차)
-                </div>
-            </div>
-
-            <!-- 등수 표시 -->
-            <div style="font-size:15px; font-weight:900; color:#191F28; margin-bottom:16px; display:flex; justify-content:space-between; align-items:center;">
-                <span><span style="font-size:18px;">🏅</span> 100명 중 우리 아기 등수</span>
-                <span id="kaup-badge" style="display:none; font-size:12px; font-weight:800; padding:4px 10px; border-radius:8px;"></span>
-            </div>
-            
-            <!-- 키/몸무게 결과 박스 -->
-            <div style="display:flex; gap:12px; margin-bottom:20px;">
-                <div style="flex:1; background: #F9FAFB; border: 1px solid #F2F5F8; padding:20px 12px; border-radius:16px; text-align:center;">
-                    <div style="font-size:13px; font-weight:800; color:#8B95A1; margin-bottom:8px;">키 (신장)</div>
-                    <div style="font-size:26px; font-weight:900; color:#3182F6; margin-bottom:4px;" id="pct-height">0%</div>
-                    <div style="font-size:12px; font-weight:700; color:#6B7684;" id="desc-height">-</div>
-                </div>
-                <div style="flex:1; background: #F9FAFB; border: 1px solid #F2F5F8; padding:20px 12px; border-radius:16px; text-align:center;">
-                    <div style="font-size:13px; font-weight:800; color:#8B95A1; margin-bottom:8px;">몸무게 (체중)</div>
-                    <div style="font-size:26px; font-weight:900; color:#00B37A; margin-bottom:4px;" id="pct-weight">0%</div>
-                    <div style="font-size:12px; font-weight:700; color:#6B7684;" id="desc-weight">-</div>
-                </div>
-            </div>
-            
-            <div id="growth-insight" style="font-size:14px; line-height:1.6; color:#00B37A; background:#E2F5EB; font-weight:700; padding:16px; border-radius:14px; text-align:center; margin-bottom:20px;"></div>
-            
-            <button class="btn-main" onclick="saveGrowthRecord()" style="background:#333D4B !important; color:#FFF !important; width:100%; padding:16px; border-radius: 14px; font-size:15px; font-weight: 800; border: none; cursor: pointer;">
-                💾 이 기록 성장 차트에 저장하기
-            </button>
-
-            <!-- 🗓️ 원더윅스 & 예방접종 브리핑 -->
-            <div style="margin-top: 32px;">
-                <div id="ww-status" style="background: #FFF9E6; border: 1px solid #FFE8A1; border-radius:16px; padding:20px; font-size:14px; line-height:1.6; margin-bottom: 16px; color: #5C4300; font-weight: 600;"></div>
-                
-                <div style="background: #E8F3FF; border: 1px solid #D0E6FF; border-radius:16px; padding:20px; margin-bottom: 16px;">
-                    <div style="font-size:14px; font-weight:900; color:#3182F6; margin-bottom:12px; display:flex; align-items:center; justify-content:space-between;">
-                        <span>💉 다음 예방접종 브리핑</span>
-                        <span id="vac-dday" style="background:#3182F6; color:#FFF; padding:6px 12px; border-radius:10px; font-size:12px;">-</span>
+                <!-- 🏥 첫 번째 카드: 기본 정보 입력 및 차트 확인 -->
+                <div class="box-main" style="border-radius: 20px; padding: 24px; box-shadow: 0 4px 12px rgba(0,0,0,0.03);">
+                    
+                    <h2 style="font-size: 20px; font-weight: 900; margin: 0 0 20px 0; color: var(--text-m); letter-spacing: -0.5px;">📈 영유아 종합 성장/건강 마스터</h2>
+                    
+                    <!-- 면책 조항 -->
+                    <div class="box-tint-yellow" style="padding: 16px; border-radius: 14px; margin-bottom: 24px;">
+                        <p style="color:#B78103; font-size:13.5px; font-weight:800; margin-bottom:4px;">🚨 의료 정보 면책 조항</p>
+                        <p style="font-size:13px; color:#7A5900; line-height:1.5; margin:0;">질병관리청 표준 성장도표 기반 추정치입니다. 실제 발달 평가는 전문의 검진을 우선하세요.</p>
                     </div>
-                    <div id="vaccine-info" style="font-size:13.5px; font-weight:700; color:#191F28; line-height:1.6;"></div>
+            
+                    <!-- 📊 누적 성장 곡선 아코디언 -->
+                    <details id="growth-history-accordion" style="display:none; background: var(--bg-sub); border: 1px solid var(--border); border-radius:16px; overflow:hidden; margin-bottom:24px;">
+                        <summary style="padding:16px 20px; font-size:14.5px; font-weight:800; cursor:pointer; list-style:none; display:flex; justify-content:space-between; align-items:center; color: var(--text-m);">
+                            <span>📊 우리 아기 누적 성장 곡선</span>
+                            <span style="font-size:12px; background: rgba(0, 179, 122, 0.15); color: #00B37A; padding:6px 12px; border-radius:10px; font-weight:800;">차트 보기 ▾</span>
+                        </summary>
+                        <div style="padding:0 20px 20px 20px; border-top: 1px solid var(--border); margin-top: 4px; padding-top: 16px;">
+                            <div style="width: 100%; height: 220px; margin-bottom: 16px;"><canvas id="growthChart"></canvas></div>
+                            <div id="growth-history-list" style="display:flex; flex-direction:column; gap:8px;"></div>
+                        </div>
+                    </details>
+            
+                    <!-- 입력 폼 -->
+                    <div class="box-sub" style="border-radius: 16px; padding: 20px; margin-bottom: 24px;">
+                        <div class="box-tint-green" style="font-size:13px; font-weight:800; padding:10px; border-radius:12px; margin-bottom:20px; text-align:center;">
+                            키·몸무게 중 하나만 적어주세요 🤍
+                        </div>
+                        
+                        <div style="display:flex; gap:12px; margin-bottom:16px;">
+                            <div style="flex:1.3; min-width:0;">
+                                <label style="font-size:13px; font-weight:800; display:block; margin-bottom:8px; color:var(--text-m);">1. 생년월일</label>
+                                <input type="text" id="v-birth" class="box-main" placeholder="터치해서 선택" onfocus="(this.type='date')" onblur="(this.value === '' ? this.type='text' : this.type='date')" style="width:100%; box-sizing:border-box; padding:14px; border-radius:12px; font-size:14px; font-weight:700; outline:none;">
+                            </div>
+                            <div style="flex:0.7; min-width:0;">
+                                <label style="font-size:13px; font-weight:800; display:block; margin-bottom:8px; color:var(--text-m);">2. 성별</label>
+                                <select id="v-gender" class="box-main" style="width:100%; box-sizing:border-box; padding:14px; border-radius:12px; font-size:14px; font-weight:700; outline:none;">
+                                    <option value="" disabled selected>선택</option>
+                                    <option value="boy">👦 남아</option>
+                                    <option value="girl">👧 여아</option>
+                                </select>
+                            </div>
+                        </div>
+                        
+                        <!-- 🚨 문제의 키/몸무게 입력칸 (cm/kg 추가 + 닫기태그 복구!) -->
+                        <div style="display:flex; gap:12px;">
+                            <div style="flex:1; min-width:0;">
+                                <label style="font-size:13px; font-weight:800; display:block; margin-bottom:8px; color:var(--text-m);">3. 현재 키 <span style="font-size:11px; color:var(--text-s); font-weight:600;">(선택)</span></label>
+                                <div style="display:flex; align-items:center; background: var(--bg-card); border: 1px solid var(--border); border-radius: 12px; padding-right: 14px; box-sizing: border-box; transition: 0.2s;">
+                                    <input type="number" id="v-height" step="0.1" placeholder="0.0" style="width:100%; min-width:0; box-sizing:border-box; padding:14px; border:none; background:transparent; font-size:18px; font-weight:900; text-align:right; color:var(--text-m); outline:none;">
+                                    <span style="font-size:14px; font-weight:800; color:var(--text-s); margin-left:4px;">cm</span>
+                                </div>
+                            </div>
+                            <div style="flex:1; min-width:0;">
+                                <label style="font-size:13px; font-weight:800; display:block; margin-bottom:8px; color:var(--text-m);">4. 체중 <span style="font-size:11px; color:var(--text-s); font-weight:600;">(선택)</span></label>
+                                <div style="display:flex; align-items:center; background: var(--bg-card); border: 1px solid var(--border); border-radius: 12px; padding-right: 14px; box-sizing: border-box; transition: 0.2s;">
+                                    <input type="number" id="v-weight-growth" step="0.1" placeholder="0.0" style="width:100%; min-width:0; box-sizing:border-box; padding:14px; border:none; background:transparent; font-size:18px; font-weight:900; text-align:right; color:var(--text-m); outline:none;">
+                                    <span style="font-size:14px; font-weight:800; color:var(--text-s); margin-left:4px;">kg</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div> <!-- 🚨 여기가 빠져있던 박스 닫기 태그입니다!! -->
+            
+                    <button class="btn-main" onclick="calcHealthMaster()" style="width: 100%; padding: 18px; font-size: 16px; font-weight: 800; border-radius: 14px; border: none; background: #00B37A !important; color: white !important; box-shadow: 0 4px 12px rgba(0, 179, 122, 0.25); cursor: pointer; transition: 0.2s;">
+                        ✨ 대한민국 100명 중 몇 등? 분석하기
+                    </button>
                 </div>
-
-                <details style="background: var(--bg-card, #FFFFFF); border: 1px solid var(--border-color, #E5E8EB); border-radius:16px; overflow:hidden; margin-bottom:24px;">
-    <summary style="padding:16px 20px; font-size:14.5px; font-weight:800; cursor:pointer; list-style:none; display:flex; justify-content:space-between; align-items:center; color: var(--text-m, #191F28);">
-        <span>📅 전체 원더윅스 타임라인</span>
-        <span style="font-size:12px; background: var(--bg-sub, #F2F4F6); border: 1px solid var(--border-color, #E5E8EB); color: var(--text-sub, #4E5968); padding:6px 12px; border-radius:10px; font-weight:700;">표 보기 ▾</span>
-    </summary>
-    <div style="padding:0 20px 20px 20px; border-top: 1px solid var(--border-color, #E5E8EB); margin-top: 4px; padding-top: 16px;">
-        <div style="border-radius:12px; overflow:hidden; border: 1px solid var(--border-color, #E5E8EB); background: var(--bg-card, #FFFFFF);">
-            <table class="ww-table" id="ww-table" style="width:100%; border-collapse:collapse; font-size:13px; text-align:center; color: var(--text-m, #333D4B);"></table>
-        </div>
-    </div>
-</details>
-            </div>
-        </div>
-    </div>
-</div>
+            
+                <!-- 📊 두 번째 카드: 분석 결과창 -->
+                <div id="growth-result" style="display:none; margin-top:24px;">
+                    <div class="box-main" style="border-radius: 20px; padding: 24px; box-shadow: 0 4px 12px rgba(0,0,0,0.03);">
+                        
+                        <!-- 생후 D-day -->
+                        <div style="text-align:center; margin-bottom:24px; border-bottom:1px dashed var(--border); padding-bottom:24px;">
+                            <div style="font-size:13.5px; color:var(--text-s); font-weight:800; margin-bottom:8px;">우리아기 성장 기록일</div>
+                            <div style="font-size:38px; font-weight:900; color:#00B37A; letter-spacing:-1px; line-height:1;">D+<span id="res-dday">0</span></div>
+                            
+                            <div class="box-sub" style="display:inline-block; padding:8px 16px; border-radius:12px; font-size:13px; font-weight:800; margin-top:16px;">
+                                생후 <span id="res-month">0</span>개월 (<span id="res-week">0</span>주 차)
+                            </div>
+                        </div>
+            
+                        <!-- 등수 표시 -->
+                        <div style="font-size:15px; font-weight:900; color:var(--text-m); margin-bottom:16px; display:flex; justify-content:space-between; align-items:center;">
+                            <span><span style="font-size:18px;">🏅</span> 100명 중 우리 아기 등수</span>
+                            <span id="kaup-badge" style="display:none; font-size:12px; font-weight:800; padding:4px 10px; border-radius:8px;"></span>
+                        </div>
+                        
+                        <!-- 키/몸무게 결과 박스 -->
+                        <div style="display:flex; gap:12px; margin-bottom:20px;">
+                            <div class="box-sub" style="flex:1; padding:20px 12px; border-radius:16px; text-align:center;">
+                                <div style="font-size:13px; font-weight:800; color:var(--text-s); margin-bottom:8px;">키 (신장)</div>
+                                <div style="font-size:26px; font-weight:900; color:#3182F6; margin-bottom:4px;" id="pct-height">0%</div>
+                                <div style="font-size:12px; font-weight:700; color:var(--text-sub);" id="desc-height">-</div>
+                            </div>
+                            
+                            <div class="box-sub" style="flex:1; padding:20px 12px; border-radius:16px; text-align:center;">
+                                <div style="font-size:13px; font-weight:800; color:var(--text-s); margin-bottom:8px;">몸무게 (체중)</div>
+                                <div style="font-size:26px; font-weight:900; color:#00B37A; margin-bottom:4px;" id="pct-weight">0%</div>
+                                <div style="font-size:12px; font-weight:700; color:var(--text-sub);" id="desc-weight">-</div>
+                            </div>
+                        </div>
+                            
+                        <div id="growth-insight" style="margin-bottom:20px; background: transparent; padding: 0;"></div>
+                        
+                        <button class="btn-main" onclick="saveGrowthRecord()" style="background:var(--text-m) !important; color:var(--bg-card) !important; width:100%; padding:16px; border-radius: 14px; font-size:15px; font-weight: 800; border: none; cursor: pointer;">
+                            💾 이 기록 성장 차트에 저장하기
+                        </button>
+            
+                        <!-- 🗓️ 원더윅스 & 예방접종 브리핑 -->
+                        <div style="margin-top: 32px;">
+                            <div id="ww-status" style="margin-bottom: 16px;"></div>
+                            
+                            <div class="box-tint-blue" style="border-radius:16px; padding:20px; margin-bottom: 16px;">
+                                <div style="font-size:14px; font-weight:900; color:#3182F6; margin-bottom:12px; display:flex; align-items:center; justify-content:space-between;">
+                                    <span>💉 다음 예방접종 브리핑</span>
+                                    <span id="vac-dday" style="background:#3182F6; color:#FFF; padding:6px 12px; border-radius:10px; font-size:12px;">-</span>
+                                </div>
+                                <div id="vaccine-info" style="font-size:13.5px; font-weight:700; color:var(--text-m); line-height:1.6;"></div>
+                            </div>
+            
+                            <details class="box-main" style="border-radius:16px; overflow:hidden; margin-bottom:24px;">
+                                <summary style="padding:16px 20px; font-size:14.5px; font-weight:800; cursor:pointer; list-style:none; display:flex; justify-content:space-between; align-items:center; color: var(--text-m);">
+                                    <span>📅 전체 원더윅스 타임라인</span>
+                                    <span class="box-sub" style="font-size:12px; padding:6px 12px; border-radius:10px; font-weight:800;">표 보기 ▾</span>
+                                </summary>
+                                <div style="padding:0 20px 20px 20px; border-top: 1px solid var(--border); margin-top: 4px; padding-top: 16px;">
+                                    <div class="box-main" style="border-radius:12px; overflow:hidden;">
+                                        <table class="ww-table" id="ww-table" style="width:100%; border-collapse:collapse; font-size:13px; text-align:center; color: var(--text-m);"></table>
+                                    </div>
+                                </div>
+                            </details>
+                        </div>
+                    </div>
+                </div>
+            </div> <!-- panel-growth 닫기 -->
 
             <div id="panel-hotdeal" class="panel-block" style="display:none; padding-top: 24px; padding-bottom: 24px;">
     
@@ -2011,9 +1503,8 @@ body {
     <!-- 1. 🌐 맘수다 감성 헤더 (대기업 앱 스타일) -->
     <div style="position: sticky; top: 0; z-index: 50; background: var(--bg-main); padding: 16px 20px 4px 20px; display: flex; justify-content: space-between; align-items: flex-start;">
         <div>
-            <h2 class="app-title" style="font-size: 24px; font-weight: 900; color: #191F28; margin: 0 0 6px 0; letter-spacing: -0.5px;">💬 맘수다</h2>
-            <p class="app-desc" style="font-size: 14px; font-weight: 600; color: #8B95A1; margin-bottom: 16px; letter-spacing: -0.3px;">동네 엄빠들과 나누는 생생한 육아 정보</p>
-        </div>
+            <h2 class="app-title" style="font-size: 24px; font-weight: 900; color: #191F28; margin: 0 0 6px 0; letter-spacing: -0.5px;">💬 맘수다</h2>     
+            </div>
         
         <div style="display: flex; gap: 16px; align-items: center; margin-top: 4px;">
             <!-- 세련된 검색 SVG 아이콘 -->
@@ -3053,6 +2544,101 @@ body { overflow-x: hidden !important; } /* 가로로 튀어나오는 모든 찌�
 #commSearchOverlay.active { transform: translateY(0) !important; }
 </style>
 
+<!-- 🏅 첫 도감 바텀 시트 (평소엔 화면 아래 숨김) -->
+<div id="milestone-bottom-sheet" class="bottom-sheet-overlay" onclick="closeMilestoneModal()">
+    <div class="bottom-sheet-content" onclick="event.stopPropagation();">
+        <!-- 상단 손잡이(핸들) -->
+        <div class="sheet-handle"></div>
+        
+        <div class="sheet-header">
+            <h3 style="margin: 0; font-size: 20px; font-weight: 800; color: #191F28;">우리아기 첫 도감 🏅</h3>
+            <span id="sheet-counter" style="background: #E8F3FF; color: #1B64DA; padding: 4px 10px; border-radius: 20px; font-size: 13px; font-weight: 700;">0 / 100 달성</span>
+        </div>
+
+        <!-- 도감 리스트가 JS에 의해 여기에 뿌려집니다 -->
+        <div id="milestone-list-container" class="sheet-body">
+            <!-- JS가 자동 생성 -->
+        </div>
+    </div>
+</div>
+
+<style>
+/* ✨ 바텀 시트 애니메이션 & 디자인 CSS */
+.bottom-sheet-overlay {
+    position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 9999;
+    display: flex; align-items: flex-end; opacity: 0; pointer-events: none;
+    transition: opacity 0.3s ease; backdrop-filter: blur(2px);
+}
+.bottom-sheet-overlay.show {
+    opacity: 1; pointer-events: auto;
+}
+.bottom-sheet-content {
+    background: #FFF; width: 100%; max-height: 85vh; border-radius: 24px 24px 0 0;
+    padding: 12px 20px 30px; transform: translateY(100%);
+    transition: transform 0.4s cubic-bezier(0.1, 1, 0.2, 1);
+    display: flex; flex-direction: column;
+}
+.bottom-sheet-overlay.show .bottom-sheet-content {
+    transform: translateY(0);
+}
+.sheet-handle {
+    width: 40px; height: 5px; background: #E5E8EB; border-radius: 3px;
+    margin: 0 auto 16px;
+}
+.sheet-header {
+    display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;
+}
+.sheet-body {
+    overflow-y: auto; flex: 1; padding-bottom: 20px;
+}
+/* 도감 리스트 아이템 디자인 */
+.milestone-item {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 16px; background: #F9FAFB; border-radius: 16px; margin-bottom: 12px;
+    border: 1px solid #F2F4F6; transition: all 0.2s;
+}
+.milestone-item.achieved {
+    background: #FFFBF0; border-color: #F8E29F;
+}
+.milestone-icon {
+    font-size: 28px; width: 48px; height: 48px; background: #FFF; 
+    border-radius: 14px; display: flex; align-items: center; justify-content: center;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.04);
+}
+.milestone-check-btn {
+    width: 32px; height: 32px; border-radius: 50%; border: 2px solid #D1D6DB;
+    background: #FFF; color: transparent; display: flex; align-items: center; 
+    justify-content: center; font-size: 16px; font-weight: bold; cursor: pointer;
+}
+.milestone-item.achieved .milestone-check-btn {
+    background: #1B64DA; border-color: #1B64DA; color: #FFF;
+}
+
+/* ✨ 골드 펄 이펙트 애니메이션 */
+.gold-pearl-effect {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 10px;
+    height: 10px;
+    background: radial-gradient(circle, rgba(255, 215, 0, 1) 0%, rgba(255, 215, 0, 0.4) 50%, transparent 80%);
+    border-radius: 50%;
+    transform: translate(-50%, -50%) scale(1);
+    animation: pearlBurst 0.6s cubic-bezier(0.1, 0.8, 0.2, 1) forwards;
+    pointer-events: none; /* 클릭 방해 금지 */
+    z-index: 10;
+}
+
+@keyframes pearlBurst {
+    0% { transform: translate(-50%, -50%) scale(0.5); opacity: 1; box-shadow: 0 0 10px 4px rgba(255, 215, 0, 0.8); }
+    100% { transform: translate(-50%, -50%) scale(5); opacity: 0; box-shadow: 0 0 30px 10px rgba(255, 215, 0, 0); }
+}
+
+.milestone-check-btn {
+    position: relative; /* 이펙트가 버튼 안에서 터지도록 설정 */
+    overflow: visible;
+}
+</style>
 
 </script>
 </body>

@@ -13,16 +13,6 @@ let selectedPillType = '';
 let feverChartObj = null; 
 let feverTimerInterval = null; 
 let currentDonutChart = null;
-const babyTips = [
-    { min: 0, max: 1, tip: "지금은 아이와 눈 맞춤을 연습할 시간이에요! 🤍" }, 
-    { min: 2, max: 3, tip: "목 가누기 연습! 하루 5분 터미타임을 시도해보세요. 💪" }, 
-    { min: 4, max: 6, tip: "뒤집기 시작! 주변에 위험한 물건이 없는지 꼼꼼히 확인해주세요." }, 
-    { min: 7, max: 9, tip: "분리불안 시작! 화장실 갈 때도 '엄마 곧 올게'라고 꼭 말해주세요!" }, 
-    { min: 10, max: 12, tip: "잡고 서기 시작! 집안 모서리 보호대를 다시 한번 점검할 시기예요. 🚧" }, 
-    { min: 13, max: 18, tip: "자아 형성기! '안 돼'라는 말보다 '이거 해볼까?' 하고 대안을 제시해 주세요. 🗣️" }, 
-    { min: 19, max: 24, tip: "에너지 폭발! 대근육 발달을 위해 안전한 놀이터 바깥놀이를 추천해요. 🏃‍♂️" }, 
-    { min: 25, max: 36, tip: "언어 폭발기! 아이의 엉뚱한 말에도 귀 기울이고 풍부하게 리액션 해주세요. 💬" }
-];
 
 // ==========================================
 // 🚀 [초고속 패치] 렉 없는 즉각 반응형 화면 내비게이션 엔진
@@ -2623,27 +2613,30 @@ function startBatonRealtimeSync() {
 window.startBatonRealtimeSync = startBatonRealtimeSync;
 
 // ==========================================
-// 🚀 런타임 구동 마스터 마운트 (중복 실행 방지 완벽 패치)
+// 🚀 런타임 구동 및 실시간 동기화 마스터 마운트 (완벽 통합본)
 // ==========================================
-window.onload = () => { 
-    loadAllExternalData(); 
-    renderBabyInfo(); 
-    loadBabyPhoto(); 
+window.addEventListener('load', () => {    
+    // 1. 기본 데이터 및 UI 로드
+    loadAllExternalData();    
+    renderBabyInfo();    
+    loadBabyPhoto();    
     renderCubes();
     renderBatonTasks();
     updateLedgerUI();
     updateHomeDashboard();
     initDarkMode();
-    renderFoodChecklist(); 
-    renderMilestones();
+    renderFoodChecklist();    
+    if (typeof renderMilestones === 'function') renderMilestones();
     
+    // 2. 툴박스 패널 초기화
     const toolboxTab = document.getElementById('tab-toolbox');
     if(toolboxTab) {
-        toolboxTab.querySelectorAll('.panel-block').forEach(p => { 
-            if(!p.classList.contains('active')) p.style.display = 'none'; 
+        toolboxTab.querySelectorAll('.panel-block').forEach(p => {    
+            if(!p.classList.contains('active')) p.style.display = 'none';    
         });
     }
     
+    // 3. 버튼 햅틱 및 심부름 버튼 이벤트 바인딩
     document.querySelectorAll('.sym-btn').forEach(btn => {
         btn.addEventListener('click', function() {
             const cb = this.previousElementSibling;
@@ -2657,10 +2650,32 @@ window.onload = () => {
         });
     });
         
-    // 🚨 파이어베이스 중복 호출 방지! (리스너는 따로 켜지므로 여기선 기본 화면만 그림)
-    renderFeverTimeline();
-    updateSyncBadge(); 
-};
+    // 4. 실시간 동기화 리스너 통합 가동 (일괄 스위치 + 개별 방어막)
+    if (typeof initRealtimeSync === 'function') {
+        initRealtimeSync();
+    } else {
+        renderFeverTimeline();
+        updateHomeDashboard();
+    }
+
+    // 개별 실시간 동기화 함수 안전 호출 (두 번째 블록 내용 병합 완료)
+    if (typeof startFeverRealtimeSync === 'function') { startFeverRealtimeSync(); } 
+    else { renderFeverTimeline(); updateHomeDashboard(); }
+
+    if (typeof startCubeRealtimeSync === 'function') { startCubeRealtimeSync(); } 
+    else { renderCubes(); }
+
+    if (typeof startBatonRealtimeSync === 'function') { startBatonRealtimeSync(); } 
+    else { renderBatonTasks(); }
+
+    if (typeof startLedgerRealtimeSync === 'function') { startLedgerRealtimeSync(); } 
+    else { updateLedgerUI(); }
+
+    // 5. 상단 연동 배지 최신화
+    if (typeof updateSyncBadge === 'function') {
+        updateSyncBadge();    
+    }
+});
 
 // ==========================================
 // 👨‍👩‍👧 가족 실시간 연동 모달 컨트롤
@@ -2781,24 +2796,6 @@ function updateSmartBanner() {
                     </div>
                 </div>
                 <span style="flex-shrink: 0; white-space: nowrap; background: #6B4EFF; color: white; font-size: 13px; font-weight: 900; padding: 8px 14px; border-radius: 12px;">교대하기</span>
-            </div>
-        `);
-    }
-
-    // 2. 주간 리포트 (일, 월요일)
-    const dayOfWeek = new Date().getDay();
-    if ((dayOfWeek === 0 || dayOfWeek === 1) && !isDismissed('weekly')) {
-        banners.push(`
-            <div onclick="window.openWeeklyReport()" style="position: relative; flex-shrink: 0; width: __WIDTH__; scroll-snap-align: start; background: var(--bg-card); border: 1px solid #F04452; border-radius: 16px; padding: 18px 20px; display: flex; align-items: center; justify-content: space-between; gap: 12px; cursor: pointer; box-shadow: 0 4px 12px rgba(0,0,0,0.05); box-sizing: border-box;">
-                <button onclick="event.stopPropagation(); window.dismissSmartBanner('weekly');" style="position:absolute; top:8px; right:8px; background:rgba(0,0,0,0.05); border-radius:50%; border:none; color:#8B95A1; font-size:12px; font-weight:900; width:26px; height:26px; display:flex; align-items:center; justify-content:center; cursor:pointer; z-index:10; backdrop-filter: blur(2px);">✕</button>
-                <div style="display: flex; align-items: center; gap: 14px; flex: 1; min-width: 0;">
-                    <div style="font-size: 26px; flex-shrink: 0;">🎉</div>
-                    <div style="flex: 1; min-width: 0; text-align: left;">
-                        <div style="font-size: 12px; font-weight: 800; color: #F04452; margin-bottom: 4px;">수고했어요, 짝꿍!</div>
-                        <div style="font-size: 15.5px; font-weight: 900; color: var(--text-m); letter-spacing: -0.3px;">이번 주 육아 리포트 발행</div>
-                    </div>
-                </div>
-                <span style="flex-shrink: 0; white-space: nowrap; background: #F04452; color: white; font-size: 13px; font-weight: 900; padding: 8px 14px; border-radius: 12px;">리포트 보기</span>
             </div>
         `);
     }
@@ -3427,12 +3424,12 @@ window.openTrackerSheet = function(type, editId = null, preSelect = null) {
                     <input type="number" id="v-sleep-mins" value="0" oninput="window.calcEndTimeFromAmount()" style="font-size: 40px; font-weight: 900; color: var(--text-m); border: none; outline: none; background: transparent; text-align: center; width: 70px; padding: 0; margin: 0; border-bottom: 3px solid var(--border); border-radius: 0; transition:0.3s;">
                     <span style="font-size: 18px; font-weight: 800; color: var(--text-s);">분</span>
                 </div>
-                <input type="hidden" id="v-sleep-amount" value="0">
+              <input type="hidden" id="v-sleep-amount" value="0">
                 <div style="margin-top: 14px;">
                     <span style="background:var(--bg-sub); color:var(--text-m); font-size:11.5px; font-weight:800; padding:6px 12px; border-radius:20px; border:1px solid var(--border);">💡 자는 중이라면 시간을 똑같이 두고 [저장] 누르세요!</span>
                 </div>
             </div>
-        `;
+            `;
         if(saveBtn) saveBtn.style.display = 'block';
         setTimeout(() => {
             const btns = document.querySelectorAll('#tracker-sheet-body .btn-main');
@@ -4230,48 +4227,6 @@ document.addEventListener("DOMContentLoaded", () => {
 setInterval(() => {
     if(typeof window.updateDiaryCard === 'function') window.updateDiaryCard();
 }, 5000);
-
-// ==========================================
-// 🚀 런타임 구동 마스터 마운트 (이부분이 날아갔었음)
-// ==========================================
-window.onload = () => { 
-    loadAllExternalData(); 
-    renderBabyInfo(); 
-    loadBabyPhoto(); 
-    renderCubes();
-    renderBatonTasks();
-    updateLedgerUI();
-    updateHomeDashboard();
-    initDarkMode();
-    renderFoodChecklist(); 
-    
-    const toolboxTab = document.getElementById('tab-toolbox');
-    if(toolboxTab) {
-        toolboxTab.querySelectorAll('.panel-block').forEach(p => { 
-            if(!p.classList.contains('active')) p.style.display = 'none'; 
-        });
-    }
-    
-    document.querySelectorAll('.sym-btn').forEach(btn => {
-        btn.addEventListener('click', function() {
-            const cb = this.previousElementSibling;
-            setTimeout(() => {
-                if (cb && cb.checked) {
-                    this.style.background = 'rgba(49, 130, 246, 0.15)'; this.style.border = '1px solid #3182F6'; this.style.color = '#3182F6';
-                } else {
-                    this.style.background = ''; this.style.border = ''; this.style.color = '';
-                }
-            }, 10);
-        });
-    });
-        
-    if (typeof startFeverRealtimeSync === 'function') { startFeverRealtimeSync(); } else { renderFeverTimeline(); updateHomeDashboard(); }
-    if (typeof startCubeRealtimeSync === 'function') { startCubeRealtimeSync(); } else { renderCubes(); }
-    if (typeof startBatonRealtimeSync === 'function') { startBatonRealtimeSync(); } else { renderBatonTasks(); }
-    if (typeof startLedgerRealtimeSync === 'function') { startLedgerRealtimeSync(); } else { updateLedgerUI(); }
-
-    updateSyncBadge(); 
-};
 
 // ==========================================
 // 🌤️ [감성 엔진] 시간대별 인사말 & 새벽 이스터에그 통합판
@@ -5958,14 +5913,14 @@ window.initWeeklyReport = function() {
         reportBtn.style.background = 'linear-gradient(135deg, #E8F3FF, #D0E6FF)';
         reportBtn.style.borderColor = '#B1D6FF';
         if(titleEl) { titleEl.style.color = '#3182F6'; titleEl.innerText = '토닥토닥, 이번 주도 빛났어요 ✨'; }
-        if(descEl) { descEl.style.color = '#1C64F2'; descEl.innerText = '아빠의 다정한 일주일 요약 〉'; }
+        if(descEl) { descEl.style.color = '#1C64F2'; descEl.innerText = '아빠의 다정한 일주일 요약'; }
         if(iconEl) { iconEl.innerText = '👨‍🍼'; }
     } else {
         // 👩 엄마 버전
         reportBtn.style.background = 'linear-gradient(135deg, #FFF0F1, #FFE5E5)';
         reportBtn.style.borderColor = '#FFD1D1';
-        if(titleEl) { titleEl.style.color = '#F04452'; titleEl.innerText = '수고했어요, 짝꿍!'; }
-        if(descEl) { descEl.style.color = '#D32F2F'; descEl.innerText = '이번 주 육아 리포트 도착 〉'; }
+        if(titleEl) { titleEl.style.color = '#F04452'; titleEl.innerText = '사랑 듬뿍 담긴 일주일 요약💖'; }
+        if(descEl) { descEl.style.color = '#D32F2F'; descEl.innerText = '엄마의 따뜻한 일주일 요약'; }
         if(iconEl) { iconEl.innerText = '💌'; }
     }
 
@@ -9761,4 +9716,296 @@ window.checkFeedPlateauBreakthrough = function() {
         const diff = todayFeedTotal - yesterdayFeedTotal;
         window.showToast(`🎉 <b>우리 아기 뱃골이 늘어나고 있어요!</b><br>어제 이 시간보다 벌써 <b>+${diff}ml</b> 든든하게 채우는 중! 🤍`);
     }
+};
+
+const originalGetItem = Storage.prototype.getItem;
+Storage.prototype.getItem = function(key) {
+    const value = originalGetItem.call(this, key);
+    try {
+        // 데이터가 JSON 형태라면 파싱 테스트를 거침 (깨졌으면 알아서 비워버림)
+        if (value && (value.startsWith('[') || value.startsWith('{'))) {
+            JSON.parse(value);
+        }
+    } catch (e) {
+        console.warn(`[Auto Storage Guard] '${key}' 데이터 손상 감지, 자동 초기화합니다.`);
+        localStorage.removeItem(key);
+        return null;
+    }
+    return value;
+};
+
+// ==========================================
+// 🏅 [마일스톤] 첫 도감 데이터 & 엔진 로직
+// ==========================================
+
+// 1. 도감 마스터 데이터 (신생아 ~ 36개월 100가지 감동 순간)
+const MILESTONE_DATA = [
+    // 🌱 신생아기 (0~1개월)
+    { id: 'm1', title: '배냇짓 (천사의 미소)', desc: '처음으로 소리 없이 활짝 웃었어요' },
+    { id: 'm2', title: '제대탈락 완료', desc: '탯줄이 떨어지고 예쁜 배꼽이 생겼어요' },
+    { id: 'm3', title: '눈 맞춤 심쿵', desc: '드디어 엄마 아빠와 눈을 맞추기 시작해요' },
+    { id: 'm4', title: '첫 목욕 성공', desc: '울지 않고 개운하게 첫 목욕을 마쳤어요' },
+    { id: 'm5', title: '첫 손톱 깎기', desc: '조막만 한 손톱을 조심조심 깎아줬어요' },
+    { id: 'm6', title: '흑백 모빌 홀릭', desc: '모빌을 보며 눈동자가 따라가기 시작해요' },
+    { id: 'm7', title: '태지 탈각 완료', desc: '뽀송뽀송한 진짜 피부가 나타났어요' },
+    { id: 'm8', title: '첫 외출 (병원)', desc: '꽁꽁 싸매고 첫 예방접종 나들이를 다녀왔어요' },
+    { id: 'm9', title: '폭풍 옹알이 시작', desc: '아우~ 우~ 기분 좋은 소리를 내요' },
+    { id: 'm10', title: '수유량 100ml 돌파', desc: '위가 늘어나서 제법 꿀떡꿀떡 잘 먹어요' },
+
+    // 🐥 영아기 1 (1~3개월)
+    { id: 'm11', title: '컬러 모빌 보기', desc: '드디어 세상의 색깔을 보기 시작했어요' },
+    { id: 'm12', title: '터미타임 첫 성공', desc: '엎드려서 고개를 빳빳하게 들었어요' },
+    { id: 'm13', title: '소리 내서 웃기', desc: '꺄르르! 처음으로 소리 내어 웃었어요' },
+    { id: 'm14', title: '주먹고기 냠냠', desc: '자신의 손을 발견하고 맛있게 빨아요' },
+    { id: 'm15', title: '손싸개 졸업', desc: '자유로운 두 손으로 세상을 탐색해요' },
+    { id: 'm16', title: '첫 통잠의 기적', desc: '밤에 깨지 않고 길게 푹 잤어요 (엄빠 오열)' },
+    { id: 'm17', title: '뒤집기 첫 시도', desc: '몸을 비틀며 뒤집으려고 용을 써요' },
+    { id: 'm18', title: '백일의 기적', desc: '건강하게 100일을 맞이했어요! 축하해' },
+    { id: 'm19', title: '침샘 폭발', desc: '침을 질질 흘리며 턱받이를 시작했어요' },
+    { id: 'm20', title: '낯가림 시작', desc: '엄마 아빠를 확실히 알아보고 낯을 가려요' },
+
+    // 🐤 영아기 2 (4~6개월)
+    { id: 'm21', title: '완벽한 뒤집기', desc: '영차! 드디어 세상을 뒤집었어요' },
+    { id: 'm22', title: '되집기 성공', desc: '엎드려 있다가 다시 하늘을 보고 누웠어요' },
+    { id: 'm23', title: '발가락 잡고 놀기', desc: '유연하게 자기 발가락을 입으로 가져가요' },
+    { id: 'm24', title: '첫니가 뿅! 났어요', desc: '귀여운 아랫니가 잇몸을 뚫고 올라왔어요' },
+    { id: 'm25', title: '이유식 첫 숟가락', desc: '분유/모유 말고 첫 식사(미음)를 했어요' },
+    { id: 'm26', title: '빨대컵 첫 성공', desc: '켁켁대지 않고 빨대로 물을 마셨어요' },
+    { id: 'm27', title: '떡뻥 입문', desc: '입안에서 사르르 녹는 첫 간식의 맛!' },
+    { id: 'm28', title: '혼자서 앉았어요', desc: '손을 짚지 않고 허리를 꼿꼿이 세워요' },
+    { id: 'm29', title: '배밀이 시작', desc: '배를 바닥에 대고 앞으로 전진해요' },
+    { id: 'm30', title: '네발기기 성공', desc: '무릎을 떼고 다다다 기어 다니기 시작해요' },
+
+    // 🐾 탐색기 (7~9개월)
+    { id: 'm31', title: '잼잼 곤지곤지', desc: '손가락을 쥐었다 폈다 개인기를 보여줘요' },
+    { id: 'm32', title: '짝짜꿍 짝짜꿍', desc: '신나게 두 손을 마주치며 박수를 쳐요' },
+    { id: 'm33', title: '까꿍 놀이 홀릭', desc: '얼굴을 가렸다 보여주면 자지러지게 웃어요' },
+    { id: 'm34', title: '잡고 일어서기', desc: '가구나 울타리를 잡고 드디어 두 발로 섰어요' },
+    { id: 'm35', title: '소파 잡고 걷기', desc: '게걸음으로 물건을 잡고 옆으로 이동해요' },
+    { id: 'm36', title: '엄마! 불렀어요', desc: '정확하게 엄마를 보며 맘마/엄마 라고 했어요' },
+    { id: 'm37', title: '아빠! 불렀어요', desc: '세상에서 가장 감동적인 아빠 소리!' },
+    { id: 'm38', title: '첫 감기 (맴찢)', desc: '처음으로 열이 나고 아팠어요. 훌쩍 커가는 과정' },
+    { id: 'm39', title: '영유아 검진 1차', desc: '키, 몸무게 상위 몇 퍼센트일까요?' },
+    { id: 'm40', title: '카시트 적응', desc: '울지 않고 의젓하게 카시트에 잘 타요' },
+
+    // 🚶 걸음마기 (10~12개월)
+    { id: 'm41', title: '혼자 서 있기 3초', desc: '아무것도 안 잡고 균형을 잡으며 서 있었어요' },
+    { id: 'm42', title: '첫걸음마 성공!', desc: '비틀비틀, 스스로 첫발을 내디뎠어요' },
+    { id: 'm43', title: '도리도리', desc: '싫어요! 고개를 저으며 의사표현을 해요' },
+    { id: 'm44', title: '빠이빠이 손 흔들기', desc: '헤어질 때 안녕~ 하고 손을 흔들어줘요' },
+    { id: 'm45', title: '돌잔치 완료', desc: '축 1년! 돌잡이에서는 무엇을 잡았을까요?' },
+    { id: 'm46', title: '유아식 첫 도전', desc: '진밥과 반찬으로 어른들처럼 밥을 먹어요' },
+    { id: 'm47', title: '생우유 입문', desc: '분유를 끊고 멸균우유/생우유로 넘어갔어요' },
+    { id: 'm48', title: '어금니가 났어요', desc: '이제 딱딱한 음식도 제법 잘 씹어요' },
+    { id: 'm49', title: '스푼 포크 쥐기', desc: '도구를 사용해서 스스로 먹으려고 해요' },
+    { id: 'm50', title: '뽀뽀 쪽!', desc: '입술을 쭉 내밀고 사랑스러운 뽀뽀를 해줘요' },
+
+    // 🏃 활동기 (13~18개월)
+    { id: 'm51', title: '첫 미용실 이발', desc: '바리캉 소리에도 씩씩하게 머리를 잘랐어요' },
+    { id: 'm52', title: '첫 신발 장착', desc: '삑삑이 신발을 신고 밖에서 걸었어요' },
+    { id: 'm53', title: '키즈카페 첫 입장', desc: '신세계 발견! 방방 뛰며 하얗게 불태웠어요' },
+    { id: 'm54', title: '동물 소리 흉내', desc: '강아지는 멍멍! 호랑이는 어흥! 소리를 내요' },
+    { id: 'm55', title: '첫 바다 구경', desc: '철썩이는 파도와 모래사장을 처음 밟았어요' },
+    { id: 'm56', title: '두 단어 연결하기', desc: '엄마 맘마, 아빠 와! 등 문장으로 말해요' },
+    { id: 'm57', title: '컵으로 물 마시기', desc: '흘리지 않고 컵을 들고 물을 마셔요' },
+    { id: 'm58', title: '공 던지기', desc: '작은 공을 앞으로 힘껏 던질 수 있어요' },
+    { id: 'm59', title: '첫 블록 쌓기', desc: '블록을 무너뜨리지 않고 2~3개 쌓아 올려요' },
+    { id: 'm60', title: '계단 오르기', desc: '손을 잡아주면 한 칸씩 계단을 올라가요' },
+
+    // 🎨 발달 폭발기 (19~24개월)
+    { id: 'm61', title: '두 발로 콩콩 뛰기', desc: '점프! 두 발이 동시에 바닥에서 떨어졌어요' },
+    { id: 'm62', title: '양치질 거부 극복', desc: '치카치카 시간을 즐거워하기 시작했어요' },
+    { id: 'm63', title: '첫 스티커 놀이', desc: '온 집안에 스티커를 야무지게 붙이고 놀아요' },
+    { id: 'm64', title: '크레용 첫 낙서', desc: '스케치북에 예술적인 피카소 선을 그렸어요' },
+    { id: 'm65', title: '미끄럼틀 혼자 타기', desc: '계단을 올라가 슝~ 혼자서 미끄럼틀을 타요' },
+    { id: 'm66', title: '배변훈련 시작', desc: '기저귀와 안녕할 준비! 유아 변기와 친해져요' },
+    { id: 'm67', title: '변기에 첫 쉬야', desc: '성공! 기저귀가 아닌 변기에 볼일을 봤어요' },
+    { id: 'm68', title: '스스로 양말 신기', desc: '끙끙대며 혼자 양말을 신으려고 노력해요' },
+    { id: 'm69', title: '첫 심부름 성공', desc: '이거 아빠 갖다주세요~ 심부름을 완수했어요' },
+    { id: 'm70', title: '친구 이름 부르기', desc: '놀이터나 문센에서 만난 친구를 기억하고 불러요' },
+
+    // 🛴 엉아/누나 모드 (25~30개월)
+    { id: 'm71', title: '세발자전거 타기', desc: '페달에 발을 올리고 굴리는 방법을 터득했어요' },
+    { id: 'm72', title: '가위질 첫 시도', desc: '안전 가위로 종이를 싹둑싹둑 잘라봐요' },
+    { id: 'm73', title: '숫자 1~10 세기', desc: '일, 이, 삼... 제법 순서대로 숫자를 세요' },
+    { id: 'm74', title: '색깔 구별하기', desc: '빨강, 파랑, 노랑 등 색깔의 이름을 알아요' },
+    { id: 'm75', title: '왜요? 지옥 입성', desc: '이건 뭐야? 왜? 호기심이 폭발하는 시기' },
+    { id: 'm76', title: '율동하며 노래하기', desc: '곰 세 마리를 율동과 함께 완창했어요' },
+    { id: 'm77', title: '혼자 바지 입기', desc: '두 다리를 구멍에 쏙 넣고 스스로 바지를 입어요' },
+    { id: 'm78', title: '첫 킥보드 탑승', desc: '한 발을 구르며 씽씽 달리며 바람을 가르네요' },
+    { id: 'm79', title: '우산 혼자 쓰기', desc: '비 오는 날 작은 우산을 꽉 쥐고 걸어가요' },
+    { id: 'm80', title: '젓가락질 첫 시도', desc: '에디슨(교정) 젓가락으로 반찬을 집어봐요' },
+
+    // 🌟 완성기 (31~36개월)
+    { id: 'm81', title: '낮잠 패스한 날', desc: '에너자이저! 낮잠 없이 밤까지 버틴 첫날' },
+    { id: 'm82', title: '혼자서 손 씻기', desc: '발판에 올라가 비누칠하고 스스로 손을 씻어요' },
+    { id: 'm83', title: '퍼즐 맞추기 성공', desc: '조각을 이리저리 돌려가며 그림을 완성해요' },
+    { id: 'm84', title: '역할놀이 심취', desc: '엄마 아빠 흉내를 내며 소꿉놀이에 빠졌어요' },
+    { id: 'm85', title: '동생(인형) 돌보기', desc: '토닥토닥 인형을 재워주며 애착을 보여요' },
+    { id: 'm86', title: '내 물건 챙기기', desc: '외출할 때 자기가 좋아하는 장난감을 가방에 챙겨요' },
+    { id: 'm87', title: '첫 영화관/공연', desc: '캄캄한 곳에서도 울지 않고 얌전히 관람했어요' },
+    { id: 'm88', title: '영유아 구강검진', desc: '치과 의자에서 아~ 벌리고 충치 검사를 했어요' },
+    { id: 'm89', title: '스스로 신발 찍찍이', desc: '신발 혀를 빼고 찍찍이 벨크로를 딱 붙여요' },
+    { id: 'm90', title: '감정 말로 표현하기', desc: '나 화났어! 슬퍼! 기분 좋아! 감정을 설명해요' },
+
+    // 🎒 드디어 사회로! (스페셜 모먼트)
+    { id: 'm91', title: '첫 소풍(도시락)', desc: '예쁜 도시락을 싸서 첫 야외 소풍을 다녀왔어요' },
+    { id: 'm92', title: '마스크 스스로 쓰기', desc: '귀에 끈을 걸어 스스로 마스크를 챙겨 써요' },
+    { id: 'm93', title: '친구와 양보하기', desc: '내 거야! 하다가도 친구에게 장난감을 빌려줘요' },
+    { id: 'm94', title: '글자에 관심 갖기', desc: '간판이나 그림책의 글자를 가리키며 물어봐요' },
+    { id: 'm95', title: '이름 쓰기 시도', desc: '삐뚤빼뚤하지만 자기 이름과 비슷한 모양을 그려요' },
+    { id: 'm96', title: '혼자서 그네 타기', desc: '밀어주지 않아도 발을 굴러 그네를 타요' },
+    { id: 'm97', title: '엄마 아빠 안마하기', desc: '고사리손으로 어깨를 조물조물 두드려줘요' },
+    { id: 'm98', title: '아플 때 약 잘 먹기', desc: '쓴 약도 주사기/약통으로 꿀꺽 잘 삼켜요' },
+    { id: 'm99', title: '첫 상장(칭찬장)', desc: '기관에서 주는 기특한 첫 상장을 받아왔어요' },
+    { id: 'm100', title: '어린이집 첫 등원', desc: '품을 떠나 첫 사회생활을 시작해요! 훌쩍 컸네!' }
+];
+
+const TOTAL_MILESTONES = 100; // 최종 기획 목표치
+
+// 2. 도감 진행도 업데이트 (애니메이션 쫀득하게 추가!)
+window.updateMilestoneCounter = function() {
+    let achieved = JSON.parse(localStorage.getItem('tosil_milestones')) || [];
+    let countText = `${achieved.length}/${TOTAL_MILESTONES}`;
+    
+    // 메인 홈 화면 버튼 카운터 업데이트
+    const homeCounterEl = document.getElementById('milestone-counter');
+    if(homeCounterEl) {
+        // 숫자가 바뀌면 살짝 띠용! 하고 노란색으로 빛났다가 돌아오는 효과
+        if (homeCounterEl.innerText !== countText) {
+            homeCounterEl.innerText = countText;
+            homeCounterEl.style.transition = 'all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275)';
+            homeCounterEl.style.transform = 'scale(1.3)';
+            homeCounterEl.style.color = '#FEE500'; // 카카오톡 노란색 포인트
+            setTimeout(() => {
+                homeCounterEl.style.transform = 'scale(1)';
+                homeCounterEl.style.color = '#FFF';
+            }, 300);
+        } else {
+            homeCounterEl.innerText = countText;
+        }
+    }
+    
+    // 바텀 시트 안쪽 카운터 업데이트
+    const sheetCounterEl = document.getElementById('sheet-counter');
+    if(sheetCounterEl) sheetCounterEl.innerText = `${achieved.length} / ${TOTAL_MILESTONES} 달성`;
+};
+
+// 3. 바텀 시트 열기 & 리스트 렌더링 (하단에 '자랑하기' 버튼 추가!)
+window.openMilestoneModal = function() {
+    if (navigator.vibrate) navigator.vibrate(15);
+    
+    const container = document.getElementById('milestone-list-container');
+    let achieved = JSON.parse(localStorage.getItem('tosil_milestones')) || [];
+    
+    let html = `
+        <!-- 📸 바이럴을 위한 상단 저장 버튼 -->
+        <button onclick="downloadMilestone()" style="width: 100%; background: #F2F5F8; color: #4E5968; border: none; padding: 14px; border-radius: 16px; font-size: 14px; font-weight: 800; margin-bottom: 16px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px;">
+            📸 내 도감 앨범에 저장해서 자랑하기
+        </button>
+        <!-- 캡처될 영역 시작 -->
+        <div id="milestone-capture-area" style="background:#FFF; padding:10px 0;">
+    `;
+
+    MILESTONE_DATA.forEach((item, index) => {
+        const isDone = achieved.includes(item.id);
+        const formattedNum = String(index + 1).padStart(2, '0'); 
+        
+        html += `
+            <div class="milestone-item ${isDone ? 'achieved' : ''}" id="card-${item.id}">
+                <div style="display:flex; align-items:center; gap: 16px;">
+                    <div id="num-${item.id}" style="width: 28px; font-size: 18px; font-weight: 900; color: ${isDone ? '#1B64DA' : '#D1D6DB'}; text-align: left; font-family: 'Helvetica Neue', Arial, sans-serif; letter-spacing: -0.5px; transition: color 0.3s;">
+                        ${formattedNum}
+                    </div>
+                    <div>
+                        <div style="font-size: 15px; font-weight: 800; color: #191F28; margin-bottom: 2px;">${item.title}</div>
+                        <div style="font-size: 12px; color: #8B95A1;">${item.desc}</div>
+                    </div>
+                </div>
+                <button class="milestone-check-btn" onclick="toggleMilestone('${item.id}', this)">✓</button>
+            </div>
+        `;
+    });
+    
+    html += `</div>`; // 캡처 영역 끝
+    container.innerHTML = html;
+    document.getElementById('milestone-bottom-sheet').classList.add('show');
+};
+
+// 4. 바텀 시트 닫기
+window.closeMilestoneModal = function() {
+    document.getElementById('milestone-bottom-sheet').classList.remove('show');
+};
+
+// 5. 도장 찍기 토글 로직 + 골드 펄 이펙트
+window.toggleMilestone = function(id, btnElement) {
+    if (navigator.vibrate) navigator.vibrate([10, 30, 20]);
+    
+    let achieved = JSON.parse(localStorage.getItem('tosil_milestones')) || [];
+    const idx = achieved.indexOf(id);
+    
+    const cardEl = document.getElementById(`card-${id}`);
+    const numEl = document.getElementById(`num-${id}`);
+    
+    if (idx === -1) {
+        achieved.push(id); 
+        cardEl.classList.add('achieved');
+        if(numEl) numEl.style.color = '#1B64DA'; // 숫자 파란색으로 변경
+        
+        // ✨ 달성 시 골드 펄 이펙트 실행
+        const pearl = document.createElement('div');
+        pearl.className = 'gold-pearl-effect';
+        btnElement.appendChild(pearl);
+        
+        // 애니메이션이 끝나면 잔해물 삭제
+        setTimeout(() => pearl.remove(), 600);
+        
+    } else {
+        achieved.splice(idx, 1); 
+        cardEl.classList.remove('achieved');
+        if(numEl) numEl.style.color = '#D1D6DB'; // 숫자 원래대로 복구
+    }
+    
+    localStorage.setItem('tosil_milestones', JSON.stringify(achieved));
+    updateMilestoneCounter(); 
+};
+
+// 6. 앱 초기화 시 홈 화면 카운터 세팅
+document.addEventListener("DOMContentLoaded", () => {
+    updateMilestoneCounter();
+});
+
+// ==========================================
+// 📸 마일스톤 도감 이미지 캡처 (인스타 자랑용)
+// ==========================================
+window.downloadMilestone = function() {
+    const target = document.getElementById('milestone-capture-area'); 
+    if (!target) return alert("저장할 도감을 찾을 수 없습니다.");
+    
+    if (typeof html2canvas === 'undefined') {
+        return alert("이미지 저장 라이브러리가 필요합니다.");
+    }
+
+    // 캡처 중엔 스크롤바나 잡티가 안 보이게 임시 처리
+    window.showToast("📸 도감을 예쁘게 앨범에 굽고 있어요...");
+
+    html2canvas(target, {
+        scale: 2, // 고화질
+        backgroundColor: '#ffffff',
+    }).then(canvas => {
+        const dataUrl = canvas.toDataURL("image/png");
+        const link = document.createElement("a");
+        const babyName = localStorage.getItem('tosil_babyName') || '우리아기';
+        link.download = `${babyName}_첫도감.png`;
+        link.href = dataUrl;
+        
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+
+        window.showToast("🎉 앨범 저장 완료! 맘카페나 인스타에 자랑해보세요!");
+    }).catch(err => {
+        console.error("도감 캡처 에러:", err);
+        alert("저장 중 오류가 발생했습니다 ㅠㅠ");
+    });
 };
