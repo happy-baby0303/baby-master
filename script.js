@@ -1759,46 +1759,48 @@ window.calcHealthMaster = function() {
         document.getElementById('desc-weight').innerText = `미입력`; 
     }
 
-    // ✨ 카우프 지수 (비만도) 연산 및 친절한 멘트 출력 ✨
-    const kaupBadge = document.getElementById('kaup-badge');
-    let insightMsg = "";
+ // ✨ 카우프 지수 (비만도) 연산 및 친절한 멘트 출력 ✨
+const kaupBadge = document.getElementById('kaup-badge');
+let insightMsg = "";
+
+if (h && w) {
+    // 카우프 지수 = 체중 / (키m * 키m)
+    const heightM = h / 100;
+    const kaup = w / (heightM * heightM);
+    kaupBadge.style.display = 'inline-block';
     
-    if (h && w) {
-        // 카우프 지수 = 체중 / (키m * 키m)
-        const heightM = h / 100;
-        const kaup = w / (heightM * heightM);
-        kaupBadge.style.display = 'inline-block';
-        
-        let kaupDesc = "";
+    let kaupDesc = "";
 
-        if (kaup < 14) { 
-            kaupBadge.innerText = '⚠️ 체중 미달 우려'; kaupBadge.style.background = '#F2F4F6'; kaupBadge.style.color = '#4E5968'; 
-            kaupDesc = "키에 비해 몸무게 증가가 다소 정체되어 있어요. 수유량이나 이유식 양을 조금 더 늘려주시고, 영유아 검진 시 의사 선생님과 상담해 보세요!";
-        }
-        else if (kaup < 16) { 
-            kaupBadge.innerText = '🌱 날씬한 모델 체형'; kaupBadge.style.background = '#E8F3FF'; kaupBadge.style.color = '#3182F6'; 
-            kaupDesc = "키에 비해 체중이 적게 나가는 날씬한 체형이에요! 활동량이 많거나 기초 대사량이 높은 아기일 수 있습니다. 아주 건강하게 잘 자라고 있어요 🏃‍♂️";
-        }
-        else if (kaup <= 18) { 
-            kaupBadge.innerText = '⚖️ 완벽한 황금 밸런스'; kaupBadge.style.background = '#ECFDF5'; kaupBadge.style.color = '#059669'; 
-            kaupDesc = "키와 몸무게의 비율이 교과서처럼 완벽한 황금 밸런스예요! 지금의 식습관과 패턴 그대로 건강하게 키워주시면 됩니다 💯";
-        }
-        else if (kaup <= 20) { 
-            kaupBadge.innerText = '💪 귀여운 통통 우량아'; kaupBadge.style.background = '#FFF9E6'; kaupBadge.style.color = '#B78103'; 
-            kaupDesc = "키보다 몸무게가 묵직한 귀여운 통통 우량아예요! 아주 잘 먹고 쑥쑥 크고 있네요. 걷고 뛰기 시작하면 젖살은 자연스럽게 빠진답니다 🧸";
-        }
-        else { 
-            kaupBadge.innerText = '🚨 소아 비만 주의'; kaupBadge.style.background = '#FFF0F1'; kaupBadge.style.color = '#D32F2F'; 
-            kaupDesc = "키에 비해 체중이 꽤 많이 나가는 편이에요. 소아 비만으로 이어지지 않도록 간식이나 수유 텀을 한 번 점검해 보시는 걸 권장합니다!";
-        }
+    if (kaup < 14) { 
+        kaupBadge.innerText = '⚠️ 체중 미달 우려'; kaupBadge.style.background = '#F2F4F6'; kaupBadge.style.color = '#4E5968'; 
+        kaupDesc = "키에 비해 몸무게 증가가 다소 정체되어 있어요. 수유량이나 이유식 양을 조금 더 늘려주시고, 영유아 검진 시 의사 선생님과 상담해 보세요!";
+    }
+    else if (kaup < 16) { 
+        kaupBadge.innerText = '🌱 날씬한 모델 체형'; kaupBadge.style.background = '#E8F3FF'; kaupBadge.style.color = '#3182F6'; 
+        kaupDesc = "키에 비해 체중이 적게 나가는 날씬한 체형이에요! 활동량이 많거나 기초 대사량이 높은 아기일 수 있습니다. 아주 건강하게 잘 자라고 있어요 🏃‍♂️";
+    }
+    else if (kaup <= 18) { 
+        kaupBadge.innerText = '⚖️ 완벽한 황금 밸런스'; kaupBadge.style.background = '#ECFDF5'; kaupBadge.style.color = '#059669'; 
+        kaupDesc = "키와 몸무게의 비율이 교과서처럼 완벽한 황금 밸런스예요! 지금의 식습관과 패턴 그대로 건강하게 키워주시면 됩니다 💯";
+    }
+    else if (kaup <= 20) { 
+        kaupBadge.innerText = '💪 귀여운 통통 우량아'; kaupBadge.style.background = '#FFF9E6'; kaupBadge.style.color = '#B78103'; 
+        kaupDesc = "키보다 몸무게가 묵직한 귀여운 통통 우량아예요! 아주 잘 먹고 쑥쑥 크고 있네요. 걷고 뛰기 시작하면 젖살은 자연스럽게 빠진답니다 🧸";
+    }
+    else { 
+        kaupBadge.innerText = '🚨 소아 비만 주의'; kaupBadge.style.background = '#FFF0F1'; kaupBadge.style.color = '#D32F2F'; 
+        kaupDesc = "키에 비해 체중이 꽤 많이 나가는 편이에요. 소아 비만으로 이어지지 않도록 간식이나 수유 텀을 한 번 점검해 보시는 걸 권장합니다!";
+    }
 
-        insightMsg = `
-            <div style="font-size:12px; font-weight:800; color:var(--text-s); margin-bottom:6px;">우리아기 체질량 지수(BMI): <span style="color:var(--text-m);">${kaup.toFixed(1)}</span></div>
-            <div style="font-size:14px; font-weight:800; color:var(--text-m); line-height:1.55; word-break:keep-all;">${kaupDesc}</div>
-        `;
-   } else {
+    // 💡 [입력 후 결과 멘트] 다크모드/라이트모드 완벽 대응 변수 적용
+    insightMsg = `
+        <div style="font-size:12px; font-weight:800; color:var(--text-s); margin-bottom:6px;">우리아기 체질량 지수(BMI): <span style="color:var(--text-m);">${kaup.toFixed(1)}</span></div>
+        <div style="font-size:14px; font-weight:800; color:var(--text-m); line-height:1.55; word-break:keep-all;">${kaupDesc}</div>
+    `;
+} else {
     kaupBadge.style.display = 'none';
-    // 💡 다크모드와 라이트모드 모두 어울리는 은은한 배경과 텍스트 톤으로 매칭
+    
+    // 💡 [입력 전 안내 멘트] 다크모드 변수 적용 완료
     insightMsg = `
         <div style="background: var(--bg-sub, #F2F4F6); color: var(--text-m, #333D4B); padding: 16px; border-radius: 12px; font-size: 13.5px; font-weight: 700; line-height: 1.5; word-break: keep-all; text-align: center;">
             키와 몸무게를 모두 입력하시면 정확한 체형 밸런스(비만도) 진단과 맞춤 조언을 해드립니다! 💜
@@ -3390,7 +3392,16 @@ window.openTrackerSheet = function(type, editId = null, preSelect = null) {
     else if (type === 'sleep') {
         title.innerHTML = window.editingTrackerId ? '💤 수면 기록 수정' : '💤 수면 기록하기';
         body.innerHTML = `
+            <!-- 🌟 수면 트래커 전용: 어제/오늘 토글 스위치 추가! -->
             <div style="text-align: center; margin-bottom: 20px;">
+                <div style="display:${dateToggleDisplay}; justify-content:center; margin-bottom:16px;">
+                    <div style="background:var(--bg-sub); border-radius:12px; padding:4px; display:inline-flex; border:1px solid var(--border);">
+                        <button id="btn-date-today" onclick="window.setTrackerDateOffset(0)" style="padding:6px 20px; border-radius:10px; border:none; font-weight:${todayWeight}; font-size:13.5px; cursor:pointer; background:${todayBg}; color:${todayColor}; box-shadow:${todayShadow}; transition:0.2s;">오늘 시작</button>
+                        <button id="btn-date-yest" onclick="window.setTrackerDateOffset(-1)" style="padding:6px 20px; border-radius:10px; border:none; font-weight:${yestWeight}; font-size:13.5px; cursor:pointer; background:${yestBg}; color:${yestColor}; box-shadow:${yestShadow}; transition:0.2s;">어제 시작</button>
+                    </div>
+                </div>
+                ${pastDateBadgeHtml}
+
                 <div style="font-size:12px; font-weight:800; color:var(--text-s); margin-bottom:6px;">언제 자고 언제 일어났나요?</div>
                 <div style="display:flex; justify-content:center; align-items:center; gap:8px;">
                     <input type="time" id="v-tracker-time" value="${currentTimeStr}" onchange="window.calcSleepFromTimes()" style="flex:1; text-align:center; border:1px solid var(--border); background:var(--bg-sub); padding:8px 10px; border-radius:12px; font-size:18px; font-weight:900; color:var(--text-m); outline:none;">
@@ -3736,6 +3747,11 @@ window.saveTrackerRecord = function() {
     records.sort((a, b) => b.timestamp - a.timestamp);
     if(records.length > 100) records.pop();
     localStorage.setItem('tosil_tracker_records', JSON.stringify(records));
+
+    // 🌟 바로 이 위치에 추가해 주세요!
+    if (typeof window.checkFeedPlateauBreakthrough === 'function') {
+        window.checkFeedPlateauBreakthrough();
+    }
 
     window.editingTrackerId = null; 
     window.closeTrackerSheet();
@@ -6019,14 +6035,30 @@ window.loginWithKakao = function() {
                     userRef.get().then((doc) => {
                         const currentLocalSyncCode = localStorage.getItem('family_sync_code');
 
+                        }).then((doc) => {
                         if (doc.exists && doc.data().family_sync_code) {
                             // 🌟 [시나리오 A] 캐시가 날아갔는데 다시 로그인한 경우 -> 연동 코드 복구!
-                            localStorage.setItem('family_sync_code', doc.data().family_sync_code);
-                            showToast(`🎉 ${nickname}님 환영합니다! (연동 복구 완료✨)`);
+                            const restoredCode = doc.data().family_sync_code;
+                            localStorage.setItem('family_sync_code', restoredCode);
+                            showToast(`🎉 ${nickname}님 환영합니다! 데이터를 100% 복구하는 중입니다...✨`);
                             
-                            // 복구 후 파이어베이스 데이터 다시 불러오기 (파트너님 함수명에 맞게 호출)
-                            if(typeof window.initFirebaseSync === 'function') window.initFirebaseSync(); 
-                            
+                            // 🚨 [방어막 패치] 연동 코드로 아기 정보(이름, 생일)까지 서버에서 찾아온 뒤, 앱을 아예 '새로고침' 시켜버림!
+                            if (typeof window.getDoc === 'function' && typeof window.doc === 'function' && window.db) {
+                                window.getDoc(window.doc(window.db, "families", restoredCode)).then((familyDoc) => {
+                                    if(familyDoc.exists()) {
+                                        localStorage.setItem("tosil_babyName", familyDoc.data().babyName);
+                                        localStorage.setItem("tosil_startDate", familyDoc.data().babyBirth);
+                                        localStorage.setItem("tosil_baby", JSON.stringify({ name: familyDoc.data().babyName, birth: familyDoc.data().babyBirth }));
+                                    }
+                                    // 1.5초 뒤 강제 새로고침! (이렇게 해야 모든 데이터가 꼬임 없이 서버에서 다시 내려옵니다)
+                                    setTimeout(() => { location.reload(); }, 1500);
+                                }).catch(() => {
+                                    setTimeout(() => { location.reload(); }, 1500);
+                                });
+                            } else {
+                                setTimeout(() => { location.reload(); }, 1500);
+                            }
+                        
                         } else if (currentLocalSyncCode) {
                             // 🌟 [시나리오 B] 이미 연동해서 쓰다가 처음으로 카카오 로그인한 경우 -> DB에 백업!
                             userRef.set({
@@ -6034,15 +6066,20 @@ window.loginWithKakao = function() {
                                 nickname: nickname
                             }, { merge: true });
                             showToast(`🎉 ${nickname}님 환영합니다! (클라우드 백업 완료☁️)`);
+                            
+                            // 설정 탭 화면 즉시 새로고침
+                            window.renderSettingsTab(); 
+                        
                         } else {
                             // 🌟 [시나리오 C] 연동도 안 했고, 첫 방문인 경우
                             showToast(`🎉 ${nickname}님 환영합니다!`);
+                            
+                            // 설정 탭 화면 즉시 새로고침
+                            window.renderSettingsTab(); 
                         }
 
-                        // 설정 탭 화면 즉시 새로고침
-                        window.renderSettingsTab(); 
-
                     }).catch((error) => {
+                        // 🟢 대표님이 짜두셨던 에러 처리 로직 (그대로 유지!)
                         console.error("자동 복구 에러:", error);
                         showToast(`🎉 ${nickname}님 환영합니다!`);
                         window.renderSettingsTab();
@@ -6050,15 +6087,18 @@ window.loginWithKakao = function() {
                     // ----------------------------------------------------
                 },
                 fail: function(error) {
+                    // 🟢 카카오 프로필 가져오기 실패 로직 (그대로 유지!)
                     alert('프로필 정보를 가져오는데 실패했습니다: ' + JSON.stringify(error));
                 }
             });
         },
         fail: function(err) {
+            // 🟢 카카오 로그인 실패 로직 (그대로 유지!)
             alert('로그인에 실패했습니다: ' + JSON.stringify(err));
         }
     });
 };
+
 
 // ==========================================
 // ⚙️ [설정 탭] 전체 UI 렌더링 엔진 (엄마/아빠 역할 스위치 & 디자인 최적화)
@@ -8365,7 +8405,7 @@ window.renderCommunityFeed = function() {
             <div style="display: flex; justify-content: space-between; align-items: center; border-top: 1px dashed rgba(0,0,0,0.05); padding-top: 14px;">
                 <div style="display: flex; align-items: center; gap: 6px;">
                     <div style="width: 24px; height: 24px; background: #EBF4FF; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px;">👑</div>
-                    <span style="font-size: 12.5px; font-weight: 800; color: #191F28;">육아메이트</span>
+                    <span style="font-size: 12.5px; font-weight: 800; color: #191F28;">육아메이트 하윤맘</span>
                 </div>
                 <div style="display: flex; gap: 12px; font-size: 13px; font-weight: 700; color: var(--text-sub);">
                     <div style="display: flex; align-items: center; gap: 4px; padding: 4px 8px; background: #FFF0F1; border-radius: 10px;">
@@ -9667,3 +9707,58 @@ window.initPremiumBanner = function() {
 document.addEventListener("DOMContentLoaded", () => {
     setTimeout(window.initPremiumBanner, 500); 
 });
+
+// ==========================================
+// 🍼 수유량 폭발 성장(뱃골 확장 / 정체기 탈출) 축하 엔진 (현실 버전)
+// ==========================================
+window.checkFeedPlateauBreakthrough = function() {
+    const todayStr = new Date().toISOString().split('T')[0];
+    
+    const lastCelebratedDate = localStorage.getItem('tosil_plateau_celebrated_date');
+    if (lastCelebratedDate === todayStr) return;
+
+    let records = JSON.parse(localStorage.getItem('tosil_tracker_records')) || [];
+    
+    const yesterday = new Date();
+    yesterday.setDate(yesterday.getDate() - 1);
+    const yesterdayStr = yesterday.toISOString().split('T')[0];
+
+    let todayFeedTotal = 0;
+    let yesterdayFeedTotal = 0;
+
+    const nowHour = new Date().getHours();
+    const nowMin = new Date().getMinutes();
+    const currentMinutesToday = nowHour * 60 + nowMin;
+
+    records.forEach(r => {
+        if (r.type === 'feed' && r.amount) {
+            const rDate = new Date(r.timestamp);
+            const rDateStr = rDate.toISOString().split('T')[0];
+            const rMinutes = rDate.getHours() * 60 + rDate.getMinutes();
+
+            if (rDateStr === todayStr) {
+                todayFeedTotal += parseInt(r.amount);
+            } else if (rDateStr === yesterdayStr) {
+                if (rMinutes <= currentMinutesToday) {
+                    yesterdayFeedTotal += parseInt(r.amount);
+                }
+            }
+        }
+    });
+
+    // 🌟 [현실 패치] 어제 이 시간대보다 오늘 딱 '30ml 이상'만 더 먹어도 뱃골 확장으로 인정!
+    // (안전장치: 오늘 총 수유량이 300ml 이상은 넘었을 때만 발동)
+    if (yesterdayFeedTotal > 0 && todayFeedTotal >= 300 && todayFeedTotal >= yesterdayFeedTotal + 30) {
+        
+        localStorage.setItem('tosil_plateau_celebrated_date', todayStr);
+
+        if (typeof window.shootConfetti === 'function') {
+            window.shootConfetti();
+        }
+
+        if (navigator.vibrate) navigator.vibrate([50, 100, 50]);
+
+        const diff = todayFeedTotal - yesterdayFeedTotal;
+        window.showToast(`🎉 <b>우리 아기 뱃골이 늘어나고 있어요!</b><br>어제 이 시간보다 벌써 <b>+${diff}ml</b> 든든하게 채우는 중! 🤍`);
+    }
+};
