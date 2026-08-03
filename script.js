@@ -1150,13 +1150,18 @@ function calcHotDeal() {
         btnText = '로켓배송 우리아기 분유 최저가 보기';
     }
 
-    document.getElementById('hd-action-area').innerHTML = `
+   document.getElementById('hd-action-area').innerHTML = `
         <button class="btn-main" style="margin-top:20px; margin-bottom:8px; background:#F8FAFC !important; color:#191F28 !important; border:1px solid #E2E8F0 !important; box-shadow:0 2px 4px rgba(0,0,0,0.02) !important; padding:16px; font-size:14.5px; font-weight:800; border-radius:14px; width:100%; display:flex; justify-content:center; align-items:center; gap:6px; cursor:pointer;" onclick="window.open('${coupangLink}', '_blank')">
             ${btnText}
         </button>
         <button class="btn-main" style="margin-top:0; background:#191F28 !important; color:#FFF !important; border:none !important; box-shadow:none !important; padding:16px; font-size:14.5px; font-weight:800; border-radius:14px; width:100%; cursor:pointer;" onclick="sendHotdealToLedger(${price}, '${cat}')">
             ${price.toLocaleString()}원 가계부로 연동하기
         </button>
+        
+        <!-- ✨ [법적 필수] 쿠팡 파트너스 활동 문구 추가 (은은하고 작게 처리) -->
+        <div style="font-size: 11px; font-weight: 600; color: var(--text-s); text-align: center; margin-top: 10px; line-height: 1.4; word-break: keep-all;">
+            "본 서비스는 쿠팡 파트너스 활동의 일환으로, 이에 따른 일정액의 수수료를 제공받습니다."
+        </div>
     `;
     
     const badgeEl = document.getElementById('hd-past-badge');
