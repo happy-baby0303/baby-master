@@ -190,7 +190,7 @@
                 <div class="home-hero-overlay" style="position: absolute; inset: 0; background: linear-gradient(to top, rgba(0,0,0,0.7) 0%, transparent 60%); padding: 20px; display: flex; flex-direction: column; justify-content: flex-end;">
                     
                     <!-- ✨ [핵심 패치] 평온기/도약기 뱃지를 좌측 상단으로 독립시켰습니다! ✨ -->
-                    <div id="wonderweek-badge" style="position: absolute; top: 20px; left: 20px; background: rgba(0,0,0,0.5); padding: 6px 12px; border-radius: 12px; font-size: 13px; font-weight: 800; color: #FFF; backdrop-filter: blur(4px); border: 1px solid rgba(255,255,255,0.2); display: none;"></div>
+                    <div id="wonderweek-badge" style="position: absolute; top: 20px; right: 20px; background: rgba(0,0,0,0.5); padding: 6px 12px; border-radius: 12px; font-size: 13px; font-weight: 800; color: #FFF; backdrop-filter: blur(4px); border: 1px solid rgba(255,255,255,0.2); display: none;"></div>
 
                     <div>
                         <div style="display:flex; align-items:center; margin-bottom:4px;">
@@ -680,14 +680,15 @@
                             키·몸무게 중 하나만 적어주세요 🤍
                         </div>
                         
-                        <div style="display:flex; gap:12px; margin-bottom:16px;">
-                            <div style="flex:1.3; min-width:0;">
+          <!-- ✨ [수정] 제목(라벨)은 왼쪽 유지, 안쪽 글씨(입력값)만 가운데 정렬! -->
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 16px;">
+                            <div style="min-width:0;">
                                 <label style="font-size:13px; font-weight:800; display:block; margin-bottom:8px; color:var(--text-m);">1. 생년월일</label>
-                                <input type="text" id="v-birth" class="box-main" placeholder="터치해서 선택" onfocus="(this.type='date')" onblur="(this.value === '' ? this.type='text' : this.type='date')" style="width:100%; box-sizing:border-box; padding:14px; border-radius:12px; font-size:14px; font-weight:700; outline:none;">
+                                <input type="text" id="v-birth" class="box-main" placeholder="터치해서 선택" onfocus="(this.type='date')" onblur="(this.value === '' ? this.type='text' : this.type='date')" style="width:100%; box-sizing:border-box; padding:14px 10px; border-radius:12px; font-size:15px; font-weight:800; outline:none; text-align:center;">
                             </div>
-                            <div style="flex:0.7; min-width:0;">
+                            <div style="min-width:0;">
                                 <label style="font-size:13px; font-weight:800; display:block; margin-bottom:8px; color:var(--text-m);">2. 성별</label>
-                                <select id="v-gender" class="box-main" style="width:100%; box-sizing:border-box; padding:14px; border-radius:12px; font-size:14px; font-weight:700; outline:none;">
+                                <select id="v-gender" class="box-main" style="width:100%; box-sizing:border-box; padding:14px 10px; border-radius:12px; font-size:15px; font-weight:800; outline:none; text-align:center; text-align-last:center;">
                                     <option value="" disabled selected>선택</option>
                                     <option value="boy">👦 남아</option>
                                     <option value="girl">👧 여아</option>
@@ -695,20 +696,22 @@
                             </div>
                         </div>
                         
-                        <!-- 🚨 문제의 키/몸무게 입력칸 (cm/kg 추가 + 닫기태그 복구!) -->
+                <!-- ✨ [수정] padding-left를 24px로 늘려서 숫자를 오른쪽으로 미세 조정! -->
                         <div style="display:flex; gap:12px;">
                             <div style="flex:1; min-width:0;">
                                 <label style="font-size:13px; font-weight:800; display:block; margin-bottom:8px; color:var(--text-m);">3. 현재 키 <span style="font-size:11px; color:var(--text-s); font-weight:600;">(선택)</span></label>
-                                <div style="display:flex; align-items:center; background: var(--bg-card); border: 1px solid var(--border); border-radius: 12px; padding-right: 14px; box-sizing: border-box; transition: 0.2s;">
-                                    <input type="number" id="v-height" step="0.1" placeholder="0.0" style="width:100%; min-width:0; box-sizing:border-box; padding:14px; border:none; background:transparent; font-size:18px; font-weight:900; text-align:right; color:var(--text-m); outline:none;">
-                                    <span style="font-size:14px; font-weight:800; color:var(--text-s); margin-left:4px;">cm</span>
+                                <div style="position:relative; display:flex; align-items:center; background: var(--bg-card); border: 1px solid var(--border); border-radius: 12px; box-sizing: border-box; transition: 0.2s;">
+                                    <!-- padding-left: 24px 추가됨 -->
+                                    <input type="number" id="v-height" step="0.1" placeholder="0.0" style="width:100%; box-sizing:border-box; padding:14px 14px 14px 24px; border:none; background:transparent; font-size:18px; font-weight:900; text-align:center; color:var(--text-m); outline:none;">
+                                    <span style="position:absolute; right:14px; font-size:14px; font-weight:800; color:var(--text-s); pointer-events:none;">cm</span>
                                 </div>
                             </div>
                             <div style="flex:1; min-width:0;">
                                 <label style="font-size:13px; font-weight:800; display:block; margin-bottom:8px; color:var(--text-m);">4. 체중 <span style="font-size:11px; color:var(--text-s); font-weight:600;">(선택)</span></label>
-                                <div style="display:flex; align-items:center; background: var(--bg-card); border: 1px solid var(--border); border-radius: 12px; padding-right: 14px; box-sizing: border-box; transition: 0.2s;">
-                                    <input type="number" id="v-weight-growth" step="0.1" placeholder="0.0" style="width:100%; min-width:0; box-sizing:border-box; padding:14px; border:none; background:transparent; font-size:18px; font-weight:900; text-align:right; color:var(--text-m); outline:none;">
-                                    <span style="font-size:14px; font-weight:800; color:var(--text-s); margin-left:4px;">kg</span>
+                                <div style="position:relative; display:flex; align-items:center; background: var(--bg-card); border: 1px solid var(--border); border-radius: 12px; box-sizing: border-box; transition: 0.2s;">
+                                    <!-- padding-left: 24px 추가됨 -->
+                                    <input type="number" id="v-weight-growth" step="0.1" placeholder="0.0" style="width:100%; box-sizing:border-box; padding:14px 14px 14px 24px; border:none; background:transparent; font-size:18px; font-weight:900; text-align:center; color:var(--text-m); outline:none;">
+                                    <span style="position:absolute; right:14px; font-size:14px; font-weight:800; color:var(--text-s); pointer-events:none;">kg</span>
                                 </div>
                             </div>
                         </div>
@@ -756,9 +759,10 @@
                             
                         <div id="growth-insight" style="margin-bottom:20px; background: transparent; padding: 0;"></div>
                         
-                        <button class="btn-main" onclick="saveGrowthRecord()" style="background:var(--text-m) !important; color:var(--bg-card) !important; width:100%; padding:16px; border-radius: 14px; font-size:15px; font-weight: 800; border: none; cursor: pointer;">
-                            💾 이 기록 성장 차트에 저장하기
-                        </button>
+                        <!-- ✨ [수정] 배경을 var(--text-m)에서 예쁜 초록색(#00B37A)으로 바꿨습니다! -->
+<button class="btn-main" onclick="saveGrowthRecord()" style="background: #00B37A !important; color: white !important; width:100%; padding:16px; border-radius: 14px; font-size:15px; font-weight: 800; border: none; cursor: pointer; box-shadow: 0 4px 12px rgba(0, 179, 122, 0.25);">
+    💾 이 기록 성장 차트에 저장하기
+</button>
             
                         <!-- 🗓️ 원더윅스 & 예방접종 브리핑 -->
                         <div style="margin-top: 32px;">

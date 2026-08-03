@@ -1141,13 +1141,13 @@ function calcHotDeal() {
 
     if (cat === 'diaper') {
         coupangLink = 'https://link.coupang.com/a/fPSpeiTAD6'; 
-        btnText = '📦 로켓배송 기저귀 최저가 비교하기 〉';
+        btnText = '📦 로켓배송 기저귀 최저가 비교하기';
     } else if (cat === 'wipe') {
         coupangLink = 'https://link.coupang.com/a/fPSk40HKOi';
-        btnText = '🫧 로켓배송 물티슈 최저가 비교하기 〉';
+        btnText = '🫧 로켓배송 물티슈 최저가 비교하기';
     } else if (cat === 'milk') {
         coupangLink = 'https://link.coupang.com/a/fPSqFEMPcq';
-        btnText = '🍼 로켓배송 우리아기 분유 최저가 보기 〉';
+        btnText = '🍼 로켓배송 우리아기 분유 최저가 보기';
     }
 
     document.getElementById('hd-action-area').innerHTML = `
@@ -1155,7 +1155,7 @@ function calcHotDeal() {
             ${btnText}
         </button>
         <button class="btn-main" style="margin-top:0; background:#191F28 !important; color:#FFF !important; border:none !important; box-shadow:none !important; padding:16px; font-size:14.5px; font-weight:800; border-radius:14px; width:100%; cursor:pointer;" onclick="sendHotdealToLedger(${price}, '${cat}')">
-            💰 ${price.toLocaleString()}원 가계부 지출로 연동하기 〉
+            💰 ${price.toLocaleString()}원 가계부 지출로 연동하기
         </button>
     `;
     
@@ -1346,7 +1346,7 @@ function renderFeverTimeline() {
     let records = JSON.parse(localStorage.getItem('tosil_fever_records')) || [];
     
     if(records.length === 0) {
-        container.innerHTML = `<div style="text-align:center; padding:40px 20px; background:var(--bg-sub, #F8F9FA); border-radius:16px; border:1px dashed #E5E8EB;">우리 아기가 아프지 않아서 기록이 텅 비어있네요. 💚</div>`;
+        container.innerHTML = `<div style="text-align:center; padding:40px 20px; background:var(--bg-sub, #F8F9FA); border-radius:16px; border:1px dashed #E5E8EB;">아기가 아프지 않아서 기록이 비어있네요💚</div>`;
         ['fever-timer-box','fever-chart-container','fever-alert'].forEach(id => { const el = document.getElementById(id); if(el) el.style.display='none'; });
         if(feverTimerInterval) clearInterval(feverTimerInterval);
         
@@ -1784,8 +1784,11 @@ if (h && w) {
 
     // 💡 [입력 후 결과 멘트] 다크모드/라이트모드 완벽 대응 변수 적용
     insightMsg = `
-        <div style="font-size:12px; font-weight:800; color:var(--text-s); margin-bottom:6px;">우리아기 체질량 지수(BMI): <span style="color:var(--text-m);">${kaup.toFixed(1)}</span></div>
-        <div style="font-size:14px; font-weight:800; color:var(--text-m); line-height:1.55; word-break:keep-all;">${kaupDesc}</div>
+        <!-- ✨ [수정] 예쁜 테두리 박스(var(--bg-card)) 안에 멘트를 담았습니다! -->
+        <div style="background: var(--bg-card); border: 1px solid var(--border); border-radius: 16px; padding: 16px; margin-bottom: 16px; text-align: left; box-shadow: 0 2px 8px rgba(0,0,0,0.02);">
+            <div style="font-size:12px; font-weight:800; color:var(--text-s); margin-bottom:6px;">우리아기 체질량 지수(BMI): <span style="color:var(--text-m); font-size:14px;">${kaup.toFixed(1)}</span></div>
+            <div style="font-size:14px; font-weight:800; color:var(--text-m); line-height:1.55; word-break:keep-all;">${kaupDesc}</div>
+        </div>
     `;
 } else {
     kaupBadge.style.display = 'none';
@@ -1914,6 +1917,15 @@ async function saveGrowthRecord() {
     // 🚨 방어 4: 차트 그리는 함수가 아직 없거나 에러 날 때 방지
     if (typeof renderGrowthHistory === 'function') {
         renderGrowthHistory();
+        
+        // ✨ [추가] 차트 아코디언을 자동으로 쫙 열고, 거기로 화면을 부드럽게 스크롤 올려주기!
+        const chartAcc = document.getElementById('growth-history-accordion');
+        if (chartAcc) {
+            chartAcc.open = true; // 아코디언 열기
+            setTimeout(() => {
+                chartAcc.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }, 100);
+        }
     } else {
         console.warn("renderGrowthHistory 함수가 없습니다. 차트를 갱신하려면 이 함수가 필요합니다.");
     }
@@ -2255,7 +2267,7 @@ function renderCubes() {
             </div>
             <div style="display:flex; align-items:center; gap:12px; flex-shrink:0; margin-left:8px;">
                 <div style="font-size:18px; font-weight:900; color:var(--primary); white-space:nowrap;">${r.qty}<span style="font-size:12px; color:var(--text-s);">개</span></div>
-                <button onclick="useCube('${r.id}')" style="background:#F2F5F8; color:#4E5968; border:none; border-radius:10px; width:44px; height:44px; font-size:20px; cursor:pointer; display:flex; align-items:center; justify-content:center; flex-shrink:0;">🥄</button>
+               <button onclick="useCube('${r.id}')" style="background:#F2F5F8; color:#4E5968; border:none; border-radius:10px; width:54px; height:44px; font-size:14px; font-weight:800; cursor:pointer; display:flex; align-items:center; justify-content:center; flex-shrink:0;">사용</button>
             </div>
         </div>`;
     });
@@ -5655,15 +5667,16 @@ window.renderOpenRecords = function() {
             statusHtml = `<span style="color:#00B37A; font-weight:800; font-size:12.5px; white-space:nowrap;">✅ D-${remainDays} (여유)</span>`;
         }
 
+       // ✨ [수정] 날짜 텍스트가 좁으면 아랫줄로 넘어가도록 flex-wrap: wrap 적용!
         html += `
         <div style="display:flex; justify-content:space-between; align-items:center; padding:16px; background:#FFFFFF; border:1px solid ${borderColor}; border-radius:16px; margin-bottom:8px; box-shadow:0 2px 6px rgba(0,0,0,0.02);">
             <div style="display:flex; align-items:center; gap:12px; flex:1; min-width:0;">
                 <div style="font-size:24px; background:var(--bg-sub); width:44px; height:44px; border-radius:12px; display:flex; align-items:center; justify-content:center; flex-shrink:0;">${r.emoji}</div>
                 <div style="flex:1; min-width:0;">
                     <div style="font-size:14.5px; font-weight:900; color:var(--text-m); margin-bottom:4px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${r.name}</div>
-                    <div style="display:flex; align-items:center; gap:6px;">
+                    <div style="display:flex; align-items:center; flex-wrap:wrap; gap:4px; margin-top:2px;">
                         ${statusHtml}
-                        <span style="font-size:11.5px; color:var(--text-s); font-weight:600; white-space:nowrap;">(오픈: ${r.openDate})</span>
+                        <span style="font-size:11px; color:var(--text-s); font-weight:600; word-break:keep-all;">(오픈: ${r.openDate})</span>
                     </div>
                 </div>
             </div>
@@ -9570,7 +9583,7 @@ window.sendNaviToDad = function(placeName, address) {
 };
 
 // ==========================================
-// 💰 프리미엄 단일 롤링 배너 자동화 엔진
+// 💰 프리미엄 단일 롤링 배너 자동화 엔진 (터치 스와이프 완벽 적용)
 // ==========================================
 window.initPremiumBanner = function() {
     const track = document.querySelector('.banner-track');
@@ -9581,6 +9594,10 @@ window.initPremiumBanner = function() {
 
     let currentIndex = 0;
     let autoTimer;
+    
+    // 👆 터치 위치를 기억할 변수들
+    let startX = 0;
+    let endX = 0;
 
     // 슬라이드 이동 및 하단 점(도트) 스타일 변경 함수
     const moveSlide = (index) => {
@@ -9610,14 +9627,59 @@ window.initPremiumBanner = function() {
 
     const stopTimer = () => clearInterval(autoTimer);
 
+    // ==========================================
+    // 👆 스와이프 (터치 드래그) 로직 추가
+    // ==========================================
+    const handleTouchStart = (e) => {
+        stopTimer(); // 터치하는 순간 자동 롤링 정지
+        startX = e.type.includes('mouse') ? e.pageX : e.touches[0].clientX;
+    };
+
+    const handleTouchMove = (e) => {
+        if (!startX) return;
+        endX = e.type.includes('mouse') ? e.pageX : e.touches[0].clientX;
+    };
+
+    const handleTouchEnd = () => {
+        if (!startX || !endX) {
+            startTimer(); // 드래그 안 하고 그냥 터치만 했으면 다시 타이머 시작
+            return;
+        }
+
+        const diffX = startX - endX;
+        const threshold = 40; // 40px 이상 움직이면 넘어감 (민감도)
+
+        if (diffX > threshold) {
+            // 왼쪽으로 스와이프 (다음 슬라이드)
+            currentIndex = (currentIndex + 1) % dots.length;
+        } else if (diffX < -threshold) {
+            // 오른쪽으로 스와이프 (이전 슬라이드)
+            currentIndex = (currentIndex - 1 + dots.length) % dots.length;
+        }
+
+        moveSlide(currentIndex);
+        
+        // 변수 초기화 및 타이머 재시작
+        startX = 0;
+        endX = 0;
+        startTimer();
+    };
+
     startTimer();
 
-    // 🚨 유저가 배너를 읽으려고 터치 중일 땐 배너가 넘어가지 않도록 멈춤!
-    wrap.addEventListener('touchstart', stopTimer, { passive: true });
-    wrap.addEventListener('mousedown', stopTimer);
-    wrap.addEventListener('touchend', startTimer);
-    wrap.addEventListener('mouseup', startTimer);
-    wrap.addEventListener('mouseleave', startTimer);
+    // 모바일 터치 이벤트
+    wrap.addEventListener('touchstart', handleTouchStart, { passive: true });
+    wrap.addEventListener('touchmove', handleTouchMove, { passive: true });
+    wrap.addEventListener('touchend', handleTouchEnd);
+
+    // PC 마우스 드래그 이벤트 (테스트용)
+    wrap.addEventListener('mousedown', handleTouchStart);
+    wrap.addEventListener('mousemove', handleTouchMove);
+    wrap.addEventListener('mouseup', handleTouchEnd);
+    wrap.addEventListener('mouseleave', () => {
+        if (startX) handleTouchEnd();
+        startTimer();
+    });
 };
 
 // 화면이 그려지고 나서 0.5초 뒤에 스무스하게 롤링 시작
