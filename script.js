@@ -5239,22 +5239,30 @@ window.renderBabyInfo = function() {
     const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
     const monthAge = Math.floor(diffDays / 30.436875);
 
-  // 3. 이름 & D-Day 뿌리기 (뱃지 크기 밸런스 조정)
-    if(nameEl) nameEl.innerText = `${savedName}의 공간`; 
-    if(missionNameEl) missionNameEl.innerText = savedName;
-    if(document.getElementById('play-dday-badge')) document.getElementById('play-dday-badge').innerText = diffDays > 0 ? diffDays : 0;
+ // 3. 이름 & D-Day 뿌리기 (뱃지 크기 밸런스 조정)
+if(nameEl) nameEl.innerText = `${savedName}의 공간`; 
+if(missionNameEl) missionNameEl.innerText = savedName;
+if(document.getElementById('play-dday-badge')) document.getElementById('play-dday-badge').innerText = diffDays > 0 ? diffDays : 0;
 
-    let ddayText = diffDays > 0 ? `D+${diffDays}일` : diffDays < 0 ? `D${diffDays}일` : `D-Day`;
-    
-    // ✨ [수정됨] 뱃지 상태 동적 계산 (도약기 vs 평온기)
-    let badgeText = "🚀 도약기"; // 기본값
-    if (typeof wwList !== 'undefined') {
-        let currentWeek = Math.floor(diffDays / 7); // 현재 주차 계산
-        let isWonderWeek = wwList.some(x => currentWeek >= (x.w - 1) && currentWeek <= (x.w + 1));
-        badgeText = isWonderWeek ? "🚀 도약기" : "☀️ 평온기";
-    }
+let ddayText = diffDays > 0 ? `D+${diffDays}일` : diffDays < 0 ? `D${diffDays}일` : `D-Day`;
 
-    if(ddayEl) ddayEl.innerHTML = `${ddayText} <span style="font-size:14px; background:rgba(0,0,0,0.5); padding:6px 12px; border-radius:12px; vertical-align:middle; margin-left:8px; font-weight:800; text-shadow:none; backdrop-filter:blur(8px); border:1px solid rgba(255,255,255,0.2); color:#FFF;">${badgeText}</span>`; 
+// ✨ [수정됨] D-day 영역에는 D-day 숫자만 깔끔하게 넣기! (span 태그 삭제)
+if(ddayEl) ddayEl.innerText = ddayText;
+
+// ✨ 뱃지 상태 동적 계산 (도약기 vs 평온기)
+let badgeText = "🚀 도약기"; // 기본값
+if (typeof wwList !== 'undefined') {
+    let currentWeek = Math.floor(diffDays / 7); // 현재 주차 계산
+    let isWonderWeek = wwList.some(x => currentWeek >= (x.w - 1) && currentWeek <= (x.w + 1));
+    badgeText = isWonderWeek ? "🚀 도약기" : "☀️ 평온기";
+}
+
+// ✨ [추가됨] 따로 만들어둔 좌측 상단 뱃지 영역으로 뱃지 텍스트 쏘기!
+const wwBadgeEl = document.getElementById('wonderweek-badge');
+if(wwBadgeEl) {
+    wwBadgeEl.innerText = badgeText;
+    wwBadgeEl.style.display = 'inline-block';
+}
 
     // 4. 시간대별 감성 인사말 띄우기
     if(typeof applyTimeBasedGreeting === 'function') applyTimeBasedGreeting(savedName);
