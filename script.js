@@ -4694,67 +4694,100 @@ document.addEventListener("DOMContentLoaded", () => {
 });
 
 // ==========================================
-// 🚨 영유아 응급처치(CPR/하임리히) 모달 제어 (실전용 업데이트)
+// 🚨 영유아 응급처치(열경련/CPR/기도폐쇄) 모달 제어
 // ==========================================
 window.openEmergencyModal = function(type) {
     const header = document.getElementById('em-header');
     const content = document.getElementById('em-content');
     
-    if (type === 'heimlich') {
+    // 🌡️ 열경련 (보라색 제거, 니치 디테일 추가)
+    if (type === 'seizure') {
         header.innerHTML = `
-            <div style="font-size: 19px; font-weight: 900; color: var(--danger); margin-bottom: 6px; margin-top: 10px;">영아 하임리히법 (1세 미만)</div>
-            <div style="font-size: 13.5px; font-weight: 700; color: var(--text-s);">이물질로 인해 숨을 쉬지 못할 때 즉시 실시!</div>
+            <div style="font-size: 19px; font-weight: 900; color: var(--danger); margin-bottom: 6px; margin-top: 10px;">🌡️ 영아 열성경련(열경기)</div>
+            <div style="font-size: 13.5px; font-weight: 700; color: var(--text-s);">아기가 눈이 돌아가고 몸이 뻣뻣해질 때</div>
         `;
         content.innerHTML = `
-            <!-- 🚨 최우선 행동 지침 -->
+            <!-- 가독성 높인 다크/라이트 호환 배너 -->
+            <div style="background:var(--bg-card); color:var(--text-m); padding:16px; border-radius:14px; font-weight:900; font-size:14.5px; text-align:center; margin-bottom:16px; border: 1px solid var(--border); box-shadow: 0 4px 12px rgba(0,0,0,0.05);">
+                ⏱️ 당황하지 말고 <span style="color:#F04452;">경련 시작 시간</span>을 재세요!
+            </div>
+            
+            <div class="box-sub" style="padding: 16px; border-radius: 16px; border-left: 4px solid var(--danger); margin-bottom: 8px;">
+                <div style="font-size: 14.5px; font-weight: 900; color: var(--text-m); margin-bottom: 6px;">1️⃣ 고개를 옆으로 돌려 눕히세요</div>
+                <div style="font-size: 13.5px; color: var(--text-s); line-height: 1.5; word-break: keep-all;">토사물이나 침이 기도를 막지 않도록 평평하고 안전한 곳에 눕힌 후 <b>고개만 옆으로</b> 돌려주세요.</div>
+            </div>
+            <div class="box-tint-red" style="padding: 16px; border-radius: 16px; border-left: 4px solid var(--danger); margin-bottom: 8px;">
+                <div style="font-size: 14.5px; font-weight: 900; color: var(--danger); margin-bottom: 6px;">2️⃣ 🚫 입에 아무것도 넣지 마세요!</div>
+                <div style="font-size: 13.5px; color: var(--danger); line-height: 1.5; word-break: keep-all;">해열제 등을 <b>억지로 먹이거나 물리면 질식 위험</b>이 큽니다. 주무르거나 흔들어 깨우는 것도 절대 금지!</div>
+            </div>
+            <!-- ✨ 찐 실전 니치 팁: 동영상 촬영 -->
+            <div class="box-sub" style="padding: 16px; border-radius: 16px; border-left: 4px solid var(--danger); margin-bottom: 8px;">
+                <div style="font-size: 14.5px; font-weight: 900; color: var(--text-m); margin-bottom: 6px;">3️⃣ 📱 여유가 있다면 영상 촬영</div>
+                <div style="font-size: 13.5px; color: var(--text-s); line-height: 1.5; word-break: keep-all;">보호자가 2명 이상이라면 <b>경련 양상을 동영상으로</b> 찍어두세요. 응급실 진료 시 가장 확실한 단서가 됩니다.</div>
+            </div>
+            
+            <!-- 🚨 5분 제약 삭제 -> 부모의 직감을 믿도록 안내 (면책 및 안전 강화) -->
+            <div class="box-tint-red" style="padding: 14px; border-radius: 16px; text-align:center; margin-bottom: 16px; margin-top:16px;">
+                <div style="font-size: 13.5px; font-weight: 800; color: var(--danger); line-height: 1.4;">처음 겪는 경련이거나 대처가 불안하다면<br>주저하지 말고 바로 119에 신고하세요!</div>
+            </div>
+            
+            <a href="tel:119" style="display:block; text-align:center; background:var(--danger); color:#FFF; padding:16px; border-radius:14px; font-size:16px; font-weight:900; text-decoration:none; box-shadow:0 4px 12px rgba(240,68,82,0.2);">🚨 119 즉시 전화걸기</a>
+        `;
+    } 
+    // 💥 기도폐쇄 (하임리히)
+    else if (type === 'heimlich') {
+        header.innerHTML = `
+            <div style="font-size: 19px; font-weight: 900; color: var(--danger); margin-bottom: 6px; margin-top: 10px;">영아 기도폐쇄 (1세 미만)</div>
+            <div style="font-size: 13.5px; font-weight: 700; color: var(--text-s);">사탕/장난감 삼켜 숨을 쉬지 못할 때 즉시 실시!</div>
+        `;
+        content.innerHTML = `
             <div style="background:var(--danger); color:#FFF; padding:12px; border-radius:12px; font-weight:900; font-size:14px; text-align:center; margin-bottom:16px; box-shadow: 0 4px 12px rgba(240,68,82,0.3); animation: pulseSOS 1.5s infinite;">
                 📞 119에 신고하고 "스피커폰"을 켜세요!
             </div>
             
             <div class="box-sub" style="padding: 16px; border-radius: 16px; border-left: 4px solid var(--danger); margin-bottom: 8px;">
-                <div style="font-size: 14.5px; font-weight: 900; color: var(--text-m); margin-bottom: 6px;">1️⃣ 등 압박 5회</div>
-                <div style="font-size: 13.5px; color: var(--text-s); line-height: 1.5; word-break: keep-all;">아기 얼굴을 아래로 향하게 엎드려 눕힌 후, 양쪽 날개뼈 사이를 <b>강하고 빠르게 5회</b> 두드립니다.</div>
+                <div style="font-size: 14.5px; font-weight: 900; color: var(--text-m); margin-bottom: 6px;">1️⃣ 등 두드리기 5회</div>
+                <div style="font-size: 13.5px; color: var(--text-s); line-height: 1.5; word-break: keep-all;">아기 얼굴을 <b>아래로 향하게</b> 허벅지 위에 엎드려 눕힌 후, 손바닥 밑부분으로 양쪽 날개뼈 사이를 <b>강하게 5회</b> 두드립니다.</div>
             </div>
             <div class="box-sub" style="padding: 16px; border-radius: 16px; border-left: 4px solid var(--danger); margin-bottom: 8px;">
                 <div style="font-size: 14.5px; font-weight: 900; color: var(--text-m); margin-bottom: 6px;">2️⃣ 가슴 압박 5회</div>
-                <div style="font-size: 13.5px; color: var(--text-s); line-height: 1.5; word-break: keep-all;">아기를 앞으로 돌려 눕히고, 양 젖꼭지 정중앙 바로 아래를 <b>두 손가락으로 5회</b> 강하게 누릅니다.</div>
+                <div style="font-size: 13.5px; color: var(--text-s); line-height: 1.5; word-break: keep-all;">아기를 <b>하늘을 보게</b> 돌려 눕히고, 양 젖꼭지 이은 선 정중앙의 <b>바로 아래</b>를 두 손가락으로 <b>5회 강하게</b> 누릅니다.</div>
             </div>
             
             <div class="box-tint-red" style="padding: 14px; border-radius: 16px; text-align:center; margin-bottom: 16px;">
-                <div style="font-size: 13.5px; font-weight: 800; color: var(--danger);">이물질이 나올 때까지 1, 2번 무한 반복!</div>
+                <div style="font-size: 13.5px; font-weight: 800; color: var(--danger);">이물질이 나오거나 119가 올 때까지 무한 반복!<br><small>(※ 1세 미만은 간 파열 위험으로 배 밀어내기 금지)</small></div>
             </div>
 
-            <!-- 🎥 평소 학습용 유튜브 링크 -->
-            <a href="https://www.youtube.com/results?search_query=영아+하임리히법+소방청" target="_blank" style="display:flex; align-items:center; justify-content:center; gap:8px; background:#FF0000; color:#FFF; padding:14px; border-radius:12px; font-weight:900; font-size:14px; text-decoration:none;">
+            <a href="https://www.youtube.com/results?search_query=영아+기도폐쇄+소방청" target="_blank" style="display:flex; align-items:center; justify-content:center; gap:8px; background:#191F28; color:#FFF; padding:14px; border-radius:12px; font-weight:900; font-size:14px; text-decoration:none;">
                 <span>▶️</span> 1분 영상으로 정확한 자세 보기
             </a>
         `;
-    } else if (type === 'cpr') {
+    } 
+    // 🫀 심폐소생술 (CPR)
+    else if (type === 'cpr') {
         header.innerHTML = `
             <div style="font-size: 19px; font-weight: 900; color: var(--primary); margin-bottom: 6px; margin-top: 10px;">영아 심폐소생술 (1세 미만)</div>
             <div style="font-size: 13.5px; font-weight: 700; color: var(--text-s);">의식과 호흡이 없을 때 즉시 실시!</div>
         `;
         content.innerHTML = `
-            <!-- 🚨 최우선 행동 지침 -->
             <div style="background:var(--primary); color:#FFF; padding:12px; border-radius:12px; font-weight:900; font-size:14px; text-align:center; margin-bottom:16px; box-shadow: 0 4px 12px rgba(49,130,246,0.3); animation: pulseSOS 1.5s infinite;">
                 📞 119에 신고하고 "스피커폰"을 켜세요!
             </div>
             
             <div class="box-sub" style="padding: 16px; border-radius: 16px; border-left: 4px solid var(--primary); margin-bottom: 8px;">
                 <div style="font-size: 14.5px; font-weight: 900; color: var(--text-m); margin-bottom: 6px;">1️⃣ 의식 확인 (발바닥 때리기)</div>
-                <div style="font-size: 13.5px; color: var(--text-s); line-height: 1.5; word-break: keep-all;">아기 <b>발바닥</b>을 때리며 반응 확인. 반응이 없으면 주변에 AED(자동심장충격기)를 요청하세요.</div>
+                <div style="font-size: 13.5px; color: var(--text-s); line-height: 1.5; word-break: keep-all;">단단하고 평평한 바닥에 눕히고, 아기 <b>발바닥</b>을 때리며 반응 확인. 반응이 없으면 주변에 자동제세동기(AED)를 요청하세요.</div>
             </div>
             <div class="box-sub" style="padding: 16px; border-radius: 16px; border-left: 4px solid var(--primary); margin-bottom: 8px;">
                 <div style="font-size: 14.5px; font-weight: 900; color: var(--text-m); margin-bottom: 6px;">2️⃣ 가슴 압박 30회</div>
-                <div style="font-size: 13.5px; color: var(--text-s); line-height: 1.5; word-break: keep-all;">양 젖꼭지 정중앙 <b>바로 아래쪽</b>을 두 손가락으로 <b>4cm 깊이로 빠르고 강하게 30회</b> 누릅니다.</div>
+                <div style="font-size: 13.5px; color: var(--text-s); line-height: 1.5; word-break: keep-all;">양 젖꼭지를 이은 선 정중앙의 <b>바로 아래</b>를 두 손가락으로 <b>4cm 깊이로, 1초에 2번 속도</b>로 30회 누릅니다.</div>
             </div>
             <div class="box-sub" style="padding: 16px; border-radius: 16px; border-left: 4px solid var(--primary); margin-bottom: 16px;">
                 <div style="font-size: 14.5px; font-weight: 900; color: var(--text-m); margin-bottom: 6px;">3️⃣ 인공호흡 2회</div>
-                <div style="font-size: 13.5px; color: var(--text-s); line-height: 1.5; word-break: keep-all;">아기의 <b>입과 코를 한 번에 덮고</b> 가슴이 부풀어 오를 정도로 1초씩 2회 숨을 불어넣습니다.</div>
+                <div style="font-size: 13.5px; color: var(--text-s); line-height: 1.5; word-break: keep-all;">아기의 <b>입과 코를 한 번에 내 입으로 덮고</b> 가슴이 살짝 부풀어 오를 정도로 1초씩 2회 숨을 불어넣습니다.</div>
             </div>
 
-            <!-- 🎥 평소 학습용 유튜브 링크 -->
-            <a href="https://www.youtube.com/results?search_query=영아+심폐소생술+소방청" target="_blank" style="display:flex; align-items:center; justify-content:center; gap:8px; background:#FF0000; color:#FFF; padding:14px; border-radius:12px; font-weight:900; font-size:14px; text-decoration:none;">
+            <a href="https://www.youtube.com/results?search_query=영아+심폐소생술+소방청" target="_blank" style="display:flex; align-items:center; justify-content:center; gap:8px; background:#191F28; color:#FFF; padding:14px; border-radius:12px; font-weight:900; font-size:14px; text-decoration:none;">
                 <span>▶️</span> 1분 영상으로 정확한 자세 보기
             </a>
         `;

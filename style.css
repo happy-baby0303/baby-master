@@ -669,7 +669,7 @@ body.dark-mode #ww-table tr[style*="background:#FFF0F1"] { background-color: rgb
         #cube-list-container .timeline-item, #baton-list-container .timeline-item { 
             background: #FFF; border: 1px solid #E5E8EB; border-radius: 16px; padding: 16px; display: flex; justify-content: space-between; align-items: center; 
         }
-        input:focus, select:focus { outline: 2px solid #3182F6 !important; border-color: #3182F6 !important; }
+        input:focus, select:focus { outline: none !important; border-color: #3182F6 !important; box-shadow: 0 0 0 2px rgba(49,130,246,0.12) !important; }
 
 /* ==========================================
    🎭 엄마/아빠 비대칭 UI 트래픽 컨트롤러

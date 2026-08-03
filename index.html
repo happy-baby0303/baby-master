@@ -681,17 +681,19 @@
                         </div>
                         
          <!-- ✨ [수정] 모바일 화면에서 날짜 글자가 잘리지 않도록 폰트 크기와 패딩을 꽉 차게 최적화! -->
-                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 16px;">
-                            <div style="min-width:0;">
-                                <label style="font-size:13px; font-weight:800; display:block; margin-bottom:8px; color:var(--text-m);">1. 생년월일</label>
-                                <input type="text" id="v-birth" class="box-main" placeholder="터치해서 선택" onfocus="(this.type='date')" onblur="(this.value === '' ? this.type='text' : this.type='date')" style="width:100%; box-sizing:border-box; padding:14px 4px; border-radius:12px; font-size:14px; font-weight:800; outline:none; text-align:center;">
-                            </div>
+                     <!-- ✨ [수정 완료] 모바일 화면에서 날짜 글자가 잘리지 않도록 폰트 12.5px & 패딩 최적화 -->
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 16px;">
+        <div style="min-width:0;">
+            <label style="font-size:13px; font-weight:800; display:block; margin-bottom:8px; color:var(--text-m);">1. 생년월일</label>
+            <input type="text" id="v-birth" class="box-main" placeholder="터치해서 선택" onfocus="(this.type='date')" onblur="(this.value === '' ? this.type='text' : this.type='date')" style="width:100%; box-sizing:border-box; padding:14px 2px; border-radius:12px; font-size:12.5px; font-weight:800; outline:none; text-align:center;">
+        </div>
                             <div style="min-width:0;">
                                 <label style="font-size:13px; font-weight:800; display:block; margin-bottom:8px; color:var(--text-m);">2. 성별</label>
-                                <select id="v-gender" class="box-main" style="width:100%; box-sizing:border-box; padding:14px 10px; border-radius:12px; font-size:15px; font-weight:800; outline:none; text-align:center; text-align-last:center;">
-                                    <option value="" disabled selected>선택</option>
-                                    <option value="boy">👦 남아</option>
-                                    <option value="girl">👧 여아</option>
+                                <!-- ✨ 고르기 전엔 연한 회색, 고르면 진한 글씨로 바뀌는 스마트 셀렉트 -->
+                                <select id="v-gender" class="box-main" onchange="this.style.color = this.value ? 'var(--text-m)' : 'var(--text-s)'" style="width:100%; box-sizing:border-box; padding:14px 10px; border-radius:12px; font-size:15px; font-weight:800; outline:none; text-align:center; text-align-last:center; border:1px solid var(--border); background:var(--bg-card); color:var(--text-s); transition: 0.2s;">
+                                    <option value="" disabled selected style="color: var(--text-s);">선택</option>
+                                    <option value="boy" style="color: var(--text-m);">👦 남아</option>
+                                    <option value="girl" style="color: var(--text-m);">👧 여아</option>
                                 </select>
                             </div>
                         </div>
@@ -1162,40 +1164,49 @@
     </div>
 
     <div id="tab-info" class="tab-content">
-        <!-- 🌟 마지막 감옥 탈출! 완벽한 디자인 통일 -->
-        <div style="padding-top:24px; padding-bottom: 4px;">
-            <h2 class="app-title" style="font-size: 24px; font-weight: 900; color: #191F28; margin: 0 0 6px 0; letter-spacing: -0.5px;">📚 육아 백과사전</h2>
-            <p class="app-desc" style="font-size: 14px; font-weight: 600; color: #8B95A1; margin-bottom: 24px; letter-spacing: -0.3px;">위급 상황 대처 및 맞춤형 육아 정보</p>
+    <div style="padding-top:24px; padding-bottom: 4px;">
+        <h2 class="app-title" style="font-size: 24px; font-weight: 900; color: #191F28; margin: 0 0 6px 0; letter-spacing: -0.5px;">📚 육아 백과사전</h2>
+        <p class="app-desc" style="font-size: 14px; font-weight: 600; color: #8B95A1; margin-bottom: 24px; letter-spacing: -0.3px;">위급 상황 대처 및 맞춤형 육아 정보</p>
 
-            <!-- 🚨 위급 상황 대처 (흰색 배경 박스로 3개 기능 그룹화) -->
-<div style="background: #FFFFFF; border-radius: 20px; box-shadow: 0 4px 12px rgba(0,0,0,0.03); padding: 16px; margin-bottom: 32px;">
-    
-    <!-- 1. 기존 SOS 배너 -->
-    <div class="sos-banner box-tint-red" onclick="openSOSModal()" style="border-radius: 20px; padding: 20px; display: flex; align-items: center; gap: 16px; cursor: pointer;">
-        <div class="sos-banner-icon" style="font-size: 38px;">🚨</div>
-        <div>
-            <div class="sos-banner-title" style="font-size: 16.5px; font-weight: 900; color: var(--danger);">한밤중 긴급 SOS 센터</div>
-            <div class="sos-banner-desc" style="font-size: 13.5px; font-weight: 700; color: var(--danger); opacity: 0.8;">응급 상담 콜 / 자지러지는 오열 원인 체크</div>
-        </div>
-    </div>
+   <!-- 🚨 위급 상황 대처 (4개 모두 각각 다른 고유 색상 분리) -->
+        <div style="background: #FFFFFF; border-radius: 20px; box-shadow: 0 4px 12px rgba(0,0,0,0.03); padding: 16px; margin-bottom: 32px; display: flex; flex-direction: column; gap: 12px;">
+            
+            <!-- 윗층 (1층): SOS 센터 & 열경련 -->
+            <div style="display: flex; gap: 12px;">
+                <!-- 1. 한밤중 긴급 SOS 센터 (빨강) -->
+                <div class="box-tint-red" onclick="openSOSModal()" style="flex: 1; height: 110px; border-radius: 16px; padding: 12px 8px; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; cursor: pointer; transition: 0.2s; box-sizing: border-box;">
+                    <div style="font-size: 26px; margin-bottom: 4px;">🚨</div>
+                    <div style="font-size: 14px; font-weight: 900; color: var(--danger); margin-bottom: 2px; word-break: keep-all;">긴급 SOS 센터</div>
+                    <div style="font-size: 11px; font-weight: 700; color: var(--danger); opacity: 0.8; word-break: keep-all;">오열 원인 체크</div>
+                </div>
 
-    <!-- 2. 기존 하임리히법 & 심폐소생술 버튼 -->
-    <div style="display: flex; gap: 12px; margin-top: 12px;">
-        <div onclick="window.openEmergencyModal('heimlich')" style="flex: 1; border-radius: 16px; padding: 22px 12px; text-align: center; background: rgba(240,68,82,0.1); border: 1px solid rgba(240,68,82,0.3); cursor: pointer; transition: 0.2s; display: flex; flex-direction: column; justify-content: center;">
-            <div style="font-size: 12.5px; font-weight: 800; color: var(--danger); margin-bottom: 6px;">이물질·기도 폐쇄</div>
-            <div style="font-size: 16px; font-weight: 900; color: var(--text-m);">하임리히법 〉</div>
-        </div>
-        <div onclick="window.openEmergencyModal('cpr')" style="flex: 1; border-radius: 16px; padding: 22px 12px; text-align: center; background: rgba(49,130,246,0.1); border: 1px solid rgba(49,130,246,0.3); cursor: pointer; transition: 0.2s; display: flex; flex-direction: column; justify-content: center;">
-            <div style="font-size: 12.5px; font-weight: 800; color: var(--primary); margin-bottom: 6px;">의식·호흡 없을 때</div>
-            <div style="font-size: 16px; font-weight: 900; color: var(--text-m);">심폐소생술 〉</div>
-        </div>
-    </div>
-    
-</div>
-
-            <div style="font-size:15px; font-weight:900; color:var(--text-m); margin-top:32px; margin-bottom:12px; padding: 0 4px;">
-                <span>🤖 우리 아기 맞춤형 생존 처방전</span>
+                <!-- 2. 열경련 대처법 (주황) -->
+                <div onclick="window.openEmergencyModal('seizure')" style="flex: 1; height: 110px; border-radius: 16px; padding: 12px 8px; background: rgba(245,158,11,0.1); border: 1px solid rgba(245,158,11,0.2); display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; cursor: pointer; transition: 0.2s; box-sizing: border-box;">
+                    <div style="font-size: 26px; margin-bottom: 4px;">🌡️</div>
+                    <div style="font-size: 14px; font-weight: 900; color: #D97706; margin-bottom: 2px; word-break: keep-all;">열경련 대처법</div>
+                    <div style="font-size: 11px; font-weight: 700; color: #D97706; opacity: 0.8; word-break: keep-all;">눈이 돌아갈 때</div>
+                </div>
             </div>
+
+            <!-- 아래층 (2층): 기도폐쇄 & 심폐소생술 -->
+            <div style="display: flex; gap: 12px;">
+                <!-- 3. 기도폐쇄 (보라색 계열로 독립!) -->
+                <div onclick="window.openEmergencyModal('heimlich')" style="flex: 1; height: 110px; border-radius: 16px; padding: 12px 8px; text-align: center; background: rgba(147,51,234,0.08); border: 1px solid rgba(147,51,234,0.2); cursor: pointer; transition: 0.2s; display: flex; flex-direction: column; align-items: center; justify-content: center; box-sizing: border-box;">
+                    <div style="font-size: 11.5px; font-weight: 800; color: #9333EA; margin-bottom: 4px; word-break: keep-all;">이물질·기도 폐쇄</div>
+                    <div style="font-size: 14px; font-weight: 900; color: var(--text-m); word-break: keep-all;">등 두드리기 〉</div>
+                </div>
+                
+                <!-- 4. 심폐소생술 (초록색 계열로 독립!) -->
+                <div onclick="window.openEmergencyModal('cpr')" style="flex: 1; height: 110px; border-radius: 16px; padding: 12px 8px; text-align: center; background: rgba(16,185,129,0.08); border: 1px solid rgba(16,185,129,0.2); cursor: pointer; transition: 0.2s; display: flex; flex-direction: column; align-items: center; justify-content: center; box-sizing: border-box;">
+                    <div style="font-size: 11.5px; font-weight: 800; color: #10B981; margin-bottom: 4px; word-break: keep-all;">의식·호흡 없을 때</div>
+                    <div style="font-size: 14px; font-weight: 900; color: var(--text-m); word-break: keep-all;">심폐소생술 〉</div>
+                </div>
+            </div>
+        </div>
+
+        <div style="font-size:15px; font-weight:900; color:var(--text-m); margin-top:32px; margin-bottom:12px; padding: 0 4px;">
+            <span>🤖 우리 아기 맞춤형 생존 처방전</span>
+        </div>
             
 <!-- 💡 내부 기능 유도형 프리미엄 인앱 롤링 배너 -->
 <div class="premium-banner-wrap" style="position: relative; margin-bottom: 32px; background: #232932; border-radius: 16px; overflow: hidden; box-shadow: 0 8px 16px rgba(0,0,0,0.1);">
@@ -1465,10 +1476,10 @@
                             </div>
                         </details>
 
-                        <!-- 🌟 새로 추가된 개봉일 가이드 아코디언 -->
-                        <details class="lib-item" style="border-bottom: none;">
-                            <summary style="display:flex; justify-content:space-between; align-items:center; padding:18px 0; cursor:pointer;">
-                                <div style="font-size:14.5px; font-weight:800; color:var(--text-m);">🗓️ 약, 연고, 화장품 개봉 후 언제까지 쓸까?</div>
+                               <!-- 🌟 새로 추가된 개봉일 가이드 아코디언 -->
+                        <details class="lib-item" style="border-bottom: 1px solid var(--border);">
+    <summary style="display:flex; justify-content:space-between; align-items:center; padding:18px 0; cursor:pointer;">
+        <div style="font-size:14.5px; font-weight:800; color:var(--text-m);">🗓️ 약, 연고, 화장품 개봉 후 언제까지 쓸까?</div>
                                 <div class="lib-plus" style="font-size:22px; font-weight:300; color:var(--primary); line-height:0.5; transition:0.2s;">+</div>
                             </summary>
                             <div style="padding:0 0 20px 0; font-size:13.5px; line-height:1.6; color:var(--text-s);">
@@ -1491,14 +1502,66 @@
                                 </div>
                             </div>
                         </details>
+                      
+                            <!-- ✨ [추가 1] 에버그린 상식: 낙상 -->
+                    <details class="lib-item" style="border-bottom: 1px solid var(--border);">
+                        <summary style="display:flex; justify-content:space-between; align-items:center; padding:18px 0; cursor:pointer;">
+                            <div style="font-size:14.5px; font-weight:800; color:var(--text-m);">💥 쿵! 아기가 침대/소파에서 떨어졌어요</div>
+                            <div class="lib-plus" style="font-size:22px; font-weight:300; color:var(--primary); line-height:0.5; transition:0.2s;">+</div>
+                        </summary>
+                        <div style="padding:0 0 20px 0; font-size:13.5px; line-height:1.6; color:var(--text-s);">
+                            <div class="box-tint-red" style="padding: 14px; border-radius: 12px; margin-bottom: 12px;">
+                                <strong style="color: var(--danger); font-size:14px; margin-bottom:4px; display:block;">🚨 당장 응급실(119)에 가야 하는 뇌진탕 증세</strong>
+                                • 떨어지고 나서 울지 않고 축 늘어지거나 의식을 잃을 때<br>
+                                • 분수토를 2~3회 이상 반복할 때<br>
+                                • 눈동자 초점이 안 맞고 경련을 일으킬 때<br>
+                                • 귀나 코에서 맑은 액체(뇌척수액)나 피가 흐를 때
+                            </div>
+                            <strong style="color: var(--text-m); font-size:14px; margin-bottom:6px; display:block;">✅ 올바른 대처법 (72시간 관찰 필수!)</strong>
+                            떨어지자마자 확 안아 올리지 마세요! 척추나 목이 다쳤을 수 있으니 팔다리를 움직이는지 10초 정도 살핀 후 천천히 안아주세요. 울음을 그치고 평소처럼 잘 먹고 잘 놀면 일단 안심이지만, <strong>최대 72시간(3일)</strong> 동안은 멍, 구토, 처짐 증상이 없는지 아기의 상태를 주의 깊게 살펴야 합니다.
+                        </div>
+                    </details>
 
-                        <!-- 🚨 라이브러리 내부를 모두 아우르는 강력한 종합 면책 조항 -->
-                        <!-- 🚨 면책조항 수정 완료 (다크모드 완벽 대응) -->
-<div style="margin: 8px 0 24px 0; padding: 16px; background: var(--bg-sub); border-radius: 12px; border: 1px solid var(--border);">
+                    <!-- ✨ [추가 2] 에버그린 상식: 화상 -->
+                    <details class="lib-item" style="border-bottom: 1px solid var(--border);">
+                        <summary style="display:flex; justify-content:space-between; align-items:center; padding:18px 0; cursor:pointer;">
+                            <div style="font-size:14.5px; font-weight:800; color:var(--text-m);">🔥 앗 뜨거! 화상 응급처치 골든타임</div>
+                            <div class="lib-plus" style="font-size:22px; font-weight:300; color:var(--primary); line-height:0.5; transition:0.2s;">+</div>
+                        </summary>
+                        <div style="padding:0 0 20px 0; font-size:13.5px; line-height:1.6; color:var(--text-s);">
+                            <div class="box-tint-blue" style="padding: 14px; border-radius: 12px; margin-bottom: 12px;">
+                                <strong style="color: var(--primary); font-size:14px; margin-bottom:4px; display:block;">💧 흐르는 미온수에 15~20분! (얼음 절대 금지)</strong>
+                                옷 위로 뜨거운 물을 쏟았다면 억지로 옷을 벗기지 마세요! 살점이 같이 떨어질 수 있습니다. <strong>옷을 입힌 채로 흐르는 시원한 물(미지근한 물)</strong>에 20분간 열을 식힌 후, 옷을 가위로 잘라내세요.
+                            </div>
+                            <strong style="color: var(--danger); font-size:14px; margin-bottom:6px; display:block;">🚫 절대 하면 안 되는 행동</strong>
+                            얼음을 직접 대면 혈관이 수축해 오히려 열이 빠져나가는 걸 방해하고 동상을 유발합니다. 또한 소주, 된장, 알로에, 화상 연고 등을 임의로 바르지 말고 <strong>깨끗한 수건이나 거즈</strong>로 살짝 덮어 화상 전문 병원으로 가세요. (물집은 세균 감염 보호막이니 절대 터뜨리지 마세요!)
+                        </div>
+                    </details>
+
+                    <!-- ✨ [추가 3] 에버그린 상식: 알레르기 -->
+                    <details class="lib-item" style="border-bottom: none;">
+                        <summary style="display:flex; justify-content:space-between; align-items:center; padding:18px 0; cursor:pointer;">
+                            <div style="font-size:14.5px; font-weight:800; color:var(--text-m);">🍓 이유식 먹고 두드러기가? (알레르기 대처)</div>
+                            <div class="lib-plus" style="font-size:22px; font-weight:300; color:var(--primary); line-height:0.5; transition:0.2s;">+</div>
+                        </summary>
+                        <div style="padding:0 0 20px 0; font-size:13.5px; line-height:1.6; color:var(--text-s);">
+                            <div class="box-tint-green" style="padding: 14px; border-radius: 12px; margin-bottom: 12px;">
+                                <strong style="color: var(--success); font-size:14px; margin-bottom:4px; display:block;">단순 발진 (지켜보기)</strong>
+                                입 주변에만 붉게 오돌토돌 올라오거나, 침이 묻어 생기는 접촉성 피부염(침독)인 경우가 많습니다. 물로 깨끗이 씻어주고 보습하며 가라앉는지 지켜보세요. (사진을 찍어두면 병원 진료 시 도움이 됩니다.)
+                            </div>
+                            <div class="box-tint-red" style="padding: 14px; border-radius: 12px; margin-bottom: 16px;">
+                                <strong style="color: var(--danger); font-size:14px; margin-bottom:4px; display:block;">🚨 아나필락시스 (초응급 상태, 즉시 119)</strong>
+                                특정 음식을 먹은 직후 <strong>①전신에 두드러기가 번지고 ②기침을 하며 쌕쌕거리거나 ③입술/혀가 심하게 붓고 ④구토와 함께 축 처진다면</strong> 급성 알레르기 쇼크(아나필락시스)입니다. 지체 없이 119를 부르고 응급실로 가야 합니다.
+                            </div>
+                        </div>
+                    </details>
+
+                    <!-- 🚨 라이브러리 내부를 모두 아우르는 강력한 종합 면책 조항 -->
+<div style="margin: 16px 0 24px 0; padding: 16px; background: var(--bg-sub); border-radius: 12px; border: 1px solid var(--border);">
     <div style="font-size: 11px; font-weight: 900; color: #8B95A1; margin-bottom: 4px;">⚠️ 육아메이트 의료 및 안전 면책 안내</div>
     <div style="font-size: 12.5px; font-weight: 600; color: var(--text-s); line-height: 1.5; word-break: keep-all;">
-        본 앱에서 제공하는 모든 <strong>의학적 지침(응급처치, 해열제 등) 및 약품 등 권장 기한</strong> 정보는 소아과학회와 식약처의 일반적인 가이드라인을 요약한 것입니다. <br><br>
-        보관 환경이나 아기의 체질에 따라 결과가 다를 수 있으므로, 본 앱은 <strong>단순 참고용 보조 도구</strong>로만 사용해 주세요. 아기에게 이상 증세가 있거나 변질이 의심되는 경우 즉시 사용을 중단하고 <strong>반드시 전문의(소아과)의 진단</strong>을 받으시길 바랍니다. 육아메이트는 사용자의 판단으로 인한 결과에 법적 책임을 지지 않습니다.
+        본 앱에서 제공하는 모든 <strong>의학적 지침(응급처치, 해열제 등) 및 약품 등의 권장 기한</strong> 정보는 소아과학회, 식약처 등 전문 기관의 일반적인 가이드라인을 요약한 것입니다.<br><br>
+        보관 환경이나 아기의 체질에 따라 결과가 다를 수 있으므로, 본 앱은 <strong>단순 참고용 보조 도구</strong>로만 사용해 주세요. 아기에게 위급한 이상 증세가 있거나 변질이 의심되는 경우 즉시 <strong>119 구급대에 신고하거나 전문의(소아과)의 진단</strong>을 받으시길 바랍니다. 육아메이트는 사용자의 판단으로 인한 결과에 법적 책임을 지지 않습니다.
     </div>
 </div>
 
