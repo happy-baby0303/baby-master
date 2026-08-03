@@ -1141,13 +1141,13 @@ function calcHotDeal() {
 
     if (cat === 'diaper') {
         coupangLink = 'https://link.coupang.com/a/fPSpeiTAD6'; 
-        btnText = '📦 로켓배송 기저귀 최저가 비교하기';
+        btnText = '로켓배송 기저귀 최저가 비교하기';
     } else if (cat === 'wipe') {
         coupangLink = 'https://link.coupang.com/a/fPSk40HKOi';
-        btnText = '🫧 로켓배송 물티슈 최저가 비교하기';
+        btnText = '로켓배송 물티슈 최저가 비교하기';
     } else if (cat === 'milk') {
         coupangLink = 'https://link.coupang.com/a/fPSqFEMPcq';
-        btnText = '🍼 로켓배송 우리아기 분유 최저가 보기';
+        btnText = '로켓배송 우리아기 분유 최저가 보기';
     }
 
     document.getElementById('hd-action-area').innerHTML = `
@@ -1155,7 +1155,7 @@ function calcHotDeal() {
             ${btnText}
         </button>
         <button class="btn-main" style="margin-top:0; background:#191F28 !important; color:#FFF !important; border:none !important; box-shadow:none !important; padding:16px; font-size:14.5px; font-weight:800; border-radius:14px; width:100%; cursor:pointer;" onclick="sendHotdealToLedger(${price}, '${cat}')">
-            💰 ${price.toLocaleString()}원 가계부 지출로 연동하기
+            ${price.toLocaleString()}원 가계부로 연동하기
         </button>
     `;
     
