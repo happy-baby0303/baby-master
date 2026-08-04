@@ -1931,50 +1931,82 @@
         console.error("❌ 익명 로그인 실패: ", err);
     });
 
-    window.createSyncCode = async () => {
-        alert("⏳ 서버와 통신 중입니다. 잠시만 기다려주세요!");
-        try {
-            const newCode = "TS-" + Math.random().toString(36).substr(2, 4).toUpperCase();
-            await setDoc(doc(window.db, "families", newCode), {
-                createdAt: new Date().toISOString(),
-                babyName: localStorage.getItem("tosil_babyName") || "우리아기",
-                babyBirth: localStorage.getItem("tosil_startDate") || "2026-03-03",
-                babyPhoto: localStorage.getItem("tosil_baby_photo") || "" 
-            });
-            const codeArea = document.getElementById('my-sync-code-area');
-            if (codeArea) {
-                codeArea.style.display = 'block';
-                codeArea.querySelector('div').innerText = newCode;
-            }
-            localStorage.setItem("family_sync_code", newCode);
-            alert(`🎉 가족 코드가 생성되었습니다! [${newCode}]\n\n이 코드를 배우자의 폰에 입력해주세요.`);
-        } catch (error) {
-            alert("🚨 카톡이나 네이버 브라우저에서 서버를 차단했습니다!");
-        }
-    };
+   // ==========================================
+// 🔗 [아내 데이터 100% 이관] 가족 코드 생성 및 전체 백업 엔진
+// ==========================================
+window.createSyncCode = async () => {
+    alert("⏳ 서버와 통신하며 기존 기록들을 안전하게 백업 중입니다. 잠시만 기다려주세요!");
+    try {
+        const newCode = "TS-" + Math.random().toString(36).substr(2, 4).toUpperCase();
+        
+        // 1. 아기 기본 정보 세팅
+        await setDoc(doc(window.db, "families", newCode), {
+            createdAt: new Date().toISOString(),
+            babyName: localStorage.getItem("tosil_babyName") || "우리아기",
+            babyBirth: localStorage.getItem("tosil_startDate") || "2026-03-03",
+            babyPhoto: localStorage.getItem("tosil_baby_photo") || "" 
+        });
+        
+        // 🚨 2. [핵심 패치] 아내가 이미 폰에 적어둔 모든 데이터를 파이어베이스에 통째로 엎어버립니다!
+        const trackers = JSON.parse(localStorage.getItem('tosil_tracker_records')) || [];
+        if(trackers.length > 0) await setDoc(doc(window.db, "tracker_" + newCode, "status"), { records: trackers });
+        
+        const ledgers = JSON.parse(localStorage.getItem('tosil_ledger_data'));
+        if(ledgers) await setDoc(doc(window.db, "ledger_" + newCode, "status"), ledgers);
+        
+        const fevers = JSON.parse(localStorage.getItem('tosil_fever_records')) || [];
+        if(fevers.length > 0) await setDoc(doc(window.db, "fever_" + newCode, "status"), { records: fevers });
+        
+        const growths = JSON.parse(localStorage.getItem('tosil_growth_records')) || [];
+        if(growths.length > 0) await setDoc(doc(window.db, "growth_" + newCode, "status"), { records: growths });
 
-    window.connectSyncCode = async () => {
-        const inputCode = document.getElementById('partner-sync-code').value.trim().toUpperCase();
-        if (inputCode.length < 5 || !inputCode.startsWith("TS-")) return alert("🚨 올바른 가족 코드를 입력해주세요.");
-        alert("⏳ 코드를 확인 중입니다...");
-        try {
-            const docSnap = await getDoc(doc(window.db, "families", inputCode));
-            if (docSnap.exists()) {
-                const data = docSnap.data();
-                localStorage.setItem("tosil_babyName", data.babyName);
-                localStorage.setItem("tosil_startDate", data.babyBirth);
-                localStorage.setItem("tosil_baby", JSON.stringify({ name: data.babyName, birth: data.babyBirth }));
-                localStorage.setItem("family_sync_code", inputCode);
-                if (data.babyPhoto) localStorage.setItem("tosil_baby_photo", data.babyPhoto);
-                alert(`🎉 [${data.babyName}]네 가족 연동 완료!\n홈 화면의 데이터가 완벽히 동기화되었습니다.`);
-                location.reload();
-            } else {
-                alert("❌ 서버에 등록되지 않은 코드입니다. 다시 확인해주세요.");
-            }
-        } catch (error) {
-            alert("🚨 서버와 통신 중 문제가 발생했습니다.");
+        const cubes = JSON.parse(localStorage.getItem('tosil_cube_records')) || [];
+        if(cubes.length > 0) await setDoc(doc(window.db, "cube_" + newCode, "status"), { records: cubes });
+
+        const batons = JSON.parse(localStorage.getItem('tosil_baton_records')) || [];
+        if(batons.length > 0) await setDoc(doc(window.db, "baton_" + newCode, "status"), { records: batons });
+        
+        const routines = JSON.parse(localStorage.getItem('tosil_routine_data'));
+        if(routines) await setDoc(doc(window.db, "routine_" + newCode, "status"), { data: routines, date: new Date().toLocaleDateString() });
+
+        // 3. UI 업데이트
+        const codeArea = document.getElementById('my-sync-code-area');
+        if (codeArea) {
+            codeArea.style.display = 'block';
+            codeArea.querySelector('div').innerText = newCode;
         }
-    };
+        localStorage.setItem("family_sync_code", newCode);
+        alert(`🎉 가족 코드가 생성되었습니다! [${newCode}]\n\n기존에 작성하신 모든 데이터가 남편 분에게 넘어갈 준비를 마쳤습니다!`);
+    } catch (error) {
+        alert("🚨 카톡이나 네이버 브라우저에서 서버를 차단했습니다!");
+    }
+};
+
+window.connectSyncCode = async () => {
+    const inputCode = document.getElementById('partner-sync-code').value.trim().toUpperCase();
+    if (inputCode.length < 5 || !inputCode.startsWith("TS-")) return alert("🚨 올바른 가족 코드를 입력해주세요.");
+    alert("⏳ 코드를 확인 중입니다...");
+    try {
+        const docSnap = await getDoc(doc(window.db, "families", inputCode));
+        if (docSnap.exists()) {
+            const data = docSnap.data();
+            localStorage.setItem("tosil_babyName", data.babyName);
+            localStorage.setItem("tosil_startDate", data.babyBirth);
+            localStorage.setItem("tosil_baby", JSON.stringify({ name: data.babyName, birth: data.babyBirth }));
+            localStorage.setItem("family_sync_code", inputCode);
+            if (data.babyPhoto) localStorage.setItem("tosil_baby_photo", data.babyPhoto);
+            
+            alert(`🎉 [${data.babyName}]네 가족 연동 완료!\n홈 화면의 데이터가 완벽히 동기화되었습니다.`);
+            
+            // 🚨 여기서 새로고침 되면서, 앱이 켜질 때 서버에 올려둔 아내의 데이터를 남편 폰으로 싹 다 다운받습니다!
+            location.reload(); 
+        } else {
+            alert("❌ 서버에 등록되지 않은 코드입니다. 다시 확인해주세요.");
+        }
+    } catch (error) {
+        alert("🚨 서버와 통신 중 문제가 발생했습니다.");
+    }
+};
 </script>
 
 <!-- 💩 기저귀 바텀시트 모달 -->

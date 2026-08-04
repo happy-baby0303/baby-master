@@ -1523,7 +1523,7 @@ function downloadFeverReport() {
 window.downloadFeverReport = downloadFeverReport;
 
 // ==========================================
-// 🌡️ [해열제] 파이어베이스 실시간 수신 리스너
+// 🌡️ [해열제] 파이어베이스 실시간 수신 리스너 - 오프라인 방어막 추가!
 // ==========================================
 let feverUnsubscribe = null;
 function startFeverRealtimeSync() {
@@ -1539,12 +1539,18 @@ function startFeverRealtimeSync() {
     // 서버 변화 실시간 감시
     feverUnsubscribe = window.onSnapshot(docRef, (docSnap) => {
         if (docSnap.exists()) {
-            const data = docSnap.data();
-            localStorage.setItem('tosil_fever_records', JSON.stringify(data.records || []));
+            const serverData = docSnap.data().records || [];
+            const localData = JSON.parse(localStorage.getItem('tosil_fever_records')) || [];
+            
+            if (serverData.length > 0 || (serverData.length === 0 && localData.length === 0)) {
+                localStorage.setItem('tosil_fever_records', JSON.stringify(serverData));
+            }
         }
         // 서버에서 데이터가 오면 즉시 화면 갱신
         if (typeof renderFeverTimeline === 'function') renderFeverTimeline();
         if (typeof updateHomeDashboard === 'function') updateHomeDashboard();
+    }, (error) => {
+        console.warn("해열제 실시간 연동 에러 (오프라인 모드)", error);
     });
 }
 window.startFeverRealtimeSync = startFeverRealtimeSync;
@@ -1835,7 +1841,7 @@ if (h && w) {
     }
 }
 
-// ✨ 성장 기록 저장 및 파이어베이스 연동 (폭풍성장 이스터에그 패치!)
+// ✨ 성장 기록 저장 및 파이어베이스 연동 (폭풍성장 이스터에그 + 오프라인 방어막 패치!)
 async function saveGrowthRecord() {
     console.log("1. 저장 버튼 클릭됨! 데이터 확인:", window.tempGrowthData);
 
@@ -1891,19 +1897,36 @@ async function saveGrowthRecord() {
 
     records.sort((a, b) => new Date(a.date) - new Date(b.date)); // 날짜순 정렬
     
-    // 🚨 방어 2: 파이어베이스 에러 때문에 로컬 저장까지 멈추는 현상 방지
-    if (typeof db !== 'undefined' && typeof setDoc === 'function' && typeof doc === 'function') {
-        const syncCode = localStorage.getItem("family_sync_code") || "unlinked_local_diary";
-        try { 
-            await setDoc(doc(db, "growth_" + syncCode, "status"), { records: records }); 
-        } catch (e) { 
-            console.warn("파이어베이스 연동 실패 (하지만 기기에는 저장됩니다):", e); 
-        }
-    }
-    
-    // 핵심! 로컬 스토리지에 무조건 저장
+    // 핵심! 로컬 스토리지에 무조건 "먼저" 저장 (체감 속도 0.1초 유지)
     localStorage.setItem('tosil_growth_records', JSON.stringify(records));
     console.log("2. 로컬 스토리지 저장 완료:", records);
+
+    // 🚨 방어 2: [오프라인 큐] 인터넷이 끊겼으면 깃발만 꽂아두고 서버 전송 생략!
+    if (!navigator.onLine) {
+        localStorage.setItem('tosil_offline_queue_growth', 'true');
+        console.warn("오프라인 상태입니다. 기기에만 임시 저장 후 통신 재개 시 동기화합니다.");
+    } else {
+        // 온라인일 때만 파이어베이스로 슛!
+        if (typeof db !== 'undefined' && typeof setDoc === 'function' && typeof doc === 'function') {
+            let syncCode = localStorage.getItem("family_sync_code");
+            
+            // 1인 가구(미연동) 유저를 위한 개인 백업 분기 처리
+            if (!syncCode) {
+                const kakaoId = localStorage.getItem("kakao_id");
+                if (kakaoId) syncCode = "personal_backup_" + kakaoId; 
+            }
+
+            if (syncCode) {
+                try { 
+                    await setDoc(doc(db, "growth_" + syncCode, "status"), { records: records }); 
+                    localStorage.removeItem('tosil_offline_queue_growth'); // 성공하면 큐 비우기
+                } catch (e) { 
+                    console.warn("파이어베이스 연동 실패 (하지만 기기에는 저장됩니다):", e); 
+                    localStorage.setItem('tosil_offline_queue_growth', 'true'); // 실패 시 큐에 다시 등록
+                }
+            }
+        }
+    }
     
     // 🌟 [니치 패치 2] 조건에 따라 토스트 팝업 & 폭죽 분기 처리
     if (typeof showToast === 'function') {
@@ -1935,6 +1958,7 @@ async function saveGrowthRecord() {
         console.warn("renderGrowthHistory 함수가 없습니다. 차트를 갱신하려면 이 함수가 필요합니다.");
     }
 }
+
 window.saveGrowthRecord = saveGrowthRecord;
 
 // ✨ 성장 기록 삭제 (모달 적용)
@@ -2607,7 +2631,7 @@ function toggleFoodStatus(itemName) {
 }
 
 // ==========================================
-// 💌 [바통터치] 실시간 감시 엔진 
+// 💌 [바통터치] 실시간 감시 엔진 - 오프라인 방어막 추가!
 // ==========================================
 let batonUnsubscribe = null;
 function startBatonRealtimeSync() {
@@ -2621,10 +2645,16 @@ function startBatonRealtimeSync() {
 
     batonUnsubscribe = window.onSnapshot(docRef, (docSnap) => {
         if (docSnap.exists()) {
-            const data = docSnap.data();
-            localStorage.setItem('tosil_baton_records', JSON.stringify(data.records || []));
-            renderBatonTasks(); 
+            const serverData = docSnap.data().records || [];
+            const localData = JSON.parse(localStorage.getItem('tosil_baton_records')) || [];
+            
+            if (serverData.length > 0 || (serverData.length === 0 && localData.length === 0)) {
+                localStorage.setItem('tosil_baton_records', JSON.stringify(serverData));
+                renderBatonTasks(); 
+            }
         }
+    }, (error) => {
+        console.warn("바통터치 실시간 연동 에러 (오프라인 모드)", error);
     });
 }
 window.startBatonRealtimeSync = startBatonRealtimeSync;
@@ -2753,7 +2783,7 @@ function updateSyncBadge() {
 window.updateSyncBadge = updateSyncBadge;
 
 // ==========================================
-// 💰 [가계부 리스너] 파이어베이스 연동 연결고리
+// 💰 [가계부 리스너] 파이어베이스 연동 연결고리 - 오프라인 방어막 추가!
 // ==========================================
 let ledgerUnsubscribe = null;
 function startLedgerRealtimeSync() {
@@ -2766,11 +2796,18 @@ function startLedgerRealtimeSync() {
 
     ledgerUnsubscribe = window.onSnapshot(docRef, (docSnap) => {
         if (docSnap.exists()) {
-            const data = docSnap.data();
-            localStorage.setItem('tosil_ledger_data', JSON.stringify(data));
+            const serverData = docSnap.data();
+            const localData = JSON.parse(localStorage.getItem('tosil_ledger_data')) || {};
+            
+            // 🚨 [방어막] 서버에 내역이 없는데 로컬엔 내역이 있다면 덮어쓰지 않음!
+            if ((serverData.history && serverData.history.length > 0) || !localData.history || localData.history.length === 0) {
+                 localStorage.setItem('tosil_ledger_data', JSON.stringify(serverData));
+            }
         }
         if (typeof updateLedgerUI === 'function') updateLedgerUI();
         if (typeof updateHomeDashboard === 'function') updateHomeDashboard();
+    }, (error) => {
+        console.warn("가계부 실시간 연동 에러 (오프라인 모드)", error);
     });
 }
 window.startLedgerRealtimeSync = startLedgerRealtimeSync;
@@ -3201,13 +3238,12 @@ window.selectTrackerBtn = function(btn, category) {
     else if (category === 'sleep_night') window.trackerState.subType = '밤잠';
 };
 
-// 🌟 바텀 시트 열기 (드럼 피커 & 날짜 계산 연동)
+// 🌟 바텀 시트 열기 (네이티브 달력 연동형으로 완벽 교체!)
 window.openTrackerSheet = function(type, editId = null, preSelect = null) {
     window.editingTrackerId = (typeof editId === 'string') ? editId : null;
     window.trackerState.type = type; 
     window.trackerState.subType = ''; 
     window.trackerState.status = '';
-    window.trackerState.dateOffset = 0; // 기본값 오늘
     
     const overlay = document.getElementById('tracker-sheet-overlay');
     const content = document.getElementById('tracker-sheet-content');
@@ -3226,65 +3262,37 @@ window.openTrackerSheet = function(type, editId = null, preSelect = null) {
     const now = new Date();
     const currentTimeStr = `${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`;
     let targetTime = currentTimeStr;
+    let displayDateStr = now.toISOString().split('T')[0]; // 기본 날짜는 오늘!
 
-    // 💡 수정 모드일 때 기존 데이터 불러와서 날짜 오프셋(어제인지 오늘인지) 계산!
+    let pastDateBadgeHtml = '';
+
+    // 💡 수정 모드일 때 기존 데이터 불러와서 날짜 달력에 세팅!
     if (window.editingTrackerId) {
         let records = JSON.parse(localStorage.getItem('tosil_tracker_records')) || [];
         let recordToEdit = records.find(r => r.id === window.editingTrackerId);
         if (recordToEdit) {
             targetTime = recordToEdit.time;
             const recDate = new Date(recordToEdit.timestamp);
-            const today = new Date();
-            today.setHours(0,0,0,0);
-            recDate.setHours(0,0,0,0);
+            displayDateStr = recDate.toISOString().split('T')[0];
             
-            // 기록일이 며칠 전인지 계산해서 어제(-1)/오늘(0) 셋팅
-            const daysAgo = Math.round((today - recDate) / (1000 * 60 * 60 * 24));
-            window.trackerState.dateOffset = -daysAgo; 
-        }
-    }
-
-    // 🌟 통계(과거 기록) 수정할 때도 버튼 무조건 보이게 수정!
-    // 단, 3일 전 등 완전 과거 기록 수정 시에는 어제/오늘 둘 다 불 꺼진 상태로 둠
-    const isPastRecord = window.trackerState.dateOffset < -1;
-    const dateToggleDisplay = isPastRecord ? 'none' : 'flex';
-    
-    // 💡 먼 과거 기록을 수정할 땐 "00월 00일 기록 수정 중" 이라는 예쁜 뱃지를 띄워줍니다!
-    let pastDateBadgeHtml = '';
-    if (isPastRecord && window.editingTrackerId) {
-        let records = JSON.parse(localStorage.getItem('tosil_tracker_records')) || [];
-        let recordToEdit = records.find(r => r.id === window.editingTrackerId);
-        if (recordToEdit) {
-            const d = new Date(recordToEdit.timestamp);
             pastDateBadgeHtml = `
                 <div style="display:flex; justify-content:center; margin-bottom:16px;">
                     <div style="background:#F2F5F8; color:#4E5968; font-size:12px; font-weight:800; padding:6px 16px; border-radius:20px; border:1px solid #E5E8EB;">
-                        🗓️ ${d.getMonth() + 1}월 ${d.getDate()}일 기록 수정 중
+                        🗓️ ${recDate.getMonth() + 1}월 ${recDate.getDate()}일 기록 수정 중
                     </div>
                 </div>
             `;
         }
     }
-    
-    const todayBg = window.trackerState.dateOffset === 0 ? '#FFF' : 'transparent';
-    const todayColor = window.trackerState.dateOffset === 0 ? '#191F28' : '#8B95A1';
-    const todayWeight = window.trackerState.dateOffset === 0 ? '900' : '800';
-    const todayShadow = window.trackerState.dateOffset === 0 ? '0 2px 4px rgba(0,0,0,0.05)' : 'none';
-    
-    const yestBg = window.trackerState.dateOffset === -1 ? '#FFF' : 'transparent';
-    const yestColor = window.trackerState.dateOffset === -1 ? '#191F28' : '#8B95A1';
-    const yestWeight = window.trackerState.dateOffset === -1 ? '900' : '800';
-    const yestShadow = window.trackerState.dateOffset === -1 ? '0 2px 4px rgba(0,0,0,0.05)' : 'none';
 
     let timeLabel = type === 'sleep' ? "언제 잠들었나요?" : "기록 시간 (스와이프하여 시간 수정)";
     
+    // 🌟 어제/오늘 토글 완전 삭제! 직관적인 달력(Date) 선택기로 교체!
     const timeInputHtml = `
         <div style="text-align: center; margin-bottom: 24px;">
-            <div style="display:${dateToggleDisplay}; justify-content:center; margin-bottom:16px;">
-                <div style="background:var(--bg-sub); border-radius:12px; padding:4px; display:inline-flex; border:1px solid var(--border);">
-                    <button id="btn-date-today" onclick="window.setTrackerDateOffset(0)" style="padding:6px 20px; border-radius:10px; border:none; font-weight:${todayWeight}; font-size:13.5px; cursor:pointer; background:${todayBg}; color:${todayColor}; box-shadow:${todayShadow}; transition:0.2s;">오늘</button>
-                    <button id="btn-date-yest" onclick="window.setTrackerDateOffset(-1)" style="padding:6px 20px; border-radius:10px; border:none; font-weight:${yestWeight}; font-size:13.5px; cursor:pointer; background:${yestBg}; color:${yestColor}; box-shadow:${yestShadow}; transition:0.2s;">어제</button>
-                </div>
+            <div style="display:flex; justify-content:center; align-items:center; gap:12px; margin-bottom:16px;">
+                <div style="font-size:13px; font-weight:800; color:var(--text-s);">날짜 선택</div>
+                <input type="date" id="v-tracker-custom-date" value="${displayDateStr}" style="padding:8px 14px; border-radius:12px; border:1px solid var(--border); background:var(--bg-card); color:var(--text-m); font-family:inherit; font-size:14px; font-weight:900; outline:none; cursor:pointer; box-shadow:inset 0 2px 4px rgba(0,0,0,0.02);">
             </div>
             
             ${pastDateBadgeHtml}
@@ -3294,6 +3302,8 @@ window.openTrackerSheet = function(type, editId = null, preSelect = null) {
             <style>
                 .drum-picker::-webkit-scrollbar { display: none; }
                 .drum-picker { -ms-overflow-style: none; scrollbar-width: none; }
+                input[type="date"]::-webkit-calendar-picker-indicator { cursor: pointer; opacity: 0.6; transition: 0.2s; background-size: contain; padding:4px;}
+                input[type="date"]::-webkit-calendar-picker-indicator:hover { opacity: 1; }
             </style>
 
             <div style="display:flex; justify-content:center; align-items:center; height: 150px; position:relative; overflow:hidden; background:var(--bg-sub); border-radius:20px; box-shadow:inset 0 2px 6px rgba(0,0,0,0.02);">
@@ -3307,11 +3317,9 @@ window.openTrackerSheet = function(type, editId = null, preSelect = null) {
         </div>
     `;
 
-    // ⬇️ 여기서부터는 원래 있던 if (type === 'feed') ... 코드가 이어지면 됩니다!
     if (type === 'feed') {
         title.innerHTML = '🍼 맘마 기록하기';
         
-        // 🌟 [복구 완료] 최근 수유량 분석 로직
         let records = JSON.parse(localStorage.getItem('tosil_tracker_records')) || [];
         let feedRecords = records.filter(r => r.type === 'feed' && r.subType !== '모유' && r.subType !== '이유식' && r.amount > 0);
         let uniqueAmounts = [];
@@ -3321,7 +3329,6 @@ window.openTrackerSheet = function(type, editId = null, preSelect = null) {
         }
         let recentFeedAmount = uniqueAmounts.length > 0 ? uniqueAmounts[0] : 160;
         
-// 🌟 [수정 완료] 분유 퀵버튼 생성 (다크모드 대응 class="quick-btn" 추가)
         let quickButtonsHtml = '';
         if (uniqueAmounts.length === 0) {
             quickButtonsHtml = `
@@ -3350,7 +3357,6 @@ window.openTrackerSheet = function(type, editId = null, preSelect = null) {
                         <input type="number" id="v-feed-amount" placeholder="${recentFeedAmount}" style="font-size: 44px; font-weight: 900; color: var(--text-m); border: none; outline: none; background: transparent; text-align: center; width: 140px; padding: 0; margin: 0; border-bottom: 3px solid var(--border); border-radius: 0; transition: 0.3s;">
                         <span style="font-size: 18px; font-weight: 800; color: var(--text-s);">ml</span>
                     </div>
-                    <!-- 🌟 [복구 완료] 분유 +10/-10 및 퀵버튼 영역 -->
                     <div style="display: flex; justify-content: center; gap: 8px; overflow-x: auto; padding-bottom: 4px; scrollbar-width: none;">
                         ${quickButtonsHtml}
                         <div style="width: 1px; background: var(--border); margin: 0 4px;"></div>
@@ -3380,7 +3386,6 @@ window.openTrackerSheet = function(type, editId = null, preSelect = null) {
                     <input type="number" id="v-food-amount" placeholder="60" style="font-size: 44px; font-weight: 900; color: var(--text-m); border: none; outline: none; background: transparent; text-align: center; width: 140px; padding: 0; margin: 0; border-bottom: 3px solid var(--border); border-radius: 0; transition: 0.3s;">
                     <span style="font-size: 18px; font-weight: 800; color: var(--text-s);">ml</span>
                 </div>
-                <!-- 이유식 미세조절 버튼 -->
                 <div style="display: flex; justify-content: center; gap: 8px;">
                     <button type="button" onclick="window.adjustFoodAmount(10)" style="padding: 10px 16px; background: rgba(16, 185, 129, 0.1); color: #10B981; border: 1px solid rgba(16, 185, 129, 0.2); border-radius: 12px; font-weight: 800; font-size: 14px; cursor: pointer;">+10</button>
                     <button type="button" onclick="window.adjustFoodAmount(-10)" style="padding: 10px 16px; background: rgba(240, 68, 82, 0.1); color: #F04452; border: 1px solid rgba(240, 68, 82, 0.2); border-radius: 12px; font-weight: 800; font-size: 14px; cursor: pointer;">-10</button>
@@ -3392,7 +3397,6 @@ window.openTrackerSheet = function(type, editId = null, preSelect = null) {
             <div class="mamma-toggle-container">
                 <input type="radio" id="tab-milk" name="mamma-type" value="milk" checked onchange="window.toggleMammaTab('milk')">
                 <label for="tab-milk">🍼 분유/모유</label>
-                
                 <input type="radio" id="tab-food" name="mamma-type" value="food" onchange="window.toggleMammaTab('food')">
                 <label for="tab-food">🥄 이유식</label>
                 <div class="toggle-slider"></div>
@@ -3402,26 +3406,13 @@ window.openTrackerSheet = function(type, editId = null, preSelect = null) {
         `;
         if(saveBtn) saveBtn.style.display = 'block';
     } 
-    // ... (이하 수면, 기저귀 렌더링 로직은 기존 코드 그대로 유지됩니다!) ...
     else if (type === 'sleep') {
         title.innerHTML = window.editingTrackerId ? '💤 수면 기록 수정' : '💤 수면 기록하기';
-        body.innerHTML = `
-            <!-- 🌟 수면 트래커 전용: 어제/오늘 토글 스위치 추가! -->
-            <div style="text-align: center; margin-bottom: 20px;">
-                <div style="display:${dateToggleDisplay}; justify-content:center; margin-bottom:16px;">
-                    <div style="background:var(--bg-sub); border-radius:12px; padding:4px; display:inline-flex; border:1px solid var(--border);">
-                        <button id="btn-date-today" onclick="window.setTrackerDateOffset(0)" style="padding:6px 20px; border-radius:10px; border:none; font-weight:${todayWeight}; font-size:13.5px; cursor:pointer; background:${todayBg}; color:${todayColor}; box-shadow:${todayShadow}; transition:0.2s;">오늘 시작</button>
-                        <button id="btn-date-yest" onclick="window.setTrackerDateOffset(-1)" style="padding:6px 20px; border-radius:10px; border:none; font-weight:${yestWeight}; font-size:13.5px; cursor:pointer; background:${yestBg}; color:${yestColor}; box-shadow:${yestShadow}; transition:0.2s;">어제 시작</button>
-                    </div>
-                </div>
-                ${pastDateBadgeHtml}
-
-                <div style="font-size:12px; font-weight:800; color:var(--text-s); margin-bottom:6px;">언제 자고 언제 일어났나요?</div>
-                <div style="display:flex; justify-content:center; align-items:center; gap:8px;">
-                    <input type="time" id="v-tracker-time" value="${currentTimeStr}" onchange="window.calcSleepFromTimes()" style="flex:1; text-align:center; border:1px solid var(--border); background:var(--bg-sub); padding:8px 10px; border-radius:12px; font-size:18px; font-weight:900; color:var(--text-m); outline:none;">
-                    <span style="font-size:18px; font-weight:900; color:var(--text-s);">~</span>
-                    <input type="time" id="v-sleep-end-time" value="${currentTimeStr}" onchange="window.calcSleepFromTimes()" style="flex:1; text-align:center; border:1px solid var(--border); background:var(--bg-sub); padding:8px 10px; border-radius:12px; font-size:18px; font-weight:900; color:var(--text-m); outline:none;">
-                </div>
+        body.innerHTML = timeInputHtml + `
+            <div style="display:flex; justify-content:center; align-items:center; gap:8px; margin-bottom:20px;">
+                <input type="time" id="v-tracker-time-dummy" value="${currentTimeStr}" disabled style="display:none;">
+                <span style="font-size:13px; font-weight:800; color:var(--text-s);">일어난 시간 👉</span>
+                <input type="time" id="v-sleep-end-time" value="${currentTimeStr}" onchange="window.calcSleepFromTimes()" style="flex:1; text-align:center; border:1px solid var(--border); background:var(--bg-sub); padding:8px 10px; border-radius:12px; font-size:16px; font-weight:900; color:var(--text-m); outline:none;">
             </div>
             <div style="display: flex; gap: 10px; margin-bottom: 20px;">
                 <button class="btn-main" onclick="window.selectTrackerBtn(this, 'sleep_day')" style="flex: 1; background: var(--bg-card); color: var(--text-s); border: 1px solid var(--border); box-shadow: none; margin:0; transition:0.2s;">☀️ 낮잠</button>
@@ -3446,30 +3437,11 @@ window.openTrackerSheet = function(type, editId = null, preSelect = null) {
                     <span style="background:var(--bg-sub); color:var(--text-m); font-size:11.5px; font-weight:800; padding:6px 12px; border-radius:20px; border:1px solid var(--border);">💡 자는 중이라면 시간을 똑같이 두고 [저장] 누르세요!</span>
                 </div>
             </div>
-            `;
+        `;
         if(saveBtn) saveBtn.style.display = 'block';
-        setTimeout(() => {
-            const btns = document.querySelectorAll('#tracker-sheet-body .btn-main');
-            btns.forEach(btn => { if(btn.innerText.includes('낮잠') && !window.editingTrackerId) window.selectTrackerBtn(btn, 'sleep_day'); });
-            
-            // =====================================
-            // 🚨 [추가] 시트가 열리면 스와이프 휠 세팅!
-            // =====================================
-            let targetTime = currentTimeStr;
-            if (window.editingTrackerId) {
-                let records = JSON.parse(localStorage.getItem('tosil_tracker_records')) || [];
-                let recordToEdit = records.find(r => r.id === window.editingTrackerId);
-                if (recordToEdit) targetTime = recordToEdit.time;
-            }
-            window.initDrumPicker(targetTime); // 엔진 가동!
-            // =====================================
-
-        }, 50);
     }
-    // 🚨 대변 색깔 로직이 완벽하게 들어간 기저귀 바텀시트
     else if (type === 'diaper') {
         title.innerHTML = '💩 기저귀 기록하기';
-        // 💡 모든 색상 버튼의 기본 스타일을 "회색 배경(#F2F5F8), 회색 글씨(#8B95A1)"로 통일했습니다!
         body.innerHTML = timeInputHtml + `
             <div style="display: flex; gap: 8px; margin-bottom: 20px;">
                 <button class="btn-main" onclick="window.selectTrackerBtn(this, 'diaper_pee')" style="flex: 1; background: var(--bg-card); color: var(--text-s); border: 1px solid var(--border); box-shadow: none; margin:0; transition:0.2s; padding:12px 0;">💧 소변</button>
@@ -3493,7 +3465,6 @@ window.openTrackerSheet = function(type, editId = null, preSelect = null) {
         if(saveBtn) saveBtn.style.display = 'block';
     }
 
-    // 🚨 수정 모드일 때 기존 데이터 불러오기 로직 (이유식 수정 기능 완벽 호환!)
     if (window.editingTrackerId) {
         title.innerHTML = title.innerHTML.replace('기록하기', '수정하기');
         if(saveBtn) saveBtn.innerText = '수정 완료';
@@ -3519,7 +3490,6 @@ window.openTrackerSheet = function(type, editId = null, preSelect = null) {
                     }
                 });
 
-                // 💡 [이유식 패치] 수정 모드일 때, 이유식이면 토글을 '이유식'으로 돌려줌
                 if (recordToEdit.type === 'feed' || recordToEdit.type === 'babyfood') {
                     if (recordToEdit.subType === '이유식') {
                         document.getElementById('tab-food').checked = true;
@@ -3576,20 +3546,14 @@ window.openTrackerSheet = function(type, editId = null, preSelect = null) {
         if(saveBtn) saveBtn.innerText = '저장하기';
     }
 
-    // ==========================================
-    // 🚨 [여기에 추가!] 바텀 시트가 열릴 때 무조건 휠 엔진 가동!
-    // ==========================================
     setTimeout(() => {
-        let targetTime = currentTimeStr; // 기본값은 현재 시간
-        
-        // 수정 모드일 경우 기존에 저장된 시간 불러오기
+        let initialTargetTime = currentTimeStr;
         if (window.editingTrackerId) {
             let records = JSON.parse(localStorage.getItem('tosil_tracker_records')) || [];
             let recordToEdit = records.find(r => r.id === window.editingTrackerId);
-            if (recordToEdit) targetTime = recordToEdit.time;
+            if (recordToEdit) initialTargetTime = recordToEdit.time;
         }
         
-        // 🔥 [신규 패치] 홈 화면 퀵버튼으로 들어왔을 때 해당 버튼(소변/대변/둘 다) 자동 클릭!
         if (type === 'diaper' && preSelect && !window.editingTrackerId) {
             const diaperBtns = document.querySelectorAll('#tracker-sheet-body .btn-main');
             diaperBtns.forEach(btn => {
@@ -3603,13 +3567,11 @@ window.openTrackerSheet = function(type, editId = null, preSelect = null) {
             });
         }
 
-        // 화면에 창이 그려지고 난 뒤(0.08초 뒤) 엔진 스위치 ON!
         if (typeof window.initDrumPicker === 'function') {
-            window.initDrumPicker(targetTime);
+            window.initDrumPicker(initialTargetTime);
         }
     }, 80);
-    // ==========================================
-}; // <--- openTrackerSheet 함수가 끝나는 진짜 마지막 중괄호
+};
 
 // 💡 [이유식 패치] 토글 버튼 누를 때 화면 바뀌게 해주는 엔진
 window.toggleMammaTab = function(type) {
@@ -3884,7 +3846,13 @@ window.updateTrackerDashboard = function() {
                 if(!grouped[dateKey]) grouped[dateKey] = [];
                 grouped[dateKey].push(r);
             });
-            let historyHtml = '<div style="max-height:300px; overflow-y:auto; padding-right:4px;">';
+          // ✨ [UX 패치] 스와이프 안내 문구 추가
+    let historyHtml = `
+        <div style="background:var(--bg-sub); color:var(--text-s); font-size:12px; font-weight:800; padding:10px; border-radius:12px; margin-bottom:12px; text-align:center; border: 1px dashed var(--border);">
+            💡 리스트를 <span style="color:var(--text-m);">왼쪽으로 밀면(👈)</span> 수정/삭제할 수 있어요!
+        </div>
+        <div style="max-height:300px; overflow-y:auto; padding-right:4px;">
+    `;
             for(let date in grouped) {
             historyHtml += `<div style="position: sticky; top: -1px; z-index: 10; background: var(--bg-card); font-size:12.5px; font-weight:900; color:#8B95A1; margin:16px 0 8px 0; border-bottom:1px solid #F2F5F8; padding:6px 0;">📅 ${date}</div>`;
                 grouped[date].forEach(r => {
@@ -3930,29 +3898,46 @@ window.updateTrackerDashboard = function() {
                     }
                     
                     // ==========================================
-                    // 💸 (패치) 트래커 히스토리: 은행 입출금 통장 스타일!
+                    // 💸 (패치) // ==========================================
+                    // 💸 (패치) 트래커 히스토리: 밀어서 수정/삭제 (오터치 완벽 방어)
                     // ==========================================
                     historyHtml += `
-                        <div style="display:flex; justify-content:space-between; align-items:center; padding:14px 4px; border-bottom:1px solid rgba(0,0,0,0.05); margin-bottom:4px;">
+                        <div class="swipe-list-item" style="position:relative; border-bottom:1px solid rgba(0,0,0,0.05); margin-bottom:4px; border-radius:12px; overflow:hidden; background:var(--bg-card);">
                             
-                            <!-- 🕒 왼쪽: 시간 -->
-                            <div style="width: 50px; font-size:13px; font-weight:800; color:#8B95A1; text-align:left; flex-shrink:0;">
-                                ${displayTime.split(' ~ ')[0]} <!-- 시작 시간만 깔끔하게 노출 -->
-                            </div>
-                            
-                            <!-- 🍼 중앙: 아이콘 + 상세 내용 -->
-                            <div style="display:flex; gap:12px; align-items:center; flex:1; min-width:0;">
-                                <div style="font-size:18px; flex-shrink:0; background:var(--bg-sub); width:36px; height:36px; display:flex; align-items:center; justify-content:center; border-radius:10px;">${icon}</div>
-                                <div style="min-width:0;">
-                                    <div style="font-weight:900; color:var(--text-m); font-size:14px; margin-bottom:2px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${txt}</div>
-                                    ${displayTime.includes('~') ? `<div style="color:#B0B8C1; font-weight:700; font-size:11.5px;">${displayTime}</div>` : ''}
+                            <!-- 🚨 숨겨진 버튼 영역 (바닥에 깔려있음) -->
+                            <div style="position:absolute; top:0; right:0; height:100%; display:flex; z-index:1;">
+                                <div onclick="window.editTrackerRecord('${r.id}')" style="background:#E8F3FF; color:#3182F6; width:65px; display:flex; flex-direction:column; align-items:center; justify-content:center; font-weight:800; font-size:12px; cursor:pointer;">
+                                    <span style="font-size:16px; margin-bottom:2px;">✏️</span>수정
+                                </div>
+                                <div onclick="window.deleteTrackerRecord('${r.id}')" style="background:#FFF0F1; color:#F04452; width:65px; display:flex; flex-direction:column; align-items:center; justify-content:center; font-weight:800; font-size:12px; cursor:pointer;">
+                                    <span style="font-size:16px; margin-bottom:2px;">🗑️</span>삭제
                                 </div>
                             </div>
                             
-                            <!-- ✏️❌ 오른쪽: 액션 버튼 (반투명 처리로 시선 분산 방지) -->
-                            <div style="display:flex; gap:12px; flex-shrink:0;">
-                                <button onclick="window.editTrackerRecord('${r.id}')" style="background:none; border:none; font-size:15px; color:#8B95A1; cursor:pointer; padding:0; opacity:0.6; transition:0.2s;">✏️</button>
-                                <button onclick="window.deleteTrackerRecord('${r.id}')" style="background:none; border:none; font-size:15px; color:#D32F2F; cursor:pointer; padding:0; opacity:0.6; transition:0.2s;">❌</button>
+                            <!-- 🌟 실제로 스와이프(터치 드래그) 되는 카드 영역 -->
+                            <div class="swipe-content" data-id="${r.id}" style="position:relative; z-index:2; background:var(--bg-card); display:flex; justify-content:space-between; align-items:center; padding:14px 4px; transition:transform 0.2s cubic-bezier(0.2, 0.8, 0.2, 1);"
+                                 ontouchstart="window.handleSwipeStart(event)" 
+                                 ontouchmove="window.handleSwipeMove(event)" 
+                                 ontouchend="window.handleSwipeEnd(event, this)">
+                                
+                                <!-- 🕒 왼쪽: 시간 -->
+                                <div style="width: 50px; font-size:13px; font-weight:800; color:#8B95A1; text-align:left; flex-shrink:0; padding-left:4px;">
+                                    ${displayTime.split(' ~ ')[0]} <!-- 시작 시간만 깔끔하게 노출 -->
+                                </div>
+                                
+                                <!-- 🍼 중앙: 아이콘 + 상세 내용 -->
+                                <div style="display:flex; gap:12px; align-items:center; flex:1; min-width:0;">
+                                    <div style="font-size:18px; flex-shrink:0; background:var(--bg-sub); width:36px; height:36px; display:flex; align-items:center; justify-content:center; border-radius:10px;">${icon}</div>
+                                    <div style="min-width:0;">
+                                        <div style="font-weight:900; color:var(--text-m); font-size:14px; margin-bottom:2px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${txt}</div>
+                                        ${displayTime.includes('~') ? `<div style="color:#B0B8C1; font-weight:700; font-size:11.5px;">${displayTime}</div>` : ''}
+                                    </div>
+                                </div>
+                                
+                                <!-- 👉 스와이프 안내 아이콘 (은은하게 밀어보라고 알려줌) -->
+                                <div style="color:#D1D6DB; font-size:18px; padding-right:8px; opacity:0.6; pointer-events:none;">
+                                    ‹
+                                </div>
                             </div>
                         </div>
                     `;
@@ -4068,16 +4053,39 @@ window.updateTrackerDashboard = function() {
 
     timelineHtml += `</div><div style="display:flex; justify-content:space-between; font-size:10px; color:#8B95A1; font-weight:800; padding:0 2px;"><span>0시</span><span>6시</span><span>12시</span><span>18시</span><span>24시</span></div></div>`;
 
-    // 📈 오늘 통계 바
-    let todayFeedAmt = 0; let todayFeedMins = 0; let todaySleepMins = 0; let todayDiaperCount = 0;
+   // 📈 오늘 통계 바 (이유식, 모유, 분유 완벽 분리 엔진)
+    let todayFormulaAmt = 0; let todayBreastMins = 0; let todayFoodAmt = 0; 
+    let todaySleepMins = 0; let todayDiaperCount = 0;
+    
     todayRecords.forEach(r => {
-        if(r.type === 'feed') { if (r.subType === '모유') todayFeedMins += r.amount; else todayFeedAmt += r.amount; }
+        if(r.type === 'feed') { 
+            if (r.subType === '모유') todayBreastMins += r.amount; 
+            else if (r.subType === '이유식') todayFoodAmt += r.amount;
+            else todayFormulaAmt += r.amount; 
+        }
         if(r.type === 'sleep') todaySleepMins += r.amount;
         if(r.type === 'diaper') todayDiaperCount++;
     });
 
     const feedInterval = parseInt(localStorage.getItem('tosil_feed_interval')) || 180;
-    const latestFeed = records.find(r => r.type === 'feed');
+    
+    // 🍼 [월령 맞춤형] 생후 일수 계산 (신생아는 10ml도 귀한 맘마입니다!)
+    const savedDate = localStorage.getItem('tosil_startDate');
+    let babyDays = 100; // 기본값
+    if (savedDate) babyDays = Math.floor((nowTime - new Date(savedDate).getTime()) / (1000 * 60 * 60 * 24));
+    
+    const minFormula = babyDays <= 30 ? 10 : (babyDays <= 100 ? 20 : 40);
+    const minBreast = babyDays <= 30 ? 2 : (babyDays <= 100 ? 3 : 5);
+
+    // 🚨 [CS 방어 3번] 미세 수유 알람 피로도 방지 엔진! (월령 자동 조절)
+    const latestFeed = records.find(r => {
+        if (r.type !== 'feed') return false;
+        if (r.subType === '이유식') return true; 
+        const amt = parseInt(r.amount) || 0;
+        if (r.subType === '모유') return amt >= minBreast; 
+        else return amt >= minFormula; 
+    });
+
     const latestDiaper = records.find(r => r.type === 'diaper');
     let diffFeedMins = latestFeed ? Math.floor((nowTime - latestFeed.timestamp) / 60000) : 0;
 
@@ -4087,9 +4095,9 @@ window.updateTrackerDashboard = function() {
     let briefing = "오늘도 평화로운 육아팅! 🤍";
 
     if (todaySleepMins >= 240) briefing = `오늘 수면 ${Math.floor(todaySleepMins/60)}시간 돌파! 꿀잠 요정 🌙`;
-    else if (todayFeedAmt >= 800 || todayFeedMins >= 90) briefing = `오늘 수유 빵빵하게 채우는 중! 💪`;
+    else if (todayFormulaAmt >= 800 || todayBreastMins >= 90 || todayFoodAmt >= 200) briefing = `오늘 수유 빵빵하게 채우는 중! 💪`;
     else if (todayDiaperCount >= 5) briefing = `기저귀 ${todayDiaperCount}번 클리어! 보송보송 ✨`;
-    else if (todayFeedAmt > 0 || todayFeedMins > 0) briefing = `오늘 수유 체크 완벽 진행 중! 🍼`;
+    else if (todayFormulaAmt > 0 || todayBreastMins > 0 || todayFoodAmt > 0) briefing = `오늘 식사 체크 완벽 진행 중! 🍼`;
 
     let briefBadge = `<div style="font-size:11px; font-weight:800; color:var(--primary); background:var(--bg-sub); padding:4px 8px; border-radius:8px;">실시간 연동</div>`;
 
@@ -4111,26 +4119,39 @@ window.updateTrackerDashboard = function() {
         </div>
     `;
 
-    let feedDisp = todayFeedAmt > 0 ? `${todayFeedAmt}ml` : `${todayFeedMins}분`;
-    if (todayFeedAmt > 0 && todayFeedMins > 0) feedDisp = `${todayFeedAmt}ml+모유`;
+   // ✨ 맘마 분리 렌더링 매직! (태그 꼬임 버그 완벽 해결 & 중앙 정렬)
+    let feedDisp = '';
+    if (todayFormulaAmt === 0 && todayBreastMins === 0 && todayFoodAmt === 0) {
+        // 기록이 0일 때는 군더더기 없이 딱 중앙에 크게 0ml 출력! (닫기 태그 꼬임 방지)
+        feedDisp = `<div style="font-size:16px; font-weight:900; color:#3182F6; text-align:center;">0ml</div>`;
+    } else {
+        // 기록이 있을 때는 세로로 예쁘게 리스트업
+        feedDisp = `<div style="display:flex; flex-direction:column; gap:4px; font-size:12.5px; font-weight:900; line-height:1.2; text-align:left;">`;
+        if (todayFormulaAmt > 0) feedDisp += `<div><span style="opacity:0.6; font-size:11px; margin-right:4px;">🍼분  유</span>${todayFormulaAmt}ml</div>`;
+        if (todayBreastMins > 0) feedDisp += `<div><span style="opacity:0.6; font-size:11px; margin-right:4px;">🤱모  유</span>${todayBreastMins}분</div>`;
+        if (todayFoodAmt > 0) feedDisp += `<div><span style="opacity:0.6; font-size:11px; margin-right:4px;">🥄이유식</span>${todayFoodAmt}g</div>`;
+        feedDisp += `</div>`;
+    }
 
-    let statsHtml = `<div style="display:grid; grid-template-columns:repeat(3, 1fr); gap:10px; margin-bottom:14px;">
-        <div style="background:var(--bg-card); border:1px solid var(--border); padding:16px 8px; border-radius:18px; text-align:center; box-shadow:0 2px 8px rgba(0,0,0,0.02);">
-            <div style="font-size:11.5px; color:#8B95A1; font-weight:800; margin-bottom:6px;">총 수유량</div>
-            <div style="font-size:16px; font-weight:900; color:#3182F6;">${feedDisp}</div>
+    // 📈 오늘 통계 바 (절대 깨지지 않는 Flexbox 3단 가로 정렬)
+    let statsHtml = `
+    <div style="display:flex; gap:10px; margin-bottom:14px; width:100%;">
+        <div style="flex:1; width:33.3%; background:var(--bg-card); border:1px solid var(--border); padding:16px 4px; border-radius:18px; text-align:center; box-shadow:0 2px 8px rgba(0,0,0,0.02); display:flex; flex-direction:column; justify-content:center; align-items:center;">
+            <div style="font-size:11.5px; color:#8B95A1; font-weight:800; margin-bottom:6px;">총 식사량</div>
+            <div style="color:#3182F6; display:flex; justify-content:center; width:100%;">${feedDisp}</div>
         </div>
-        <div style="background:var(--bg-card); border:1px solid var(--border); padding:16px 8px; border-radius:18px; text-align:center; box-shadow:0 2px 8px rgba(0,0,0,0.02);">
+        <div style="flex:1; width:33.3%; background:var(--bg-card); border:1px solid var(--border); padding:16px 4px; border-radius:18px; text-align:center; box-shadow:0 2px 8px rgba(0,0,0,0.02); display:flex; flex-direction:column; justify-content:center; align-items:center;">
             <div style="font-size:11.5px; color:#8B95A1; font-weight:800; margin-bottom:6px;">총 수면시간</div>
-            <div style="font-size:16px; font-weight:900; color:#A855F7;">${Math.floor(todaySleepMins/60)}h ${todaySleepMins%60}m</div>
+            <div style="font-size:17px; font-weight:900; color:#A855F7;">${Math.floor(todaySleepMins/60)}h ${todaySleepMins%60}m</div>
         </div>
-        <div style="background:var(--bg-card); border:1px solid var(--border); padding:16px 8px; border-radius:18px; text-align:center; box-shadow:0 2px 8px rgba(0,0,0,0.02);">
+        <div style="flex:1; width:33.3%; background:var(--bg-card); border:1px solid var(--border); padding:16px 4px; border-radius:18px; text-align:center; box-shadow:0 2px 8px rgba(0,0,0,0.02); display:flex; flex-direction:column; justify-content:center; align-items:center;">
             <div style="font-size:11.5px; color:#8B95A1; font-weight:800; margin-bottom:6px;">기저귀 교체</div>
-            <div style="font-size:16px; font-weight:900; color:#F04452;">${todayDiaperCount}회</div>
+            <div style="font-size:17px; font-weight:900; color:#F04452;">${todayDiaperCount}회</div>
         </div>
     </div>`;
 
     container.innerHTML = wakeTimeHtml + timelineHtml + briefingBarHtml + statsHtml;
-    container.style.display = ''; 
+    container.style.display = '';
 
     // 💡 [수면 투트랙] 수면 버튼은 "직전 수면량", 다른 버튼은 "N분 전"
     const getRelativeTime = (latestRecord) => {
@@ -4422,23 +4443,68 @@ window.toggleRoutine = async function(id) {
 };
 
 // ==========================================
-// 🚀 트래커 실시간 연동 (앱 끄자마자 즉시 저장!)
+// 🚀 [CS 방어 1&4번] 불사조 오프라인 큐 & 1인 유저 자동 백업 엔진
 // ==========================================
 window.saveTrackerToFirebase = async function(records) {
-    // 1. 내 폰에 먼저 저장해서 화면은 0.1초 만에 바뀌게 (체감속도 유지)
+    // 1. 내 폰(로컬)에 먼저 저장해서 화면은 0.1초 만에 바뀌게 (체감속도 유지)
     localStorage.setItem('tosil_tracker_records', JSON.stringify(records));
     if(typeof window.updateTrackerDashboard === 'function') window.updateTrackerDashboard();
 
-    // 2. 지연 시간 1초도 없이 곧바로 파이어베이스로 슛! (육퇴 후 바로 앱을 꺼도 무조건 저장됨)
+    // 🚨 [오프라인 방어막] 네트워크가 꺼져있으면 '오프라인 큐'에 깃발만 꽂아두고 스무스하게 종료!
+    if (!navigator.onLine) {
+        localStorage.setItem('tosil_offline_queue_tracker', 'true');
+        console.warn("오프라인 상태입니다. 기기에만 임시 저장 후 통신 재개 시 동기화합니다.");
+        return;
+    }
+
+    // 2. 서버로 전송
     if (typeof db !== 'undefined' && typeof setDoc === 'function') {
-        const syncCode = localStorage.getItem("family_sync_code") || "unlinked_local_diary";
+        let syncCode = localStorage.getItem("family_sync_code");
+        
+        // 🚨 [데이터 증발 방어막] 가족 연동을 안 한 유저라도 카카오 ID가 있으면 무조건 개인 백업 진행!
+        if (!syncCode) {
+            const kakaoId = localStorage.getItem("kakao_id");
+            if (kakaoId) {
+                syncCode = "personal_backup_" + kakaoId; 
+            } else {
+                return; // 로그인도 안 한 유저는 어쩔 수 없이 폰에만 저장
+            }
+        }
+        
         try { 
             await setDoc(doc(db, "tracker_" + syncCode, "status"), { records: records }); 
+            // 전송에 성공하면 오프라인 큐 깃발 뽑기
+            localStorage.removeItem('tosil_offline_queue_tracker'); 
         } catch (e) { 
             console.error("트래커 클라우드 저장 실패", e); 
+            // 에러 나면 다음 기회를 위해 오프라인 큐 깃발 꽂아둠
+            localStorage.setItem('tosil_offline_queue_tracker', 'true');
         }
     }
 };
+
+// 📡 인터넷 연결 상태 실시간 레이더망
+window.flushOfflineQueue = async function() {
+    if (!navigator.onLine) return; // 여전히 오프라인이면 패스
+    
+    // 오프라인 때 못 보낸 트래커 기록이 남아있는지 확인
+    if (localStorage.getItem('tosil_offline_queue_tracker') === 'true') {
+        const records = JSON.parse(localStorage.getItem('tosil_tracker_records')) || [];
+        await window.saveTrackerToFirebase(records);
+        
+        if (typeof window.showToast === 'function') {
+            window.showToast("☁️ 오프라인 때 기록한 데이터가 클라우드에 안전하게 백업되었습니다!");
+        }
+    }
+};
+
+// 폰이 와이파이나 LTE를 다시 잡는 순간(online) 숨겨진 백업을 쏴줍니다!
+window.addEventListener('online', window.flushOfflineQueue);
+
+// 앱을 처음 켤 때도 오프라인에 묶여있던 짐이 있는지 한 번 검사
+document.addEventListener("DOMContentLoaded", () => {
+    setTimeout(window.flushOfflineQueue, 2000);
+});
 
 // ==========================================
 // 4️⃣    트래커 기존 함수들을 '연동형'으로 업그레이드
@@ -4489,9 +4555,9 @@ window.saveTrackerRecord = async function() {
     let timestamp = new Date().getTime();
     const timeInputEl = document.getElementById('v-tracker-time');
     
-    // 🌟 날짜 계산 핵심 로직 (어제/오늘 버튼 누른 값을 무조건 반영)
-    let finalDate = new Date();
-    finalDate.setDate(finalDate.getDate() + window.trackerState.dateOffset); // 어제면 -1, 오늘이면 0
+ // 🌟 [달력 패치] 어제/오늘 토글 대신 네이티브 달력 선택값 불러오기!
+    const customDateInput = document.getElementById('v-tracker-custom-date');
+    let finalDate = customDateInput && customDateInput.value ? new Date(customDateInput.value) : new Date();
     
     if (timeInputEl && timeInputEl.value) {
         timeStr = timeInputEl.value; 
@@ -4621,10 +4687,11 @@ window.toggleRoutine = async function(id) {
 };
 
 // ==========================================
-// 6️⃣  파이어베이스 실시간 수신 리스너 (트래커 & 비타민)
+// 6️⃣ 파이어베이스 실시간 수신 리스너 (트래커 스마트 병합 & 설정 연동 & 비타민)
 // ==========================================
 let trackerUnsubscribe = null;
 let routineUnsubscribe = null;
+let settingsUnsubscribe = null; // 🌟 아기 설정값 연동 리스너 추가
 
 window.startTrackerRealtimeSync = function() {
     const syncCode = localStorage.getItem("family_sync_code") || "unlinked_local_diary";
@@ -4635,18 +4702,32 @@ window.startTrackerRealtimeSync = function() {
 
     trackerUnsubscribe = window.onSnapshot(docRef, (docSnap) => {
         if (docSnap.exists()) {
-            const data = docSnap.data();
-            localStorage.setItem('tosil_tracker_records', JSON.stringify(data.records || []));
+            const serverData = docSnap.data().records || [];
+            const localData = JSON.parse(localStorage.getItem('tosil_tracker_records')) || [];
+            
+            // 🚨 [스마트 병합 엔진] 부부가 각자 쓰다가 연동해도 데이터가 덮어씌워지지 않고 예쁘게 하나로 뭉칩니다!
+            if (serverData.length > 0) {
+                const mergedMap = new Map();
+                // 내 폰에 있던 데이터 먼저 깔아두고
+                localData.forEach(r => mergedMap.set(r.id, r));
+                // 짝꿍 폰(서버)에서 날아온 데이터 덮어쓰기 (중복 id는 서버값으로 갱신)
+                serverData.forEach(r => mergedMap.set(r.id, r)); 
+                
+                const mergedArray = Array.from(mergedMap.values());
+                mergedArray.sort((a, b) => b.timestamp - a.timestamp); // 최신순으로 다시 정렬
+                
+                localStorage.setItem('tosil_tracker_records', JSON.stringify(mergedArray));
+            }
         }
         
-        // 🚨 [수정 1] 앞에 window. 를 붙여야 다른 폰에서 화면(대시보드)이 즉시 갱신됩니다!
         if (typeof window.updateTrackerDashboard === 'function') window.updateTrackerDashboard();
-        
-        // 🎁 [수정 2 - 보너스] 남편분이 3번째 기록을 쓰면, 아내분 폰에도 영수증 버튼이 바로 '짠!' 하고 뜨게 만듭니다.
         if (typeof window.checkReceiptVisibility === 'function') window.checkReceiptVisibility();
+    }, (error) => {
+        console.warn("트래커 실시간 연동 에러 (오프라인 모드로 전환됨)", error);
     });
 };
 
+// 👇 기존 비타민 연동 코드 무사히 보존 완료! 👇
 window.startRoutineRealtimeSync = function() {
     const syncCode = localStorage.getItem("family_sync_code") || "unlinked_local_diary";
     const docRef = typeof doc !== 'undefined' && typeof window.db !== 'undefined' ? doc(window.db, "routine_" + syncCode, "status") : null;
@@ -4662,13 +4743,47 @@ window.startRoutineRealtimeSync = function() {
                 localStorage.setItem('tosil_routine_data', JSON.stringify(dbData.data || {}));
                 localStorage.setItem('tosil_routine_date', todayStr);
             }
-            // 💡 추가된 핵심 로직: 서버에 커스텀 이름이 있으면 내 폰에도 적용!
             if (dbData.names) {
                 localStorage.setItem('tosil_routine_names', JSON.stringify(dbData.names));
             }
         }
         if (typeof renderRoutineChecklist === 'function') renderRoutineChecklist();
     });
+};
+
+// 🌟 [추가] 아빠 폰에도 아기 이름, 생일이 실시간으로 동기화되게 만드는 엔진!
+window.startSettingsRealtimeSync = function() {
+    const syncCode = localStorage.getItem("family_sync_code");
+    if (!syncCode || typeof doc === 'undefined' || typeof window.db === 'undefined' || typeof window.onSnapshot !== 'function') return;
+    
+    const docRef = doc(window.db, "settings_" + syncCode, "info");
+    if (settingsUnsubscribe) settingsUnsubscribe();
+
+    settingsUnsubscribe = window.onSnapshot(docRef, (docSnap) => {
+        if (docSnap.exists()) {
+            const data = docSnap.data();
+            if (data.babyName) localStorage.setItem('tosil_babyName', data.babyName);
+            if (data.startDate) localStorage.setItem('tosil_startDate', data.startDate);
+            if (data.feedingStage) localStorage.setItem('tosil_feedingStage', data.feedingStage);
+            
+            if (typeof window.renderBabyInfo === 'function') window.renderBabyInfo();
+            if (typeof window.updateDadBriefing === 'function') window.updateDadBriefing();
+        }
+    });
+};
+
+// 내 폰에서 아기 정보를 바꿨을 때 서버로 발사하는 함수
+window.syncBabySettingsToFirebase = function() {
+    const syncCode = localStorage.getItem("family_sync_code");
+    if (!syncCode || typeof db === 'undefined' || typeof setDoc === 'undefined') return;
+    
+    const settings = {
+        babyName: localStorage.getItem('tosil_babyName') || '우리아기',
+        startDate: localStorage.getItem('tosil_startDate') || '',
+        feedingStage: localStorage.getItem('tosil_feedingStage') || '모유/분유'
+    };
+    
+    setDoc(doc(db, "settings_" + syncCode, "info"), settings).catch(e=>console.warn(e));
 };
 
 // ==========================================
@@ -4684,6 +4799,7 @@ window.initRealtimeSync = () => {
     if (typeof startRoutineRealtimeSync === 'function') startRoutineRealtimeSync();
     if (typeof startCommunityRealtimeSync === 'function') startCommunityRealtimeSync();
     if (typeof startCommentRealtimeSync === 'function') startCommentRealtimeSync();
+    if (typeof startSettingsRealtimeSync === 'function') startSettingsRealtimeSync();
 };
 
 // 앱 로딩 시 리스너 수동 실행 방어 코드
@@ -4700,40 +4816,41 @@ window.openEmergencyModal = function(type) {
     const header = document.getElementById('em-header');
     const content = document.getElementById('em-content');
     
-    // 🌡️ 열경련 (보라색 제거, 니치 디테일 추가)
     if (type === 'seizure') {
         header.innerHTML = `
-            <div style="font-size: 19px; font-weight: 900; color: var(--danger); margin-bottom: 6px; margin-top: 10px;">🌡️ 영아 열성경련(열경기)</div>
+            <div style="font-size: 19px; font-weight: 900; color: #D97706; margin-bottom: 6px; margin-top: 10px;">🌡️ 영아 열성경련(열경기)</div>
             <div style="font-size: 13.5px; font-weight: 700; color: var(--text-s);">아기가 눈이 돌아가고 몸이 뻣뻣해질 때</div>
         `;
         content.innerHTML = `
             <!-- 가독성 높인 다크/라이트 호환 배너 -->
             <div style="background:var(--bg-card); color:var(--text-m); padding:16px; border-radius:14px; font-weight:900; font-size:14.5px; text-align:center; margin-bottom:16px; border: 1px solid var(--border); box-shadow: 0 4px 12px rgba(0,0,0,0.05);">
-                ⏱️ 당황하지 말고 <span style="color:#F04452;">경련 시작 시간</span>을 재세요!
+                ⏱️ 당황하지 말고 <span style="color:#D97706;">경련 시작 시간</span>을 재세요!
             </div>
             
-            <div class="box-sub" style="padding: 16px; border-radius: 16px; border-left: 4px solid var(--danger); margin-bottom: 8px;">
-                <div style="font-size: 14.5px; font-weight: 900; color: var(--text-m); margin-bottom: 6px;">1️⃣ 고개를 옆으로 돌려 눕히세요</div>
-                <div style="font-size: 13.5px; color: var(--text-s); line-height: 1.5; word-break: keep-all;">토사물이나 침이 기도를 막지 않도록 평평하고 안전한 곳에 눕힌 후 <b>고개만 옆으로</b> 돌려주세요.</div>
+            <div class="box-sub" style="padding: 16px; border-radius: 16px; border-left: 4px solid #D97706; margin-bottom: 8px;">
+                <div style="font-size: 14.5px; font-weight: 900; color: var(--text-m); margin-bottom: 6px;">1️⃣ 고개를 돌리고 옷을 느슨하게!</div>
+                <div style="font-size: 13.5px; color: var(--text-s); line-height: 1.5; word-break: keep-all;">토사물이 기도를 막지 않게 <b>고개를 옆으로</b> 돌리고, 목 주변 단추나 지퍼를 풀어 호흡을 편하게 해주세요.</div>
             </div>
+
+            <!-- ✨ 대표님의 날카로운 인사이트 반영: 흔한 부모들의 실수 방지! -->
             <div class="box-tint-red" style="padding: 16px; border-radius: 16px; border-left: 4px solid var(--danger); margin-bottom: 8px;">
-                <div style="font-size: 14.5px; font-weight: 900; color: var(--danger); margin-bottom: 6px;">2️⃣ 🚫 입에 아무것도 넣지 마세요!</div>
-                <div style="font-size: 13.5px; color: var(--danger); line-height: 1.5; word-break: keep-all;">해열제 등을 <b>억지로 먹이거나 물리면 질식 위험</b>이 큽니다. 주무르거나 흔들어 깨우는 것도 절대 금지!</div>
+                <div style="font-size: 14.5px; font-weight: 900; color: var(--danger); margin-bottom: 6px;">2️⃣ 🚫 억지로 열 내리기 절대 금지!</div>
+                <div style="font-size: 13.5px; color: var(--danger); line-height: 1.5; word-break: keep-all;">경련 중 <b>옷을 억지로 벗기거나 물수건으로 닦지 마세요.</b> 해열제를 입에 물리면 <b>질식 위험</b>이 큽니다. 주무르기도 금지!</div>
             </div>
-            <!-- ✨ 찐 실전 니치 팁: 동영상 촬영 -->
-            <div class="box-sub" style="padding: 16px; border-radius: 16px; border-left: 4px solid var(--danger); margin-bottom: 8px;">
+            
+            <div class="box-sub" style="padding: 16px; border-radius: 16px; border-left: 4px solid #D97706; margin-bottom: 8px;">
                 <div style="font-size: 14.5px; font-weight: 900; color: var(--text-m); margin-bottom: 6px;">3️⃣ 📱 여유가 있다면 영상 촬영</div>
                 <div style="font-size: 13.5px; color: var(--text-s); line-height: 1.5; word-break: keep-all;">보호자가 2명 이상이라면 <b>경련 양상을 동영상으로</b> 찍어두세요. 응급실 진료 시 가장 확실한 단서가 됩니다.</div>
             </div>
             
-            <!-- 🚨 5분 제약 삭제 -> 부모의 직감을 믿도록 안내 (면책 및 안전 강화) -->
-            <div class="box-tint-red" style="padding: 14px; border-radius: 16px; text-align:center; margin-bottom: 16px; margin-top:16px;">
-                <div style="font-size: 13.5px; font-weight: 800; color: var(--danger); line-height: 1.4;">처음 겪는 경련이거나 대처가 불안하다면<br>주저하지 말고 바로 119에 신고하세요!</div>
+            <div class="box-tint-yellow" style="padding: 14px; border-radius: 16px; text-align:center; margin-bottom: 16px; margin-top:16px;">
+                <div style="font-size: 13.5px; font-weight: 800; color: #B45309; line-height: 1.4;">처음 겪는 경련이거나 대처가 불안하다면<br>주저하지 말고 바로 119에 신고하세요!</div>
             </div>
             
             <a href="tel:119" style="display:block; text-align:center; background:var(--danger); color:#FFF; padding:16px; border-radius:14px; font-size:16px; font-weight:900; text-decoration:none; box-shadow:0 4px 12px rgba(240,68,82,0.2);">🚨 119 즉시 전화걸기</a>
         `;
-    } 
+    }
+
     // 💥 기도폐쇄 (하임리히)
     else if (type === 'heimlich') {
         header.innerHTML = `
@@ -6568,16 +6685,33 @@ window.renderDadQuests = function() {
     let isCollapsed = localStorage.getItem('tosil_dad_dashboard_collapsed') === 'true';
     const levelInfo = window.getMateLevelInfo();
 
-    // 트래커 데이터 분석
+   // 트래커 데이터 분석
     let records = JSON.parse(localStorage.getItem('tosil_tracker_records')) || [];
     const now = new Date().getTime();
     const startOfToday = new Date().setHours(0,0,0,0);
     let todayEvents = 0; 
     let lastFeed = null; let lastDiaper = null; let lastSleep = null;
     
+    // 🍼 [월령 맞춤형] 아빠 모드 생후 일수 계산
+    const savedDateForDad = localStorage.getItem('tosil_startDate');
+    let dadBabyDays = 100;
+    if (savedDateForDad) dadBabyDays = Math.floor((now - new Date(savedDateForDad).getTime()) / (1000 * 60 * 60 * 24));
+    const minFormulaDad = dadBabyDays <= 30 ? 10 : (dadBabyDays <= 100 ? 20 : 40);
+    const minBreastDad = dadBabyDays <= 30 ? 2 : (dadBabyDays <= 100 ? 3 : 5);
+    
     records.forEach(r => {
         if(r.timestamp >= startOfToday) todayEvents++;
-        if(!lastFeed && r.type === 'feed') lastFeed = r;
+        
+        // 🚨 [아빠 모드 동기화 1] 상황판 월령 맞춤형 간식 필터!
+        if(!lastFeed && r.type === 'feed') {
+            if (r.subType === '이유식') lastFeed = r;
+            else {
+                const amt = parseInt(r.amount) || 0;
+                if (r.subType === '모유' && amt >= minBreastDad) lastFeed = r;
+                else if (r.subType !== '모유' && amt >= minFormulaDad) lastFeed = r;
+            }
+        }
+        
         if(!lastDiaper && r.type === 'diaper') lastDiaper = r;
         if(!lastSleep && r.type === 'sleep') lastSleep = r;
     });
@@ -6674,8 +6808,8 @@ window.updateDadBriefing = function() {
     const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
     
     let records = JSON.parse(localStorage.getItem('tosil_tracker_records')) || [];
-    let todayFeedAmt = 0; let todayFeedCount = 0; 
-    let todayDiaperCount = 0; let todaySleepCount = 0;
+    let todayFormulaAmt = 0; let todayBreastMins = 0; let todayFoodAmt = 0; 
+    let todayFeedCount = 0; let todayDiaperCount = 0; let todaySleepCount = 0;
     
     let lastFeed = null; let lastDiaper = null; let lastSleep = null;
 
@@ -6683,9 +6817,25 @@ window.updateDadBriefing = function() {
         if(r.timestamp >= startOfToday) {
             if(r.type === 'feed' || r.type === '수유') {
                 let amt = parseInt(String(r.amount || '0').replace(/[^0-9]/g, ''));
-                todayFeedAmt += amt || 0; 
+                if (r.subType === '모유') todayBreastMins += amt;
+                else if (r.subType === '이유식') todayFoodAmt += amt;
+                else todayFormulaAmt += amt;
+                
                 todayFeedCount++;
-                if(!lastFeed || r.timestamp > lastFeed.timestamp) lastFeed = r;
+                
+                // 🍼 [월령 맞춤형] 아빠 1순위 미션 생후 일수 계산
+                const briefDate = localStorage.getItem('tosil_startDate');
+                let briefDays = 100;
+                if (briefDate) briefDays = Math.floor((now.getTime() - new Date(briefDate).getTime()) / (1000 * 60 * 60 * 24));
+                const minF = briefDays <= 30 ? 10 : (briefDays <= 100 ? 20 : 40);
+                const minB = briefDays <= 30 ? 2 : (briefDays <= 100 ? 3 : 5);
+
+                // 🚨 [아빠 모드 동기화 2] 1순위 미션 브리핑 월령 맞춤형!
+                if(!lastFeed || r.timestamp > lastFeed.timestamp) {
+                    if (r.subType === '이유식') lastFeed = r;
+                    else if (r.subType === '모유' && amt >= minB) lastFeed = r;
+                    else if (r.subType !== '모유' && amt >= minF) lastFeed = r;
+                }
             } else if (r.type === 'diaper' || r.type === '기저귀') {
                 todayDiaperCount++;
                 if(!lastDiaper || r.timestamp > lastDiaper.timestamp) lastDiaper = r;
@@ -6699,7 +6849,23 @@ window.updateDadBriefing = function() {
     const feedEl = document.getElementById('dad-brief-feed');
     const diaperEl = document.getElementById('dad-brief-diaper');
     const sleepEl = document.getElementById('dad-brief-sleep');
-    if(feedEl) feedEl.innerText = todayFeedAmt > 0 ? `${todayFeedAmt} ml` : '0 ml';
+    
+    if(feedEl) {
+        let texts = [];
+        if(todayFormulaAmt > 0) texts.push(`분유 ${todayFormulaAmt}ml`);
+        if(todayFoodAmt > 0) texts.push(`이유식 ${todayFoodAmt}g`);
+        if(todayBreastMins > 0) texts.push(`모유 ${todayBreastMins}분`);
+        
+        if(texts.length === 0) {
+            feedEl.innerText = '0 ml';
+        } else if(texts.length === 1) {
+            feedEl.innerText = texts[0];
+        } else {
+            // 여러 개일 땐 좁은 폰 화면에서 안 깨지게 작은 폰트로 세로 정렬
+            feedEl.innerHTML = `<div style="font-size:11.5px; line-height:1.3; margin-top:2px;">${texts.join('<br>')}</div>`;
+        }
+    }
+    
     if(diaperEl) diaperEl.innerText = todayDiaperCount > 0 ? `${todayDiaperCount} 회` : '0 회';
     if(sleepEl) sleepEl.innerText = todaySleepCount > 0 ? `${todaySleepCount} 번` : '0 번';
 
@@ -10071,3 +10237,75 @@ window.downloadMilestone = function() {
         alert("저장 중 오류가 발생했습니다 ㅠㅠ");
     });
 };
+
+// ==========================================
+// 🛡️ [CS 방어 2번] 오터치 방지 '스와이프(밀기) 액션' 물리 엔진
+// ==========================================
+window.swipeState = { startX: 0, startY: 0, activeEl: null, isScrolling: false };
+
+window.handleSwipeStart = function(e) {
+    // 이미 열려있는 다른 항목이 있다면 닫아주기
+    if (window.swipeState.activeEl && window.swipeState.activeEl !== e.currentTarget) {
+        window.swipeState.activeEl.style.transform = 'translateX(0)';
+        window.swipeState.activeEl = null;
+    }
+    window.swipeState.startX = e.touches[0].clientX;
+    window.swipeState.startY = e.touches[0].clientY;
+    window.swipeState.isScrolling = false;
+    e.currentTarget.style.transition = 'none'; // 드래그 중에는 부드러움 효과 끄기 (빠릿하게)
+};
+
+window.handleSwipeMove = function(e) {
+    if (window.swipeState.isScrolling) return; // 상하 스크롤 중이면 가로 스와이프 무시
+    
+    const currentX = e.touches[0].clientX;
+    const currentY = e.touches[0].clientY;
+    const diffX = currentX - window.swipeState.startX;
+    const diffY = currentY - window.swipeState.startY;
+
+    // 위아래로 움직이는 각도가 더 크면 화면 스크롤로 간주! (핵심 방어 로직)
+    if (Math.abs(diffY) > Math.abs(diffX) && Math.abs(diffY) > 10) {
+        window.swipeState.isScrolling = true;
+        return;
+    }
+
+    // 왼쪽으로 밀 때만 반응 (수정/삭제 버튼이 오른쪽에 있으므로)
+    if (diffX < 0) {
+        // 최대 130px(수정+삭제 버튼 넓이)까지만 밀리게 고무줄 저항감 추가
+        let translateX = diffX;
+        if(translateX < -130) translateX = -130 + (diffX + 130) * 0.2; 
+        e.currentTarget.style.transform = `translateX(${translateX}px)`;
+        
+        // 가로로 밀 때는 브라우저 기본 스와이프(뒤로가기 등) 방지
+        if(Math.abs(diffX) > 10 && e.cancelable) e.preventDefault(); 
+    }
+};
+
+window.handleSwipeEnd = function(e, el) {
+    if (window.swipeState.isScrolling) {
+        el.style.transition = 'transform 0.2s cubic-bezier(0.2, 0.8, 0.2, 1)';
+        el.style.transform = 'translateX(0)';
+        return;
+    }
+    
+    const diffX = e.changedTouches[0].clientX - window.swipeState.startX;
+    el.style.transition = 'transform 0.2s cubic-bezier(0.2, 0.8, 0.2, 1)';
+    
+    // 절반(50px) 이상 밀었으면 확 열어버리기!
+    if (diffX < -50) { 
+        el.style.transform = 'translateX(-130px)'; // 버튼 두 개 영역 (65px + 65px)
+        window.swipeState.activeEl = el;
+        if(navigator.vibrate) navigator.vibrate(15); // 열릴 때 '툭' 하는 햅틱 손맛!
+    } else {
+        el.style.transform = 'translateX(0)'; // 찔끔 밀면 다시 원상복구
+        if(window.swipeState.activeEl === el) window.swipeState.activeEl = null;
+    }
+};
+
+// 💡 화면의 다른 곳을 터치하면 열려있던 스와이프 메뉴를 스르륵 닫아줍니다.
+document.addEventListener('touchstart', (e) => {
+    if (window.swipeState.activeEl && !e.target.closest('.swipe-list-item')) {
+        window.swipeState.activeEl.style.transform = 'translateX(0)';
+        window.swipeState.activeEl = null;
+    }
+}, {passive: true});
