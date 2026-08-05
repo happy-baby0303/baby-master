@@ -411,95 +411,94 @@ function filterPlaces() {
 }
 
 // ==========================================
-// 🎪 행사 모달창 프리미엄 UI 패치 (티맵/카카오맵 모바일 앱 강제 연동!)
+// 🎪 행사 모달창 프리미엄 UI 패치 (실전 압축 다이어트 버전!)
 // ==========================================
 function openFestivalModal(title, dateText, addr, tel, review, query, image) {
     const body = document.getElementById('modal-dynamic-body');
     if(!body) return;
     
     const naverUrl = 'https://m.map.naver.com/search2/search.naver?query=' + encodeURIComponent(query);
-    
-    // 🚨 [핵심 패치 1] 티맵 웹사이트가 아니라, 스마트폰 티맵 앱을 강제로 열어버리는 전용 주소!
     const tmapUrl = 'tmap://search?name=' + encodeURIComponent(query);
-    
-    // 🚨 [핵심 패치 2] 카카오맵도 웹사이트 말고 모바일 앱이 바로 켜지도록 최적화
     const kakaoUrl = 'https://map.kakao.com/link/search/' + encodeURIComponent(query);
     
+    // 버튼 패딩 다이어트 (16px -> 12px)
     const telBtn = tel && tel !== '정보없음' 
-        ? `<button onclick="window.location.href='tel:${tel}'" style="flex:1; padding:16px; background:#F2F5F8; color:#4E5968; border-radius:14px; font-weight:900; font-size:15px; border:none; cursor:pointer;">📞 전화 문의</button>` 
-        : `<button disabled style="flex:1; padding:16px; background:#F2F5F8; color:#A0AEC0; border-radius:14px; font-weight:900; font-size:15px; border:none; opacity:0.6;">📞 번호 없음</button>`;
+        ? `<button onclick="window.location.href='tel:${tel}'" style="flex:1; padding:12px; background:#F2F5F8; color:#4E5968; border-radius:12px; font-weight:900; font-size:14px; border:none; cursor:pointer;">📞 전화 문의</button>` 
+        : `<button disabled style="flex:1; padding:12px; background:#F2F5F8; color:#A0AEC0; border-radius:12px; font-weight:900; font-size:14px; border:none; opacity:0.6;">📞 번호 없음</button>`;
         
+    // 📸 메인 이미지 높이 확 줄이기 (200px -> 130px)
     const modalImgHtml = (image && !image.startsWith('⚙️')) 
-        ? `<div style="width:100%; height:200px; border-radius:18px; overflow:hidden; margin-bottom:20px; box-shadow:0 4px 16px rgba(0,0,0,0.06); position:relative;">
+        ? `<div style="width:100%; height:130px; border-radius:14px; overflow:hidden; margin-bottom:14px; box-shadow:0 4px 12px rgba(0,0,0,0.05); position:relative;">
              <img src="${image}" style="width:100%; height:100%; object-fit:cover;" onerror="this.style.display='none'">
-             <div style="position:absolute; bottom:10px; right:10px; background:rgba(0,0,0,0.6); color:#FFF; font-size:11px; font-weight:800; padding:4px 8px; border-radius:8px; backdrop-filter:blur(4px);">행사 전경</div>
+             <div style="position:absolute; bottom:8px; right:8px; background:rgba(0,0,0,0.6); color:#FFF; font-size:10px; font-weight:800; padding:4px 6px; border-radius:6px; backdrop-filter:blur(4px);">행사 전경</div>
            </div>` 
-        : `<div style="width:100%; height:140px; border-radius:18px; background:linear-gradient(135deg, #EBF4FF, #EAEFF7); margin-bottom:20px; display:flex; align-items:center; justify-content:center; font-size:40px; box-shadow:0 4px 16px rgba(0,0,0,0.06);">🎪</div>`;
+        : `<div style="width:100%; height:120px; border-radius:14px; background:linear-gradient(135deg, #EBF4FF, #EAEFF7); margin-bottom:14px; display:flex; align-items:center; justify-content:center; font-size:36px; box-shadow:0 4px 12px rgba(0,0,0,0.05);">🎪</div>`;
 
+    // 🚨 불필요한 위아래 여백 전부 압축!
     body.innerHTML = `
-        <div style="padding: 10px 4px 20px 4px;">
-            <!-- 🏷️ 제목 영역 -->
-            <div style="display:flex; align-items:flex-start; gap:10px; margin-bottom:16px;">
-                <span style="font-size:26px; background:#F2F5F8; padding:8px; border-radius:14px; box-shadow:inset 0 1px 3px rgba(0,0,0,0.05);">🌲</span>
-                <div style="font-size:20px; font-weight:900; color:#191F28; letter-spacing:-0.5px; line-height:1.3; word-break:keep-all; margin-top:2px;">${title}</div>
+        <div style="padding: 0px 4px 10px 4px;">
+            <!-- 🏷️ 제목 영역: 이모지 아이콘 크기 축소 및 균형 조정 -->
+            <div style="display:flex; align-items:flex-start; gap:8px; margin-bottom:12px;">
+                <span style="font-size:18px; background:#F2F5F8; padding:6px; border-radius:10px; box-shadow:inset 0 1px 3px rgba(0,0,0,0.05);">🌲</span>
+                <div style="font-size:18px; font-weight:900; color:#191F28; letter-spacing:-0.5px; line-height:1.3; word-break:keep-all; margin-top:4px;">${title}</div>
             </div>
 
             <!-- 📸 메인 이미지 -->
             ${modalImgHtml}
 
-            <!-- 🗓️ 기본 정보 박스 -->
-            <div style="background:#F8F9FA; padding:18px; border-radius:16px; margin-bottom:20px; border:1px solid #E5E8EB;">
-                <div style="display:flex; gap:12px; margin-bottom:14px; align-items:flex-start;">
-                    <span style="font-size:18px; margin-top:2px;">🗓️</span>
+            <!-- 🗓️ 기본 정보 박스: 패딩(18->14) 및 여백 압축 -->
+            <div style="background:#F8F9FA; padding:14px; border-radius:14px; margin-bottom:12px; border:1px solid #E5E8EB;">
+                <div style="display:flex; gap:10px; margin-bottom:10px; align-items:flex-start;">
+                    <span style="font-size:16px; margin-top:2px;">🗓️</span>
                     <div>
-                        <div style="font-size:11.5px; font-weight:800; color:#8B95A1; margin-bottom:4px;">행사 기간</div>
-                        <div style="font-size:14.5px; font-weight:800; color:#333D4B;">${dateText}</div>
+                        <div style="font-size:11px; font-weight:800; color:#8B95A1; margin-bottom:2px;">행사 기간</div>
+                        <div style="font-size:14px; font-weight:800; color:#333D4B;">${dateText}</div>
                     </div>
                 </div>
-                <div style="display:flex; gap:12px; align-items:flex-start;">
-                    <span style="font-size:18px; margin-top:2px;">📍</span>
+                <div style="display:flex; gap:10px; align-items:flex-start;">
+                    <span style="font-size:16px; margin-top:2px;">📍</span>
                     <div>
-                        <div style="font-size:11.5px; font-weight:800; color:#8B95A1; margin-bottom:4px;">행사 장소</div>
-                        <div style="font-size:14.5px; font-weight:800; color:#333D4B; line-height:1.4; word-break:keep-all;">${addr}</div>
+                        <div style="font-size:11px; font-weight:800; color:#8B95A1; margin-bottom:2px;">행사 장소</div>
+                        <div style="font-size:14px; font-weight:800; color:#333D4B; line-height:1.4; word-break:keep-all;">${addr}</div>
                     </div>
                 </div>
             </div>
 
-            <!-- 💡 팩트 체크 박스 -->
-            <div style="background:linear-gradient(135deg, #F4F0FF 0%, #F9F7FF 100%); padding:18px; border-radius:16px; margin-bottom:24px; border:1px solid #EBE5FF; display:flex; gap:12px; align-items:flex-start;">
-                <span style="font-size:20px; margin-top:2px;">💡</span>
+            <!-- 💡 팩트 체크 박스: 패딩 축소 -->
+            <div style="background:linear-gradient(135deg, #F4F0FF 0%, #F9F7FF 100%); padding:14px; border-radius:14px; margin-bottom:16px; border:1px solid #EBE5FF; display:flex; gap:10px; align-items:flex-start;">
+                <span style="font-size:16px; margin-top:2px;">💡</span>
                 <div>
-                    <div style="font-size:12.5px; font-weight:900; color:#6B4EFF; margin-bottom:6px;">토실이 팩트 체크</div>
-                    <div style="font-size:14px; font-weight:800; color:#4E5968; line-height:1.5; word-break:keep-all;">"${review || '맞춤형 주말 안전 인프라입니다.'}"</div>
+                    <div style="font-size:12px; font-weight:900; color:#6B4EFF; margin-bottom:4px;">토실이 팩트 체크</div>
+                    <div style="font-size:13.5px; font-weight:800; color:#4E5968; line-height:1.4; word-break:keep-all;">"${review || '맞춤형 주말 안전 인프라입니다.'}"</div>
                 </div>
             </div>
 
-            <!-- 🚗 길찾기 영역 -->
-            <div style="font-size:13.5px; font-weight:900; color:#191F28; margin-bottom:12px; display:flex; align-items:center; gap:6px;">
+            <!-- 🚗 길찾기 영역: 박스 및 아이콘 크기 축소 -->
+            <div style="font-size:13px; font-weight:900; color:#191F28; margin-bottom:8px; display:flex; align-items:center; gap:6px;">
                 <span>🚗</span> 아기랑 모바일 길찾기
             </div>
-            <div style="display:flex; gap:10px; margin-bottom:24px;">
-                <a href="${naverUrl}" target="_blank" style="flex:1; padding:12px 0; background:#FFF; border:1px solid #E5E8EB; border-radius:14px; cursor:pointer; display:flex; flex-direction:column; align-items:center; gap:8px; box-shadow:0 2px 6px rgba(0,0,0,0.02); text-decoration:none;">
-                    <div style="width:36px; height:36px; background:#03C75A; border-radius:10px; display:flex; align-items:center; justify-content:center; color:#FFF; font-weight:900; font-size:18px;">N</div>
-                    <span style="font-size:11.5px; font-weight:800; color:#4E5968;">네이버 지도</span>
+            <div style="display:flex; gap:8px; margin-bottom:16px;">
+                <a href="${naverUrl}" target="_blank" style="flex:1; padding:10px 0; background:#FFF; border:1px solid #E5E8EB; border-radius:12px; cursor:pointer; display:flex; flex-direction:column; align-items:center; gap:6px; box-shadow:0 2px 4px rgba(0,0,0,0.02); text-decoration:none;">
+                    <div style="width:30px; height:30px; background:#03C75A; border-radius:8px; display:flex; align-items:center; justify-content:center; color:#FFF; font-weight:900; font-size:15px;">N</div>
+                    <span style="font-size:11px; font-weight:800; color:#4E5968;">네이버 지도</span>
                 </a>
-                <a href="${tmapUrl}" style="flex:1; padding:12px 0; background:#FFF; border:1px solid #E5E8EB; border-radius:14px; cursor:pointer; display:flex; flex-direction:column; align-items:center; gap:8px; box-shadow:0 2px 6px rgba(0,0,0,0.02); text-decoration:none;">
-                    <div style="width:36px; height:36px; background:#111111; border-radius:10px; display:flex; align-items:center; justify-content:center; color:#FFF; font-weight:900; font-size:18px;">T</div>
-                    <span style="font-size:11.5px; font-weight:800; color:#4E5968;">티맵</span>
+                <a href="${tmapUrl}" style="flex:1; padding:10px 0; background:#FFF; border:1px solid #E5E8EB; border-radius:12px; cursor:pointer; display:flex; flex-direction:column; align-items:center; gap:6px; box-shadow:0 2px 4px rgba(0,0,0,0.02); text-decoration:none;">
+                    <div style="width:30px; height:30px; background:#111111; border-radius:8px; display:flex; align-items:center; justify-content:center; color:#FFF; font-weight:900; font-size:15px;">T</div>
+                    <span style="font-size:11px; font-weight:800; color:#4E5968;">티맵</span>
                 </a>
-                <a href="${kakaoUrl}" target="_blank" style="flex:1; padding:12px 0; background:#FFF; border:1px solid #E5E8EB; border-radius:14px; cursor:pointer; display:flex; flex-direction:column; align-items:center; gap:8px; box-shadow:0 2px 6px rgba(0,0,0,0.02); text-decoration:none;">
-                    <div style="width:36px; height:36px; background:#FEE500; border-radius:10px; display:flex; align-items:center; justify-content:center; color:#191F28; font-weight:900; font-size:18px;">K</div>
-                    <span style="font-size:11.5px; font-weight:800; color:#4E5968;">카카오맵</span>
+                <a href="${kakaoUrl}" target="_blank" style="flex:1; padding:10px 0; background:#FFF; border:1px solid #E5E8EB; border-radius:12px; cursor:pointer; display:flex; flex-direction:column; align-items:center; gap:6px; box-shadow:0 2px 4px rgba(0,0,0,0.02); text-decoration:none;">
+                    <div style="width:30px; height:30px; background:#FEE500; border-radius:8px; display:flex; align-items:center; justify-content:center; color:#191F28; font-weight:900; font-size:15px;">K</div>
+                    <span style="font-size:11px; font-weight:800; color:#4E5968;">카카오맵</span>
                 </a>
             </div>
 
             <!-- ✅ 하단 액션 버튼 -->
-            <div style="display:flex; gap:10px; margin-bottom: 0;">
+            <div style="display:flex; gap:8px; margin-bottom: 0;">
                 ${telBtn}
-                <button onclick="closeFestivalModalForce()" style="flex:2; padding:16px; background:#3182F6; color:#FFF; border-radius:14px; font-weight:900; font-size:15px; border:none; box-shadow:0 4px 12px rgba(49,130,246,0.3); cursor:pointer;">확인 완료</button>
+                <button onclick="closeFestivalModalForce()" style="flex:2; padding:12px; background:#3182F6; color:#FFF; border-radius:12px; font-weight:900; font-size:14px; border:none; box-shadow:0 4px 10px rgba(49,130,246,0.3); cursor:pointer;">확인 완료</button>
             </div>
             
-            <div style="width: 100%; height: 20px; display: block; clear: both; flex-shrink: 0;"></div>
+            <div style="width: 100%; height: 10px; display: block; clear: both; flex-shrink: 0;"></div>
         </div>
     `;
     const modalWrap = document.getElementById('premium-modal');
@@ -3238,7 +3237,9 @@ window.selectTrackerBtn = function(btn, category) {
     else if (category === 'sleep_night') window.trackerState.subType = '밤잠';
 };
 
-// 🌟 바텀 시트 열기 (네이티브 달력 연동 + 모바일 화면 잘림 완벽 방어!)
+// ==========================================
+// 📱 원터치 육아 트래커 엔진 (초압축 다이어트 & 잘림 방지 패치!)
+// ==========================================
 window.openTrackerSheet = function(type, editId = null, preSelect = null) {
     window.editingTrackerId = (typeof editId === 'string') ? editId : null;
     window.trackerState.type = type; 
@@ -3256,13 +3257,13 @@ window.openTrackerSheet = function(type, editId = null, preSelect = null) {
     if(title) title.style.color = 'var(--text-m)';
     if(saveBtn) { saveBtn.style.backgroundColor = 'var(--primary)'; saveBtn.style.color = '#FFF'; saveBtn.style.border = 'none'; }
 
-    // 🚨 [핵심 패치 1] 모바일 화면 짤림 방지 (높이 85% 제한 & 내부 스크롤 허용)
+    // 🚨 [패치 1] 화면 뚫림 방어! 바텀시트 최대 높이 85vh 제한 & 내부 스크롤 허용
     content.style.maxHeight = '85vh';
     content.style.display = 'flex';
     content.style.flexDirection = 'column';
-    body.style.overflowY = 'auto'; // 내용물이 길면 시트 안에서 부드럽게 스크롤됩니다!
+    body.style.overflowY = 'auto';
     body.style.flex = '1';
-    body.style.paddingBottom = '30px'; // 하단 여백 추가로 쾌적함 상승
+    body.style.paddingBottom = '30px'; 
 
     overlay.style.display = 'block'; 
     setTimeout(() => { content.style.transform = 'translateY(0)'; }, 10);
@@ -3270,11 +3271,10 @@ window.openTrackerSheet = function(type, editId = null, preSelect = null) {
     const now = new Date();
     const currentTimeStr = `${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`;
     let targetTime = currentTimeStr;
-    let displayDateStr = now.toISOString().split('T')[0]; // 기본 날짜는 오늘!
+    let displayDateStr = now.toISOString().split('T')[0];
 
     let pastDateBadgeHtml = '';
 
-    // 💡 수정 모드일 때 기존 데이터 불러와서 날짜 달력에 세팅!
     if (window.editingTrackerId) {
         let records = JSON.parse(localStorage.getItem('tosil_tracker_records')) || [];
         let recordToEdit = records.find(r => r.id === window.editingTrackerId);
@@ -3293,19 +3293,17 @@ window.openTrackerSheet = function(type, editId = null, preSelect = null) {
         }
     }
 
-    let timeLabel = type === 'sleep' ? "언제 잠들었나요?" : "기록 시간 (스와이프하여 시간 수정)";
-    
-    // 🚨 [핵심 패치 2] 날짜 칸 너비 강제 확보 (min-width: 140px)로 글자 짤림 방어!
-    const timeInputHtml = `
-        <div style="text-align: center; margin-bottom: 24px;">
-            <div style="display:flex; justify-content:center; align-items:center; gap:12px; margin-bottom:16px;">
-                <div style="font-size:13px; font-weight:800; color:var(--text-s);">날짜 선택</div>
-                <input type="date" id="v-tracker-custom-date" value="${displayDateStr}" style="padding:8px 10px; border-radius:12px; border:1px solid var(--border); background:var(--bg-card); color:var(--text-m); font-family:inherit; font-size:14px; font-weight:900; outline:none; cursor:pointer; box-shadow:inset 0 2px 4px rgba(0,0,0,0.02); min-width: 140px; text-align: center;">
+    // 🚨 수유/기저귀 탭에서 사용할 공통 상단 (날짜 잘림 방지 스타일 적용)
+    const baseTimeInputHtml = `
+        <div style="text-align: center; margin-bottom: 20px;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px; gap:12px;">
+                <div style="font-size:13.5px; font-weight:800; color:var(--text-s); flex-shrink:0;">날짜 선택</div>
+                <input type="date" id="v-tracker-custom-date" value="${displayDateStr}" style="flex:1; width:100%; padding:10px 4px; border-radius:12px; border:1px solid var(--border); background:var(--bg-card); color:var(--text-m); font-family:inherit; font-size:15px; font-weight:900; outline:none; text-align:center; letter-spacing:-1px; box-sizing:border-box;">
             </div>
             
             ${pastDateBadgeHtml}
 
-            <div style="font-size:12.5px; font-weight:800; color:var(--text-s); margin-bottom:12px;">${timeLabel}</div>
+            <div style="font-size:12.5px; font-weight:800; color:var(--text-s); margin-bottom:10px;">기록 시간 (스와이프하여 시간 수정)</div>
             
             <style>
                 .drum-picker::-webkit-scrollbar { display: none; }
@@ -3314,20 +3312,18 @@ window.openTrackerSheet = function(type, editId = null, preSelect = null) {
                 input[type="date"]::-webkit-calendar-picker-indicator:hover { opacity: 1; }
             </style>
 
-            <div style="display:flex; justify-content:center; align-items:center; height: 150px; position:relative; overflow:hidden; background:var(--bg-sub); border-radius:20px; box-shadow:inset 0 2px 6px rgba(0,0,0,0.02);">
+            <div style="display:flex; justify-content:center; align-items:center; height: 140px; position:relative; overflow:hidden; background:var(--bg-sub); border-radius:20px; box-shadow:inset 0 2px 6px rgba(0,0,0,0.02);">
                 <div style="position:absolute; top:50%; left:20px; right:20px; height:44px; transform:translateY(-50%); background:rgba(49, 130, 246, 0.08); border-radius:12px; pointer-events:none; border: 1px solid rgba(49, 130, 246, 0.15);"></div>
                 <div id="picker-hour" class="drum-picker" style="height:100%; overflow-y:auto; scroll-snap-type:y mandatory; width:80px; text-align:center; display:flex; flex-direction:column; scroll-behavior: smooth;"></div>
                 <div style="font-size:22px; font-weight:900; color:var(--text-s); margin:0 10px; z-index:1; padding-bottom:4px;">:</div>
                 <div id="picker-minute" class="drum-picker" style="height:100%; overflow-y:auto; scroll-snap-type:y mandatory; width:80px; text-align:center; display:flex; flex-direction:column; scroll-behavior: smooth;"></div>
             </div>
-            
-            <input type="hidden" id="v-tracker-time" value="${targetTime}" onchange="${type === 'sleep' ? 'window.calcSleepFromTimes()' : ''}">
+            <input type="hidden" id="v-tracker-time" value="${targetTime}">
         </div>
     `;
 
     if (type === 'feed') {
         title.innerHTML = '🍼 맘마 기록하기';
-        
         let records = JSON.parse(localStorage.getItem('tosil_tracker_records')) || [];
         let feedRecords = records.filter(r => r.type === 'feed' && r.subType !== '모유' && r.subType !== '이유식' && r.amount > 0);
         let uniqueAmounts = [];
@@ -3339,69 +3335,18 @@ window.openTrackerSheet = function(type, editId = null, preSelect = null) {
         
         let quickButtonsHtml = '';
         if (uniqueAmounts.length === 0) {
-            quickButtonsHtml = `
-                <button type="button" class="quick-btn active" onclick="window.setFeedAmount(160)" style="flex-shrink: 0; padding: 10px 14px; background: #EBF4FF; color: #3182F6; border: none; border-radius: 12px; font-weight: 900; font-size: 13.5px; cursor: pointer;">🍼 160ml</button>
-                <button type="button" class="quick-btn" onclick="window.setFeedAmount(200)" style="flex-shrink: 0; padding: 10px 14px; background: #F2F5F8; color: #4E5968; border: none; border-radius: 12px; font-weight: 900; font-size: 13.5px; cursor: pointer;">200ml</button>
-            `;
+            quickButtonsHtml = `<button type="button" class="quick-btn active" onclick="window.setFeedAmount(160)" style="flex-shrink: 0; padding: 10px 14px; background: #EBF4FF; color: #3182F6; border: none; border-radius: 12px; font-weight: 900; font-size: 13.5px; cursor: pointer;">🍼 160ml</button><button type="button" class="quick-btn" onclick="window.setFeedAmount(200)" style="flex-shrink: 0; padding: 10px 14px; background: #F2F5F8; color: #4E5968; border: none; border-radius: 12px; font-weight: 900; font-size: 13.5px; cursor: pointer;">200ml</button>`;
         } else if (uniqueAmounts.length === 1) {
             quickButtonsHtml = `<button type="button" class="quick-btn active" onclick="window.setFeedAmount(${uniqueAmounts[0]})" style="flex-shrink: 0; padding: 10px 14px; background: #EBF4FF; color: #3182F6; border: none; border-radius: 12px; font-weight: 900; font-size: 13.5px; cursor: pointer;">🍼 늘 먹던 ${uniqueAmounts[0]}ml</button>`;
         } else {
-            quickButtonsHtml = `
-                <button type="button" class="quick-btn active" onclick="window.setFeedAmount(${uniqueAmounts[0]})" style="flex-shrink: 0; padding: 10px 14px; background: #EBF4FF; color: #3182F6; border: none; border-radius: 12px; font-weight: 900; font-size: 13.5px; cursor: pointer;">🍼 ${uniqueAmounts[0]}ml</button>
-                <button type="button" class="quick-btn" onclick="window.setFeedAmount(${uniqueAmounts[1]})" style="flex-shrink: 0; padding: 10px 14px; background: #F2F5F8; color: #4E5968; border: none; border-radius: 12px; font-weight: 900; font-size: 13.5px; cursor: pointer;">${uniqueAmounts[1]}ml</button>
-            `;
+            quickButtonsHtml = `<button type="button" class="quick-btn active" onclick="window.setFeedAmount(${uniqueAmounts[0]})" style="flex-shrink: 0; padding: 10px 14px; background: #EBF4FF; color: #3182F6; border: none; border-radius: 12px; font-weight: 900; font-size: 13.5px; cursor: pointer;">🍼 ${uniqueAmounts[0]}ml</button><button type="button" class="quick-btn" onclick="window.setFeedAmount(${uniqueAmounts[1]})" style="flex-shrink: 0; padding: 10px 14px; background: #F2F5F8; color: #4E5968; border: none; border-radius: 12px; font-weight: 900; font-size: 13.5px; cursor: pointer;">${uniqueAmounts[1]}ml</button>`;
         }
         
-        let milkHtml = `
-            <div id="milk-input-area">
-                <div style="display: flex; gap: 10px; margin-bottom: 20px;">
-                    <button class="btn-main" onclick="window.selectTrackerBtn(this, 'feed')" style="flex: 1; background: var(--bg-card); color: var(--text-s); border: 1px solid var(--border); box-shadow: none; margin:0; transition:0.2s;">🍼 분유</button>
-                    <button class="btn-main" onclick="window.selectTrackerBtn(this, 'feed')" style="flex: 1; background: var(--bg-card); color: var(--text-s); border: 1px solid var(--border); box-shadow: none; margin:0; transition:0.2s;">🤱 모유</button>
-                    <button class="btn-main" onclick="window.selectTrackerBtn(this, 'feed')" style="flex: 1; background: var(--bg-card); color: var(--text-s); border: 1px solid var(--border); box-shadow: none; margin:0; transition:0.2s;">🍼 유축</button>
-                </div>
-                <div id="feed-ml-area" style="text-align: center; margin-bottom: 24px;">
-                    <div style="font-size: 13px; font-weight: 800; color: var(--text-s); margin-bottom: 8px;">먹은 양 (ml)</div>
-                    <div style="display: flex; justify-content: center; align-items: baseline; gap: 4px; margin-bottom: 16px;">
-                        <input type="number" id="v-feed-amount" placeholder="${recentFeedAmount}" style="font-size: 44px; font-weight: 900; color: var(--text-m); border: none; outline: none; background: transparent; text-align: center; width: 140px; padding: 0; margin: 0; border-bottom: 3px solid var(--border); border-radius: 0; transition: 0.3s;">
-                        <span style="font-size: 18px; font-weight: 800; color: var(--text-s);">ml</span>
-                    </div>
-                    <div style="display: flex; justify-content: center; gap: 8px; overflow-x: auto; padding-bottom: 4px; scrollbar-width: none;">
-                        ${quickButtonsHtml}
-                        <div style="width: 1px; background: var(--border); margin: 0 4px;"></div>
-                        <button type="button" onclick="window.adjustFeedAmount(10)" style="flex-shrink: 0; padding: 10px 12px; background: var(--bg-card); color: var(--text-m); border: 1px solid var(--border); border-radius: 12px; font-weight: 800; font-size: 13.5px; cursor: pointer;">+10</button>
-                        <button type="button" onclick="window.adjustFeedAmount(-10)" style="flex-shrink: 0; padding: 10px 12px; background: var(--bg-card); color: var(--text-m); border: 1px solid var(--border); border-radius: 12px; font-weight: 800; font-size: 13.5px; cursor: pointer;">-10</button>
-                    </div>
-                </div>
-                <div id="feed-breast-area" style="display: none; text-align: center; margin-bottom: 24px;">
-                    <div style="font-size: 13px; font-weight: 800; color: var(--text-s); margin-bottom: 12px;">어느 쪽을 먹였나요?</div>
-                    <div style="display: flex; justify-content: center; gap: 12px; margin-bottom: 20px;">
-                        <button class="btn-main" onclick="window.selectTrackerBtn(this, 'breast_left')" style="width: 110px; padding: 14px 0; white-space: nowrap; background: var(--bg-card); color: var(--text-s); border: 1px solid var(--border); box-shadow: none; margin:0; transition:0.2s; font-size: 14.5px;">왼쪽 (L)</button>
-                        <button class="btn-main" onclick="window.selectTrackerBtn(this, 'breast_right')" style="width: 110px; padding: 14px 0; white-space: nowrap; background: var(--bg-card); color: var(--text-s); border: 1px solid var(--border); box-shadow: none; margin:0; transition:0.2s; font-size: 14.5px;">오른쪽 (R)</button>
-                    </div>
-                    <div style="font-size: 13px; font-weight: 800; color: var(--text-s); margin-bottom: 8px;">수유 시간 (분)</div>
-                    <div style="display: flex; justify-content: center; align-items: baseline; gap: 4px;">
-                        <input type="number" id="v-breast-amount" placeholder="15" style="font-size: 40px; font-weight: 900; color: var(--text-m); border: none; outline: none; background: transparent; text-align: center; width: 140px; padding: 0; margin: 0; border-bottom: 2px solid var(--border); border-radius: 0;">
-                        <span style="font-size: 18px; font-weight: 800; color: var(--text-s);">분</span>
-                    </div>
-                </div>
-            </div>
-        `;
+        let milkHtml = `<div id="milk-input-area"><div style="display: flex; gap: 10px; margin-bottom: 20px;"><button class="btn-main" onclick="window.selectTrackerBtn(this, 'feed')" style="flex: 1; background: var(--bg-card); color: var(--text-s); border: 1px solid var(--border); box-shadow: none; margin:0; transition:0.2s;">🍼 분유</button><button class="btn-main" onclick="window.selectTrackerBtn(this, 'feed')" style="flex: 1; background: var(--bg-card); color: var(--text-s); border: 1px solid var(--border); box-shadow: none; margin:0; transition:0.2s;">🤱 모유</button><button class="btn-main" onclick="window.selectTrackerBtn(this, 'feed')" style="flex: 1; background: var(--bg-card); color: var(--text-s); border: 1px solid var(--border); box-shadow: none; margin:0; transition:0.2s;">🍼 유축</button></div><div id="feed-ml-area" style="text-align: center; margin-bottom: 24px;"><div style="font-size: 13px; font-weight: 800; color: var(--text-s); margin-bottom: 8px;">먹은 양 (ml)</div><div style="display: flex; justify-content: center; align-items: baseline; gap: 4px; margin-bottom: 16px;"><input type="number" id="v-feed-amount" placeholder="${recentFeedAmount}" style="font-size: 44px; font-weight: 900; color: var(--text-m); border: none; outline: none; background: transparent; text-align: center; width: 140px; padding: 0; margin: 0; border-bottom: 3px solid var(--border); border-radius: 0; transition: 0.3s;"><span style="font-size: 18px; font-weight: 800; color: var(--text-s);">ml</span></div><div style="display: flex; justify-content: center; gap: 8px; overflow-x: auto; padding-bottom: 4px; scrollbar-width: none;">${quickButtonsHtml}<div style="width: 1px; background: var(--border); margin: 0 4px;"></div><button type="button" onclick="window.adjustFeedAmount(10)" style="flex-shrink: 0; padding: 10px 12px; background: var(--bg-card); color: var(--text-m); border: 1px solid var(--border); border-radius: 12px; font-weight: 800; font-size: 13.5px; cursor: pointer;">+10</button><button type="button" onclick="window.adjustFeedAmount(-10)" style="flex-shrink: 0; padding: 10px 12px; background: var(--bg-card); color: var(--text-m); border: 1px solid var(--border); border-radius: 12px; font-weight: 800; font-size: 13.5px; cursor: pointer;">-10</button></div></div><div id="feed-breast-area" style="display: none; text-align: center; margin-bottom: 24px;"><div style="font-size: 13px; font-weight: 800; color: var(--text-s); margin-bottom: 12px;">어느 쪽을 먹였나요?</div><div style="display: flex; justify-content: center; gap: 12px; margin-bottom: 20px;"><button class="btn-main" onclick="window.selectTrackerBtn(this, 'breast_left')" style="width: 110px; padding: 14px 0; white-space: nowrap; background: var(--bg-card); color: var(--text-s); border: 1px solid var(--border); box-shadow: none; margin:0; transition:0.2s; font-size: 14.5px;">왼쪽 (L)</button><button class="btn-main" onclick="window.selectTrackerBtn(this, 'breast_right')" style="width: 110px; padding: 14px 0; white-space: nowrap; background: var(--bg-card); color: var(--text-s); border: 1px solid var(--border); box-shadow: none; margin:0; transition:0.2s; font-size: 14.5px;">오른쪽 (R)</button></div><div style="font-size: 13px; font-weight: 800; color: var(--text-s); margin-bottom: 8px;">수유 시간 (분)</div><div style="display: flex; justify-content: center; align-items: baseline; gap: 4px;"><input type="number" id="v-breast-amount" placeholder="15" style="font-size: 40px; font-weight: 900; color: var(--text-m); border: none; outline: none; background: transparent; text-align: center; width: 140px; padding: 0; margin: 0; border-bottom: 2px solid var(--border); border-radius: 0;"><span style="font-size: 18px; font-weight: 800; color: var(--text-s);">분</span></div></div></div>`;
 
-        let foodHtml = `
-            <div id="food-input-area" style="display: none; text-align: center; margin-bottom: 24px;">
-                <div style="font-size: 13px; font-weight: 800; color: var(--text-s); margin-bottom: 8px;">먹은 이유식 양 (ml/g)</div>
-                <div style="display: flex; justify-content: center; align-items: baseline; gap: 4px; margin-bottom: 16px;">
-                    <input type="number" id="v-food-amount" placeholder="60" style="font-size: 44px; font-weight: 900; color: var(--text-m); border: none; outline: none; background: transparent; text-align: center; width: 140px; padding: 0; margin: 0; border-bottom: 3px solid var(--border); border-radius: 0; transition: 0.3s;">
-                    <span style="font-size: 18px; font-weight: 800; color: var(--text-s);">ml</span>
-                </div>
-                <div style="display: flex; justify-content: center; gap: 8px;">
-                    <button type="button" onclick="window.adjustFoodAmount(10)" style="padding: 10px 16px; background: rgba(16, 185, 129, 0.1); color: #10B981; border: 1px solid rgba(16, 185, 129, 0.2); border-radius: 12px; font-weight: 800; font-size: 14px; cursor: pointer;">+10</button>
-                    <button type="button" onclick="window.adjustFoodAmount(-10)" style="padding: 10px 16px; background: rgba(240, 68, 82, 0.1); color: #F04452; border: 1px solid rgba(240, 68, 82, 0.2); border-radius: 12px; font-weight: 800; font-size: 14px; cursor: pointer;">-10</button>
-                </div>
-            </div>
-        `;
+        let foodHtml = `<div id="food-input-area" style="display: none; text-align: center; margin-bottom: 24px;"><div style="font-size: 13px; font-weight: 800; color: var(--text-s); margin-bottom: 8px;">먹은 이유식 양 (ml/g)</div><div style="display: flex; justify-content: center; align-items: baseline; gap: 4px; margin-bottom: 16px;"><input type="number" id="v-food-amount" placeholder="60" style="font-size: 44px; font-weight: 900; color: var(--text-m); border: none; outline: none; background: transparent; text-align: center; width: 140px; padding: 0; margin: 0; border-bottom: 3px solid var(--border); border-radius: 0; transition: 0.3s;"><span style="font-size: 18px; font-weight: 800; color: var(--text-s);">ml</span></div><div style="display: flex; justify-content: center; gap: 8px;"><button type="button" onclick="window.adjustFoodAmount(10)" style="padding: 10px 16px; background: rgba(16, 185, 129, 0.1); color: #10B981; border: 1px solid rgba(16, 185, 129, 0.2); border-radius: 12px; font-weight: 800; font-size: 14px; cursor: pointer;">+10</button><button type="button" onclick="window.adjustFoodAmount(-10)" style="padding: 10px 16px; background: rgba(240, 68, 82, 0.1); color: #F04452; border: 1px solid rgba(240, 68, 82, 0.2); border-radius: 12px; font-weight: 800; font-size: 14px; cursor: pointer;">-10</button></div></div>`;
 
-        body.innerHTML = timeInputHtml + `
+        body.innerHTML = baseTimeInputHtml + `
             <div class="mamma-toggle-container">
                 <input type="radio" id="tab-milk" name="mamma-type" value="milk" checked onchange="window.toggleMammaTab('milk')">
                 <label for="tab-milk">🍼 분유/모유</label>
@@ -3414,44 +3359,116 @@ window.openTrackerSheet = function(type, editId = null, preSelect = null) {
         `;
         if(saveBtn) saveBtn.style.display = 'block';
     } 
-    // 🚨 [핵심 패치 3] 수면 탭 내부의 상하 여백(margin)을 줄여서 한 화면에 완벽하게 들어오게 다이어트!
+// 🚨 [패치 6] 수면 탭 (디폴트 끄기 + 밤잠 기억 + 디자인 파란색으로 통일)
     else if (type === 'sleep') {
-        title.innerHTML = window.editingTrackerId ? '💤 수면 기록 수정' : '💤 수면 기록하기';
-        body.innerHTML = timeInputHtml + `
-            <div style="display:flex; justify-content:center; align-items:center; gap:8px; margin-bottom:16px;">
-                <input type="time" id="v-tracker-time-dummy" value="${currentTimeStr}" disabled style="display:none;">
-                <span style="font-size:13px; font-weight:800; color:var(--text-s);">일어난 시간 👉</span>
-                <input type="time" id="v-sleep-end-time" value="${currentTimeStr}" onchange="window.calcSleepFromTimes()" style="flex:1; text-align:center; border:1px solid var(--border); background:var(--bg-sub); padding:8px 10px; border-radius:12px; font-size:16px; font-weight:900; color:var(--text-m); outline:none;">
+        let records = JSON.parse(localStorage.getItem('tosil_tracker_records')) || [];
+
+        if (!window.editingTrackerId) {
+            let sleepingRecord = records.find(r => r.type === 'sleep' && r.amount === 0);
+            if (sleepingRecord) {
+                window.editingTrackerId = sleepingRecord.id;
+            }
+        }
+
+        title.innerHTML = window.editingTrackerId ? '수면 기록 수정' : '수면 기록하기';
+        
+        let sleepStartD = displayDateStr;
+        let sleepStartT = targetTime;
+        let sleepEndD = displayDateStr;
+        let sleepEndT = currentTimeStr;
+        let activeSubType = ''; // 💡 핵심: 처음엔 아무 불도 안 들어오게 비워둠!
+        window.trackerState.isSleeping = false; 
+
+        if (window.editingTrackerId) {
+            let r = records.find(x => x.id === window.editingTrackerId);
+            if (r) {
+                const sDate = new Date(r.timestamp);
+                sleepStartD = sDate.toISOString().split('T')[0];
+                sleepStartT = r.time;
+                activeSubType = r.subType || ''; // 자는 중이면 원래 잤던 잠 불러오기
+                
+                if (r.amount === 0) {
+                    window.trackerState.isSleeping = true;
+                } else {
+                    const eDate = new Date(r.timestamp + (r.amount * 60000));
+                    sleepEndD = eDate.toISOString().split('T')[0];
+                    sleepEndT = `${String(eDate.getHours()).padStart(2,'0')}:${String(eDate.getMinutes()).padStart(2,'0')}`;
+                }
+            }
+        }
+        
+        window.trackerState.subType = activeSubType; 
+
+        body.innerHTML = `
+            <!-- 버튼에서도 이모티콘 싹 뺌 -->
+            <div style="display: flex; gap: 8px; margin-bottom: 24px;" id="sleep-type-buttons">
+                <button class="btn-main" onclick="window.selectTrackerBtn(this, 'sleep_day')" style="flex: 1; background: var(--bg-card); color: var(--text-s); border: 1px solid var(--border); box-shadow: none; margin:0; padding:14px 0; font-size:14.5px; transition:0.2s; border-radius:14px;">낮잠</button>
+                <button class="btn-main" onclick="window.selectTrackerBtn(this, 'sleep_night')" style="flex: 1; background: var(--bg-card); color: var(--text-s); border: 1px solid var(--border); box-shadow: none; margin:0; padding:14px 0; font-size:14.5px; transition:0.2s; border-radius:14px;">밤잠</button>
             </div>
-            <div style="display: flex; gap: 10px; margin-bottom: 16px;">
-                <button class="btn-main" onclick="window.selectTrackerBtn(this, 'sleep_day')" style="flex: 1; background: var(--bg-card); color: var(--text-s); border: 1px solid var(--border); box-shadow: none; margin:0; transition:0.2s;">☀️ 낮잠</button>
-                <button class="btn-main" onclick="window.selectTrackerBtn(this, 'sleep_night')" style="flex: 1; background: var(--bg-card); color: var(--text-s); border: 1px solid var(--border); box-shadow: none; margin:0; transition:0.2s;">🌙 밤잠</button>
+
+            <div style="background: var(--bg-card); padding: 20px; border-radius: 20px; margin-bottom: 20px; border: 1px solid var(--border); box-shadow: 0 4px 16px rgba(0,0,0,0.03);">
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <div style="font-size: 15px; font-weight: 900; color: var(--text-m); display:flex; align-items:center; gap:8px;">
+                        <span style="display:inline-block; width:8px; height:8px; background:#3182F6; border-radius:50%;"></span> 잠든 시간
+                    </div>
+                    <div style="display: flex; gap: 6px;">
+                        <input type="date" id="v-sleep-start-date" value="${sleepStartD}" onchange="window.calcSleepRange()" style="padding: 8px 10px; border-radius: 10px; border: 1px solid var(--border); background: var(--bg-sub); font-size: 13px; font-weight: 800; color: var(--text-m); outline: none; text-align:center;">
+                        <input type="time" id="v-sleep-start-time" value="${sleepStartT}" onchange="window.calcSleepRange()" style="padding: 8px 10px; border-radius: 10px; border: 1px solid var(--border); background: var(--bg-sub); font-size: 14px; font-weight: 900; color: var(--text-m); outline: none; text-align:center;">
+                    </div>
+                </div>
+                
+                <div id="sleep-divider" style="border-left: 2px dashed #E5E8EB; height: 24px; margin-left: 3px; margin-top: 4px; margin-bottom: 4px; ${window.trackerState.isSleeping ? 'display:none;' : ''}"></div>
+                
+                <div id="sleep-end-area" style="display: ${window.trackerState.isSleeping ? 'none' : 'flex'}; justify-content: space-between; align-items: center;">
+                    <div style="font-size: 15px; font-weight: 900; color: var(--text-m); display:flex; align-items:center; gap:8px;">
+                        <span style="display:inline-block; width:8px; height:8px; background:#F59E0B; border-radius:50%;"></span> 일어난 시간
+                    </div>
+                    <div style="display: flex; gap: 6px;">
+                        <input type="date" id="v-sleep-end-date" value="${sleepEndD}" onchange="window.calcSleepRange()" style="padding: 8px 10px; border-radius: 10px; border: 1px solid var(--border); background: var(--bg-sub); font-size: 13px; font-weight: 800; color: var(--text-m); outline: none; text-align:center;">
+                        <input type="time" id="v-sleep-end-time" value="${sleepEndT}" onchange="window.calcSleepRange()" style="padding: 8px 10px; border-radius: 10px; border: 1px solid var(--border); background: var(--bg-sub); font-size: 14px; font-weight: 900; color: var(--text-m); outline: none; text-align:center;">
+                    </div>
+                </div>
             </div>
-            <div style="background:var(--bg-sub); padding:16px; border-radius:16px; margin-bottom:16px; border:1px solid var(--border); text-align:center;">
-                <div style="font-size:12.5px; font-weight:800; color:#3182F6; margin-bottom:8px;">아기가 지금 막 일어났나요?</div>
-                <button onclick="window.calcSleepToNow()" style="width:100%; padding:12px; background:var(--bg-card); color:#3182F6; border:1px solid var(--border); border-radius:12px; font-size:15px; font-weight:900; cursor:pointer; box-shadow:0 2px 8px rgba(0,0,0,0.05); transition:0.2s;">
-                    ⏰ 방금 깼어요! (알아서 계산)
+
+            <!-- 💡 사진 4번과 5번의 디자인을 파란색으로 통일! -->
+            <div style="text-align: center; margin-bottom: 20px;">
+                <div id="v-sleep-total-text" style="display:inline-flex; justify-content:center; align-items:center; background:#EBF8FF; color:#3182F6; padding:12px 24px; border-radius:24px; font-size:16px; font-weight:900; letter-spacing:-0.5px; transition:0.3s;">계산 중...</div>
+            </div>
+
+            <div style="display: flex; gap: 10px; margin-bottom: 10px;">
+                <button id="btn-wake-now" onclick="window.setWakeTimeNow()" style="flex: 1; padding: 14px; background: #E8F3FF; color: #3182F6; border: none; border-radius: 14px; font-size: 14px; font-weight: 900; cursor: pointer; transition:0.2s; display:${window.trackerState.isSleeping ? 'none' : 'block'};">
+                    깼어요
+                </button>
+                <button id="btn-still-sleeping" onclick="window.toggleIsSleeping()" style="flex: 1; padding: 14px; background: ${window.trackerState.isSleeping ? '#F2F5F8' : '#FFF0F1'}; color: ${window.trackerState.isSleeping ? '#8B95A1' : '#F04452'}; border: none; border-radius: 14px; font-size: 14px; font-weight: 900; cursor: pointer; transition:0.2s;">
+                    ${window.trackerState.isSleeping ? '취소 (일어난 시간 입력)' : '자고 있어요'}
                 </button>
             </div>
-            <div style="text-align: center; margin-bottom: 16px;">
-                <div style="font-size: 13.5px; font-weight: 800; color: var(--text-s); margin-bottom: 8px;">총 수면 시간</div>
-                <div style="display: flex; justify-content: center; align-items: baseline; gap: 6px;">
-                    <input type="number" id="v-sleep-hours" value="0" oninput="window.calcEndTimeFromAmount()" style="font-size: 40px; font-weight: 900; color: var(--text-m); border: none; outline: none; background: transparent; text-align: center; width: 70px; padding: 0; margin: 0; border-bottom: 3px solid var(--border); border-radius: 0; transition:0.3s;">
-                    <span style="font-size: 18px; font-weight: 800; color: var(--text-s);">시간</span>
-                    <input type="number" id="v-sleep-mins" value="0" oninput="window.calcEndTimeFromAmount()" style="font-size: 40px; font-weight: 900; color: var(--text-m); border: none; outline: none; background: transparent; text-align: center; width: 70px; padding: 0; margin: 0; border-bottom: 3px solid var(--border); border-radius: 0; transition:0.3s;">
-                    <span style="font-size: 18px; font-weight: 800; color: var(--text-s);">분</span>
-                </div>
-              <input type="hidden" id="v-sleep-amount" value="0">
-                <div style="margin-top: 10px;">
-                    <span style="background:var(--bg-sub); color:var(--text-m); font-size:11px; font-weight:800; padding:6px 12px; border-radius:20px; border:1px solid var(--border); display:inline-block; word-break:keep-all;">💡 자는 중이라면 시간을 똑같이 두고 [저장] 누르세요!</span>
-                </div>
-            </div>
+            <input type="hidden" id="v-sleep-amount" value="0">
         `;
         if(saveBtn) saveBtn.style.display = 'block';
+
+        setTimeout(() => {
+            const sleepBtns = document.querySelectorAll('#sleep-type-buttons .btn-main');
+            // activeSubType이 있을 때만 불 켜기 (새 기록이면 아무것도 안 켜짐)
+            if (activeSubType) {
+                sleepBtns.forEach(btn => {
+                    if (btn.innerText.includes(activeSubType)) {
+                        window.selectTrackerBtn(btn, activeSubType === '낮잠' ? 'sleep_day' : 'sleep_night');
+                    }
+                });
+            }
+
+            window.calcSleepRange();
+            if(window.sleepModalLiveTimer) clearInterval(window.sleepModalLiveTimer);
+            window.sleepModalLiveTimer = setInterval(() => {
+                if(window.trackerState.isSleeping) window.calcSleepRange();
+            }, 60000); 
+        }, 10);
     }
+
     else if (type === 'diaper') {
         title.innerHTML = '💩 기저귀 기록하기';
-        body.innerHTML = timeInputHtml + `
+        body.innerHTML = baseTimeInputHtml + `
             <div style="display: flex; gap: 8px; margin-bottom: 20px;">
                 <button class="btn-main" onclick="window.selectTrackerBtn(this, 'diaper_pee')" style="flex: 1; background: var(--bg-card); color: var(--text-s); border: 1px solid var(--border); box-shadow: none; margin:0; transition:0.2s; padding:12px 0;">💧 소변</button>
                 <button class="btn-main" onclick="window.selectTrackerBtn(this, 'diaper_poop')" style="flex: 1; background: var(--bg-card); color: var(--text-s); border: 1px solid var(--border); box-shadow: none; margin:0; transition:0.2s; padding:12px 0;">💩 대변</button>
@@ -3863,7 +3880,14 @@ window.updateTrackerDashboard = function() {
         <div style="max-height:300px; overflow-y:auto; padding-right:4px;">
     `;
             for(let date in grouped) {
-            historyHtml += `<div style="position: sticky; top: -1px; z-index: 10; background: var(--bg-card); font-size:12.5px; font-weight:900; color:#8B95A1; margin:16px 0 8px 0; border-bottom:1px solid #F2F5F8; padding:6px 0;">📅 ${date}</div>`;
+                // 💡 [핵심 패치] 날짜 헤더 바로 밑에 일간 통계 요약(패턴 분석) 박스 추가!
+                historyHtml += `
+                    <div style="position: sticky; top: -1px; z-index: 10; background: var(--bg-card); padding: 12px 0 8px 0; border-bottom:1px solid #F2F5F8;">
+                        <div style="font-size:14px; font-weight:900; color:#4E5968; margin-bottom: 6px;">📅 ${date}</div>
+                        ${window.getDailySummaryHtml(grouped[date])}
+                    </div>
+                `;
+                
                 grouped[date].forEach(r => {
     let icon = '✨';
     // 👇 이 부분이 핵심입니다! 이유식이면 숟가락, 아니면 젖병!
@@ -4547,7 +4571,9 @@ window.stopSleepTimer = async function() {
     window.showToast(`✅ ${durationMins}분 동안 자고 일어났어요!`);
 };
 
-// 🌟 기록 저장 함수 (어제/오늘 날짜 무조건 우선 적용!)
+// ==========================================
+// 🚨 [저장 엔진 업데이트] 기존 saveTrackerRecord 함수 덮어쓰기!
+// ==========================================
 window.saveTrackerRecord = async function() {
     if(!window.trackerState.type) return;
 
@@ -4559,29 +4585,36 @@ window.saveTrackerRecord = async function() {
         saveBtn.style.opacity = '0.5';
     }
 
-    let records = JSON.parse(localStorage.getItem('tosil_tracker_records')) || [];
+  let records = JSON.parse(localStorage.getItem('tosil_tracker_records')) || [];
     let timeStr = "";
     let timestamp = new Date().getTime();
-    const timeInputEl = document.getElementById('v-tracker-time');
     
- // 🌟 [달력 패치] 어제/오늘 토글 대신 네이티브 달력 선택값 불러오기!
-    const customDateInput = document.getElementById('v-tracker-custom-date');
-    let finalDate = customDateInput && customDateInput.value ? new Date(customDateInput.value) : new Date();
-    
-    if (timeInputEl && timeInputEl.value) {
-        timeStr = timeInputEl.value; 
-        const [hours, minutes] = timeStr.split(':');
-        finalDate.setHours(parseInt(hours), parseInt(minutes), 0, 0);
-        timestamp = finalDate.getTime();
+    // 🌟 [패치] 수면 탭일 때는 새로 바뀐 타임라인 입력칸에서 정확한 날짜/시간을 긁어옵니다!
+    if (window.trackerState.type === 'sleep') {
+        const sDate = document.getElementById('v-sleep-start-date').value;
+        const sTime = document.getElementById('v-sleep-start-time').value;
+        timeStr = sTime;
+        timestamp = new Date(`${sDate}T${sTime}:00`).getTime();
     } else {
-        timeStr = `${String(finalDate.getHours()).padStart(2,'0')}:${String(finalDate.getMinutes()).padStart(2,'0')}`;
-        timestamp = finalDate.getTime();
+        // 수유, 기저귀 등은 기존대로 단일 날짜 가져오기
+        const timeInputEl = document.getElementById('v-tracker-time');
+        const customDateInput = document.getElementById('v-tracker-custom-date');
+        let finalDate = customDateInput && customDateInput.value ? new Date(customDateInput.value) : new Date();
+        
+        if (timeInputEl && timeInputEl.value) {
+            timeStr = timeInputEl.value; 
+            const [hours, minutes] = timeStr.split(':');
+            finalDate.setHours(parseInt(hours), parseInt(minutes), 0, 0);
+            timestamp = finalDate.getTime();
+        } else {
+            timeStr = `${String(finalDate.getHours()).padStart(2,'0')}:${String(finalDate.getMinutes()).padStart(2,'0')}`;
+            timestamp = finalDate.getTime();
+        }
     }
 
     let recordId = window.editingTrackerId ? window.editingTrackerId : 'trk_'+new Date().getTime();
     let record = { id: recordId, time: timeStr, timestamp: timestamp, type: window.trackerState.type };
 
-    // 분기별 데이터 정리 로직
     if (window.trackerState.type === 'feed' || window.trackerState.type === 'babyfood') {
         if (window.trackerState.subType === '이유식') {
             const foodAmt = document.getElementById('v-food-amount').value;
@@ -4623,25 +4656,45 @@ window.saveTrackerRecord = async function() {
         record.subType = window.trackerState.subType;
         record.status = (window.trackerState.subType === '소변') ? '' : (window.trackerState.status || '');
     }
+   // 🚨 [버그 픽스] 수면 탭 저장 로직 (선택 안하면 저장 안됨!)
     else if (window.trackerState.type === 'sleep') {
+        // 💡 핵심: 아무것도 안 골랐으면 저장 막기
+        if (!window.trackerState.subType) {
+            if(saveBtn) { saveBtn.disabled = false; saveBtn.innerText = '저장하기'; saveBtn.style.opacity = '1'; }
+            return window.showToast('⚠️ 낮잠인지 밤잠인지 선택해주세요!');
+        }
+
         const amt = document.getElementById('v-sleep-amount');
         let sleepAmount = 0;
         if (amt && amt.value !== '') sleepAmount = parseInt(amt.value);
+        
+        if (sleepAmount < 0) {
+            if(saveBtn){ saveBtn.disabled=false; saveBtn.innerText='저장하기'; saveBtn.style.opacity='1'; }
+            return window.showToast('⚠️ 종료 시간이 시작 시간보다 빠릅니다.');
+        }
+
         record.amount = sleepAmount;
         
-        if (sleepAmount > 0) {
-            localStorage.removeItem('tosil_sleep_start');
-            localStorage.removeItem('tosil_sleep_type');
-        }
-        
-        if (window.editingTrackerId) {
-            const originalRecord = records.find(r => r.id === window.editingTrackerId);
-            if (originalRecord) record.subType = originalRecord.subType; 
+        if (sleepAmount === 0) {
+            const existingSleepIdx = records.findIndex(r => r.type === 'sleep' && r.amount === 0 && r.id !== window.editingTrackerId);
+            if (existingSleepIdx !== -1) {
+                record.id = records[existingSleepIdx].id;
+                if (!window.editingTrackerId) window.editingTrackerId = record.id; 
+            }
+            record.subType = window.trackerState.subType; 
         } else {
-            record.subType = window.trackerState.subType || '낮잠'; 
+            if (window.editingTrackerId) {
+                const originalRecord = records.find(r => r.id === window.editingTrackerId);
+                // 기존꺼 수정일때만 원본 유지, 아니면 현재 고른 subType 적용
+                if (originalRecord && !window.trackerState.subType) record.subType = originalRecord.subType; 
+                else record.subType = window.trackerState.subType;
+            } else {
+                record.subType = window.trackerState.subType; 
+            }
         }
     }
 
+    // ▼▼▼ 여기서부터는 기존에 있던 찐 저장 및 창 닫기 로직 (그대로 유지됨) ▼▼▼
     if (window.editingTrackerId) {
         const idx = records.findIndex(r => r.id === window.editingTrackerId);
         if(idx !== -1) records[idx] = record;
@@ -4672,6 +4725,7 @@ window.saveTrackerRecord = async function() {
             saveBtn.style.opacity = '1';
         }, 500);
     }
+// 이 다음의 중괄호 } 는 원래 함수(saveTrackerRecord) 닫는 중괄호이므로 건드리지 마세요!
 };
 
 // ==========================================
@@ -10318,3 +10372,167 @@ document.addEventListener('touchstart', (e) => {
         window.swipeState.activeEl = null;
     }
 }, {passive: true});
+
+// ==========================================
+// 💡 수면시간 계산 엔진 (디자인 & 텍스트 포맷 완벽 통일)
+// ==========================================
+window.calcSleepRange = function() {
+    const totalText = document.getElementById('v-sleep-total-text');
+    const amountHidden = document.getElementById('v-sleep-amount');
+    
+    const sDateVal = document.getElementById('v-sleep-start-date')?.value;
+    const sTimeVal = document.getElementById('v-sleep-start-time')?.value;
+
+    if (!sDateVal || !sTimeVal) return;
+
+    const startObj = new Date(`${sDateVal}T${sTimeVal}:00`);
+
+    // 1. "아직 자는 중" 상태일 때
+    if (window.trackerState.isSleeping) {
+        const now = new Date();
+        let diffMins = Math.floor((now.getTime() - startObj.getTime()) / 60000);
+        if (diffMins < 0) diffMins = 0; 
+        
+        const h = Math.floor(diffMins / 60);
+        const m = diffMins % 60;
+        
+        // 텍스트 포맷: 현재 X시간 X분째 수면 중
+        totalText.innerHTML = `현재 <span style="font-size:20px; margin:0 2px;">${h}</span>시간 <span style="font-size:20px; margin:0 2px;">${m}</span>분째 수면 중 💤`;
+        totalText.style.background = "#EBF8FF";
+        totalText.style.color = "#3182F6";
+        amountHidden.value = 0; 
+        return;
+    }
+
+    // 2. 평상시(수면 완료 또는 방금 창을 열었을 때)
+    const eDateVal = document.getElementById('v-sleep-end-date')?.value;
+    const eTimeVal = document.getElementById('v-sleep-end-time')?.value;
+
+    if (!eDateVal || !eTimeVal) return;
+
+    const endObj = new Date(`${eDateVal}T${eTimeVal}:00`);
+    let diffMins = Math.floor((endObj.getTime() - startObj.getTime()) / 60000);
+
+    if (diffMins < 0) {
+        totalText.innerHTML = `<span style="color:#F04452; font-size:15px;">종료 시간이 더 빠릅니다 🚨</span>`;
+        totalText.style.background = "#FFF0F1";
+        amountHidden.value = -1; 
+        return;
+    }
+
+    const h = Math.floor(diffMins / 60);
+    const m = diffMins % 60;
+    
+    totalText.style.background = "#EBF8FF";
+    totalText.style.color = "#3182F6";
+
+    // 💡 [핵심 패치] '총 0분'으로 덜렁 나오던 걸 무조건 'X시간 X분' 폼으로 고정!
+    totalText.innerHTML = `총 <span style="font-size:20px; margin:0 2px;">${h}</span>시간 <span style="font-size:20px; margin:0 2px;">${m}</span>분 수면 💤`;
+    
+    amountHidden.value = diffMins; 
+};
+
+window.toggleIsSleeping = function() {
+    window.trackerState.isSleeping = !window.trackerState.isSleeping;
+    
+    const endArea = document.getElementById('sleep-end-area');
+    const divider = document.getElementById('sleep-divider');
+    const btnWake = document.getElementById('btn-wake-now');
+    const btnStill = document.getElementById('btn-still-sleeping');
+    
+    if (window.trackerState.isSleeping) {
+        endArea.style.display = 'none';
+        divider.style.display = 'none';
+        btnWake.style.display = 'none';
+        btnStill.innerText = '취소 (일어난 시간 입력)';
+        btnStill.style.background = '#F2F5F8';
+        btnStill.style.color = '#8B95A1';
+    } else {
+        endArea.style.display = 'flex';
+        divider.style.display = 'block';
+        btnWake.style.display = 'block';
+        btnStill.innerText = '💤 자고 있어요';
+        btnStill.style.background = '#FFF0F1';
+        btnStill.style.color = '#F04452';
+    }
+    window.calcSleepRange();
+};
+
+window.setWakeTimeNow = function() {
+    const now = new Date();
+    const dStr = now.toISOString().split('T')[0];
+    const tStr = `${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`;
+    
+    const eDateInput = document.getElementById('v-sleep-end-date');
+    const eTimeInput = document.getElementById('v-sleep-end-time');
+    
+    if(eDateInput) eDateInput.value = dStr;
+    if(eTimeInput) eTimeInput.value = tStr;
+    
+    window.calcSleepRange();
+    
+    if (navigator.vibrate) navigator.vibrate(15);
+    const totalText = document.getElementById('v-sleep-total-text');
+    totalText.style.transform = 'scale(1.1)';
+    setTimeout(() => totalText.style.transform = 'scale(1)', 200);
+};
+
+// 모달 닫힐 때 타이머 메모리 해제
+const originalCloseTrackerSheet = window.closeTrackerSheet;
+window.closeTrackerSheet = function() {
+    if(window.sleepModalLiveTimer) clearInterval(window.sleepModalLiveTimer);
+    if(typeof originalCloseTrackerSheet === 'function') originalCloseTrackerSheet();
+};
+
+// ==========================================
+// 💡 [일간 통계 요약 엔진 V4] 이모티콘 제거 & 1줄 다이어트 완료
+// ==========================================
+window.getDailySummaryHtml = function(dailyRecords) {
+    if (!dailyRecords || dailyRecords.length === 0) return '';
+
+    let formulaAmt = 0;   
+    let breastMins = 0;   
+    let babyfoodAmt = 0;  
+    let daySleep = 0, nightSleep = 0;
+    let pee = 0, poop = 0;
+
+    dailyRecords.forEach(r => {
+        if (r.type === 'feed' || r.type === 'babyfood') {
+            const amt = parseInt(r.amount) || 0;
+            if (r.subType === '이유식') babyfoodAmt += amt;
+            else if (r.subType === '모유') breastMins += amt;
+            else formulaAmt += amt; 
+        } else if (r.type === 'sleep' && r.amount > 0) {
+            if (r.subType === '밤잠') nightSleep += r.amount;
+            else daySleep += r.amount;
+        } else if (r.type === 'diaper') {
+            if (r.subType === '소변') pee++;
+            else if (r.subType === '대변') poop++;
+            else if (r.subType === '둘 다' || r.subType === '소변+대변') { pee++; poop++; }
+        }
+    });
+
+    let summaryItems = [];
+    
+    // 이모티콘 싹 빼고 텍스트만 깔끔하게!
+    if (formulaAmt > 0) summaryItems.push(`<span style="color:#3182F6;">분유 ${formulaAmt}ml</span>`);
+    if (breastMins > 0) summaryItems.push(`<span style="color:#F59E0B;">모유 ${breastMins}분</span>`);
+    if (babyfoodAmt > 0) summaryItems.push(`<span style="color:#10B981;">이유식 ${babyfoodAmt}g</span>`);
+    
+    let sleepStr = [];
+    if (daySleep > 0) sleepStr.push(`낮잠 ${Math.floor(daySleep/60)}h ${daySleep%60}m`);
+    if (nightSleep > 0) sleepStr.push(`밤잠 ${Math.floor(nightSleep/60)}h ${nightSleep%60}m`);
+    if (sleepStr.length > 0) summaryItems.push(`<span style="color:#A855F7;">${sleepStr.join(' ')}</span>`);
+    
+    // 기저귀는 총 횟수로 깔끔하게 통일
+    if (pee > 0 || poop > 0) summaryItems.push(`<span style="color:#EF4444;">기저귀 ${pee+poop}번</span>`);
+
+    if (summaryItems.length === 0) return '';
+
+    // 배경을 없애고 텍스트만 둥둥 떠있게 해서 더 넓고 깔끔해 보이게 처리
+    return `
+        <div style="font-size: 11.5px; font-weight: 800; color: #4E5968; display: flex; flex-wrap: wrap; gap: 8px 12px; padding: 4px 0 12px 0; align-items: center;">
+            ${summaryItems.join('<span style="color:#E5E8EB; font-size:10px;">|</span>')}
+        </div>
+    `;
+};
