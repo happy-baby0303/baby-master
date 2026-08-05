@@ -3400,44 +3400,50 @@ window.openTrackerSheet = function(type, editId = null, preSelect = null) {
         window.trackerState.subType = activeSubType; 
 
         body.innerHTML = `
-            <!-- 버튼에서도 이모티콘 싹 뺌 -->
-            <div style="display: flex; gap: 8px; margin-bottom: 24px;" id="sleep-type-buttons">
+            <!-- 낮잠/밤잠 탭 -->
+            <div style="display: flex; gap: 8px; margin-bottom: 20px;" id="sleep-type-buttons">
                 <button class="btn-main" onclick="window.selectTrackerBtn(this, 'sleep_day')" style="flex: 1; background: var(--bg-card); color: var(--text-s); border: 1px solid var(--border); box-shadow: none; margin:0; padding:14px 0; font-size:14.5px; transition:0.2s; border-radius:14px;">낮잠</button>
                 <button class="btn-main" onclick="window.selectTrackerBtn(this, 'sleep_night')" style="flex: 1; background: var(--bg-card); color: var(--text-s); border: 1px solid var(--border); box-shadow: none; margin:0; padding:14px 0; font-size:14.5px; transition:0.2s; border-radius:14px;">밤잠</button>
             </div>
 
-            <div style="background: var(--bg-card); padding: 20px; border-radius: 20px; margin-bottom: 20px; border: 1px solid var(--border); box-shadow: 0 4px 16px rgba(0,0,0,0.03);">
-                <div style="display: flex; justify-content: space-between; align-items: center;">
-                    <div style="font-size: 15px; font-weight: 900; color: var(--text-m); display:flex; align-items:center; gap:8px;">
+            <!-- ⏰ 모바일 찌그러짐 방지형 타임라인 박스 -->
+            <div style="background: var(--bg-card); padding: 16px; border-radius: 20px; margin-bottom: 16px; border: 1px solid var(--border); box-shadow: 0 4px 16px rgba(0,0,0,0.03);">
+                
+                <!-- 잠든 시간 (모바일에서 세로 꺾임 방지를 위해 flex-wrap 및 간격 최적화) -->
+                <div style="display: flex; justify-content: space-between; align-items: center; gap: 8px;">
+                    <div style="font-size: 14px; font-weight: 900; color: var(--text-m); display:flex; align-items:center; gap:6px; white-space: nowrap; flex-shrink: 0;">
                         <span style="display:inline-block; width:8px; height:8px; background:#3182F6; border-radius:50%;"></span> 잠든 시간
                     </div>
-                    <div style="display: flex; gap: 6px;">
-                        <input type="date" id="v-sleep-start-date" value="${sleepStartD}" onchange="window.calcSleepRange()" style="padding: 8px 10px; border-radius: 10px; border: 1px solid var(--border); background: var(--bg-sub); font-size: 13px; font-weight: 800; color: var(--text-m); outline: none; text-align:center;">
-                        <input type="time" id="v-sleep-start-time" value="${sleepStartT}" onchange="window.calcSleepRange()" style="padding: 8px 10px; border-radius: 10px; border: 1px solid var(--border); background: var(--bg-sub); font-size: 14px; font-weight: 900; color: var(--text-m); outline: none; text-align:center;">
+                    <div style="display: flex; gap: 4px; min-width: 0; flex-shrink: 1;">
+                        <input type="date" id="v-sleep-start-date" value="${sleepStartD}" onchange="window.calcSleepRange()" style="width: 110px; padding: 6px 4px; border-radius: 10px; border: 1px solid var(--border); background: var(--bg-sub); font-size: 12px; font-weight: 800; color: var(--text-m); outline: none; text-align:center; box-sizing: border-box;">
+                        <input type="time" id="v-sleep-start-time" value="${sleepStartT}" onchange="window.calcSleepRange()" style="width: 85px; padding: 6px 4px; border-radius: 10px; border: 1px solid var(--border); background: var(--bg-sub); font-size: 13px; font-weight: 900; color: var(--text-m); outline: none; text-align:center; box-sizing: border-box;">
                     </div>
                 </div>
                 
-                <div id="sleep-divider" style="border-left: 2px dashed #E5E8EB; height: 24px; margin-left: 3px; margin-top: 4px; margin-bottom: 4px; ${window.trackerState.isSleeping ? 'display:none;' : ''}"></div>
+                <!-- 연결선 -->
+                <div id="sleep-divider" style="border-left: 2px dashed #E5E8EB; height: 18px; margin-left: 3px; margin-top: 4px; margin-bottom: 4px; ${window.trackerState.isSleeping ? 'display:none;' : ''}"></div>
                 
-                <div id="sleep-end-area" style="display: ${window.trackerState.isSleeping ? 'none' : 'flex'}; justify-content: space-between; align-items: center;">
-                    <div style="font-size: 15px; font-weight: 900; color: var(--text-m); display:flex; align-items:center; gap:8px;">
+                <!-- 일어난 시간 -->
+                <div id="sleep-end-area" style="display: ${window.trackerState.isSleeping ? 'none' : 'flex'}; justify-content: space-between; align-items: center; gap: 8px;">
+                    <div style="font-size: 14px; font-weight: 900; color: var(--text-m); display:flex; align-items:center; gap:6px; white-space: nowrap; flex-shrink: 0;">
                         <span style="display:inline-block; width:8px; height:8px; background:#F59E0B; border-radius:50%;"></span> 일어난 시간
                     </div>
-                    <div style="display: flex; gap: 6px;">
-                        <input type="date" id="v-sleep-end-date" value="${sleepEndD}" onchange="window.calcSleepRange()" style="padding: 8px 10px; border-radius: 10px; border: 1px solid var(--border); background: var(--bg-sub); font-size: 13px; font-weight: 800; color: var(--text-m); outline: none; text-align:center;">
-                        <input type="time" id="v-sleep-end-time" value="${sleepEndT}" onchange="window.calcSleepRange()" style="padding: 8px 10px; border-radius: 10px; border: 1px solid var(--border); background: var(--bg-sub); font-size: 14px; font-weight: 900; color: var(--text-m); outline: none; text-align:center;">
+                    <div style="display: flex; gap: 4px; min-width: 0; flex-shrink: 1;">
+                        <input type="date" id="v-sleep-end-date" value="${sleepEndD}" onchange="window.calcSleepRange()" style="width: 110px; padding: 6px 4px; border-radius: 10px; border: 1px solid var(--border); background: var(--bg-sub); font-size: 12px; font-weight: 800; color: var(--text-m); outline: none; text-align:center; box-sizing: border-box;">
+                        <input type="time" id="v-sleep-end-time" value="${sleepEndT}" onchange="window.calcSleepRange()" style="width: 85px; padding: 6px 4px; border-radius: 10px; border: 1px solid var(--border); background: var(--bg-sub); font-size: 13px; font-weight: 900; color: var(--text-m); outline: none; text-align:center; box-sizing: border-box;">
                     </div>
                 </div>
             </div>
 
-            <!-- 💡 사진 4번과 5번의 디자인을 파란색으로 통일! -->
+            <!-- 총 수면 시간 표시 -->
             <div style="text-align: center; margin-bottom: 20px;">
-                <div id="v-sleep-total-text" style="display:inline-flex; justify-content:center; align-items:center; background:#EBF8FF; color:#3182F6; padding:12px 24px; border-radius:24px; font-size:16px; font-weight:900; letter-spacing:-0.5px; transition:0.3s;">계산 중...</div>
+                <div id="v-sleep-total-text" style="display:inline-flex; justify-content:center; align-items:center; background:#EBF8FF; color:#3182F6; padding:12px 24px; border-radius:24px; font-size:15px; font-weight:900; letter-spacing:-0.5px; transition:0.3s;">계산 중...</div>
             </div>
 
+            <!-- 하단 액션 버튼 -->
             <div style="display: flex; gap: 10px; margin-bottom: 10px;">
                 <button id="btn-wake-now" onclick="window.setWakeTimeNow()" style="flex: 1; padding: 14px; background: #E8F3FF; color: #3182F6; border: none; border-radius: 14px; font-size: 14px; font-weight: 900; cursor: pointer; transition:0.2s; display:${window.trackerState.isSleeping ? 'none' : 'block'};">
-                    깼어요
+                    방금 깼어요
                 </button>
                 <button id="btn-still-sleeping" onclick="window.toggleIsSleeping()" style="flex: 1; padding: 14px; background: ${window.trackerState.isSleeping ? '#F2F5F8' : '#FFF0F1'}; color: ${window.trackerState.isSleeping ? '#8B95A1' : '#F04452'}; border: none; border-radius: 14px; font-size: 14px; font-weight: 900; cursor: pointer; transition:0.2s;">
                     ${window.trackerState.isSleeping ? '취소 (일어난 시간 입력)' : '자고 있어요'}
