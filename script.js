@@ -3406,31 +3406,31 @@ window.openTrackerSheet = function(type, editId = null, preSelect = null) {
                 <button class="btn-main" onclick="window.selectTrackerBtn(this, 'sleep_night')" style="flex: 1; background: var(--bg-card); color: var(--text-s); border: 1px solid var(--border); box-shadow: none; margin:0; padding:14px 0; font-size:14.5px; transition:0.2s; border-radius:14px;">밤잠</button>
             </div>
 
-            <!-- ⏰ 모바일 찌그러짐 방지형 타임라인 박스 -->
-            <div style="background: var(--bg-card); padding: 16px; border-radius: 20px; margin-bottom: 16px; border: 1px solid var(--border); box-shadow: 0 4px 16px rgba(0,0,0,0.03);">
+            <!-- ⏰ 상하 스택형 타임라인 박스 (글자 잘림 100% 방지) -->
+            <div style="background: var(--bg-card); padding: 18px; border-radius: 20px; margin-bottom: 16px; border: 1px solid var(--border); box-shadow: 0 4px 16px rgba(0,0,0,0.03);">
                 
-                <!-- 잠든 시간 (모바일에서 세로 꺾임 방지를 위해 flex-wrap 및 간격 최적화) -->
-                <div style="display: flex; justify-content: space-between; align-items: center; gap: 8px;">
-                    <div style="font-size: 14px; font-weight: 900; color: var(--text-m); display:flex; align-items:center; gap:6px; white-space: nowrap; flex-shrink: 0;">
+                <!-- 1. 잠든 시간 그룹 -->
+                <div style="margin-bottom: 14px;">
+                    <div style="font-size: 13.5px; font-weight: 900; color: var(--text-m); display: flex; align-items: center; gap: 6px; margin-bottom: 8px;">
                         <span style="display:inline-block; width:8px; height:8px; background:#3182F6; border-radius:50%;"></span> 잠든 시간
                     </div>
-                    <div style="display: flex; gap: 4px; min-width: 0; flex-shrink: 1;">
-                        <input type="date" id="v-sleep-start-date" value="${sleepStartD}" onchange="window.calcSleepRange()" style="width: 110px; padding: 6px 4px; border-radius: 10px; border: 1px solid var(--border); background: var(--bg-sub); font-size: 12px; font-weight: 800; color: var(--text-m); outline: none; text-align:center; box-sizing: border-box;">
-                        <input type="time" id="v-sleep-start-time" value="${sleepStartT}" onchange="window.calcSleepRange()" style="width: 85px; padding: 6px 4px; border-radius: 10px; border: 1px solid var(--border); background: var(--bg-sub); font-size: 13px; font-weight: 900; color: var(--text-m); outline: none; text-align:center; box-sizing: border-box;">
+                    <div style="display: flex; gap: 6px; width: 100%;">
+                        <input type="date" id="v-sleep-start-date" value="${sleepStartD}" onchange="window.calcSleepRange()" style="flex: 1.2; box-sizing: border-box; padding: 12px 4px; border-radius: 12px; border: 1px solid var(--border); background: var(--bg-sub); font-size: 13.5px; font-weight: 800; color: var(--text-m); outline: none; text-align: center;">
+                        <input type="time" id="v-sleep-start-time" value="${sleepStartT}" onchange="window.calcSleepRange()" style="flex: 1; box-sizing: border-box; padding: 12px 4px; border-radius: 12px; border: 1px solid var(--border); background: var(--bg-sub); font-size: 15px; font-weight: 900; color: var(--text-m); outline: none; text-align: center;">
                     </div>
                 </div>
                 
-                <!-- 연결선 -->
-                <div id="sleep-divider" style="border-left: 2px dashed #E5E8EB; height: 18px; margin-left: 3px; margin-top: 4px; margin-bottom: 4px; ${window.trackerState.isSleeping ? 'display:none;' : ''}"></div>
+                <!-- 구분선 -->
+                <div id="sleep-divider" style="border-left: 2px dashed #E5E8EB; height: 16px; margin-left: 5px; margin-top: 4px; margin-bottom: 8px; ${window.trackerState.isSleeping ? 'display:none;' : ''}"></div>
                 
-                <!-- 일어난 시간 -->
-                <div id="sleep-end-area" style="display: ${window.trackerState.isSleeping ? 'none' : 'flex'}; justify-content: space-between; align-items: center; gap: 8px;">
-                    <div style="font-size: 14px; font-weight: 900; color: var(--text-m); display:flex; align-items:center; gap:6px; white-space: nowrap; flex-shrink: 0;">
+                <!-- 2. 일어난 시간 그룹 -->
+                <div id="sleep-end-area" style="display: ${window.trackerState.isSleeping ? 'none' : 'block'};">
+                    <div style="font-size: 13.5px; font-weight: 900; color: var(--text-m); display: flex; align-items: center; gap: 6px; margin-bottom: 8px;">
                         <span style="display:inline-block; width:8px; height:8px; background:#F59E0B; border-radius:50%;"></span> 일어난 시간
                     </div>
-                    <div style="display: flex; gap: 4px; min-width: 0; flex-shrink: 1;">
-                        <input type="date" id="v-sleep-end-date" value="${sleepEndD}" onchange="window.calcSleepRange()" style="width: 110px; padding: 6px 4px; border-radius: 10px; border: 1px solid var(--border); background: var(--bg-sub); font-size: 12px; font-weight: 800; color: var(--text-m); outline: none; text-align:center; box-sizing: border-box;">
-                        <input type="time" id="v-sleep-end-time" value="${sleepEndT}" onchange="window.calcSleepRange()" style="width: 85px; padding: 6px 4px; border-radius: 10px; border: 1px solid var(--border); background: var(--bg-sub); font-size: 13px; font-weight: 900; color: var(--text-m); outline: none; text-align:center; box-sizing: border-box;">
+                    <div style="display: flex; gap: 6px; width: 100%;">
+                        <input type="date" id="v-sleep-end-date" value="${sleepEndD}" onchange="window.calcSleepRange()" style="flex: 1.2; box-sizing: border-box; padding: 12px 4px; border-radius: 12px; border: 1px solid var(--border); background: var(--bg-sub); font-size: 13.5px; font-weight: 800; color: var(--text-m); outline: none; text-align: center;">
+                        <input type="time" id="v-sleep-end-time" value="${sleepEndT}" onchange="window.calcSleepRange()" style="flex: 1; box-sizing: border-box; padding: 12px 4px; border-radius: 12px; border: 1px solid var(--border); background: var(--bg-sub); font-size: 15px; font-weight: 900; color: var(--text-m); outline: none; text-align: center;">
                     </div>
                 </div>
             </div>
