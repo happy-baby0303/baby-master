@@ -10647,3 +10647,78 @@ window.getDailySummaryHtml = function(dailyRecords) {
         </div>
     `;
 };
+
+// ==========================================
+// ✈️ [하이엔드 감성] 우리가족 보딩패스 티켓 발행기
+// ==========================================
+window.showSyncCode = function() {
+    const syncCode = localStorage.getItem('family_sync_code') || 'TS-XXXX';
+    const babyName = localStorage.getItem('tosil_babyName') || '우리아기';
+    
+    // 이미 열려있는 모달이 있다면 제거
+    let existing = document.getElementById('sync-ticket-modal');
+    if (existing) existing.remove();
+
+    const modalHtml = `
+        <div id="sync-ticket-modal" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 99999; display: flex; justify-content: center; align-items: center; padding: 20px; backdrop-filter: blur(4px);">
+            <div style="width: 100%; max-width: 340px; display: flex; flex-direction: column; gap: 16px; animation: popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);">
+                
+                <!-- ✈️ 보딩패스 티켓 본체 (캡처 영역) -->
+                <div id="ticket-capture-area" style="background: linear-gradient(135deg, #3182F6 0%, #1B64DA 100%); border-radius: 24px; padding: 24px; color: #FFF; box-shadow: 0 15px 35px rgba(49,130,246,0.3); position: relative; overflow: hidden; font-family: 'Pretendard', sans-serif;">
+                    <!-- 배경 장식용 원 -->
+                    <div style="position: absolute; right: -40px; top: -40px; width: 120px; height: 120px; background: rgba(255,255,255,0.1); border-radius: 50%;"></div>
+                    
+                    <div style="font-size: 11px; font-weight: 800; letter-spacing: 2px; opacity: 0.8; margin-bottom: 4px;">TOSIL FAMILY PASS</div>
+                    <div style="font-size: 20px; font-weight: 900; margin-bottom: 20px;">✈️ ${babyName}네 가족 티켓</div>
+                    
+                    <div style="background: rgba(255,255,255,0.15); padding: 16px; border-radius: 16px; backdrop-filter: blur(4px); text-align: center; margin-bottom: 16px; border: 1px solid rgba(255,255,255,0.2);">
+                        <div style="font-size: 11px; font-weight: 700; opacity: 0.8; margin-bottom: 4px;">FAMILY SYNC CODE</div>
+                        <div style="font-size: 28px; font-weight: 900; letter-spacing: 3px; color: #FFF;">${syncCode}</div>
+                    </div>
+
+                    <div style="display: flex; justify-content: space-between; font-size: 11px; opacity: 0.7; font-weight: 600;">
+                        <span>STATUS: LIVE SYNC</span>
+                        <span>육아메이트 🤍</span>
+                    </div>
+                </div>
+
+                <!-- 🔘 하단 액션 버튼 -->
+                <div style="display: flex; gap: 8px;">
+                    <button onclick="window.copySyncCode('${syncCode}')" style="flex: 1; padding: 14px; background: var(--bg-card); color: var(--text-m); border: 1px solid var(--border); border-radius: 14px; font-size: 14px; font-weight: 800; cursor: pointer;">📋 코드 복사</button>
+                    <button onclick="window.downloadSyncTicket()" style="flex: 1.5; padding: 14px; background: #3182F6; color: #FFF; border: none; border-radius: 14px; font-size: 14px; font-weight: 900; cursor: pointer; box-shadow: 0 4px 12px rgba(49,130,246,0.3);">📸 티켓 이미지 저장</button>
+                </div>
+                <button onclick="document.getElementById('sync-ticket-modal').remove()" style="width: 100%; padding: 10px; background: transparent; color: #8B95A1; border: none; font-size: 13px; font-weight: 700; cursor: pointer;">닫기</button>
+            </div>
+        </div>
+    `;
+    document.body.insertAdjacentHTML('beforeend', modalHtml);
+};
+
+// 클립보드 복사 함수
+window.copySyncCode = function(code) {
+    navigator.clipboard.writeText(code).then(() => {
+        window.showToast("📋 가족 코드가 클립보드에 복사되었습니다!");
+    });
+};
+
+// 티켓 앨범 저장 함수 (html2canvas 활용)
+window.downloadSyncTicket = function() {
+    const target = document.getElementById('ticket-capture-area');
+    if (!target || typeof html2canvas === 'undefined') return alert("저장할 수 없습니다.");
+    
+    window.showToast("📸 예쁜 티켓을 앨범에 담고 있어요...");
+    html2canvas(target, { scale: 2, backgroundColor: null, useCORS: true }).then(canvas => {
+        const link = document.createElement('a');
+        link.download = '우리아기_육아티켓.png';
+        link.href = canvas.toDataURL("image/png");
+        
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+
+        window.showToast("🎉 티켓 저장 완료! 짝꿍에게 보내보세요 ✈️");
+    }).catch(err => {
+        console.error(err);
+        alert("이미지 저장 중 오류가 발생했습니다.");
+    });
+};
