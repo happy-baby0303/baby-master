@@ -3974,7 +3974,7 @@ window.updateTrackerDashboard = function() {
             const avgSleepM = Math.round((weekSleepMins / dayDiv) % 60);
             const avgDiaper = Math.round(weekDiaperCount / dayDiv);
 
-            // 💡 병원 진료 프리패스! 7일 평균 요약 박스
+            // 💡 7일 평균 요약 박스
             let historyHtml = `
                 <div style="background: #F8F9FA; padding: 16px; border-radius: 16px; border: 1px solid #E5E8EB; margin-bottom: 16px;">
                     <div style="font-size: 13px; font-weight: 900; color: #3182F6; margin-bottom: 12px; display:flex; align-items:center; gap:6px;">
@@ -3982,11 +3982,11 @@ window.updateTrackerDashboard = function() {
                     </div>
                     <div style="display: flex; justify-content: space-between; text-align: center; gap: 8px;">
                         <div style="flex:1; background:#FFF; padding:10px 4px; border-radius:12px; border:1px solid #F2F5F8; box-shadow:0 2px 4px rgba(0,0,0,0.02);">
-                            <div style="font-size:11px; color:#8B95A1; font-weight:800; margin-bottom:4px;">하루 수유량</div>
+                            <div style="font-size:11px; color:#8B95A1; font-weight:800; margin-bottom:4px;">평균 수유량</div>
                             <div style="font-size:14px; font-weight:900; color:#333D4B;">${avgFeed}<span style="font-size:11px; margin-left:2px;">ml</span></div>
                         </div>
                         <div style="flex:1; background:#FFF; padding:10px 4px; border-radius:12px; border:1px solid #F2F5F8; box-shadow:0 2px 4px rgba(0,0,0,0.02);">
-                            <div style="font-size:11px; color:#8B95A1; font-weight:800; margin-bottom:4px;">하루 수면</div>
+                            <div style="font-size:11px; color:#8B95A1; font-weight:800; margin-bottom:4px;">평균 수면</div>
                             <div style="font-size:14px; font-weight:900; color:#333D4B;">${avgSleepH}<span style="font-size:11px; margin-left:2px; margin-right:2px;">시간</span>${avgSleepM}<span style="font-size:11px; margin-left:2px;">분</span></div>
                         </div>
                         <div style="flex:1; background:#FFF; padding:10px 4px; border-radius:12px; border:1px solid #F2F5F8; box-shadow:0 2px 4px rgba(0,0,0,0.02);">
@@ -6384,6 +6384,7 @@ window.loginWithKakao = function() {
         }
     });
 };
+
 // ==========================================
 // ⚙️ [설정 탭] 전체 UI 렌더링 엔진 (엄마/아빠 역할 스위치 & 디자인 최적화)
 // ==========================================
@@ -6402,22 +6403,22 @@ window.renderSettingsTab = function() {
             : `👤`;
             
         profileHtml = `
-            <div style="display: flex; align-items: center; gap: 16px; background: var(--bg-card); padding: 16px; border-radius: 16px; border: 1px solid var(--border); margin-bottom: 24px; box-shadow: 0 2px 8px rgba(0,0,0,0.02);">
-                <div style="width: 56px; height: 56px; border-radius: 50%; background: #F2F5F8; display: flex; align-items: center; justify-content: center; font-size: 24px; overflow: hidden; border: 1px solid #E5E8EB;">
+            <div style="display: flex; align-items: center; gap: 16px; background: var(--bg-card); padding: 20px; border-radius: 16px; border: 1px solid var(--border); margin-bottom: 32px; box-shadow: 0 2px 8px rgba(0,0,0,0.02); box-sizing: border-box; width: 100%;">
+                <div style="width: 56px; height: 56px; border-radius: 50%; background: #F2F5F8; display: flex; align-items: center; justify-content: center; font-size: 24px; overflow: hidden; border: 1px solid #E5E8EB; flex-shrink: 0;">
                     ${imgTag}
                 </div>
-                <div style="flex: 1;">
-                    <div style="font-size: 12px; font-weight: 800; color: #3182F6; margin-bottom: 4px;"> 육아메이트 인증 완료</div>
-                    <div style="font-size: 16px; font-weight: 900; color: var(--text-m);">${savedNickname} <span style="font-size: 13.5px; font-weight: 600; color: var(--text-s);">님</span></div>
+                <div style="flex: 1; overflow: hidden;">
+                    <div style="font-size: 12px; font-weight: 800; color: #3182F6; margin-bottom: 4px;">육아메이트 인증 완료</div>
+                    <div style="font-size: 16px; font-weight: 900; color: var(--text-m); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${savedNickname} <span style="font-size: 13.5px; font-weight: 600; color: var(--text-s);">님</span></div>
                 </div>
-                <button onclick="window.logoutKakao()" style="padding: 6px 12px; border-radius: 8px; background: #F2F5F8; color: #8B95A1; font-size: 12px; font-weight: 800; border: none; cursor: pointer; transition: 0.2s;">
+                <button onclick="window.logoutKakao()" style="padding: 8px 14px; border-radius: 8px; background: #F2F5F8; color: #8B95A1; font-size: 12px; font-weight: 800; border: none; cursor: pointer; transition: 0.2s; flex-shrink: 0;">
                     로그아웃
                 </button>
             </div>
         `;
     } else {
         profileHtml = `
-            <div style="background: var(--bg-card); padding: 20px 16px; border-radius: 16px; border: 1px solid var(--border); margin-bottom: 24px; box-shadow: 0 2px 8px rgba(0,0,0,0.02); text-align: center;">
+            <div style="background: var(--bg-card); padding: 24px 20px; border-radius: 16px; border: 1px solid var(--border); margin-bottom: 32px; box-shadow: 0 2px 8px rgba(0,0,0,0.02); text-align: center; box-sizing: border-box; width: 100%;">
                 <div style="width: 56px; height: 56px; border-radius: 50%; background: #F2F5F8; display: flex; align-items: center; justify-content: center; font-size: 24px; margin: 0 auto 12px auto;">👤</div>
                 <div style="font-size: 12px; font-weight: 800; color: #8B95A1; margin-bottom: 4px;">내 정보 안전하게 보관하기</div>
                 <div style="font-size: 15.5px; font-weight: 900; color: var(--text-m); margin-bottom: 16px;">로그인이 필요합니다</div>
@@ -6428,23 +6429,22 @@ window.renderSettingsTab = function() {
         `;
     }
 
-  // 🌟 2. 가족 연동 섹션 
+    // 🌟 2. 가족 연동 섹션 
     const syncCode = localStorage.getItem('family_sync_code');
     let syncHtml = '';
 
     if (syncCode) {
-        // ✅ 연동 완료 상태 (내 코드 확인 + 해제 버튼 반반)
         syncHtml = `
-            <div style="background: var(--bg-card); border: 1px solid var(--border); border-radius: 16px; padding: 16px; margin-bottom: 24px; box-shadow: 0 2px 8px rgba(0,0,0,0.02);">
+            <div style="background: var(--bg-card); border: 1px solid var(--border); border-radius: 16px; padding: 20px; margin-bottom: 32px; box-shadow: 0 2px 8px rgba(0,0,0,0.02); box-sizing: border-box; width: 100%;">
                 <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px;">
                     <div style="font-size: 14.5px; font-weight: 900; color: var(--text-m);">👨‍👩‍👧 가족 연동 완료</div>
                     <span style="background: #EBF4FF; color: #3182F6; font-size: 11px; font-weight: 900; padding: 4px 8px; border-radius: 8px;">상태: ON</span>
                 </div>
-                <div style="font-size: 12.5px; color: var(--text-s); font-weight: 600; margin-bottom: 16px;">현재 가족과 육아 데이터를 실시간 공유 중입니다.</div>
+                <div style="font-size: 12.5px; color: var(--text-s); font-weight: 600; margin-bottom: 16px; line-height: 1.4;">현재 가족과 육아 데이터를 실시간 공유 중입니다.</div>
                 
-                <button onclick="window.showSyncCode()" style="flex: 1; padding: 12px; border-radius: 12px; background: #F2F5F8; color: #4E5968; font-size: 13.5px; font-weight: 800; border: none; cursor: pointer;">
-    🎟️ 내 코드 확인
-</button>
+                <div style="display: flex; gap: 8px;">
+                    <button onclick="window.showSyncCode()" style="flex: 1; padding: 12px; border-radius: 12px; background: #F2F5F8; color: #4E5968; font-size: 13.5px; font-weight: 800; border: none; cursor: pointer;">
+                        🎟️ 내 코드 확인
                     </button>
                     <button onclick="window.safeUnlinkFamilySync()" style="flex: 1; padding: 12px; border-radius: 12px; background: #FFF0F1; color: #F04452; font-size: 13.5px; font-weight: 900; border: 1px solid #FFE5E8; cursor: pointer;">
                         🚨 연동 해제
@@ -6453,9 +6453,8 @@ window.renderSettingsTab = function() {
             </div>
         `;
     } else {
-        // ❌ 미연동 상태 (카톡 초대 + 코드 직접 입력 반반)
         syncHtml = `
-            <div style="background: var(--bg-card); border: 1px solid var(--border); border-radius: 16px; padding: 16px; margin-bottom: 24px; box-shadow: 0 2px 8px rgba(0,0,0,0.02);">
+            <div style="background: var(--bg-card); border: 1px solid var(--border); border-radius: 16px; padding: 20px; margin-bottom: 32px; box-shadow: 0 2px 8px rgba(0,0,0,0.02); box-sizing: border-box; width: 100%;">
                 <div style="font-size: 14.5px; font-weight: 900; color: var(--text-m); margin-bottom: 8px;">👨‍👩‍👧 우리 아기 함께 키우기</div>
                 <div style="font-size: 12.5px; color: var(--text-s); font-weight: 600; margin-bottom: 16px; line-height: 1.4;">혼자 하는 육아는 너무 힘들어요.<br>아빠, 할머니, 이모님을 초대해서 기록을 공유하세요!</div>
                 
@@ -6471,15 +6470,13 @@ window.renderSettingsTab = function() {
         `;
     }
 
-
-    // 💡 현재 설정된 역할 가져오기 (기본값: 엄마)
     const currentRole = localStorage.getItem('user_role') || 'mom';
 
     // 🌟 3. 전체 화면 조립하기 
     container.innerHTML = `
-        <div style="padding: 20px 20px 40px 20px;">
-            <!-- 🔥 수정된 부분: 설정 타이틀 크기를 키우고 margin-bottom을 16px로 줄여 밀착! -->
-            <div style="font-size: 26px; font-weight: 900; color: var(--text-m); margin-bottom: 16px; letter-spacing: -0.5px; padding-left: 4px;">설정</div>
+        <div style="padding: 24px 20px 40px 20px; max-width: 600px; margin: 0 auto; box-sizing: border-box; width: 100%;">
+            <!-- 최상단 타이틀 -->
+            <div style="font-size: 24px; font-weight: 900; color: var(--text-m); margin-bottom: 24px; letter-spacing: -0.5px;">설정</div>
 
             <!-- 계정 및 프로필 -->
             ${profileHtml}
@@ -6488,10 +6485,8 @@ window.renderSettingsTab = function() {
             ${syncHtml}
 
             <!-- 앱 설정 -->
-            <div style="font-size: 13.5px; font-weight: 900; color: var(--text-s); margin-bottom: 12px; margin-left: 4px;">앱 설정</div>
-            <div style="background: var(--bg-card); border: 1px solid var(--border); border-radius: 16px; overflow: hidden; margin-bottom: 24px;">
-                
-                <!-- 🔥 내 역할 (엄마/아빠) 토글 스위치 추가! 🔥 -->
+            <div style="font-size: 13.5px; font-weight: 900; color: var(--text-s); margin-bottom: 12px;">앱 설정</div>
+            <div style="background: var(--bg-card); border: 1px solid var(--border); border-radius: 16px; overflow: hidden; margin-bottom: 32px; box-shadow: 0 2px 8px rgba(0,0,0,0.02); box-sizing: border-box; width: 100%;">
                 <div style="display: flex; justify-content: space-between; align-items: center; padding: 16px 20px; border-bottom: 1px solid var(--border);">
                     <div style="font-size: 14.5px; font-weight: 800; color: var(--text-m);">🧑‍🧑‍🧒 내 역할 설정</div>
                     <div style="display: flex; background: var(--bg-sub); border-radius: 10px; padding: 4px; border: 1px solid var(--border);">
@@ -6499,7 +6494,6 @@ window.renderSettingsTab = function() {
                         <button onclick="window.changeUserRole('dad')" style="padding: 6px 14px; border: none; border-radius: 8px; font-size: 13px; font-weight: 900; cursor: pointer; transition: 0.2s; ${currentRole === 'dad' ? 'background:#FFF; color:#3182F6; box-shadow:0 2px 6px rgba(0,0,0,0.05);' : 'background:transparent; color:#8B95A1;'}">아빠</button>
                     </div>
                 </div>
-
                 <div onclick="window.promptBabyInfo()" style="display: flex; justify-content: space-between; align-items: center; padding: 16px 20px; border-bottom: 1px solid var(--border); cursor: pointer;">
                     <div style="font-size: 14.5px; font-weight: 800; color: var(--text-m);">👶 아기 정보 수정</div>
                     <div style="color: #8B95A1; font-size: 12px;">〉</div>
@@ -6513,8 +6507,8 @@ window.renderSettingsTab = function() {
             </div>
 
             <!-- 데이터 관리 -->
-            <div style="font-size: 13.5px; font-weight: 900; color: var(--text-s); margin-bottom: 12px; margin-left: 4px;">데이터 관리</div>
-            <div style="background: var(--bg-card); border: 1px solid var(--border); border-radius: 16px; overflow: hidden; margin-bottom: 24px;">
+            <div style="font-size: 13.5px; font-weight: 900; color: var(--text-s); margin-bottom: 12px;">데이터 관리</div>
+            <div style="background: var(--bg-card); border: 1px solid var(--border); border-radius: 16px; overflow: hidden; margin-bottom: 32px; box-shadow: 0 2px 8px rgba(0,0,0,0.02); box-sizing: border-box; width: 100%;">
                 <div onclick="window.exportToExcel()" style="display: flex; justify-content: space-between; align-items: center; padding: 16px 20px; border-bottom: 1px solid var(--border); cursor: pointer;">
                     <div style="font-size: 14.5px; font-weight: 800; color: var(--text-m);">📥 기록 데이터 엑셀 내보내기</div>
                 </div>
@@ -6524,8 +6518,8 @@ window.renderSettingsTab = function() {
             </div>
 
             <!-- 고객 지원 및 약관 -->
-            <div style="font-size: 13.5px; font-weight: 900; color: var(--text-s); margin-bottom: 12px; margin-left: 4px;">고객 지원 및 약관</div>
-            <div style="background: var(--bg-card); border: 1px solid var(--border); border-radius: 16px; overflow: hidden; margin-bottom: 32px;">
+            <div style="font-size: 13.5px; font-weight: 900; color: var(--text-s); margin-bottom: 12px;">고객 지원 및 약관</div>
+            <div style="background: var(--bg-card); border: 1px solid var(--border); border-radius: 16px; overflow: hidden; margin-bottom: 40px; box-shadow: 0 2px 8px rgba(0,0,0,0.02); box-sizing: border-box; width: 100%;">
                 <div onclick="window.open('https://www.instagram.com/ggoom_e2', '_blank')" style="display: flex; justify-content: space-between; align-items: center; padding: 16px 20px; border-bottom: 1px solid var(--border); cursor: pointer;">
                     <div style="font-size: 14.5px; font-weight: 800; color: var(--text-m);">💬 인스타그램 DM으로 문의하기</div>
                     <div style="color: #8B95A1; font-size: 12px;">〉</div>
@@ -6538,8 +6532,6 @@ window.renderSettingsTab = function() {
                     <div style="font-size: 14.5px; font-weight: 800; color: var(--text-m);">🛡️ 개인정보 처리방침 및 이용약관</div>
                     <div style="color: #8B95A1; font-size: 12px;">〉</div>
                 </div>
-             
-            <!-- 🔥 [수정] 버전 정보 영역에 비밀 스위치(handleSecretAdminClick) 장착! 🔥 -->
                 <div onclick="window.handleSecretAdminClick()" style="display: flex; justify-content: space-between; align-items: center; padding: 16px 20px; cursor: pointer; -webkit-tap-highlight-color: transparent;">
                     <div style="font-size: 14.5px; font-weight: 800; color: var(--text-m);">현재 버전</div>
                     <div style="font-size: 13.5px; font-weight: 800; color: #3182F6;">v1.0.0 최신</div>
@@ -6561,7 +6553,6 @@ window.renderSettingsTab = function() {
         </div>
     `;
 };
-
 // ==========================================
 // 🌟 역할 변경 기능 함수 (설정 탭 스위치)
 // ==========================================
