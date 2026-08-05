@@ -3238,7 +3238,7 @@ window.selectTrackerBtn = function(btn, category) {
     else if (category === 'sleep_night') window.trackerState.subType = '밤잠';
 };
 
-// 🌟 바텀 시트 열기 (네이티브 달력 연동형으로 완벽 교체!)
+// 🌟 바텀 시트 열기 (네이티브 달력 연동 + 모바일 화면 잘림 완벽 방어!)
 window.openTrackerSheet = function(type, editId = null, preSelect = null) {
     window.editingTrackerId = (typeof editId === 'string') ? editId : null;
     window.trackerState.type = type; 
@@ -3255,6 +3255,14 @@ window.openTrackerSheet = function(type, editId = null, preSelect = null) {
     content.style.backgroundColor = 'var(--bg-card)';
     if(title) title.style.color = 'var(--text-m)';
     if(saveBtn) { saveBtn.style.backgroundColor = 'var(--primary)'; saveBtn.style.color = '#FFF'; saveBtn.style.border = 'none'; }
+
+    // 🚨 [핵심 패치 1] 모바일 화면 짤림 방지 (높이 85% 제한 & 내부 스크롤 허용)
+    content.style.maxHeight = '85vh';
+    content.style.display = 'flex';
+    content.style.flexDirection = 'column';
+    body.style.overflowY = 'auto'; // 내용물이 길면 시트 안에서 부드럽게 스크롤됩니다!
+    body.style.flex = '1';
+    body.style.paddingBottom = '30px'; // 하단 여백 추가로 쾌적함 상승
 
     overlay.style.display = 'block'; 
     setTimeout(() => { content.style.transform = 'translateY(0)'; }, 10);
@@ -3287,12 +3295,12 @@ window.openTrackerSheet = function(type, editId = null, preSelect = null) {
 
     let timeLabel = type === 'sleep' ? "언제 잠들었나요?" : "기록 시간 (스와이프하여 시간 수정)";
     
-    // 🌟 어제/오늘 토글 완전 삭제! 직관적인 달력(Date) 선택기로 교체!
+    // 🚨 [핵심 패치 2] 날짜 칸 너비 강제 확보 (min-width: 140px)로 글자 짤림 방어!
     const timeInputHtml = `
         <div style="text-align: center; margin-bottom: 24px;">
             <div style="display:flex; justify-content:center; align-items:center; gap:12px; margin-bottom:16px;">
                 <div style="font-size:13px; font-weight:800; color:var(--text-s);">날짜 선택</div>
-                <input type="date" id="v-tracker-custom-date" value="${displayDateStr}" style="padding:8px 14px; border-radius:12px; border:1px solid var(--border); background:var(--bg-card); color:var(--text-m); font-family:inherit; font-size:14px; font-weight:900; outline:none; cursor:pointer; box-shadow:inset 0 2px 4px rgba(0,0,0,0.02);">
+                <input type="date" id="v-tracker-custom-date" value="${displayDateStr}" style="padding:8px 10px; border-radius:12px; border:1px solid var(--border); background:var(--bg-card); color:var(--text-m); font-family:inherit; font-size:14px; font-weight:900; outline:none; cursor:pointer; box-shadow:inset 0 2px 4px rgba(0,0,0,0.02); min-width: 140px; text-align: center;">
             </div>
             
             ${pastDateBadgeHtml}
@@ -3406,26 +3414,27 @@ window.openTrackerSheet = function(type, editId = null, preSelect = null) {
         `;
         if(saveBtn) saveBtn.style.display = 'block';
     } 
+    // 🚨 [핵심 패치 3] 수면 탭 내부의 상하 여백(margin)을 줄여서 한 화면에 완벽하게 들어오게 다이어트!
     else if (type === 'sleep') {
         title.innerHTML = window.editingTrackerId ? '💤 수면 기록 수정' : '💤 수면 기록하기';
         body.innerHTML = timeInputHtml + `
-            <div style="display:flex; justify-content:center; align-items:center; gap:8px; margin-bottom:20px;">
+            <div style="display:flex; justify-content:center; align-items:center; gap:8px; margin-bottom:16px;">
                 <input type="time" id="v-tracker-time-dummy" value="${currentTimeStr}" disabled style="display:none;">
                 <span style="font-size:13px; font-weight:800; color:var(--text-s);">일어난 시간 👉</span>
                 <input type="time" id="v-sleep-end-time" value="${currentTimeStr}" onchange="window.calcSleepFromTimes()" style="flex:1; text-align:center; border:1px solid var(--border); background:var(--bg-sub); padding:8px 10px; border-radius:12px; font-size:16px; font-weight:900; color:var(--text-m); outline:none;">
             </div>
-            <div style="display: flex; gap: 10px; margin-bottom: 20px;">
+            <div style="display: flex; gap: 10px; margin-bottom: 16px;">
                 <button class="btn-main" onclick="window.selectTrackerBtn(this, 'sleep_day')" style="flex: 1; background: var(--bg-card); color: var(--text-s); border: 1px solid var(--border); box-shadow: none; margin:0; transition:0.2s;">☀️ 낮잠</button>
                 <button class="btn-main" onclick="window.selectTrackerBtn(this, 'sleep_night')" style="flex: 1; background: var(--bg-card); color: var(--text-s); border: 1px solid var(--border); box-shadow: none; margin:0; transition:0.2s;">🌙 밤잠</button>
             </div>
-            <div style="background:var(--bg-sub); padding:18px; border-radius:16px; margin-bottom:20px; border:1px solid var(--border); text-align:center;">
+            <div style="background:var(--bg-sub); padding:16px; border-radius:16px; margin-bottom:16px; border:1px solid var(--border); text-align:center;">
                 <div style="font-size:12.5px; font-weight:800; color:#3182F6; margin-bottom:8px;">아기가 지금 막 일어났나요?</div>
-                <button onclick="window.calcSleepToNow()" style="width:100%; padding:14px; background:var(--bg-card); color:#3182F6; border:1px solid var(--border); border-radius:12px; font-size:15px; font-weight:900; cursor:pointer; box-shadow:0 2px 8px rgba(0,0,0,0.05); transition:0.2s;">
+                <button onclick="window.calcSleepToNow()" style="width:100%; padding:12px; background:var(--bg-card); color:#3182F6; border:1px solid var(--border); border-radius:12px; font-size:15px; font-weight:900; cursor:pointer; box-shadow:0 2px 8px rgba(0,0,0,0.05); transition:0.2s;">
                     ⏰ 방금 깼어요! (알아서 계산)
                 </button>
             </div>
-            <div style="text-align: center; margin-bottom: 24px;">
-                <div style="font-size: 13.5px; font-weight: 800; color: var(--text-s); margin-bottom: 12px;">총 수면 시간</div>
+            <div style="text-align: center; margin-bottom: 16px;">
+                <div style="font-size: 13.5px; font-weight: 800; color: var(--text-s); margin-bottom: 8px;">총 수면 시간</div>
                 <div style="display: flex; justify-content: center; align-items: baseline; gap: 6px;">
                     <input type="number" id="v-sleep-hours" value="0" oninput="window.calcEndTimeFromAmount()" style="font-size: 40px; font-weight: 900; color: var(--text-m); border: none; outline: none; background: transparent; text-align: center; width: 70px; padding: 0; margin: 0; border-bottom: 3px solid var(--border); border-radius: 0; transition:0.3s;">
                     <span style="font-size: 18px; font-weight: 800; color: var(--text-s);">시간</span>
@@ -3433,8 +3442,8 @@ window.openTrackerSheet = function(type, editId = null, preSelect = null) {
                     <span style="font-size: 18px; font-weight: 800; color: var(--text-s);">분</span>
                 </div>
               <input type="hidden" id="v-sleep-amount" value="0">
-                <div style="margin-top: 14px;">
-                    <span style="background:var(--bg-sub); color:var(--text-m); font-size:11.5px; font-weight:800; padding:6px 12px; border-radius:20px; border:1px solid var(--border);">💡 자는 중이라면 시간을 똑같이 두고 [저장] 누르세요!</span>
+                <div style="margin-top: 10px;">
+                    <span style="background:var(--bg-sub); color:var(--text-m); font-size:11px; font-weight:800; padding:6px 12px; border-radius:20px; border:1px solid var(--border); display:inline-block; word-break:keep-all;">💡 자는 중이라면 시간을 똑같이 두고 [저장] 누르세요!</span>
                 </div>
             </div>
         `;
