@@ -2083,7 +2083,7 @@ function uploadPhoto(input) {
                 const ctx = canvas.getContext('2d'); 
                 ctx.drawImage(img, 0, 0, width, height);
                 
-                const dataUrl = canvas.toDataURL('image/jpeg', 0.85); 
+                const dataUrl = canvas.toDataURL('image/jpeg', 0.5); 
                 
                 try { 
                     localStorage.setItem('tosil_baby_photo', dataUrl); 
@@ -3812,6 +3812,89 @@ window.toggleTrackerHistory = function() {
     window.updateTrackerDashboard();
 };
 
+// ==========================================
+// 📈 [신규] 기록 탭: 주간 통계 탭 전환 및 차트 렌더링 엔진
+// ==========================================
+window.trackerHistoryTab = 'daily'; // 기본 탭은 '일간 내역'
+
+window.setTrackerHistoryTab = function(tabName) {
+    window.trackerHistoryTab = tabName;
+    window.updateTrackerDashboard();
+};
+
+let trackerStatsChartObj = null;
+
+window.drawTrackerStatsChart = function(records) {
+    const canvas = document.getElementById('trackerStatsChart');
+    if (!canvas || typeof Chart === 'undefined') return;
+    const ctx = canvas.getContext('2d');
+    if (trackerStatsChartObj) trackerStatsChartObj.destroy();
+
+    // 최근 7일 라벨 및 데이터 추출
+    const labels = [];
+    const feedData = [];
+    const sleepData = [];
+
+    for (let i = 6; i >= 0; i--) {
+        let d = new Date();
+        d.setDate(d.getDate() - i);
+        labels.push(`${d.getMonth() + 1}/${d.getDate()}`);
+        
+        let dailyFeed = 0;
+        let dailySleepMins = 0;
+
+        records.forEach(r => {
+            let rd = new Date(r.timestamp);
+            if (rd.getDate() === d.getDate() && rd.getMonth() === d.getMonth() && rd.getFullYear() === d.getFullYear()) {
+                // 분유/유축 수유량 (ml) 합산
+                if (r.type === 'feed' && r.subType !== '이유식' && r.subType !== '모유') dailyFeed += (parseInt(r.amount) || 0);
+                // 수면 시간 (분) 합산
+                if (r.type === 'sleep') dailySleepMins += (parseInt(r.amount) || 0);
+            }
+        });
+        feedData.push(dailyFeed);
+        sleepData.push(+(dailySleepMins / 60).toFixed(1)); // 시간 단위로 변환
+    }
+
+    trackerStatsChartObj = new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: labels,
+            datasets: [
+                {
+                    type: 'line',
+                    label: '수면 (시간)',
+                    data: sleepData,
+                    borderColor: '#A855F7',
+                    backgroundColor: '#A855F7',
+                    yAxisID: 'ySleep',
+                    tension: 0.4,
+                    borderWidth: 3,
+                    pointRadius: 4
+                },
+                {
+                    type: 'bar',
+                    label: '분유/유축 (ml)',
+                    data: feedData,
+                    backgroundColor: 'rgba(49, 130, 246, 0.8)',
+                    borderRadius: 6,
+                    yAxisID: 'yFeed'
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                x: { grid: { display: false } },
+                yFeed: { type: 'linear', position: 'left', title: { display: true, text: '수유량(ml)', font: { size: 10 } } },
+                ySleep: { type: 'linear', position: 'right', grid: { drawOnChartArea: false }, title: { display: true, text: '수면(시간)', font: { size: 10 } }, min: 0 }
+            },
+            plugins: { legend: { position: 'bottom', labels: { boxWidth: 12, font: { size: 11 } } } }
+        }
+    });
+};
+
 window.openTrackerSettings = function() {
     const feedMins = localStorage.getItem('tosil_feed_interval') || 180;
     const diaperMins = localStorage.getItem('tosil_diaper_interval') || 180;
@@ -3852,10 +3935,10 @@ window.updateTrackerDashboard = function() {
         return 'var(--text-m)';
     };
 
-    // --- 히스토리 뷰 (펼쳐보기) 렌더링 시작 ---
-     if (window.isHistoryView) {
+   // --- 히스토리 뷰 (펼쳐보기) 렌더링 시작 ---
+    if (window.isHistoryView) {
         if(records.length === 0) {
-            // 🌟 텅 빈 화면(Empty State) 감성 패치!
+            // 🌟 텅 빈 화면
             container.innerHTML = `
                 <div style="padding:40px 20px; text-align:center; background:var(--bg-sub); border-radius:16px; border:1px dashed var(--border);">
                     <div style="font-size:32px; margin-bottom:12px;">🐣</div>
@@ -3865,128 +3948,142 @@ window.updateTrackerDashboard = function() {
                 <button class="btn-main" onclick="window.toggleTrackerHistory()" style="width:100%; margin-top:12px; padding:14px; font-size:14px; background:#F2F5F8 !important; color:#4E5968 !important; border:1px solid #E5E8EB !important; border-radius:14px; box-shadow:none !important;">닫기 〉</button>
             `;
         } else {
-            let grouped = {};
-            records.forEach(r => {
-                const d = new Date(r.timestamp);
-                const dateKey = `${d.getMonth()+1}월 ${d.getDate()}일`;
-                if(!grouped[dateKey]) grouped[dateKey] = [];
-                grouped[dateKey].push(r);
-            });
-          // ✨ [UX 패치] 스와이프 안내 문구 추가
-    let historyHtml = `
-        <div style="background:var(--bg-sub); color:var(--text-s); font-size:12px; font-weight:800; padding:10px; border-radius:12px; margin-bottom:12px; text-align:center; border: 1px dashed var(--border);">
-            💡 리스트를 <span style="color:var(--text-m);">왼쪽으로 밀면(👈)</span> 수정/삭제할 수 있어요!
-        </div>
-        <div style="max-height:300px; overflow-y:auto; padding-right:4px;">
-    `;
-            for(let date in grouped) {
-                // 💡 [핵심 패치] 날짜 헤더 바로 밑에 일간 통계 요약(패턴 분석) 박스 추가!
-                historyHtml += `
-                    <div style="position: sticky; top: -1px; z-index: 10; background: var(--bg-card); padding: 12px 0 8px 0; border-bottom:1px solid #F2F5F8;">
-                        <div style="font-size:14px; font-weight:900; color:#4E5968; margin-bottom: 6px;">📅 ${date}</div>
-                        ${window.getDailySummaryHtml(grouped[date])}
-                    </div>
-                `;
-                
-                grouped[date].forEach(r => {
-    let icon = '✨';
-    // 👇 이 부분이 핵심입니다! 이유식이면 숟가락, 아니면 젖병!
-    if (r.type === 'feed') {
-        icon = (r.subType === '이유식') ? '🥄' : '🍼';
-    }
-    else if (r.type === 'sleep') icon = (r.subType === '밤잠' ? '🌙' : '☀️');
-    else if (r.type === 'diaper') {
-                        if (r.subType === '소변') icon = '💧';
-                        else if (r.subType === '대변') icon = '💩';
-                        else icon = '💩';
-                    }
+            // 💡 [신규] 상단 탭 (일간 내역 / 주간 통계)
+            const isDaily = window.trackerHistoryTab === 'daily';
+            let historyHtml = `
+                <div style="display: flex; gap: 8px; margin-bottom: 16px; background: #F2F5F8; padding: 4px; border-radius: 12px;">
+                    <div onclick="window.setTrackerHistoryTab('daily')" style="flex: 1; text-align: center; padding: 10px 0; border-radius: 8px; font-size: 13.5px; font-weight: 800; cursor: pointer; transition: 0.2s; ${isDaily ? 'background: #FFFFFF; color: #191F28; box-shadow: 0 2px 4px rgba(0,0,0,0.05);' : 'color: #8B95A1;'}">일간 내역</div>
+                    <div onclick="window.setTrackerHistoryTab('stats')" style="flex: 1; text-align: center; padding: 10px 0; border-radius: 8px; font-size: 13.5px; font-weight: 800; cursor: pointer; transition: 0.2s; ${!isDaily ? 'background: #FFFFFF; color: #191F28; box-shadow: 0 2px 4px rgba(0,0,0,0.05);' : 'color: #8B95A1'}">주간 통계</div>
+                </div>
+            `;
 
-                    let txt = '';
-                    let displayTime = r.time; 
-                    
-                    if(r.type === 'feed') {
-                        if (r.subType === '모유') txt = `모유 (${r.status}) ${r.amount}분`;
-                        else txt = `${r.subType} ${r.amount}ml`;
-                    }
-                    else if(r.type === 'diaper') {
-                        if (r.status) {
-                            const sColor = getStatusColor(r.status);
-                            txt = `${r.subType} / <span style="color:${sColor}; font-weight:900;">${r.status}</span>`;
-                        } else {
-                            txt = `${r.subType}`;
-                        }
-                    }
-                    else if(r.type === 'sleep') {
-                        if (r.amount === 0) {
-                            txt = `<span style="color:#3182F6">${r.subType || '낮잠'} (자는 중 💤)</span>`;
-                        } else {
-                            let h = Math.floor(r.amount / 60);
-                            let m = r.amount % 60;
-                            let durText = h > 0 ? `${h}시간 ${m}분` : `${m}분`;
-                            txt = `${r.subType || '낮잠'} <span style="color:#A855F7;">${durText}</span>`;
-                            let dEnd = new Date(r.timestamp + (r.amount * 60000));
-                            let endStr = `${String(dEnd.getHours()).padStart(2,'0')}:${String(dEnd.getMinutes()).padStart(2,'0')}`;
-                            displayTime = `${r.time} ~ ${endStr}`; 
-                        }
-                    }
-                    
-                    // ==========================================
-                    // 💸 (패치) // ==========================================
-                    // 💸 (패치) 트래커 히스토리: 밀어서 수정/삭제 (오터치 완벽 방어)
-                    // ==========================================
+            if (isDaily) {
+                // 👇 기존의 [일간 내역] 리스트 렌더링
+                let grouped = {};
+                records.forEach(r => {
+                    const d = new Date(r.timestamp);
+                    const dateKey = `${d.getMonth()+1}월 ${d.getDate()}일`;
+                    if(!grouped[dateKey]) grouped[dateKey] = [];
+                    grouped[dateKey].push(r);
+                });
+                
+                historyHtml += `
+                    <div style="background:var(--bg-sub); color:var(--text-s); font-size:12px; font-weight:800; padding:10px; border-radius:12px; margin-bottom:12px; text-align:center; border: 1px dashed var(--border);">
+                        💡 리스트를 <span style="color:var(--text-m);">왼쪽으로 밀면(👈)</span> 수정/삭제할 수 있어요!
+                    </div>
+                    <div style="max-height:350px; overflow-y:auto; padding-right:4px;">
+                `;
+
+                for(let date in grouped) {
                     historyHtml += `
-                        <div class="swipe-list-item" style="position:relative; border-bottom:1px solid rgba(0,0,0,0.05); margin-bottom:4px; border-radius:12px; overflow:hidden; background:var(--bg-card);">
-                            
-                            <!-- 🚨 숨겨진 버튼 영역 (바닥에 깔려있음) -->
-                            <div style="position:absolute; top:0; right:0; height:100%; display:flex; z-index:1;">
-                                <div onclick="window.editTrackerRecord('${r.id}')" style="background:#E8F3FF; color:#3182F6; width:65px; display:flex; flex-direction:column; align-items:center; justify-content:center; font-weight:800; font-size:12px; cursor:pointer;">
-                                    <span style="font-size:16px; margin-bottom:2px;">✏️</span>수정
-                                </div>
-                                <div onclick="window.deleteTrackerRecord('${r.id}')" style="background:#FFF0F1; color:#F04452; width:65px; display:flex; flex-direction:column; align-items:center; justify-content:center; font-weight:800; font-size:12px; cursor:pointer;">
-                                    <span style="font-size:16px; margin-bottom:2px;">🗑️</span>삭제
-                                </div>
-                            </div>
-                            
-                            <!-- 🌟 실제로 스와이프(터치 드래그) 되는 카드 영역 -->
-                            <div class="swipe-content" data-id="${r.id}" style="position:relative; z-index:2; background:var(--bg-card); display:flex; justify-content:space-between; align-items:center; padding:14px 4px; transition:transform 0.2s cubic-bezier(0.2, 0.8, 0.2, 1);"
-                                 ontouchstart="window.handleSwipeStart(event)" 
-                                 ontouchmove="window.handleSwipeMove(event)" 
-                                 ontouchend="window.handleSwipeEnd(event, this)">
-                                
-                                <!-- 🕒 왼쪽: 시간 -->
-                                <div style="width: 50px; font-size:13px; font-weight:800; color:#8B95A1; text-align:left; flex-shrink:0; padding-left:4px;">
-                                    ${displayTime.split(' ~ ')[0]} <!-- 시작 시간만 깔끔하게 노출 -->
-                                </div>
-                                
-                                <!-- 🍼 중앙: 아이콘 + 상세 내용 -->
-                                <div style="display:flex; gap:12px; align-items:center; flex:1; min-width:0;">
-                                    <div style="font-size:18px; flex-shrink:0; background:var(--bg-sub); width:36px; height:36px; display:flex; align-items:center; justify-content:center; border-radius:10px;">${icon}</div>
-                                    <div style="min-width:0;">
-                                        <div style="font-weight:900; color:var(--text-m); font-size:14px; margin-bottom:2px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${txt}</div>
-                                        ${displayTime.includes('~') ? `<div style="color:#B0B8C1; font-weight:700; font-size:11.5px;">${displayTime}</div>` : ''}
-                                    </div>
-                                </div>
-                                
-                                <!-- 👉 스와이프 안내 아이콘 (은은하게 밀어보라고 알려줌) -->
-                                <div style="color:#D1D6DB; font-size:18px; padding-right:8px; opacity:0.6; pointer-events:none;">
-                                    ‹
-                                </div>
-                            </div>
+                        <div style="position: sticky; top: -1px; z-index: 10; background: var(--bg-card); padding: 12px 0 8px 0; border-bottom:1px solid #F2F5F8;">
+                            <div style="font-size:14px; font-weight:900; color:#4E5968; margin-bottom: 6px;">📅 ${date}</div>
+                            ${window.getDailySummaryHtml(grouped[date])}
                         </div>
                     `;
-                });
+                    
+                    grouped[date].forEach(r => {
+                        let icon = '✨';
+                        if (r.type === 'feed') icon = (r.subType === '이유식') ? '🥄' : '🍼';
+                        else if (r.type === 'sleep') icon = (r.subType === '밤잠' ? '🌙' : '☀️');
+                        else if (r.type === 'diaper') {
+                            if (r.subType === '소변') icon = '💧';
+                            else if (r.subType === '대변') icon = '💩';
+                            else icon = '💩';
+                        }
+
+                        let txt = '';
+                        let displayTime = r.time; 
+                        
+                        if(r.type === 'feed') {
+                            if (r.subType === '모유') txt = `모유 (${r.status}) ${r.amount}분`;
+                            else txt = `${r.subType} ${r.amount}ml`;
+                        }
+                        else if(r.type === 'diaper') {
+                            if (r.status) {
+                                const sColor = getStatusColor(r.status);
+                                txt = `${r.subType} / <span style="color:${sColor}; font-weight:900;">${r.status}</span>`;
+                            } else {
+                                txt = `${r.subType}`;
+                            }
+                        }
+                        else if(r.type === 'sleep') {
+                            if (r.amount === 0) {
+                                txt = `<span style="color:#3182F6">${r.subType || '낮잠'} (자는 중 💤)</span>`;
+                            } else {
+                                let h = Math.floor(r.amount / 60);
+                                let m = r.amount % 60;
+                                let durText = h > 0 ? `${h}시간 ${m}분` : `${m}분`;
+                                txt = `${r.subType || '낮잠'} <span style="color:#A855F7;">${durText}</span>`;
+                                let dEnd = new Date(r.timestamp + (r.amount * 60000));
+                                let endStr = `${String(dEnd.getHours()).padStart(2,'0')}:${String(dEnd.getMinutes()).padStart(2,'0')}`;
+                                displayTime = `${r.time} ~ ${endStr}`; 
+                            }
+                        }
+                        
+                        // 밀어서 수정/삭제 아이템
+                        historyHtml += `
+                            <div class="swipe-list-item" style="position:relative; border-bottom:1px solid rgba(0,0,0,0.05); margin-bottom:4px; border-radius:12px; overflow:hidden; background:var(--bg-card);">
+                                <div style="position:absolute; top:0; right:0; height:100%; display:flex; z-index:1;">
+                                    <div onclick="window.editTrackerRecord('${r.id}')" style="background:#E8F3FF; color:#3182F6; width:65px; display:flex; flex-direction:column; align-items:center; justify-content:center; font-weight:800; font-size:12px; cursor:pointer;">
+                                        <span style="font-size:16px; margin-bottom:2px;">✏️</span>수정
+                                    </div>
+                                    <div onclick="window.deleteTrackerRecord('${r.id}')" style="background:#FFF0F1; color:#F04452; width:65px; display:flex; flex-direction:column; align-items:center; justify-content:center; font-weight:800; font-size:12px; cursor:pointer;">
+                                        <span style="font-size:16px; margin-bottom:2px;">🗑️</span>삭제
+                                    </div>
+                                </div>
+                                <div class="swipe-content" data-id="${r.id}" style="position:relative; z-index:2; background:var(--bg-card); display:flex; justify-content:space-between; align-items:center; padding:14px 4px; transition:transform 0.2s cubic-bezier(0.2, 0.8, 0.2, 1);"
+                                     ontouchstart="window.handleSwipeStart(event)" 
+                                     ontouchmove="window.handleSwipeMove(event)" 
+                                     ontouchend="window.handleSwipeEnd(event, this)">
+                                    
+                                    <div style="width: 50px; font-size:13px; font-weight:800; color:#8B95A1; text-align:left; flex-shrink:0; padding-left:4px;">
+                                        ${displayTime.split(' ~ ')[0]} 
+                                    </div>
+                                    
+                                    <div style="display:flex; gap:12px; align-items:center; flex:1; min-width:0;">
+                                        <div style="font-size:18px; flex-shrink:0; background:var(--bg-sub); width:36px; height:36px; display:flex; align-items:center; justify-content:center; border-radius:10px;">${icon}</div>
+                                        <div style="min-width:0;">
+                                            <div style="font-weight:900; color:var(--text-m); font-size:14px; margin-bottom:2px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${txt}</div>
+                                            ${displayTime.includes('~') ? `<div style="color:#B0B8C1; font-weight:700; font-size:11.5px;">${displayTime}</div>` : ''}
+                                        </div>
+                                    </div>
+                                    
+                                    <div style="color:#D1D6DB; font-size:18px; padding-right:8px; opacity:0.6; pointer-events:none;">‹</div>
+                                </div>
+                            </div>
+                        `;
+                    });
+                }
+                historyHtml += '</div>';
+
+            } else {
+                // 👇 [신규] 주간 통계 탭 렌더링 (차트 캔버스 삽입)
+                historyHtml += `
+                    <div style="background: #F9FAFB; padding: 16px; border-radius: 16px; border: 1px solid #E5E8EB; margin-bottom: 12px; text-align: center;">
+                        <div style="font-size: 15px; font-weight: 900; color: var(--text-m); margin-bottom: 6px;">📈 최근 7일 수유 & 수면 추이</div>
+                        <div style="font-size: 12px; color: var(--text-s); font-weight: 600;">그래프를 탭하면 수치 상세를 볼 수 있어요.</div>
+                        <div style="height: 250px; margin-top: 16px;">
+                            <canvas id="trackerStatsChart"></canvas>
+                        </div>
+                    </div>
+                `;
+                // 차트 그리기 지연 실행
+                setTimeout(() => window.drawTrackerStatsChart(records), 50);
             }
-            historyHtml += '</div>';
-            historyHtml += `<div style="display:flex; gap:8px; margin-top:16px;">
-                <button class="btn-main" onclick="window.resetTrackerRecords()" style="flex:1; background:#FFF0F1 !important; color:#F04452 !important; border:1px solid #FFE3E3 !important; box-shadow:none !important; font-size:13px; padding:12px; border-radius:12px; margin:0;">🗑️ 전체 삭제</button>
-                <button class="btn-main" onclick="window.toggleTrackerHistory()" style="flex:1; margin:0; font-size:13px; padding:12px; border-radius:12px; box-shadow:none !important;">접기 닫기 〉</button>
-            </div>`;
+
+            // 하단 버튼 영역
+            historyHtml += `
+                <div style="display:flex; gap:8px; margin-top:16px;">
+                    <button class="btn-main" onclick="window.resetTrackerRecords()" style="flex:1; background:#FFF0F1 !important; color:#F04452 !important; border:1px solid #FFE3E3 !important; box-shadow:none !important; font-size:13px; padding:12px; border-radius:12px; margin:0;">🗑️ 전체 삭제</button>
+                    <button class="btn-main" onclick="window.toggleTrackerHistory()" style="flex:1; margin:0; font-size:13px; padding:12px; border-radius:12px; box-shadow:none !important;">접기 닫기 〉</button>
+                </div>
+            `;
             container.innerHTML = historyHtml;
         }
         container.style.display = 'block';
         return; 
     }
-    // --- 히스토리 뷰 렌더링 끝 ---
 
     const lastSleepRecord = records.find(r => r.type === 'sleep'); 
     let sleepStartTime = localStorage.getItem('tosil_sleep_start');
@@ -6308,35 +6405,49 @@ window.renderSettingsTab = function() {
         `;
     }
 
-    // 🌟 2. 가족 연동 섹션 
+  // 🌟 2. 가족 연동 섹션 
     const syncCode = localStorage.getItem('family_sync_code');
     let syncHtml = '';
 
     if (syncCode) {
+        // ✅ 연동 완료 상태 (내 코드 확인 + 해제 버튼 반반)
         syncHtml = `
             <div style="background: var(--bg-card); border: 1px solid var(--border); border-radius: 16px; padding: 16px; margin-bottom: 24px; box-shadow: 0 2px 8px rgba(0,0,0,0.02);">
                 <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px;">
                     <div style="font-size: 14.5px; font-weight: 900; color: var(--text-m);">👨‍👩‍👧 가족 연동 완료</div>
                     <span style="background: #EBF4FF; color: #3182F6; font-size: 11px; font-weight: 900; padding: 4px 8px; border-radius: 8px;">상태: ON</span>
                 </div>
-                <div style="font-size: 12.5px; color: var(--text-s); font-weight: 600; margin-bottom: 12px;">현재 가족간 육아 데이터를 공유 중입니다.</div>
+                <div style="font-size: 12.5px; color: var(--text-s); font-weight: 600; margin-bottom: 16px;">현재 가족과 육아 데이터를 실시간 공유 중입니다.</div>
                 
-                <button onclick="window.safeUnlinkFamilySync()" style="width: 100%; padding: 12px; border-radius: 12px; background: #FFF0F1; color: #F04452; font-size: 13.5px; font-weight: 900; border: 1px solid #FFE5E8; cursor: pointer; box-shadow: 0 2px 4px rgba(240,68,82,0.05);">
-                    🚨 연동 해제하기
-                </button>
+                <div style="display: flex; gap: 8px;">
+                    <button onclick="window.openFamilySyncModal()" style="flex: 1; padding: 12px; border-radius: 12px; background: #F2F5F8; color: #4E5968; font-size: 13.5px; font-weight: 800; border: none; cursor: pointer;">
+                        🎟️ 내 코드 관리
+                    </button>
+                    <button onclick="window.safeUnlinkFamilySync()" style="flex: 1; padding: 12px; border-radius: 12px; background: #FFF0F1; color: #F04452; font-size: 13.5px; font-weight: 900; border: 1px solid #FFE5E8; cursor: pointer;">
+                        🚨 연동 해제
+                    </button>
+                </div>
             </div>
         `;
     } else {
+        // ❌ 미연동 상태 (카톡 초대 + 코드 직접 입력 반반)
         syncHtml = `
             <div style="background: var(--bg-card); border: 1px solid var(--border); border-radius: 16px; padding: 16px; margin-bottom: 24px; box-shadow: 0 2px 8px rgba(0,0,0,0.02);">
-                <div style="font-size: 14.5px; font-weight: 900; color: var(--text-m); margin-bottom: 8px;">👨‍👩‍👧 짝꿍과 함께 육아하기</div>
-                <div style="font-size: 12.5px; color: var(--text-s); font-weight: 600; margin-bottom: 16px; line-height: 1.4;">혼자 하는 육아는 너무 힘들어요.<br>지금 짝꿍을 초대해서 데이터를 공유하세요!</div>
-                <button onclick="window.sendKakaoInvite()" style="width: 100%; padding: 14px; border-radius: 12px; background: #FEE500; color: #191F28; font-size: 14.5px; font-weight: 900; border: none; cursor: pointer; box-shadow: 0 2px 6px rgba(254,229,0,0.2); display: flex; justify-content: center; align-items: center; gap: 8px;">
-                    💬 카카오톡으로 초대장 보내기
-                </button>
+                <div style="font-size: 14.5px; font-weight: 900; color: var(--text-m); margin-bottom: 8px;">👨‍👩‍👧 우리 아기 함께 키우기</div>
+                <div style="font-size: 12.5px; color: var(--text-s); font-weight: 600; margin-bottom: 16px; line-height: 1.4;">혼자 하는 육아는 너무 힘들어요.<br>아빠, 할머니, 이모님을 초대해서 기록을 공유하세요!</div>
+                
+                <div style="display: flex; flex-direction: column; gap: 8px;">
+                    <button onclick="window.sendKakaoInvite()" style="width: 100%; padding: 14px; border-radius: 12px; background: #FEE500; color: #191F28; font-size: 14.5px; font-weight: 900; border: none; cursor: pointer; display: flex; justify-content: center; align-items: center; gap: 8px;">
+                        💬 카카오톡으로 초대장 보내기
+                    </button>
+                    <button onclick="window.openFamilySyncModal()" style="width: 100%; padding: 14px; border-radius: 12px; background: #FFFFFF; color: #4E5968; font-size: 14px; font-weight: 800; border: 1px solid #E5E8EB; cursor: pointer; display: flex; justify-content: center; align-items: center; gap: 8px;">
+                        🎟️ 초대 코드 직접 입력 / 생성
+                    </button>
+                </div>
             </div>
         `;
     }
+
 
     // 💡 현재 설정된 역할 가져오기 (기본값: 엄마)
     const currentRole = localStorage.getItem('user_role') || 'mom';
@@ -7556,7 +7667,7 @@ window.handleImageSelection = function(event) {
                 const ctx = canvas.getContext('2d');
                 ctx.drawImage(img, 0, 0, width, height);
 
-                const dataUrl = canvas.toDataURL('image/jpeg', 0.7);
+                const dataUrl = canvas.toDataURL('image/jpeg', 0.5);
                 
                 // 🚀 [마스터 패치] 글자 뭉치(Base64) 대신, Storage에 올리고 URL 받아오기!
                 if (window.storage && window.uploadString && window.getDownloadURL) {
@@ -8741,7 +8852,7 @@ window.handleProfileImageSelection = function(event) {
             const ctx = canvas.getContext('2d');
             ctx.drawImage(img, 0, 0, width, height);
 
-            const dataUrl = canvas.toDataURL('image/jpeg', 0.8);
+            const dataUrl = canvas.toDataURL('image/jpeg', 0.5);
             localStorage.setItem('community_profile_image', dataUrl); 
 
             const profileCircle = document.getElementById('mypage-profile-icon');
