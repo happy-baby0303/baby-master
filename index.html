@@ -62,6 +62,38 @@
 
 <style>
     body { margin: 0 !important; padding: 0 !important; }
+
+/* ========================================== */
+/* 👵 조부모 / 시터 모드 전용 (초간단 UI) */
+/* ========================================== */
+/* 🚨 육아정보(#nav-info)까지 싹 다 숨김! */
+body.mode-senior #nav-toolbox,
+body.mode-senior #nav-hotplace,
+body.mode-senior #nav-community,
+body.mode-senior #nav-info { display: none !important; }
+
+/* 하단 탭에 '홈' 하나만 남으므로 1칸으로 꽉 채움 */
+body.mode-senior .bottom-nav { grid-template-columns: 1fr; } 
+
+body.mode-senior .show-on-mom-block,
+body.mode-senior .show-on-dad-block,
+body.mode-senior #tracker-section,
+body.mode-senior #play-banner-card,
+body.mode-senior #health-smart-banner { display: none !important; }
+
+/* 시니어 모드에서만 보이는 전용 블록 */
+.show-on-senior-block { display: none; }
+body.mode-senior .show-on-senior-block { display: block !important; }
+
+/* 조부모 모드 프라이버시 철통 방어 (사생활 탭 싹 다 숨김) */
+body.mode-senior .diary-card,
+body.mode-senior [onclick="openSOSModal()"],
+body.mode-senior #db-ledger-card,
+body.mode-senior [onclick*="directGoToolbox('fever')"],
+body.mode-senior .ai-matrix-container,
+body.mode-senior .premium-banner-wrap,
+body.mode-senior .hide-on-senior /* HTML에 붙인 숨김 태그 완벽 작동 */
+{ display: none !important; }
 </style>
 
 </head>
@@ -322,6 +354,81 @@
             <div id="routine-checklist-container" style="margin-top: 16px;"></div>
         </div>
 
+      <!-- 👵 조부모/시터 전용 하이엔드 대시보드 -->
+<div class="show-on-senior-block" style="margin-top: 16px; margin-bottom: 24px;">
+
+    <!-- 1. 프리미엄 알림장 & 필수 투약 체크 -->
+    <div style="background: #FFFFFF; border: 1px solid #E5E8EB; padding: 24px; border-radius: 24px; margin-bottom: 20px; box-shadow: 0 4px 16px rgba(0,0,0,0.03); position: relative;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+            <div style="font-size: 13px; font-weight: 800; color: #8B95A1;">📌 부모님 전달사항</div>
+            <button onclick="window.editSeniorMemo()" style="background: #F2F4F6; color: #4E5968; font-size: 12px; font-weight: 800; padding: 6px 12px; border-radius: 8px; border: none; cursor: pointer; transition: 0.2s;">수정</button>
+        </div>
+        <div id="senior-memo-text" style="font-size: 17px; font-weight: 900; color: #191F28; line-height: 1.5; word-break: keep-all;">여기에 전달사항을 적어주세요. (예: 2시에 이유식 먹여주세요)</div>
+        
+        <!-- 💊 4번 아이디어: 원터치 투약/케어 체크 -->
+        <div style="margin-top: 16px; padding-top: 16px; border-top: 1px dashed #E5E8EB; display: flex; align-items: center; justify-content: space-between;">
+            <div style="font-size: 14px; font-weight: 800; color: #191F28;">💊 오늘 약/필수케어 하셨나요?</div>
+            <button id="senior-routine-btn" onclick="window.toggleSeniorRoutine()" style="background: #F2F5F8; color: #8B95A1; border: 1px solid #E5E8EB; padding: 10px 16px; border-radius: 12px; font-size: 14px; font-weight: 900; cursor: pointer; transition: 0.2s;">안 했어요 ⬜</button>
+        </div>
+    </div>
+
+    <!-- 2. 직관적인 트래커 6구 버튼 (2x3 그리드 레이아웃) -->
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 24px;">
+        <button onclick="window.quickSaveSenior('formula')" style="background: #FFFFFF; border: 1px solid #E5E8EB; color: #191F28; padding: 20px 10px; border-radius: 20px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.02); cursor: pointer; transition: transform 0.2s;">
+            <div style="background: #EBF4FF; width: 50px; height: 50px; border-radius: 16px; display: flex; align-items: center; justify-content: center; font-size: 26px;">🍼</div>
+            <span style="font-size: 15.5px; font-weight: 900; letter-spacing: -0.5px;">분유 먹였어요</span>
+        </button>
+        <button onclick="window.quickSaveSenior('babyfood')" style="background: #FFFFFF; border: 1px solid #E5E8EB; color: #191F28; padding: 20px 10px; border-radius: 20px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.02); cursor: pointer; transition: transform 0.2s;">
+            <div style="background: #E6F7F2; width: 50px; height: 50px; border-radius: 16px; display: flex; align-items: center; justify-content: center; font-size: 26px;">🥄</div>
+            <span style="font-size: 15.5px; font-weight: 900; letter-spacing: -0.5px;">이유식 먹였어요</span>
+        </button>
+        <button onclick="window.quickSaveSenior('pee')" style="background: #FFFFFF; border: 1px solid #E5E8EB; color: #191F28; padding: 20px 10px; border-radius: 20px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.02); cursor: pointer; transition: transform 0.2s;">
+            <div style="background: #EBF8FF; width: 50px; height: 50px; border-radius: 16px; display: flex; align-items: center; justify-content: center; font-size: 26px;">💧</div>
+            <span style="font-size: 15.5px; font-weight: 900; letter-spacing: -0.5px;">쉬 쌌어요</span>
+        </button>
+        <button onclick="window.quickSaveSenior('poop')" style="background: #FFFFFF; border: 1px solid #E5E8EB; color: #191F28; padding: 20px 10px; border-radius: 20px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.02); cursor: pointer; transition: transform 0.2s;">
+            <div style="background: #FFF0F1; width: 50px; height: 50px; border-radius: 16px; display: flex; align-items: center; justify-content: center; font-size: 26px;">💩</div>
+            <span style="font-size: 15.5px; font-weight: 900; letter-spacing: -0.5px;">응가 쌌어요</span>
+        </button>
+        <button onclick="window.quickSaveSenior('sleep_start')" style="background: #FFFFFF; border: 1px solid #E5E8EB; color: #191F28; padding: 20px 10px; border-radius: 20px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.02); cursor: pointer; transition: transform 0.2s;">
+            <div style="background: #F3E8FF; width: 50px; height: 50px; border-radius: 16px; display: flex; align-items: center; justify-content: center; font-size: 26px;">💤</div>
+            <span style="font-size: 15.5px; font-weight: 900; letter-spacing: -0.5px;">잠들었어요</span>
+        </button>
+        <button onclick="window.quickSaveSenior('sleep_end')" style="background: #FFFFFF; border: 1px solid #E5E8EB; color: #191F28; padding: 20px 10px; border-radius: 20px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.02); cursor: pointer; transition: transform 0.2s;">
+            <div style="background: #FFF9E6; width: 50px; height: 50px; border-radius: 16px; display: flex; align-items: center; justify-content: center; font-size: 26px;">☀️</div>
+            <span style="font-size: 15.5px; font-weight: 900; letter-spacing: -0.5px;">방금 깼어요</span>
+        </button>
+    </div>
+
+    <!-- 3. 모던한 긴급 통화 바 -->
+    <div style="background: #F8F9FA; border-radius: 20px; padding: 16px; display: flex; gap: 8px; margin-bottom: 24px;">
+        <button onclick="window.location.href='tel:010-0000-0000'" style="flex: 1; background: #FFFFFF; color: #4E5968; padding: 14px 0; font-size: 14px; font-weight: 800; border-radius: 14px; border: 1px solid #E5E8EB; display: flex; flex-direction: column; align-items: center; gap: 6px; cursor: pointer; box-shadow: 0 2px 6px rgba(0,0,0,0.02);">
+            <span style="font-size: 22px;">👩‍🍼</span> 엄마 전화
+        </button>
+        <button onclick="window.location.href='tel:010-0000-0000'" style="flex: 1; background: #FFFFFF; color: #4E5968; padding: 14px 0; font-size: 14px; font-weight: 800; border-radius: 14px; border: 1px solid #E5E8EB; display: flex; flex-direction: column; align-items: center; gap: 6px; cursor: pointer; box-shadow: 0 2px 6px rgba(0,0,0,0.02);">
+            <span style="font-size: 22px;">👨‍🍼</span> 아빠 전화
+        </button>
+        <button onclick="window.location.href='tel:119'" style="flex: 1; background: #FFF0F1; color: #F04452; padding: 14px 0; font-size: 14px; font-weight: 900; border-radius: 14px; border: 1px solid #FFE5E8; display: flex; flex-direction: column; align-items: center; gap: 6px; cursor: pointer; box-shadow: 0 2px 6px rgba(240,68,82,0.1);">
+            <span style="font-size: 22px;">🚑</span> 119
+        </button>
+    </div>
+
+  <!-- 🌟 1번 & 3번 아이디어: 할머니 할아버지 전용 특수 기능 (화이트 톤으로 세련되게 변경) -->
+    <div style="display: flex; gap: 12px; margin-bottom: 20px;">
+        <!-- 숨겨진 사진 입력창 -->
+        <input type="file" id="senior-photo-input" accept="image/*" capture="environment" style="display:none;" onchange="window.handleSeniorPhotoUpload(this)">
+        
+        <button onclick="document.getElementById('senior-photo-input').click()" style="flex: 1; background: #FFFFFF; border: 1px solid #E5E8EB; color: #191F28; padding: 20px 10px; border-radius: 20px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.02); cursor: pointer; transition: transform 0.2s;">
+            <div style="background: #FFF9E6; width: 50px; height: 50px; border-radius: 16px; display: flex; align-items: center; justify-content: center; font-size: 26px;">📸</div>
+            <span style="font-size: 15.5px; font-weight: 900; letter-spacing: -0.5px;">사진 보내기</span>
+        </button>
+        
+        <button onclick="window.openKioskPractice()" style="flex: 1; background: #FFFFFF; border: 1px solid #E5E8EB; color: #191F28; padding: 20px 10px; border-radius: 20px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.02); cursor: pointer; transition: transform 0.2s;">
+            <div style="background: #F2F5F8; width: 50px; height: 50px; border-radius: 16px; display: flex; align-items: center; justify-content: center; font-size: 26px;">👆</div>
+            <span style="font-size: 15.5px; font-weight: 900; letter-spacing: -0.5px;"> 키오스크 연습</span>
+        </button>
+    </div>
+
       <!-- 🦸‍♂️ 6. 아빠 전용: 바통터치 미션 보드 (아빠 모드에서만 보임!) -->
 <div class="show-on-dad-block" style="margin-bottom: 24px; width: 100%;">
     <div style="font-size: 16px; font-weight: 900; color: var(--text-m); margin-bottom: 12px; display: flex; align-items: center; justify-content: space-between; padding: 0 4px;">
@@ -372,10 +479,10 @@
         </div>
 
         <!-- 공통: 건강 & 경제 관리 -->
-        <div style="font-size:15px; font-weight:900; color:var(--text-m); margin-top:32px; margin-bottom:12px; padding: 0 4px;">
-            <span>📊 건강 & 경제 관리</span>
-        </div>
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: ; align-items: stretch;">
+        <div class="hide-on-senior" style="font-size:15px; font-weight:900; color:var(--text-m); margin-top:32px; margin-bottom:12px; padding: 0 4px;">
+    <span>📊 건강 & 경제 관리</span>
+            </div>
+        <div class="hide-on-senior" style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 24px; align-items: stretch;">
             <div onclick="directGoToolbox('fever')" class="box-main" style="border-radius: 20px; padding: 18px 16px; box-shadow: 0 4px 12px rgba(0,0,0,0.02); cursor: pointer; display: flex; flex-direction: column; justify-content: space-between; transition: 0.2s;">
                 <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 12px;">
                     <div style="font-size:12.5px; font-weight:800; color:var(--primary);">🌡️ 스마트 해열</div>
@@ -2679,6 +2786,150 @@ body { overflow-x: hidden !important; } /* 가로로 튀어나오는 모든 찌�
         <div id="milestone-list-container" class="sheet-body">
             <!-- JS가 자동 생성 -->
         </div>
+    </div>
+</div>
+
+<!-- 🍔 "매운맛 실전" 키오스크 연습장 모달 -->
+<div id="kiosk-modal" style="display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: #F8F9FA; z-index: 9999999; flex-direction: column; overflow: hidden; font-family: 'Pretendard', sans-serif;">
+    
+    <!-- 🛑 헤더 -->
+    <div style="background: #191F28; color: white; padding: 16px 20px; display: flex; justify-content: space-between; align-items: center; z-index: 10;">
+        <div style="font-size: 20px; font-weight: 900;">☕ 육아다방 무인주문기</div>
+        <button onclick="document.getElementById('kiosk-modal').style.display='none'" style="background: #F04452; color: white; border: none; padding: 8px 16px; border-radius: 8px; font-weight: 900; font-size: 13px; cursor: pointer;">연습 종료 ✕</button>
+    </div>
+
+    <!-- 🛑 스텝 0: 시작 화면 -->
+    <div id="kiosk-step-0" onclick="window.kioskNextStep(1)" style="flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; background: #3182F6; color: white; cursor: pointer;">
+        <div style="font-size: 100px; margin-bottom: 20px; animation: bounce 2s infinite;">👆</div>
+        <h1 style="font-size: 36px; font-weight: 900; margin-bottom: 16px; text-align: center;">주문하시려면<br>화면을 터치해주세요</h1>
+    </div>
+
+    <!-- 🛑 스텝 1: 매장/포장 -->
+    <div id="kiosk-step-1" style="display: none; flex: 1; flex-direction: column; align-items: center; justify-content: center; padding: 24px; background: #F2F4F6;">
+        <h2 style="font-size: 32px; font-weight: 900; color: #191F28; margin-bottom: 40px;">식사 장소를 선택해 주세요</h2>
+        <div style="display: flex; gap: 16px; width: 100%; max-width: 400px;">
+            <button onclick="window.kioskNextStep(2)" style="flex: 1; aspect-ratio: 1/1; background: #FFF; border: 2px solid #E5E8EB; border-radius: 24px; font-size: 28px; font-weight: 900; color: #191F28; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 16px; cursor: pointer;">
+                <span style="font-size: 60px;">🏪</span> 매장 식사
+            </button>
+            <button onclick="window.kioskNextStep(2)" style="flex: 1; aspect-ratio: 1/1; background: #FFF; border: 2px solid #E5E8EB; border-radius: 24px; font-size: 28px; font-weight: 900; color: #191F28; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 16px; cursor: pointer;">
+                <span style="font-size: 60px;">🛍️</span> 포장 하기
+            </button>
+        </div>
+    </div>
+
+    <!-- 🛑 스텝 2: 카테고리 및 메뉴 선택 -->
+    <div id="kiosk-step-2" style="display: none; flex: 1; flex-direction: column; background: #FFFFFF;">
+        <div style="display: flex; background: #191F28; color: #FFF; overflow-x: auto;">
+            <div style="padding: 16px 24px; font-weight: 900; background: #3182F6;">🔥 커피</div>
+            <div style="padding: 16px 24px; font-weight: 700; color: #8B95A1;">스무디/차</div>
+            <div style="padding: 16px 24px; font-weight: 700; color: #8B95A1;">디저트</div>
+        </div>
+        
+        <div style="flex: 1; padding: 20px; overflow-y: auto; display: grid; grid-template-columns: 1fr 1fr; gap: 16px; align-content: start; background: #F9FAFB;">
+            <div onclick="window.kioskOpenOption('아메리카노', 1500, '☕')" style="background: #FFF; border: 1px solid #E5E8EB; border-radius: 16px; padding: 24px 10px; text-align: center; box-shadow: 0 4px 12px rgba(0,0,0,0.03); cursor: pointer;">
+                <div style="font-size: 40px; margin-bottom: 12px;">☕</div>
+                <div style="font-size: 16px; font-weight: 900; color: #191F28; margin-bottom: 6px;">아메리카노</div>
+                <div style="font-size: 15px; font-weight: 800; color: #F04452;">1,500원</div>
+            </div>
+            <div onclick="window.kioskOpenOption('카페 라떼', 2900, '🥛')" style="background: #FFF; border: 1px solid #E5E8EB; border-radius: 16px; padding: 24px 10px; text-align: center; box-shadow: 0 4px 12px rgba(0,0,0,0.03); cursor: pointer;">
+                <div style="font-size: 40px; margin-bottom: 12px;">🥛</div>
+                <div style="font-size: 16px; font-weight: 900; color: #191F28; margin-bottom: 6px;">카페 라떼</div>
+                <div style="font-size: 15px; font-weight: 800; color: #F04452;">2,900원</div>
+            </div>
+        </div>
+
+        <!-- 하단 장바구니 -->
+        <div style="border-top: 2px solid #191F28; background: #FFF; padding: 16px;">
+            <div id="kiosk-cart-list" style="height: 70px; overflow-y: auto; margin-bottom: 12px; font-size: 14px; font-weight: 800; color: #4E5968;">
+                <div style="text-align: center; color: #8B95A1; margin-top: 20px;">선택한 메뉴가 없습니다.</div>
+            </div>
+            <div style="display: flex; justify-content: space-between; align-items: center; border-top: 1px solid #E5E8EB; padding-top: 16px;">
+                <div>
+                    <div style="font-size: 13px; font-weight: 800; color: #8B95A1; margin-bottom: 4px;">총 결제금액</div>
+                    <div style="font-size: 26px; font-weight: 900; color: #F04452;" id="kiosk-total-price">0원</div>
+                </div>
+                <button onclick="window.kioskCheckoutProcess()" style="background: #F04452; color: white; border: none; padding: 16px 36px; border-radius: 12px; font-size: 20px; font-weight: 900; cursor: pointer; box-shadow: 0 4px 12px rgba(240, 68, 82, 0.3);">결제하기</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 🛑 [신규] 옵션 선택 팝업 (HOT/ICE, 사이즈) -->
+    <div id="kiosk-option-modal" style="display: none; position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: 20; flex-direction: column; justify-content: flex-end;">
+        <div style="background: white; border-radius: 24px 24px 0 0; padding: 24px; animation: slideUp 0.3s;">
+            <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #191F28; padding-bottom: 16px; margin-bottom: 20px;">
+                <div style="font-size: 20px; font-weight: 900;" id="kiosk-opt-title">메뉴 옵션 선택</div>
+                <button onclick="document.getElementById('kiosk-option-modal').style.display='none'" style="background: none; border: none; font-size: 24px; font-weight: 900; color: #8B95A1;">✕</button>
+            </div>
+
+            <div style="font-size: 15px; font-weight: 800; margin-bottom: 12px;">온도 선택 (필수)</div>
+            <div style="display: flex; gap: 12px; margin-bottom: 24px;">
+                <button onclick="window.kioskOptSelect(this, 'temp')" class="kiosk-opt-temp" style="flex: 1; padding: 16px; background: #FFF0F1; color: #F04452; border: 2px solid #F04452; border-radius: 12px; font-weight: 900; font-size: 16px;">🔥 HOT</button>
+                <button onclick="window.kioskOptSelect(this, 'temp')" class="kiosk-opt-temp" style="flex: 1; padding: 16px; background: #F2F5F8; color: #4E5968; border: 2px solid #E5E8EB; border-radius: 12px; font-weight: 900; font-size: 16px;">🧊 ICE (+500원)</button>
+            </div>
+
+            <div style="font-size: 15px; font-weight: 800; margin-bottom: 12px;">사이즈 선택 (필수)</div>
+            <div style="display: flex; gap: 12px; margin-bottom: 30px;">
+                <button onclick="window.kioskOptSelect(this, 'size')" class="kiosk-opt-size" style="flex: 1; padding: 16px; background: #EBF4FF; color: #3182F6; border: 2px solid #3182F6; border-radius: 12px; font-weight: 900; font-size: 16px;">기본 (R)</button>
+                <button onclick="window.kioskOptSelect(this, 'size')" class="kiosk-opt-size" style="flex: 1; padding: 16px; background: #F2F5F8; color: #4E5968; border: 2px solid #E5E8EB; border-radius: 12px; font-weight: 900; font-size: 16px;">라지 (L) (+1000원)</button>
+            </div>
+
+            <button onclick="window.kioskAddOptionToCart()" style="width: 100%; padding: 20px; background: #191F28; color: white; border: none; border-radius: 16px; font-weight: 900; font-size: 18px;">장바구니 담기</button>
+        </div>
+    </div>
+
+    <!-- 🛑 스텝 3: 추천 메뉴 끼워팔기 팝업 (어르신들 멘붕구간 1) -->
+    <div id="kiosk-step-3" style="display: none; flex: 1; flex-direction: column; align-items: center; justify-content: center; padding: 24px; background: rgba(0,0,0,0.8);">
+        <div style="background: white; border-radius: 24px; padding: 32px; width: 100%; max-width: 400px; text-align: center; box-shadow: 0 10px 30px rgba(0,0,0,0.5);">
+            <div style="font-size: 50px; margin-bottom: 16px;">🍰</div>
+            <h2 style="font-size: 22px; font-weight: 900; color: #191F28; margin-bottom: 12px;">달콤한 케이크도 추가할까요?</h2>
+            <p style="font-size: 14px; color: #8B95A1; font-weight: 800; margin-bottom: 24px;">커피와 함께 드시면 500원 할인됩니다!</p>
+            <div style="display: flex; flex-direction: column; gap: 12px;">
+                <button onclick="window.kioskAddToCart('치즈 케이크', 4500); window.kioskNextStep(4);" style="padding: 18px; background: #F04452; color: white; border: none; border-radius: 12px; font-size: 16px; font-weight: 900; cursor: pointer;">예, 추가할게요 (+4,500원)</button>
+                <button onclick="window.kioskNextStep(4)" style="padding: 18px; background: #F2F5F8; color: #4E5968; border: none; border-radius: 12px; font-size: 16px; font-weight: 900; cursor: pointer;">아니요, 괜찮습니다</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 🛑 스텝 4: 포인트/할인 바코드 (어르신들 멘붕구간 2) -->
+    <div id="kiosk-step-4" style="display: none; flex: 1; flex-direction: column; align-items: center; justify-content: center; padding: 24px; background: #F8F9FA;">
+        <h2 style="font-size: 26px; font-weight: 900; color: #191F28; margin-bottom: 16px; text-align: center;">포인트 적립 / 할인</h2>
+        <div style="background: #FFF; border: 1px solid #E5E8EB; border-radius: 20px; padding: 30px; text-align: center; width: 100%; max-width: 400px; margin-bottom: 24px;">
+            <div style="font-size: 60px; margin-bottom: 16px;">📱</div>
+            <div style="font-size: 16px; font-weight: 800; color: #3182F6; margin-bottom: 8px;">스캐너에 바코드를 인식시켜주세요</div>
+            <div style="font-size: 13px; color: #8B95A1; font-weight: 600;">(또는 전화번호를 입력하세요)</div>
+        </div>
+        <button onclick="window.kioskNextStep(5)" style="width: 100%; max-width: 400px; padding: 20px; background: #191F28; color: white; border: none; border-radius: 16px; font-size: 18px; font-weight: 900;">적립 안 하고 건너뛰기</button>
+    </div>
+
+    <!-- 🛑 스텝 5: 결제 수단 선택 -->
+    <div id="kiosk-step-5" style="display: none; flex: 1; flex-direction: column; align-items: center; justify-content: center; padding: 24px; background: #F2F4F6;">
+        <h2 style="font-size: 24px; font-weight: 900; color: #191F28; margin-bottom: 30px;">결제 수단을 선택해 주세요</h2>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; width: 100%; max-width: 400px;">
+            <button onclick="window.kioskNextStep(6)" style="background: white; border: 2px solid #191F28; border-radius: 16px; padding: 30px 10px; font-size: 18px; font-weight: 900; color: #191F28; display: flex; flex-direction: column; align-items: center; gap: 12px;">
+                <span style="font-size: 40px;">💳</span> 신용/체크카드
+            </button>
+            <button onclick="window.kioskNextStep(6)" style="background: white; border: 1px solid #E5E8EB; border-radius: 16px; padding: 30px 10px; font-size: 18px; font-weight: 900; color: #8B95A1; display: flex; flex-direction: column; align-items: center; gap: 12px;">
+                <span style="font-size: 40px;">📱</span> 모바일 결제
+            </button>
+        </div>
+    </div>
+
+    <!-- 🛑 스텝 6: 카드 삽입 -->
+    <div id="kiosk-step-6" style="display: none; flex: 1; flex-direction: column; align-items: center; justify-content: center; padding: 24px; background: rgba(0,0,0,0.85); color: white;">
+        <div style="font-size: 80px; margin-bottom: 20px; animation: slideUp 0.5s infinite alternate;">💳</div>
+        <h2 style="font-size: 26px; font-weight: 900; margin-bottom: 16px; text-align: center; line-height: 1.4;">신용카드를 투입구에<br><span style="color: #F04452;">끝까지</span> 밀어 넣어주세요.</h2>
+        <div style="font-size: 16px; font-weight: 700; color: #A1A1AA; margin-bottom: 40px;">(결제가 완료될 때까지 카드를 빼지 마세요)</div>
+        <div style="width: 50px; height: 50px; border: 5px solid rgba(255,255,255,0.2); border-top: 5px solid #3182F6; border-radius: 50%; animation: spin 1s linear infinite;"></div>
+    </div>
+
+    <!-- 🛑 스텝 7: 완료 -->
+    <div id="kiosk-step-7" style="display: none; flex: 1; flex-direction: column; align-items: center; justify-content: center; padding: 24px; text-align: center; background: #FFFFFF;">
+        <div style="font-size: 80px; margin-bottom: 20px; animation: popIn 0.5s;">🎉</div>
+        <h2 style="font-size: 28px; font-weight: 900; color: #00B37A; margin-bottom: 16px;">결제 성공!</h2>
+        <div style="font-size: 18px; font-weight: 800; color: #4E5968; line-height: 1.6; margin-bottom: 40px;">
+            영수증과 주문번호표를 받아가세요.<br><span style="color:#3182F6;">할머니 할아버지 최고예요! 👏</span>
+        </div>
+        <button onclick="document.getElementById('kiosk-modal').style.display='none'" style="width: 100%; max-width: 300px; padding: 20px; background: #191F28; color: #FFF; border: none; border-radius: 16px; font-size: 18px; font-weight: 900;">완벽하게 마스터 했어요 (닫기)</button>
     </div>
 </div>
 
