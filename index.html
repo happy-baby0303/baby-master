@@ -301,13 +301,18 @@ body.mode-senior .hide-on-senior { display: none !important; }
          <!-- 👵 조부모/시터 전용 하이엔드 대시보드 시작 -->
 <div class="show-on-senior-block" style="margin-top: 16px; margin-bottom: 24px;">
 
-    <!-- 1. 프리미엄 알림장 & 필수 투약 체크 -->
-    <div style="background: #FFFFFF; border: 1px solid #E5E8EB; padding: 24px; border-radius: 24px; margin-bottom: 20px; box-shadow: 0 4px 16px rgba(0,0,0,0.03); position: relative;">
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
-            <div style="font-size: 13px; font-weight: 800; color: #8B95A1;">📌 부모님 전달사항</div>
-            <button onclick="window.editSeniorMemo()" style="background: #F2F4F6; color: #4E5968; font-size: 12px; font-weight: 800; padding: 6px 12px; border-radius: 8px; border: none; cursor: pointer; transition: 0.2s;">수정</button>
-        </div>
+  <!-- 1. 프리미엄 알림장 & 필수 투약 체크 -->
+<div style="background: #FFFFFF; border: 1px solid #E5E8EB; padding: 24px; border-radius: 24px; margin-bottom: 20px; box-shadow: 0 4px 16px rgba(0,0,0,0.03); position: relative;">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+        <div style="font-size: 13px; font-weight: 800; color: #8B95A1;">📌 부모님 전달사항</div>
+        <!-- 💡 버튼에 고유 ID 부여 -->
+        <button id="senior-memo-edit-btn" onclick="window.toggleEditSeniorMemo()" style="background: #F2F4F6; color: #4E5968; font-size: 12px; font-weight: 800; padding: 6px 12px; border-radius: 8px; border: none; cursor: pointer; transition: 0.2s;">수정</button>
+    </div>
+    
+    <!-- 💡 텍스트가 들어가는 자리를 감싸는 컨테이너 생성 -->
+    <div id="senior-memo-container">
         <div id="senior-memo-text" style="font-size: 17px; font-weight: 900; color: #191F28; line-height: 1.5; word-break: keep-all;">여기에 전달사항을 적어주세요. (예: 2시에 이유식 먹여주세요)</div>
+    </div>
         
         <div style="margin-top: 16px; padding-top: 16px; border-top: 1px dashed #E5E8EB; display: flex; align-items: center; justify-content: space-between;">
             <div style="font-size: 14px; font-weight: 800; color: #191F28;">💊 오늘 약/필수케어 하셨나요?</div>
@@ -2859,7 +2864,7 @@ body { overflow-x: hidden !important; } /* 가로로 튀어나오는 모든 찌�
     
     <!-- 🛑 헤더 -->
     <div style="background: #191F28; color: white; padding: 16px 20px; display: flex; justify-content: space-between; align-items: center; z-index: 10;">
-        <div style="font-size: 20px; font-weight: 900;">☕ 육아다방 무인주문기</div>
+        <div style="font-size: 20px; font-weight: 900;"> 육아메이트 휴게소 키오스크</div>
         <button onclick="document.getElementById('kiosk-modal').style.display='none'" style="background: #F04452; color: white; border: none; padding: 8px 16px; border-radius: 8px; font-weight: 900; font-size: 13px; cursor: pointer;">연습 종료 ✕</button>
     </div>
 

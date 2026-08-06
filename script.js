@@ -11254,6 +11254,128 @@ window.updateSeniorBriefing = function() {
 };
 
 // ==========================================
+// 📌 [부모님 전달사항] 화면 안에서 바로 쓰는 인라인 편집 엔진
+// ==========================================
+
+// 1. 전달사항 화면에 예쁘게 렌더링하기
+window.renderParentNotice = function() {
+    const container = document.getElementById('senior-memo-container');
+    if (!container) return;
+
+    const savedNotice = localStorage.getItem('tosil_parent_notice') || '';
+    
+    // 만약 현재 편집 중인 상태가 아니라면 일반 텍스트로 그려줌
+    if (!window.isEditingSeniorMemo) {
+        if (savedNotice.trim() !== '') {
+            container.innerHTML = `<div id="senior-memo-text" style="font-size: 17px; font-weight: 900; color: #191F28; line-height: 1.5; word-break: break-all; overflow-wrap: break-word;">${savedNotice.replace(/\n/g, '<br>')}</div>`;
+        } else {
+            container.innerHTML = `<div id="senior-memo-text" style="font-size: 17px; font-weight: 900; color: #8B95A1; line-height: 1.5; word-break: break-all; overflow-wrap: break-word;">여기에 전달사항을 적어주세요. (예: 2시에 이유식 먹여주세요)</div>`;
+        }
+    }
+};
+
+// 2. [수정] ⇄ [저장] 토글 및 입력창 변신 마술
+window.isEditingSeniorMemo = false;
+
+window.toggleEditSeniorMemo = function() {
+    const container = document.getElementById('senior-memo-container');
+    const btn = document.getElementById('senior-memo-edit-btn');
+    if (!container || !btn) return;
+
+    if (!window.isEditingSeniorMemo) {
+        // 👉 [수정 모드로 진입] 텍스트를 입력할 수 있는 textarea로 싹 바꿔치기!
+        window.isEditingSeniorMemo = true;
+        const currentNotice = localStorage.getItem('tosil_parent_notice') || '';
+        
+        container.innerHTML = `
+            <textarea id="senior-memo-textarea" placeholder="어르신들께 전달할 말씀을 적어주세요..." style="width: 100%; height: 90px; background: var(--bg-sub); border: 2px solid #3182F6; border-radius: 12px; padding: 12px; font-size: 15px; font-weight: 800; color: var(--text-m); outline: none; resize: none; box-sizing: border-box; line-height: 1.4; word-break: break-all; overflow-wrap: break-word;">${currentNotice}</textarea>
+        `;
+        
+        // 버튼을 파란색 '저장' 버튼으로 변경
+        btn.innerText = '저장';
+        btn.style.background = '#3182F6';
+        btn.style.color = '#FFF';
+
+        // 입력창에 자동으로 커서 깜빡이게 포커스 주기
+        const textarea = document.getElementById('senior-memo-textarea');
+        if (textarea) {
+            textarea.focus();
+            textarea.setSelectionRange(textarea.value.length, textarea.value.length);
+        }
+
+    } else {
+        // 👉 [저장 모드 실행] 입력된 값을 가져와서 저장하고 다시 텍스트뷰로 복구!
+        const textarea = document.getElementById('senior-memo-textarea');
+        if (!textarea) return;
+
+        const newNotice = textarea.value.trim();
+        localStorage.setItem('tosil_parent_notice', newNotice);
+        
+        window.isEditingSeniorMemo = false;
+        
+        // 버튼을 원래대로 복구
+        btn.innerText = '수정';
+        btn.style.background = '#F2F4F6';
+        btn.style.color = '#4E5968';
+
+        window.renderParentNotice();
+        
+        // 파이어베이스 클라우드 서버로 실시간 발사!
+        window.saveParentNoticeToFirebase(newNotice);
+        window.showToast("📌 부모님 전달사항이 저장되었습니다!");
+    }
+};
+
+// 3. 파이어베이스 클라우드 전송 함수
+window.saveParentNoticeToFirebase = async function(text) {
+    if (typeof db !== 'undefined' && typeof setDoc === 'function' && typeof doc === 'function') {
+        const syncCode = localStorage.getItem("family_sync_code") || "unlinked_local_diary";
+        try {
+            await setDoc(doc(db, "parent_notice_" + syncCode, "status"), { 
+                notice: text,
+                updatedAt: new Date().getTime() 
+            }, { merge: true });
+        } catch (e) {
+            console.warn("전달사항 서버 전송 실패:", e);
+        }
+    }
+};
+
+// 4. 파이어베이스 실시간 수신 리스너 (상대방이 수정하면 내 폰 카드 내용도 실시간 변경!)
+let parentNoticeUnsubscribe = null;
+window.startParentNoticeRealtimeSync = function() {
+    const syncCode = localStorage.getItem("family_sync_code") || "unlinked_local_diary";
+    const docRef = typeof doc !== 'undefined' && typeof window.db !== 'undefined' ? doc(window.db, "parent_notice_" + syncCode, "status") : null;
+    
+    if (!docRef) return; 
+    if (parentNoticeUnsubscribe) parentNoticeUnsubscribe();
+    if (typeof window.onSnapshot !== 'function') return;
+
+    parentNoticeUnsubscribe = window.onSnapshot(docRef, (docSnap) => {
+        if (docSnap.exists()) {
+            const data = docSnap.data();
+            // 내가 지금 편집 중이 아닐 때만 서버 데이터로 갱신 (입력 중 방해받지 않게)
+            if (data.notice !== undefined && !window.isEditingSeniorMemo) {
+                localStorage.setItem('tosil_parent_notice', data.notice);
+                window.renderParentNotice();
+            }
+        }
+    }, (error) => {
+        console.warn("전달사항 실시간 연동 에러", error);
+    });
+};
+
+// 5. 앱 구동 시 자동 실행
+document.addEventListener("DOMContentLoaded", () => {
+    setTimeout(() => {
+        window.renderParentNotice();
+        if (typeof window.startParentNoticeRealtimeSync === 'function') {
+            window.startParentNoticeRealtimeSync();
+        }
+    }, 200);
+});
+
+// ==========================================
 // 🚀 앱 켤 때 역할(모드) 유지 엔진
 // ==========================================
 document.addEventListener("DOMContentLoaded", () => {
