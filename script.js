@@ -2825,6 +2825,12 @@ function updateSmartBanner() {
     const container = document.getElementById('smart-banner-container');
     if(!container) return;
 
+    // 🌟 [조부모 모드 방어막] 시니어 모드일 때는 맞춤 알림 배너를 강제로 완전히 숨김!
+    if (localStorage.getItem('user_role') === 'senior') {
+        container.style.display = 'none';
+        return;
+    }
+
     container.style.setProperty('border', 'none', 'important');
     container.style.setProperty('outline', 'none', 'important');
     container.style.setProperty('background', 'transparent', 'important');
@@ -2833,7 +2839,6 @@ function updateSmartBanner() {
     let banners = [];
     const todayStr = new Date().toDateString();
     const isDismissed = (type) => localStorage.getItem('tosil_dismiss_banner_' + type) === todayStr;
-
     // 1. SOS 바통터치
     const batonRecords = JSON.parse(localStorage.getItem('tosil_baton_records')) || [];
     const urgentBaton = batonRecords.find(r => r.status === 'requested');
