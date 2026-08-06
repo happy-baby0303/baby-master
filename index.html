@@ -231,7 +231,7 @@ body.mode-senior .hide-on-senior { display: none !important; }
 
                     <!-- 도감 버튼 (우측 하단) -->
                     <button id="milestone-btn" onclick="event.stopPropagation(); openMilestoneModal();" style="position: absolute; right: 20px; bottom: 20px; background: rgba(255,255,255,0.25); border: 1px solid rgba(255,255,255,0.4); color: #FFF; padding: 6px 12px; border-radius: 12px; font-size: 13px; font-weight: 800; cursor: pointer; backdrop-filter: blur(4px); box-shadow: 0 4px 10px rgba(0,0,0,0.1); display: flex; align-items: center; gap: 4px; z-index: 10;">
-                        🏅 첫 도감 <span id="milestone-counter">0/30</span> 〉
+                        🏅 첫 도감 <span id="milestone-counter">0/100</span> 〉
                     </button>
                 </div>
             </div>
@@ -1891,9 +1891,9 @@ body.mode-senior .hide-on-senior { display: none !important; }
             <div style="display:flex; flex-direction:column; gap:10px;">
                 <a href="tel:119" style="text-align:center; display:block; background:var(--danger); color:#FFF; padding:16px; border-radius:14px; font-size:15px; font-weight:900; text-decoration:none; box-shadow:0 4px 12px rgba(240,68,82,0.2);">🚨 119 전문의 상담 전화걸기</a>
                 <div style="display:flex; gap:10px; margin-top:8px;">
-                    <a href="https://www.e-gen.or.kr/moonlight/main.do" target="_blank" class="box-tint-yellow" style="flex:1; text-align:center; padding:14px 4px; border-radius:12px; font-size:13px; font-weight:900; color:#B78103; text-decoration:none;">🌙 달빛어린이병원</a>
-                    <a href="https://www.pharm114.or.kr/" target="_blank" class="box-tint-green" style="flex:1; text-align:center; padding:14px 4px; border-radius:12px; font-size:13px; font-weight:900; color:#059669; text-decoration:none;">💊 휴일/심야 약국</a>
-                </div>
+    <a href="https://www.e-gen.or.kr/moonlight/main.do" target="_blank" class="box-tint-yellow" style="flex:1; text-align:center; padding:14px 0; border-radius:12px; font-size:12px; font-weight:900; color:#B78103; text-decoration:none; white-space:nowrap; letter-spacing:-0.5px;">🌙 달빛어린이병원</a>
+    <a href="https://www.pharm114.or.kr/" target="_blank" class="box-tint-green" style="flex:1; text-align:center; padding:14px 0; border-radius:12px; font-size:12px; font-weight:900; color:#059669; text-decoration:none; white-space:nowrap; letter-spacing:-0.5px;">💊 휴일/심야 약국</a>
+</div>
             </div>
         </div>
 
@@ -2770,7 +2770,8 @@ body { overflow-x: hidden !important; } /* 가로로 튀어나오는 모든 찌�
         <div class="sheet-handle"></div>
         
         <div class="sheet-header">
-            <h3 style="margin: 0; font-size: 20px; font-weight: 800; color: #191F28;">우리아기 첫 도감 🏅</h3>
+            <!-- 🚨 color 부분을 다크모드 반응형 변수로 교체했습니다! -->
+<h3 style="margin: 0; font-size: 20px; font-weight: 800; color: var(--text-m);">우리아기 첫 도감 🏅</h3>
             <span id="sheet-counter" style="background: #E8F3FF; color: #1B64DA; padding: 4px 10px; border-radius: 20px; font-size: 13px; font-weight: 700;">0 / 100 달성</span>
         </div>
 

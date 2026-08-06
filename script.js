@@ -3262,7 +3262,6 @@ window.openTrackerSheet = function(type, editId = null, preSelect = null) {
     if(title) title.style.color = 'var(--text-m)';
     if(saveBtn) { saveBtn.style.backgroundColor = 'var(--primary)'; saveBtn.style.color = '#FFF'; saveBtn.style.border = 'none'; }
 
-    // 🚨 바텀시트 내부 스크롤 허용 & 하단 여백 다이어트! (30px -> 12px)
     content.style.maxHeight = '85vh';
     content.style.display = 'flex';
     content.style.flexDirection = 'column';
@@ -3276,7 +3275,12 @@ window.openTrackerSheet = function(type, editId = null, preSelect = null) {
     const now = new Date();
     const currentTimeStr = `${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`;
     let targetTime = currentTimeStr;
-    let displayDateStr = now.toISOString().split('T')[0];
+    
+    // 🚨 [핵심 패치] UTC가 아닌 기기의 진짜 로컬(한국) 날짜를 가져옵니다!
+    const year = now.getFullYear();
+    const month = String(now.getMonth() + 1).padStart(2, '0');
+    const day = String(now.getDate()).padStart(2, '0');
+    let displayDateStr = `${year}-${month}-${day}`;
 
     let pastDateBadgeHtml = '';
 
@@ -3286,7 +3290,10 @@ window.openTrackerSheet = function(type, editId = null, preSelect = null) {
         if (recordToEdit) {
             targetTime = recordToEdit.time;
             const recDate = new Date(recordToEdit.timestamp);
-            displayDateStr = recDate.toISOString().split('T')[0];
+            const eYear = recDate.getFullYear();
+            const eMonth = String(recDate.getMonth() + 1).padStart(2, '0');
+            const eDay = String(recDate.getDate()).padStart(2, '0');
+            displayDateStr = `${eYear}-${eMonth}-${eDay}`;
             
             pastDateBadgeHtml = `
                 <div style="display:flex; justify-content:center; margin-bottom:16px;">
@@ -6482,13 +6489,13 @@ window.renderSettingsTab = function() {
             <div style="font-size: 13.5px; font-weight: 900; color: var(--text-s); margin-bottom: 12px;">앱 설정</div>
             <div style="background: var(--bg-card); border: 1px solid var(--border); border-radius: 16px; overflow: hidden; margin-bottom: 32px; box-shadow: 0 2px 8px rgba(0,0,0,0.02); box-sizing: border-box; width: 100%;">
                 <div style="display: flex; justify-content: space-between; align-items: center; padding: 16px 20px; border-bottom: 1px solid var(--border);">
-                    <div style="font-size: 14.5px; font-weight: 800; color: var(--text-m);">🧑‍🧑‍🧒 내 역할 설정</div>
+                    <div style="font-size: 14.5px; font-weight: 800; color: var(--text-m); min-width: 0; flex: 1;">🧑‍🧑‍🧒 내 역할 설정</div>
                     
-                    <!-- 🚨 바로 여기! '조부모님' 스위치 버튼 추가 완료! -->
-                    <div style="display: flex; background: var(--bg-sub); border-radius: 10px; padding: 4px; border: 1px solid var(--border);">
-                        <button onclick="window.changeUserRole('mom')" style="padding: 6px 14px; border: none; border-radius: 8px; font-size: 13px; font-weight: 900; cursor: pointer; transition: 0.2s; ${currentRole === 'mom' ? 'background:#FFF; color:#F04452; box-shadow:0 2px 6px rgba(0,0,0,0.05);' : 'background:transparent; color:#8B95A1;'}">엄마</button>
-                        <button onclick="window.changeUserRole('dad')" style="padding: 6px 14px; border: none; border-radius: 8px; font-size: 13px; font-weight: 900; cursor: pointer; transition: 0.2s; ${currentRole === 'dad' ? 'background:#FFF; color:#3182F6; box-shadow:0 2px 6px rgba(0,0,0,0.05);' : 'background:transparent; color:#8B95A1;'}">아빠</button>
-                        <button onclick="window.changeUserRole('senior')" style="padding: 6px 14px; border: none; border-radius: 8px; font-size: 13px; font-weight: 900; cursor: pointer; transition: 0.2s; ${currentRole === 'senior' ? 'background:#FFF; color:#00B37A; box-shadow:0 2px 6px rgba(0,0,0,0.05);' : 'background:transparent; color:#8B95A1;'}">조부모님</button>
+                    <!-- 🚨 [디자인 복구 & 모바일 패치] 줄바꿈 절대 방지(white-space:nowrap) 및 여백 최적화 -->
+                    <div style="display: flex; background: var(--bg-sub); border-radius: 10px; padding: 4px; border: 1px solid var(--border); flex-shrink: 0;">
+                        <button onclick="window.changeUserRole('mom')" style="padding: 6px 12px; border: none; border-radius: 8px; font-size: 12.5px; font-weight: 900; cursor: pointer; transition: 0.2s; white-space: nowrap; ${currentRole === 'mom' ? 'background:#FFF; color:#F04452; box-shadow:0 2px 6px rgba(0,0,0,0.05);' : 'background:transparent; color:#8B95A1;'}">엄마</button>
+                        <button onclick="window.changeUserRole('dad')" style="padding: 6px 12px; border: none; border-radius: 8px; font-size: 12.5px; font-weight: 900; cursor: pointer; transition: 0.2s; white-space: nowrap; ${currentRole === 'dad' ? 'background:#FFF; color:#3182F6; box-shadow:0 2px 6px rgba(0,0,0,0.05);' : 'background:transparent; color:#8B95A1;'}">아빠</button>
+                        <button onclick="window.changeUserRole('senior')" style="padding: 6px 12px; border: none; border-radius: 8px; font-size: 12.5px; font-weight: 900; cursor: pointer; transition: 0.2s; white-space: nowrap; ${currentRole === 'senior' ? 'background:#FFF; color:#00B37A; box-shadow:0 2px 6px rgba(0,0,0,0.05);' : 'background:transparent; color:#8B95A1;'}">조부모</button>
                     </div>
 
                 </div>
@@ -10286,48 +10293,83 @@ const MILESTONE_DATA = [
 
 const TOTAL_MILESTONES = 100; // 최종 기획 목표치
 
-// 2. 도감 진행도 업데이트 (애니메이션 쫀득하게 추가!)
-window.updateMilestoneCounter = function() {
-    let achieved = JSON.parse(localStorage.getItem('tosil_milestones')) || [];
-    let countText = `${achieved.length}/${TOTAL_MILESTONES}`;
+// 2. 도감 진행도 업데이트 (중복 텍스트 픽스 & 새로고침 완벽 연동)
+window.updateMilestoneCounter = function(isFromClick = false) {
+    let achieved = [];
+    try {
+        achieved = JSON.parse(localStorage.getItem('tosil_milestones')) || [];
+    } catch(e) { achieved = []; }
+    
+    // 🚨 [핵심 픽스 1] HTML에 이모지와 꺾쇠가 있으니, 무조건 "숫자"만 꽂아넣습니다!
+    // (TOTAL_MILESTONES 변수 에러 방지를 위해 100으로 안전하게 하드코딩)
+    let countText = `${achieved.length}/100`;
     
     // 메인 홈 화면 버튼 카운터 업데이트
     const homeCounterEl = document.getElementById('milestone-counter');
     if(homeCounterEl) {
-        // 숫자가 바뀌면 살짝 띠용! 하고 노란색으로 빛났다가 돌아오는 효과
-        if (homeCounterEl.innerText !== countText) {
-            homeCounterEl.innerText = countText;
+        // 앱을 켜거나 새로고침 할 때마다 저장된 진짜 숫자로 무조건 덮어씌움!
+        homeCounterEl.innerText = countText;
+        homeCounterEl.style.display = 'inline-block'; 
+        homeCounterEl.style.color = '#FFFFFF'; // 언제나 예쁜 하얀색 고정
+        
+        // 🚨 도장을 찍었을 때만 쫀득하게 튀어오르는 애니메이션 발동!
+        if (isFromClick) {
             homeCounterEl.style.transition = 'all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275)';
             homeCounterEl.style.transform = 'scale(1.3)';
-            homeCounterEl.style.color = '#FEE500'; // 카카오톡 노란색 포인트
+            homeCounterEl.style.color = '#FEE500'; // 노란색으로 반짝!
             setTimeout(() => {
                 homeCounterEl.style.transform = 'scale(1)';
-                homeCounterEl.style.color = '#FFF';
+                homeCounterEl.style.color = '#FFFFFF'; // 애니메이션 끝나면 흰색 복구
             }, 300);
-        } else {
-            homeCounterEl.innerText = countText;
         }
     }
     
     // 바텀 시트 안쪽 카운터 업데이트
     const sheetCounterEl = document.getElementById('sheet-counter');
-    if(sheetCounterEl) sheetCounterEl.innerText = `${achieved.length} / ${TOTAL_MILESTONES} 달성`;
+    if(sheetCounterEl) sheetCounterEl.innerText = `${achieved.length} / 100 달성`;
 };
 
-// 3. 바텀 시트 열기 & 리스트 렌더링 (하단에 '자랑하기' 버튼 추가!)
+// 2. 🚀 앱이 켜지자마자 무조건 숫자를 복구시키는 자동 실행 스위치!
+document.addEventListener("DOMContentLoaded", () => {
+    // HTML이 다 그려지고 난 뒤 0.1초 뒤에 내 폰에 저장된 도장 개수를 홈 화면에 뽝! 박아줍니다.
+    setTimeout(() => {
+        if(typeof window.updateMilestoneCounter === 'function') {
+            window.updateMilestoneCounter(false); // 애니메이션 없이 숫자만 조용히 복구
+        }
+    }, 100);
+});
+
+// 3. 바텀 시트 열기 & 리스트 렌더링 (흰색 테두리 및 틈새 완벽 박멸 패치!)
 window.openMilestoneModal = function() {
     if (navigator.vibrate) navigator.vibrate(15);
     
+    // 🚨 [핵심 픽스 2] 모달창 뼈대, 헤더, 배경 구석구석에 숨은 흰색 찌꺼기를 다크모드 톤으로 완전 소독!
+    const sheetContent = document.querySelector('#milestone-bottom-sheet .bottom-sheet-content');
+    if(sheetContent) {
+        sheetContent.style.background = 'var(--bg-main)';
+        sheetContent.style.border = 'none'; 
+    }
+    
+    const sheetHeader = document.querySelector('#milestone-bottom-sheet .sheet-header');
+    if(sheetHeader) {
+        sheetHeader.style.background = 'var(--bg-main)';
+        sheetHeader.style.borderBottom = 'none'; // 헤더 밑 하얀 선 제거
+    }
+
+    const sheetHeaderTitle = document.querySelector('#milestone-bottom-sheet .sheet-header h3');
+    if(sheetHeaderTitle) {
+        sheetHeaderTitle.style.color = 'var(--text-m)';
+    }
+
     const container = document.getElementById('milestone-list-container');
     let achieved = JSON.parse(localStorage.getItem('tosil_milestones')) || [];
     
     let html = `
-        <!-- 📸 바이럴을 위한 상단 저장 버튼 -->
-        <button onclick="downloadMilestone()" style="width: 100%; background: #F2F5F8; color: #4E5968; border: none; padding: 14px; border-radius: 16px; font-size: 14px; font-weight: 800; margin-bottom: 16px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px;">
+        <button onclick="downloadMilestone()" style="width: 100%; background: var(--bg-card); color: var(--text-m); border: 1px solid var(--border); padding: 14px; border-radius: 16px; font-size: 14px; font-weight: 800; margin-bottom: 16px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px; box-shadow: 0 2px 8px rgba(0,0,0,0.02);">
             📸 내 도감 앨범에 저장해서 자랑하기
         </button>
-        <!-- 캡처될 영역 시작 -->
-        <div id="milestone-capture-area" style="background:#FFF; padding:10px 0;">
+        <!-- 🚨 캡처 영역 뒷배경도 투명하게 날려서 틈새 흰 줄 방어 -->
+        <div id="milestone-capture-area" style="background: transparent; padding-bottom: 10px;">
     `;
 
     MILESTONE_DATA.forEach((item, index) => {
@@ -10335,32 +10377,32 @@ window.openMilestoneModal = function() {
         const formattedNum = String(index + 1).padStart(2, '0'); 
         
         html += `
-            <div class="milestone-item ${isDone ? 'achieved' : ''}" id="card-${item.id}">
-                <div style="display:flex; align-items:center; gap: 16px;">
-                    <div id="num-${item.id}" style="width: 28px; font-size: 18px; font-weight: 900; color: ${isDone ? '#1B64DA' : '#D1D6DB'}; text-align: left; font-family: 'Helvetica Neue', Arial, sans-serif; letter-spacing: -0.5px; transition: color 0.3s;">
+            <div class="milestone-item ${isDone ? 'achieved' : ''}" id="card-${item.id}" style="background: var(--bg-card); border: 1px solid var(--border); padding: 16px; margin-bottom: 10px; border-radius: 16px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 6px rgba(0,0,0,0.02);">
+                <div style="display:flex; align-items:center; gap: 16px; flex: 1;">
+                    <div id="num-${item.id}" style="width: 28px; font-size: 18px; font-weight: 900; color: ${isDone ? '#3182F6' : 'var(--text-s)'}; text-align: left; font-family: 'Helvetica Neue', Arial, sans-serif; letter-spacing: -0.5px; transition: color 0.3s;">
                         ${formattedNum}
                     </div>
                     <div>
-                        <div style="font-size: 15px; font-weight: 800; color: #191F28; margin-bottom: 2px;">${item.title}</div>
-                        <div style="font-size: 12px; color: #8B95A1;">${item.desc}</div>
+                        <div style="font-size: 15px; font-weight: 800; color: var(--text-m); margin-bottom: 4px;">${item.title}</div>
+                        <div style="font-size: 12px; color: var(--text-s); word-break: keep-all; line-height: 1.4;">${item.desc}</div>
                     </div>
                 </div>
-                <button class="milestone-check-btn" onclick="toggleMilestone('${item.id}', this)">✓</button>
+                <button class="milestone-check-btn" onclick="toggleMilestone('${item.id}', this)" style="background: ${isDone ? '#3182F6' : 'var(--bg-sub)'}; color: ${isDone ? '#FFF' : 'transparent'}; border: 1px solid ${isDone ? '#3182F6' : 'var(--border)'}; width: 28px; height: 28px; border-radius: 50%; font-size: 14px; font-weight: bold; flex-shrink: 0; transition: 0.2s; display:flex; align-items:center; justify-content:center; padding:0;">✓</button>
             </div>
         `;
     });
     
-    html += `</div>`; // 캡처 영역 끝
+    html += `</div>`; 
     container.innerHTML = html;
     document.getElementById('milestone-bottom-sheet').classList.add('show');
 };
 
-// 4. 바텀 시트 닫기
+// 4. 바텀 시트 닫기 (이 함수는 기존 그대로 유지)
 window.closeMilestoneModal = function() {
     document.getElementById('milestone-bottom-sheet').classList.remove('show');
 };
 
-// 5. 도장 찍기 토글 로직 + 골드 펄 이펙트
+// 5. 도장 찍기 토글 로직 + 애니메이션 신호 전달
 window.toggleMilestone = function(id, btnElement) {
     if (navigator.vibrate) navigator.vibrate([10, 30, 20]);
     
@@ -10373,30 +10415,31 @@ window.toggleMilestone = function(id, btnElement) {
     if (idx === -1) {
         achieved.push(id); 
         cardEl.classList.add('achieved');
-        if(numEl) numEl.style.color = '#1B64DA'; // 숫자 파란색으로 변경
+        if(numEl) numEl.style.color = '#3182F6';
         
-        // ✨ 달성 시 골드 펄 이펙트 실행
+        btnElement.style.background = '#3182F6';
+        btnElement.style.borderColor = '#3182F6';
+        btnElement.style.color = '#FFF';
+
         const pearl = document.createElement('div');
         pearl.className = 'gold-pearl-effect';
         btnElement.appendChild(pearl);
-        
-        // 애니메이션이 끝나면 잔해물 삭제
         setTimeout(() => pearl.remove(), 600);
-        
     } else {
         achieved.splice(idx, 1); 
         cardEl.classList.remove('achieved');
-        if(numEl) numEl.style.color = '#D1D6DB'; // 숫자 원래대로 복구
+        if(numEl) numEl.style.color = 'var(--text-s)';
+        
+        btnElement.style.background = 'var(--bg-sub)';
+        btnElement.style.borderColor = 'var(--border)';
+        btnElement.style.color = 'transparent';
     }
     
     localStorage.setItem('tosil_milestones', JSON.stringify(achieved));
-    updateMilestoneCounter(); 
+    
+    // 🚨 [핵심 픽스 3] 도장을 찍었을 때만 'true' 신호를 보내 애니메이션을 터트립니다!
+    window.updateMilestoneCounter(true); 
 };
-
-// 6. 앱 초기화 시 홈 화면 카운터 세팅
-document.addEventListener("DOMContentLoaded", () => {
-    updateMilestoneCounter();
-});
 
 // ==========================================
 // 📸 마일스톤 도감 이미지 캡처 (인스타 자랑용)
@@ -10600,9 +10643,13 @@ window.toggleIsSleeping = function(forceState = null) {
 };
 
 window.setWakeTimeNow = function() {
-    // 1. 현재 시간으로 일어난 시간 셋팅
+    // 1. 현재 시간으로 일어난 시간 셋팅 (한국시간 패치)
     const now = new Date();
-    const dStr = now.toISOString().split('T')[0];
+    const year = now.getFullYear();
+    const month = String(now.getMonth() + 1).padStart(2, '0');
+    const day = String(now.getDate()).padStart(2, '0');
+    
+    const dStr = `${year}-${month}-${day}`;
     const tStr = `${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`;
     
     const eDateInput = document.getElementById('v-sleep-end-date');
@@ -10610,7 +10657,7 @@ window.setWakeTimeNow = function() {
     if(eDateInput) eDateInput.value = dStr;
     if(eTimeInput) eTimeInput.value = tStr;
     
-    // 2. UI를 깬 상태로 강제 전환 (버튼이 알아서 1개로 착! 바뀜)
+    // 2. UI를 깬 상태로 강제 전환
     window.toggleIsSleeping(false);
     
     if (navigator.vibrate) navigator.vibrate(15);
