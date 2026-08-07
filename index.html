@@ -84,6 +84,12 @@ body.mode-senior [onclick*="directGoToolbox('fever')"],
 body.mode-senior .ai-matrix-container,
 body.mode-senior .premium-banner-wrap,
 body.mode-senior .hide-on-senior { display: none !important; }
+
+/* 🚨 다크모드 상단 흰색 틈새(눈뽕) 완벽 방어 패치 */
+body.dark-mode { background-color: #000000 !important; }
+html { background-color: var(--bg-main); }
+.global-header { top: -1px !important; padding-top: 13px !important; border-top: none !important; box-shadow: none !important; }
+
 </style>
 
 </head>
@@ -395,23 +401,29 @@ body.mode-senior .hide-on-senior { display: none !important; }
         <span id="tracker-history-btn" onclick="window.toggleTrackerHistory()" class="box-tint-blue" style="font-size: 12px; color: var(--primary); font-weight: 800; border:none; padding: 5px 10px; border-radius: 10px; cursor: pointer;">통계·기록 보기 〉</span>
     </div>
     
-    <!-- 입력 버튼 3개 (id="btn-sub-..." 추가 완료!) -->
-    <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 16px;">
-        <button onclick="window.openTrackerSheet('feed')" class="box-main" style="border-radius: 18px; padding: 16px 0; display: flex; flex-direction: column; align-items: center; gap: 4px; cursor: pointer; box-shadow: 0 4px 12px rgba(0,0,0,0.02); transition: transform 0.2s;">
-            <span style="font-size: 28px; line-height: 1;">🍼</span>
-            <span style="font-size: 13.5px; font-weight: 800; color: var(--text-m);">맘마</span>
+    <!-- 🚨 4구 버튼으로 확장! (grid-template-columns: repeat(4, 1fr)) -->
+    <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-bottom: 16px;">
+        <button onclick="window.openTrackerSheet('feed')" class="box-main" style="border-radius: 16px; padding: 14px 0; display: flex; flex-direction: column; align-items: center; gap: 4px; cursor: pointer; box-shadow: 0 4px 12px rgba(0,0,0,0.02); transition: transform 0.2s;">
+            <span style="font-size: 26px; line-height: 1;">🍼</span>
+            <span style="font-size: 12.5px; font-weight: 800; color: var(--text-m);">맘마</span>
             <span id="btn-sub-feed" style="font-size: 11px; font-weight: 700; color: #3182F6;">-</span>
         </button>
-        <button onclick="window.openTrackerSheet('sleep')" class="box-main" style="border-radius: 18px; padding: 16px 0; display: flex; flex-direction: column; align-items: center; gap: 4px; cursor: pointer; box-shadow: 0 4px 12px rgba(0,0,0,0.02); transition: transform 0.2s;">
-            <span style="font-size: 28px; line-height: 1;">💤</span>
-            <span style="font-size: 13.5px; font-weight: 800; color: var(--text-m);">수면</span>
+        <button onclick="window.openTrackerSheet('sleep')" class="box-main" style="border-radius: 16px; padding: 14px 0; display: flex; flex-direction: column; align-items: center; gap: 4px; cursor: pointer; box-shadow: 0 4px 12px rgba(0,0,0,0.02); transition: transform 0.2s;">
+            <span style="font-size: 26px; line-height: 1;">💤</span>
+            <span style="font-size: 12.5px; font-weight: 800; color: var(--text-m);">수면</span>
             <span id="btn-sub-sleep" style="font-size: 11px; font-weight: 700; color: #A855F7;">-</span>
         </button>
-        <button onclick="window.openTrackerSheet('diaper')" class="box-main" style="border-radius: 18px; padding: 16px 0; display: flex; flex-direction: column; align-items: center; gap: 4px; cursor: pointer; box-shadow: 0 4px 12px rgba(0,0,0,0.02); transition: transform 0.2s;">
-    <span style="font-size: 28px; line-height: 1;">💩</span>
-    <span style="font-size: 13.5px; font-weight: 800; color: var(--text-m);">기저귀</span>
-    <span id="btn-sub-diaper" style="font-size: 11px; font-weight: 700; color: #F04452;">-</span>
-</button>
+        <button onclick="window.openTrackerSheet('diaper')" class="box-main" style="border-radius: 16px; padding: 14px 0; display: flex; flex-direction: column; align-items: center; gap: 4px; cursor: pointer; box-shadow: 0 4px 12px rgba(0,0,0,0.02); transition: transform 0.2s;">
+            <span style="font-size: 26px; line-height: 1;">💩</span>
+            <span style="font-size: 12.5px; font-weight: 800; color: var(--text-m);">기저귀</span>
+            <span id="btn-sub-diaper" style="font-size: 11px; font-weight: 700; color: #F04452;">-</span>
+        </button>
+        <!-- ✨ 신규 추가된 투약/비타민 버튼 -->
+        <button onclick="window.openTrackerSheet('med')" class="box-main" style="border-radius: 16px; padding: 14px 0; display: flex; flex-direction: column; align-items: center; gap: 4px; cursor: pointer; box-shadow: 0 4px 12px rgba(0,0,0,0.02); transition: transform 0.2s;">
+            <span style="font-size: 26px; line-height: 1;">💊</span>
+            <span style="font-size: 12.5px; font-weight: 800; color: var(--text-m);">약/비타민</span>
+            <span id="btn-sub-med" style="font-size: 11px; font-weight: 700; color: #059669;">-</span>
+        </button>
     </div>
    
             <!-- 가로형 영수증 롱버튼 -->
