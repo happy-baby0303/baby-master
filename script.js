@@ -3465,12 +3465,13 @@ window.openTrackerSheet = function(type, editId = null, preSelect = null) {
         }
     }
 
+    // 🚨 상하 여백은 원래대로 타이트하게 줄이고, 날짜만 완벽하게 정중앙에 배치!
     const baseTimeInputHtml = `
         <div style="text-align: center; margin-bottom: 20px;">
-            <div style="display:flex; justify-content:center; align-items:center; margin-bottom:16px;">
-                <div style="display:inline-flex; align-items:center; background:var(--bg-sub); padding:6px 12px; border-radius:12px; border:1px solid var(--border);">
+            <div style="display:flex; justify-content:center; align-items:center; margin-bottom:16px; width:100%;">
+                <div style="display:inline-flex; align-items:center; justify-content:center; background:var(--bg-sub); padding:6px 16px; border-radius:12px; border:1px solid var(--border);">
                     <span style="font-size:13px; font-weight:800; color:var(--text-s); margin-right:8px;">날짜</span>
-                    <input type="date" id="v-tracker-custom-date" value="${displayDateStr}" style="background:transparent; border:none; outline:none; color:var(--text-m); font-family:inherit; font-size:15px; font-weight:900; letter-spacing:-0.5px; padding:0;">
+                    <input type="date" id="v-tracker-custom-date" value="${displayDateStr}" style="background:transparent; border:none; outline:none; color:var(--text-m); font-family:inherit; font-size:15px; font-weight:900; letter-spacing:-0.5px; padding:0; width:135px; text-align:center;">
                 </div>
             </div>
             ${pastDateBadgeHtml}
@@ -3490,100 +3491,112 @@ window.openTrackerSheet = function(type, editId = null, preSelect = null) {
         </div>
     `;
 
-    if (type === 'feed') {
+  if (type === 'feed') {
         title.innerHTML = '🍼 맘마 기록하기';
         let records = JSON.parse(localStorage.getItem('tosil_tracker_records')) || [];
         
         let feedRecords = records.filter(r => r.type === 'feed' && r.subType !== '모유' && r.subType !== '이유식' && r.amount > 0);
+        
+        // 🌟 [복구 완료] 최근 기록 중 서로 다른 양(ml) 최대 2개까지 정확하게 수집!
         let uniqueAmounts = [];
         for (let r of feedRecords) {
             if (!uniqueAmounts.includes(r.amount)) uniqueAmounts.push(r.amount);
             if (uniqueAmounts.length >= 2) break;
         }
-        let recentFeedAmount = uniqueAmounts.length > 0 ? uniqueAmounts[0] : 160;
-        let quickButtonsHtml = uniqueAmounts.length > 0 
-            ? `<button type="button" class="quick-btn active" onclick="window.setFeedAmount(${uniqueAmounts[0]})" style="flex-shrink: 0; padding: 10px 14px; background: #EBF4FF; color: #3182F6; border: none; border-radius: 12px; font-weight: 900; font-size: 13.5px; cursor: pointer;">🍼 늘 먹던 ${uniqueAmounts[0]}ml</button>`
-            : `<button type="button" class="quick-btn active" onclick="window.setFeedAmount(160)" style="flex-shrink: 0; padding: 10px 14px; background: #EBF4FF; color: #3182F6; border: none; border-radius: 12px; font-weight: 900; font-size: 13.5px; cursor: pointer;">🍼 160ml</button>`;
+
+        // 수집된 '늘 먹던 양' 버튼들을 생성
+        let quickButtonsHtml = '';
+        if (uniqueAmounts.length > 0) {
+            uniqueAmounts.forEach(amt => {
+                quickButtonsHtml += `<button type="button" class="quick-btn active" onclick="window.setFeedAmount(${amt})" style="flex-shrink: 0; padding: 8px 12px; background: #EBF4FF; color: #3182F6; border: none; border-radius: 10px; font-weight: 900; font-size: 13px; cursor: pointer;">🍼 ${amt}ml</button>`;
+            });
+        } else {
+            quickButtonsHtml = `<button type="button" class="quick-btn active" onclick="window.setFeedAmount(160)" style="flex-shrink: 0; padding: 8px 12px; background: #EBF4FF; color: #3182F6; border: none; border-radius: 10px; font-weight: 900; font-size: 13px; cursor: pointer;">🍼 160ml</button>`;
+        }
 
         let foodRecords = records.filter(r => r.type === 'feed' && r.subType === '이유식' && r.amount > 0);
         let recentFoodAmount = foodRecords.length > 0 ? foodRecords[0].amount : 60;
         let foodQuickHtml = foodRecords.length > 0
-            ? `<button type="button" class="quick-btn active" onclick="window.adjustFoodAmount(${recentFoodAmount} - parseInt(document.getElementById('v-food-amount').value||0))" style="flex-shrink: 0; padding: 10px 14px; background: #E6F7F2; color: #00B37A; border: none; border-radius: 12px; font-weight: 900; font-size: 13.5px; cursor: pointer;">🥄 늘 먹던 ${recentFoodAmount}g</button>`
+            ? `<button type="button" class="quick-btn active" onclick="window.adjustFoodAmount(${recentFoodAmount} - parseInt(document.getElementById('v-food-amount').value||0))" style="flex-shrink: 0; padding: 8px 12px; background: #E6F7F2; color: #00B37A; border: none; border-radius: 10px; font-weight: 900; font-size: 13px; cursor: pointer;">🥄 늘 먹던 ${recentFoodAmount}g</button>`
             : '';
 
-       // 🌟 [UI 리뉴얼] 모유/분유 선택, 방향, 타이머 영역을 선 없이 깔끔하고 넓게 재배치!
         let milkHtml = `
             <div id="milk-input-area" style="margin-top: 10px;">
                 
-                <!-- 1. 분유 vs 모유 탭 (선 삭제, 토스 스타일 세그먼트 컨트롤) -->
-                <div style="display: flex; background: var(--bg-sub); border-radius: 14px; padding: 4px; margin-bottom: 24px;">
-                    <button class="btn-main" onclick="window.selectTrackerBtn(this, 'feed')" style="flex: 1; background: var(--bg-card); color: var(--text-m); border: none; box-shadow: 0 2px 8px rgba(0,0,0,0.04); margin:0; transition:0.2s; padding:14px 0; border-radius:10px; font-weight:900;">🍼 분유/유축</button>
-                    <button class="btn-main" onclick="window.selectTrackerBtn(this, 'feed')" style="flex: 1; background: transparent; color: var(--text-s); border: none; box-shadow: none; margin:0; transition:0.2s; padding:14px 0; border-radius:10px; font-weight:800;">🤱 모유(유축기)</button>
+                <!-- 분유/유축 vs 모유 직수 선택 버튼 -->
+                <div style="display: flex; gap: 8px; margin-bottom: 20px;">
+                    <button class="btn-main" onclick="window.selectTrackerBtn(this, 'feed')" style="flex: 1; display: flex; align-items: center; justify-content: center; background: var(--bg-card); color: var(--text-s); border: 1px solid var(--border); box-shadow: none; margin:0; transition:0.2s; padding: 14px 0; border-radius: 14px; font-weight: 800; font-size: 14px;">🍼 분유/유축</button>
+                    <button class="btn-main" onclick="window.selectTrackerBtn(this, 'feed')" style="flex: 1; display: flex; align-items: center; justify-content: center; background: var(--bg-card); color: var(--text-s); border: 1px solid var(--border); box-shadow: none; margin:0; transition:0.2s; padding: 14px 0; border-radius: 14px; font-weight: 800; font-size: 14px;">🤱 모유 직수</button>
                 </div>
 
-                <!-- 🍼 [분유/유축 선택 시 화면] -->
-                <div id="feed-ml-area" style="text-align: center; margin-bottom: 24px;">
-                    <div style="font-size: 13.5px; font-weight: 800; color: var(--text-s); margin-bottom: 12px;">먹은 양 (ml)</div>
-                    <div style="display: flex; justify-content: center; align-items: baseline; gap: 4px; margin-bottom: 20px;">
-                        <input type="number" id="v-feed-amount" placeholder="${recentFeedAmount}" style="font-size: 56px; font-weight: 900; color: var(--text-m); border: none; outline: none; background: transparent; text-align: center; width: 140px; padding: 0; margin: 0; transition: 0.3s;">
-                        <span style="font-size: 20px; font-weight: 800; color: var(--text-s);">ml</span>
+                <!-- 🍼 분유/유축 영역 -->
+                <div id="feed-ml-area" style="text-align: center; margin-bottom: 20px;">
+                    <div style="font-size: 13px; font-weight: 800; color: var(--text-s); margin-bottom: 8px;">먹은 양 (ml)</div>
+                    <div style="display: flex; justify-content: center; align-items: baseline; gap: 4px; margin-bottom: 14px;">
+                        <input type="number" id="v-feed-amount" placeholder="${uniqueAmounts[0] || 160}" style="font-size: 42px; font-weight: 900; color: var(--text-m); border: none; outline: none; background: transparent; text-align: center; width: 130px; padding: 0; margin: 0; transition: 0.3s;">
+                        <span style="font-size: 17px; font-weight: 800; color: var(--text-s);">ml</span>
                     </div>
-                    <div style="display: flex; justify-content: center; gap: 8px; overflow-x: auto; padding-bottom: 4px; scrollbar-width: none;">
+                    <div style="display: flex; justify-content: center; gap: 6px; overflow-x: auto; padding-bottom: 4px; scrollbar-width: none;">
                         ${quickButtonsHtml}
-                        <div style="width: 1px; background: var(--border); margin: 0 4px;"></div>
-                        <button type="button" onclick="window.adjustFeedAmount(10)" style="flex-shrink: 0; padding: 10px 16px; background: var(--bg-sub); color: var(--text-m); border: none; border-radius: 12px; font-weight: 900; font-size: 14px; cursor: pointer;">+10</button>
-                        <button type="button" onclick="window.adjustFeedAmount(-10)" style="flex-shrink: 0; padding: 10px 16px; background: var(--bg-sub); color: var(--text-m); border: none; border-radius: 12px; font-weight: 900; font-size: 14px; cursor: pointer;">-10</button>
+                        <div style="width: 1px; background: var(--border); margin: 0 2px;"></div>
+                        <button type="button" onclick="window.adjustFeedAmount(10)" style="flex-shrink: 0; padding: 8px 12px; background: var(--bg-sub); color: var(--text-m); border: none; border-radius: 10px; font-weight: 900; font-size: 13px; cursor: pointer;">+10</button>
+                        <button type="button" onclick="window.adjustFeedAmount(-10)" style="flex-shrink: 0; padding: 8px 12px; background: var(--bg-sub); color: var(--text-m); border: none; border-radius: 10px; font-weight: 900; font-size: 13px; cursor: pointer;">-10</button>
                     </div>
                 </div>
 
-                <!-- 🤱 [모유 직수 선택 시 화면] -->
-                <div id="feed-breast-area" style="display: none; margin-bottom: 24px;">
-                    
-                    <!-- 방향 선택 (동그랗고 부드러운 칩 스타일) -->
-                    <div style="font-size: 13.5px; font-weight: 800; color: var(--text-s); margin-bottom: 12px; text-align:center;">방향을 선택해주세요</div>
-                    <div style="display: flex; justify-content: center; gap: 10px; margin-bottom: 32px;">
-                        <button class="btn-main" onclick="window.selectTrackerBtn(this, 'breast_left')" style="flex:1; padding: 14px 0; background: var(--bg-sub); color: var(--text-s); border: none; border-radius: 16px; margin:0; transition:0.2s; font-size: 14.5px; font-weight:800;">왼쪽 (L)</button>
-                        <button class="btn-main" onclick="window.selectTrackerBtn(this, 'breast_right')" style="flex:1; padding: 14px 0; background: var(--bg-sub); color: var(--text-s); border: none; border-radius: 16px; margin:0; transition:0.2s; font-size: 14.5px; font-weight:800;">오른쪽 (R)</button>
-                        <button class="btn-main" onclick="window.selectTrackerBtn(this, 'breast_both')" style="flex:1; padding: 14px 0; background: var(--bg-sub); color: var(--text-s); border: none; border-radius: 16px; margin:0; transition:0.2s; font-size: 14.5px; font-weight:800;">양쪽 다</button>
+                <!-- 🤱 모유 직수 영역 (타이머 포함) -->
+                <div id="feed-breast-area" style="display: none; margin-bottom: 20px;">
+                    <div style="font-size: 13px; font-weight: 800; color: var(--text-s); margin-bottom: 10px; text-align:center;">방향을 선택해주세요</div>
+                    <div style="display: flex; justify-content: center; gap: 8px; margin-bottom: 20px;">
+                        <button class="btn-main" onclick="window.selectTrackerBtn(this, 'breast_left')" style="flex:1; display: flex; align-items: center; justify-content: center; padding: 12px 0; background: var(--bg-sub); color: var(--text-s); border: 1px solid var(--border); border-radius: 12px; margin:0; transition:0.2s; font-size: 14px; font-weight:800;">왼쪽 (L)</button>
+                        <button class="btn-main" onclick="window.selectTrackerBtn(this, 'breast_right')" style="flex:1; display: flex; align-items: center; justify-content: center; padding: 12px 0; background: var(--bg-sub); color: var(--text-s); border: 1px solid var(--border); border-radius: 12px; margin:0; transition:0.2s; font-size: 14px; font-weight:800;">오른쪽 (R)</button>
+                        <button class="btn-main" onclick="window.selectTrackerBtn(this, 'breast_both')" style="flex:1; display: flex; align-items: center; justify-content: center; padding: 12px 0; background: var(--bg-sub); color: var(--text-s); border: 1px solid var(--border); border-radius: 12px; margin:0; transition:0.2s; font-size: 14px; font-weight:800;">양쪽 다</button>
                     </div>
                     
-                    <!-- 🌟 대망의 라이브 타이머 위젯 (스톱워치 모드 추가!) -->
-                    <div style="background: #F8F9FA; border-radius: 24px; padding: 24px 0; text-align: center;">
-                        <div style="font-size: 13px; font-weight: 800; color: #8B95A1; margin-bottom: 8px;">직수 시간</div>
+                    <div style="background: var(--bg-sub); border-radius: 20px; padding: 18px 0; text-align: center; border: 1px solid var(--border);">
+                        <div style="font-size: 12.5px; font-weight: 800; color: var(--text-s); margin-bottom: 6px;">직수 시간</div>
                         
-                        <!-- 입력 모드 vs 스톱워치 모드 스위칭 -->
-                        <div style="display: flex; justify-content: center; align-items: baseline; gap: 4px; margin-bottom: 20px; height: 75px;">
-                            <!-- 1. 멈춰있을 때 (직접 입력 가능) -->
-                            <input type="number" id="v-breast-amount" placeholder="0" style="font-size: 64px; font-weight: 900; color: var(--text-m); border: none; outline: none; background: transparent; text-align: center; width: 120px; padding: 0; margin: 0; transition: 0.3s;">
-                            <span id="v-breast-unit" style="font-size: 20px; font-weight: 800; color: var(--text-s);">분</span>
+                        <div style="display: flex; justify-content: center; align-items: baseline; gap: 4px; margin-bottom: 14px; height: 55px;">
+                            <input type="number" id="v-breast-amount" placeholder="0" style="font-size: 42px; font-weight: 900; color: var(--text-m); border: none; outline: none; background: transparent; text-align: center; width: 100px; padding: 0; margin: 0; transition: 0.3s;">
+                            <span id="v-breast-unit" style="font-size: 17px; font-weight: 800; color: var(--text-s);">분</span>
                             
-                            <!-- 2. 타이머 돌아갈 때 (디지털 스톱워치 디자인) 🚨 빨간색 제거하고 기본색으로 변경! -->
-                            <div id="v-breast-display" style="display: none; font-size: 64px; font-weight: 900; color: var(--text-m); text-align: center; font-variant-numeric: tabular-nums; letter-spacing: -2px;">00:00</div>
+                            <div id="v-breast-display" style="display: none; font-size: 42px; font-weight: 900; color: var(--text-m); text-align: center; font-variant-numeric: tabular-nums; letter-spacing: -1px;">00:00</div>
                         </div>
 
-                        <button id="btn-breast-timer" onclick="window.toggleBreastTimer()" style="padding: 16px 36px; background: #EBF4FF; color: #3182F6; border: none; border-radius: 100px; font-size: 16px; font-weight: 900; cursor: pointer; transition: 0.2s; box-shadow: 0 4px 12px rgba(49, 130, 246, 0.15);">
+                        <button id="btn-breast-timer" onclick="window.toggleBreastTimer()" style="padding: 12px 28px; background: var(--bg-card); color: var(--primary); border: 1px solid var(--border); border-radius: 100px; font-size: 14px; font-weight: 900; cursor: pointer; transition: 0.2s; box-shadow: 0 2px 6px rgba(0,0,0,0.04);">
                             ▶ 타이머 시작
                         </button>
                     </div>
-
                 </div>
             </div>`;
 
-        let foodHtml = `<div id="food-input-area" style="display: none; text-align: center; margin-bottom: 24px;"><div style="font-size: 13px; font-weight: 800; color: var(--text-s); margin-bottom: 8px;">먹은 이유식 양 (g)</div><div style="display: flex; justify-content: center; align-items: baseline; gap: 4px; margin-bottom: 16px;"><input type="number" id="v-food-amount" placeholder="${recentFoodAmount}" style="font-size: 44px; font-weight: 900; color: var(--text-m); border: none; outline: none; background: transparent; text-align: center; width: 140px; padding: 0; margin: 0; border-bottom: 3px solid var(--border); border-radius: 0; transition: 0.3s;"><span style="font-size: 18px; font-weight: 800; color: var(--text-s);">g</span></div><div style="display: flex; justify-content: center; gap: 8px; overflow-x: auto; padding-bottom: 4px; scrollbar-width: none;">${foodQuickHtml}<div style="width: 1px; background: var(--border); margin: 0 4px;"></div><button type="button" onclick="window.adjustFoodAmount(10)" style="padding: 10px 16px; background: rgba(16, 185, 129, 0.1); color: #10B981; border: 1px solid rgba(16, 185, 129, 0.2); border-radius: 12px; font-weight: 800; font-size: 14px; cursor: pointer; flex-shrink:0;">+10</button><button type="button" onclick="window.adjustFoodAmount(-10)" style="padding: 10px 16px; background: rgba(240, 68, 82, 0.1); color: #F04452; border: 1px solid rgba(240, 68, 82, 0.2); border-radius: 12px; font-weight: 800; font-size: 14px; cursor: pointer; flex-shrink:0;">-10</button></div></div>`;
+        let foodHtml = `
+            <div id="food-input-area" style="display: none; text-align: center; margin-bottom: 20px;">
+                <div style="font-size: 13px; font-weight: 800; color: var(--text-s); margin-bottom: 8px;">먹은 이유식 양 (g)</div>
+                <div style="display: flex; justify-content: center; align-items: baseline; gap: 4px; margin-bottom: 14px;">
+                    <input type="number" id="v-food-amount" placeholder="${recentFoodAmount}" style="font-size: 42px; font-weight: 900; color: var(--text-m); border: none; outline: none; background: transparent; text-align: center; width: 130px; padding: 0; margin: 0; transition: 0.3s;">
+                    <span style="font-size: 17px; font-weight: 800; color: var(--text-s);">g</span>
+                </div>
+                <div style="display: flex; justify-content: center; gap: 6px; overflow-x: auto; padding-bottom: 4px; scrollbar-width: none;">
+                    ${foodQuickHtml}
+                    <div style="width: 1px; background: var(--border); margin: 0 2px;"></div>
+                    <button type="button" onclick="window.adjustFoodAmount(10)" style="padding: 8px 14px; background: rgba(16, 185, 129, 0.1); color: #10B981; border: none; border-radius: 10px; font-weight: 800; font-size: 13px; cursor: pointer; flex-shrink:0;">+10</button>
+                    <button type="button" onclick="window.adjustFoodAmount(-10)" style="padding: 8px 14px; background: rgba(240, 68, 82, 0.1); color: #F04452; border: none; border-radius: 10px; font-weight: 800; font-size: 13px; cursor: pointer; flex-shrink:0;">-10</button>
+                </div>
+            </div>`;
 
+   // 🚨 [디자인 최종 교정] 높이와 패딩을 완벽하게 고정하여 수직 정중앙 강제 배치
         body.innerHTML = baseTimeInputHtml + `
-            <div class="mamma-toggle-container">
-                <input type="radio" id="tab-milk" name="mamma-type" value="milk" checked onchange="window.toggleMammaTab('milk')">
-                <label for="tab-milk">🍼 수유</label>
-                <input type="radio" id="tab-food" name="mamma-type" value="food" onchange="window.toggleMammaTab('food')">
-                <label for="tab-food">🥄 이유식</label>
-                <div class="toggle-slider"></div>
+            <div style="display: flex; align-items: center; justify-content: center; background: var(--bg-sub); border-radius: 16px; padding: 4px; margin-bottom: 20px; border: 1px solid var(--border); box-sizing: border-box; height: 50px;">
+                <button id="tab-btn-milk" class="btn-main" onclick="window.toggleMammaTab('milk')" style="flex: 1; height: 42px; display: flex; align-items: center; justify-content: center; margin: 0; background: var(--bg-card); color: var(--text-m); border: none; border-radius: 12px; font-size: 14px; font-weight: 900; cursor: pointer; box-shadow: 0 2px 6px rgba(0,0,0,0.04); transition: 0.2s;">🍼 수유</button>
+                <button id="tab-btn-food" class="btn-main" onclick="window.toggleMammaTab('food')" style="flex: 1; height: 42px; display: flex; align-items: center; justify-content: center; margin: 0; background: transparent; color: var(--text-s); border: none; border-radius: 12px; font-size: 14px; font-weight: 800; cursor: pointer; transition: 0.2s;">🥄 이유식</button>
             </div>
             ${milkHtml}
             ${foodHtml}
         `;
         if(saveBtn) saveBtn.style.display = 'block';
     }
+
     else if (type === 'diaper') {
         title.innerHTML = '💩 기저귀 기록하기';
         body.innerHTML = baseTimeInputHtml + `
@@ -3872,21 +3885,55 @@ window.openTrackerSheet = function(type, editId = null, preSelect = null) {
     }, 80);
 };
 
-// 💡 [이유식 패치] 토글 버튼 누를 때 화면 바뀌게 해주는 엔진
+// 💡 [이유식 패치] 토글 버튼 누를 때 화면 바뀌게 해주는 엔진 (버튼 색상 변경 포함)
 window.toggleMammaTab = function(type) {
     const milkArea = document.getElementById('milk-input-area');
     const foodArea = document.getElementById('food-input-area');
+    
+    // 버튼 2개 가져오기
+    const btnMilk = document.getElementById('tab-btn-milk');
+    const btnFood = document.getElementById('tab-btn-food');
+    
+    if (navigator.vibrate) navigator.vibrate(10); // 가벼운 진동
+
     if(type === 'food') {
-        milkArea.style.display = 'none';
-        foodArea.style.display = 'block';
-        window.trackerState.subType = '이유식'; // 상태를 이유식으로 고정!
+        // UI 변경
+        if (milkArea) milkArea.style.display = 'none';
+        if (foodArea) foodArea.style.display = 'block';
+        window.trackerState.subType = '이유식'; 
+        
+        // 버튼 색깔 스위칭
+        if (btnFood && btnMilk) {
+            btnFood.style.background = 'var(--bg-card)';
+            btnFood.style.color = 'var(--text-m)';
+            btnFood.style.fontWeight = '900';
+            btnFood.style.boxShadow = '0 2px 6px rgba(0,0,0,0.04)';
+            
+            btnMilk.style.background = 'transparent';
+            btnMilk.style.color = 'var(--text-s)';
+            btnMilk.style.fontWeight = '800';
+            btnMilk.style.boxShadow = 'none';
+        }
     } else {
-        milkArea.style.display = 'block';
-        foodArea.style.display = 'none';
-        // 기본 분유로 돌려놓기
+        // UI 변경
+        if (milkArea) milkArea.style.display = 'block';
+        if (foodArea) foodArea.style.display = 'none';
         window.trackerState.subType = ''; 
         const feedBtns = document.querySelectorAll('#milk-input-area .btn-main');
         if(feedBtns.length > 0) window.selectTrackerBtn(feedBtns[0], 'feed'); 
+        
+        // 버튼 색깔 스위칭
+        if (btnFood && btnMilk) {
+            btnMilk.style.background = 'var(--bg-card)';
+            btnMilk.style.color = 'var(--text-m)';
+            btnMilk.style.fontWeight = '900';
+            btnMilk.style.boxShadow = '0 2px 6px rgba(0,0,0,0.04)';
+            
+            btnFood.style.background = 'transparent';
+            btnFood.style.color = 'var(--text-s)';
+            btnFood.style.fontWeight = '800';
+            btnFood.style.boxShadow = 'none';
+        }
     }
 };
 
@@ -6854,14 +6901,14 @@ window.renderSettingsTab = function() {
             <div style="font-size: 13.5px; font-weight: 900; color: var(--text-s); margin-bottom: 12px;">앱 설정</div>
             <div style="background: var(--bg-card); border: 1px solid var(--border); border-radius: 16px; overflow: hidden; margin-bottom: 32px; box-shadow: 0 2px 8px rgba(0,0,0,0.02); box-sizing: border-box; width: 100%;">
                 
-                <!-- 🚨 역할 설정: 이모지 빼고 버튼 영역 쾌적하게 확보 -->
-                <div style="display: flex; justify-content: space-between; align-items: center; padding: 18px 20px; border-bottom: 1px solid var(--border);">
-                    <div style="font-size: 14.5px; font-weight: 800; color: var(--text-m); flex-shrink: 0;">내 역할 설정</div>
+                <!-- 🚨 역할 설정: 한 줄 유지하되, 우측 여백을 지우고 캡슐을 오른쪽 끝으로 바짝 밀착! -->
+                <div style="display: flex; justify-content: space-between; align-items: center; padding: 16px 12px 16px 20px; border-bottom: 1px solid var(--border);">
+                    <div style="font-size: 14.5px; font-weight: 800; color: var(--text-m); margin-right: auto;">내 역할 설정</div>
                     
-                    <div style="display: flex; background: var(--bg-sub); border-radius: 10px; padding: 4px; border: 1px solid var(--border); flex-shrink: 0; gap: 2px;">
-                        <button onclick="window.changeUserRole('mom')" style="padding: 6px 14px; border: none; border-radius: 8px; font-size: 13px; font-weight: 900; cursor: pointer; transition: 0.2s; white-space: nowrap; ${currentRole === 'mom' ? 'background:#FFF; color:#F04452; box-shadow:0 2px 6px rgba(0,0,0,0.05);' : 'background:transparent; color:#8B95A1;'}">엄마</button>
-                        <button onclick="window.changeUserRole('dad')" style="padding: 6px 14px; border: none; border-radius: 8px; font-size: 13px; font-weight: 900; cursor: pointer; transition: 0.2s; white-space: nowrap; ${currentRole === 'dad' ? 'background:#FFF; color:#3182F6; box-shadow:0 2px 6px rgba(0,0,0,0.05);' : 'background:transparent; color:#8B95A1;'}">아빠</button>
-                        <button onclick="window.changeUserRole('senior')" style="padding: 6px 14px; border: none; border-radius: 8px; font-size: 13px; font-weight: 900; cursor: pointer; transition: 0.2s; white-space: nowrap; ${currentRole === 'senior' ? 'background:#FFF; color:#00B37A; box-shadow:0 2px 6px rgba(0,0,0,0.05);' : 'background:transparent; color:#8B95A1;'}">조부모</button>
+                    <div style="display: flex; background: var(--bg-sub); border-radius: 10px; padding: 3px; border: 1px solid var(--border); flex-shrink: 0;">
+                        <button onclick="window.changeUserRole('mom')" style="padding: 6px 10px; border: none; border-radius: 8px; font-size: 13px; font-weight: 900; cursor: pointer; transition: 0.2s; white-space: nowrap; ${currentRole === 'mom' ? 'background:var(--bg-card); color:#F04452; box-shadow:0 2px 6px rgba(0,0,0,0.05);' : 'background:transparent; color:#8B95A1;'}">엄마</button>
+                        <button onclick="window.changeUserRole('dad')" style="padding: 6px 10px; border: none; border-radius: 8px; font-size: 13px; font-weight: 900; cursor: pointer; transition: 0.2s; white-space: nowrap; ${currentRole === 'dad' ? 'background:var(--bg-card); color:#3182F6; box-shadow:0 2px 6px rgba(0,0,0,0.05);' : 'background:transparent; color:#8B95A1;'}">아빠</button>
+                        <button onclick="window.changeUserRole('senior')" style="padding: 6px 10px; border: none; border-radius: 8px; font-size: 13px; font-weight: 900; cursor: pointer; transition: 0.2s; white-space: nowrap; ${currentRole === 'senior' ? 'background:var(--bg-card); color:#00B37A; box-shadow:0 2px 6px rgba(0,0,0,0.05);' : 'background:transparent; color:#8B95A1;'}">조부모</button>
                     </div>
                 </div>
 
