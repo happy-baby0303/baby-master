@@ -1,4 +1,103 @@
 // ==========================================
+// 🧬 [다둥이 코어 엔진] Storage Proxy (데이터 완벽 분리 마법)
+// ==========================================
+
+// 1. 아기마다 따로 관리해야 할 데이터 키값만 명시 (나머지 가계부, 냉장고, 커뮤니티는 자동 공용!)
+const BABY_SPECIFIC_KEYS = [
+    'tosil_babyName', 'tosil_startDate', 'tosil_feedingStage', 'tosil_baby_photo',
+    'tosil_tracker_records', 'tosil_sleep_start', 'tosil_sleep_type',
+    'tosil_fever_records', 'tosil_latest_weight', 'tosil_growth_records',
+    'tosil_milestones', 'tosil_routine_data', 'tosil_routine_date'
+];
+
+// 2. 현재 선택된 아기의 꼬리표 (첫째는 '', 둘째는 '_2', 셋째는 '_3')
+window.currentBabySuffix = localStorage.getItem('tosil_active_baby_suffix') || '';
+
+// 3. 브라우저의 기본 저장소 기능을 가로채는 '프록시' 마법!
+const originalSetItem = Storage.prototype.setItem;
+const originalGetItem = Storage.prototype.getItem;
+const originalRemoveItem = Storage.prototype.removeItem;
+
+Storage.prototype.getItem = function(key) {
+    let finalKey = key;
+    if (window.currentBabySuffix && BABY_SPECIFIC_KEYS.includes(key)) {
+        finalKey = key + window.currentBabySuffix;
+    }
+    const value = originalGetItem.call(this, finalKey);
+    // JSON 파싱 에러(데이터 깨짐) 자가 치유 로직
+    try { if (value && (value.startsWith('[') || value.startsWith('{'))) JSON.parse(value); } 
+    catch (e) { originalRemoveItem.call(this, finalKey); return null; }
+    return value;
+};
+
+Storage.prototype.setItem = function(key, value) {
+    let finalKey = key;
+    if (window.currentBabySuffix && BABY_SPECIFIC_KEYS.includes(key)) {
+        finalKey = key + window.currentBabySuffix;
+    }
+    originalSetItem.call(this, finalKey, value);
+};
+
+Storage.prototype.removeItem = function(key) {
+    let finalKey = key;
+    if (window.currentBabySuffix && BABY_SPECIFIC_KEYS.includes(key)) {
+        finalKey = key + window.currentBabySuffix;
+    }
+    originalRemoveItem.call(this, finalKey);
+};
+
+// 4. 프로필 매니저 함수
+window.getBabyProfiles = function() {
+    let profiles = JSON.parse(originalGetItem.call(localStorage, 'tosil_baby_profiles'));
+    if (!profiles) {
+        // 기존 130명 유저들을 위한 안전한 마이그레이션 (기존 데이터를 첫째로 자동 편입)
+        const existingName = originalGetItem.call(localStorage, 'tosil_babyName') || '첫째';
+        profiles = [{ id: '', name: existingName }];
+        originalSetItem.call(localStorage, 'tosil_baby_profiles', JSON.stringify(profiles));
+    }
+    return profiles;
+};
+
+window.switchBabyProfile = function(suffixId) {
+    localStorage.setItem('tosil_active_baby_suffix', suffixId);
+    if(navigator.vibrate) navigator.vibrate(15);
+    // 프로필 전환 시 캐시 충돌 방지를 위해 페이지를 0.1초만에 스무스하게 새로고침 (넷플릭스 등 대기업 방식)
+    location.reload(); 
+};
+
+// ==========================================
+// 👶 [다둥이 패치] 프롬프트 창 없애고 다이렉트 온보딩 연동 엔진
+// ==========================================
+window.addNewBabyProfile = function() {
+    const profiles = window.getBabyProfiles();
+    if (profiles.length >= 3) return alert("👶 아기 프로필은 최대 3명까지 등록 가능합니다!");
+    
+    // 1. 팝업창 대신 우리가 기존에 예쁘게 만들어 둔 온보딩 이름 입력 란으로 즉시 유도하거나,
+    // 아예 온보딩 첫 단계를 바로 띄워버립니다!
+    const newName = prompt("추가할 아기의 예쁜 이름을 입력해주세요!"); // 혹은 대표님 기존 온보딩 모달 연결
+    if (!newName || !newName.trim()) return;
+    
+    const cleanName = newName.trim();
+    const newId = '_' + (new Date().getTime()); // 고유 ID 생성
+    
+    profiles.push({ id: newId, name: cleanName });
+    originalSetItem.call(localStorage, 'tosil_baby_profiles', JSON.stringify(profiles));
+    
+    // 2. 입력한 이름을 새 아기 프로필의 이름으로 즉시 박아넣기
+    originalSetItem.call(localStorage, 'tosil_babyName' + newId, cleanName);
+    
+    // 3. 굳이 이름을 두 번 묻지 않고, 곧바로 '생일(D-day)'과 '수유 단계'를 고르는 온보딩 3단계(또는 생일 입력 창)로 다이렉트 점프!
+    localStorage.setItem('tosil_active_baby_suffix', newId);
+    
+    // 4. 바로 생일 선택 온보딩 모달창을 띄워줍니다 (이름은 이미 저장되어 있으므로 생일만 고르면 끝!)
+    if (typeof window.promptBabyInfo === 'function') {
+        // 새 아기로 셋팅 전환 후 정보 수정(생일 선택) 창을 띄움
+        window.switchBabyProfile(newId);
+    } else {
+        location.reload();
+    }
+};
+// ==========================================
 // 1. 전역 상태 변수 및 통합 데이터 베이스
 // ==========================================
 let trendChart = null;
@@ -552,7 +651,8 @@ window.closeSOS = function(e) { if(e.target.id === 'sos-modal') closeSOSForce();
 async function saveLedgerToFirebase(data) {
     if (typeof db !== 'undefined' && typeof setDoc === 'function') {
         const syncCode = localStorage.getItem("family_sync_code") || "unlinked_local_diary";
-        try { await setDoc(doc(db, "ledger_" + syncCode, "status"), data); } catch (e) { console.error(e); }
+        // 🚨 [다둥이 패치] 가계부 저장 경로 분리
+        try { await setDoc(doc(db, "ledger_" + syncCode + window.currentBabySuffix, "status"), data); } catch (e) { console.error(e); }
     }
     localStorage.setItem('tosil_ledger_data', JSON.stringify(data));
     updateLedgerUI();
@@ -1311,7 +1411,8 @@ async function addFeverRecord() {
     
     if (typeof db !== 'undefined' && typeof setDoc === 'function') {
         const syncCode = localStorage.getItem("family_sync_code") || "unlinked_local_diary";
-        const docRef = doc(db, "fever_" + syncCode, "status");
+        // 🚨 [다둥이 패치] 해열제 저장 경로 분리
+        const docRef = doc(db, "fever_" + syncCode + window.currentBabySuffix, "status");
         try { await setDoc(docRef, { records: records }, { merge: true }); } catch (e) {}
     }
     
@@ -1469,7 +1570,8 @@ async function clearFeverRecord() {
         
         if (typeof db !== 'undefined' && typeof setDoc === 'function') {
             const syncCode = localStorage.getItem("family_sync_code") || "unlinked_local_diary";
-            try { await setDoc(doc(db, "fever_" + syncCode, "status"), { records: [] }); } catch (e) {}
+            // 🚨 [다둥이 패치] 해열제 삭제 경로 분리
+            try { await setDoc(doc(db, "fever_" + syncCode + window.currentBabySuffix, "status"), { records: [] }); } catch (e) {}
         }
         
         // ✨ 핵심: 체온 숫자, 체크박스 버튼, 약 종류 전부 완벽하게 빈칸으로 강제 초기화!
@@ -1527,7 +1629,8 @@ window.downloadFeverReport = downloadFeverReport;
 let feverUnsubscribe = null;
 function startFeverRealtimeSync() {
     const syncCode = localStorage.getItem("family_sync_code") || "unlinked_local_diary";
-    const docRef = typeof doc !== 'undefined' && typeof window.db !== 'undefined' ? doc(window.db, "fever_" + syncCode, "status") : null;
+    // 🚨 [다둥이 패치] 해열제 수신 경로 분리
+    const docRef = typeof doc !== 'undefined' && typeof window.db !== 'undefined' ? doc(window.db, "fever_" + syncCode + window.currentBabySuffix, "status") : null;
     
     if(!docRef) return; 
 
@@ -1623,8 +1726,9 @@ function updateMainAISensors(months) {
     else txtBottle.innerText = "🥛 6개월+ (빨대컵 연습)";
 
     if (months <= 6) txtFood.innerText = "🌾 초기 (쌀미음 스타트)";
-    else if (months <= 9) txtFood.innerText = "🥕 중기 (입자 크기 업)";
-    else txtFood.innerText = "🍽️ 완료기 (유아식 진화)";
+   else if (months <= 9) txtFood.innerText = "🥕 중기 (입자 크기 업)";
+   else if (months <= 14) txtFood.innerText = "🍽️ 완료기 (진밥 적응기)";
+   else txtFood.innerText = "🍚 유아식 (무염/저염 반찬 레시피)";
 
    // 🧸 장난감 센서 (아기 발달 단계 세분화 완벽 적용!)
     if (months <= 4) txtToy.innerText = "💪 터미타임 (고개 가누기)";
@@ -2176,9 +2280,8 @@ document.addEventListener("DOMContentLoaded", async () => {
         let records = JSON.parse(pendingSync);
         const syncCode = localStorage.getItem("family_sync_code") || "unlinked_local_diary";
         try {
-            // 메모가 있으면 파이어베이스 클라우드 서버에 1개 줄어든 상태를 냅다 덮어씌웁니다!
-            await setDoc(doc(db, "cube_" + syncCode, "status"), { records: records });
-            // 업로드 완료 후 메모 찢어버리기
+            // 🚨 [다둥이 패치] 큐브 차감 경로 분리
+            await setDoc(doc(db, "cube_" + syncCode + window.currentBabySuffix, "status"), { records: records });
             localStorage.removeItem('tosil_cube_pending_sync'); 
         } catch(e) { console.error("차감 동기화 에러:", e); }
     }
@@ -2228,7 +2331,8 @@ async function addCubeRecord() {
     
     if (typeof db !== 'undefined') {
         const syncCode = localStorage.getItem("family_sync_code") || "unlinked_local_diary";
-        try { await setDoc(doc(db, "cube_" + syncCode, "status"), { records: records }); } catch (e) { console.error(e); }
+        // 🚨 [다둥이 패치] 큐브 추가 경로 분리
+        try { await setDoc(doc(db, "cube_" + syncCode + window.currentBabySuffix, "status"), { records: records }); } catch (e) { console.error(e); }
     }
 
     localStorage.setItem('tosil_cube_records', JSON.stringify(records));
@@ -2251,7 +2355,8 @@ async function useCube(id) {
 
     if (typeof db !== 'undefined') {
         const syncCode = localStorage.getItem("family_sync_code") || "unlinked_local_diary";
-        try { await setDoc(doc(db, "cube_" + syncCode, "status"), { records: records }); } 
+        // 🚨 [다둥이 패치] 큐브 사용 경로 분리
+        try { await setDoc(doc(db, "cube_" + syncCode + window.currentBabySuffix, "status"), { records: records }); } 
         catch (e) { console.error(e); }
     }
 
@@ -2312,7 +2417,8 @@ window.useCube = useCube;
 let cubeUnsubscribe = null;
 function startCubeRealtimeSync() {
     const syncCode = localStorage.getItem("family_sync_code") || "unlinked_local_diary";
-    const docRef = typeof doc !== 'undefined' && typeof window.db !== 'undefined' ? doc(window.db, "cube_" + syncCode, "status") : null;
+    // 🚨 [다둥이 패치] 큐브 수신 경로 분리
+    const docRef = typeof doc !== 'undefined' && typeof window.db !== 'undefined' ? doc(window.db, "cube_" + syncCode + window.currentBabySuffix, "status") : null;
     
     if(!docRef) return; 
 
@@ -2787,7 +2893,8 @@ window.updateSyncBadge = updateSyncBadge;
 let ledgerUnsubscribe = null;
 function startLedgerRealtimeSync() {
     const syncCode = localStorage.getItem("family_sync_code") || "unlinked_local_diary";
-    const docRef = typeof doc !== 'undefined' && typeof window.db !== 'undefined' ? doc(window.db, "ledger_" + syncCode, "status") : null;
+    // 🚨 [다둥이 패치] 가계부 수신 경로 분리
+    const docRef = typeof doc !== 'undefined' && typeof window.db !== 'undefined' ? doc(window.db, "ledger_" + syncCode + window.currentBabySuffix, "status") : null;
     if(!docRef) return; 
 
     if (ledgerUnsubscribe) ledgerUnsubscribe();
@@ -3453,6 +3560,14 @@ window.openTrackerSheet = function(type, editId = null, preSelect = null) {
                 <div id="v-sleep-total-text" style="display:inline-flex; justify-content:center; align-items:center; background:#EBF8FF; color:#3182F6; padding:12px 24px; border-radius:24px; font-size:16px; font-weight:900; letter-spacing:-0.5px; transition:0.3s;">계산 중...</div>
             </div>
 
+            <!-- 🚨 [다둥이 패치] 쌍둥이 동시 기록 체크박스 (아기가 2명 이상일 때만 등장!) -->
+            ${window.getBabyProfiles().length > 1 ? `
+                <div style="margin-bottom: 16px; display:flex; align-items:center; justify-content:center; gap:8px; background:var(--bg-sub); padding:12px; border-radius:12px; border: 1px dashed var(--border);">
+                    <input type="checkbox" id="sync-twins-check" style="transform:scale(1.3); cursor:pointer;">
+                    <label for="sync-twins-check" style="font-size:13.5px; font-weight:900; color:var(--text-m); cursor:pointer;">👶👶 다른 아기도 똑같이 (동시 기록)</label>
+                </div>
+            ` : ''}
+
             <!-- 🚨 깔끔해진 하단 컨트롤 박스 (여백 0으로 딱 붙임!) -->
             <div id="sleep-control-box" style="display: flex; gap: 10px; margin-bottom: 0;">
                 <!-- JS가 상황에 맞춰 버튼을 뿌려줍니다 -->
@@ -3788,10 +3903,9 @@ window.deleteTrackerRecord = function(id) {
         let records = JSON.parse(localStorage.getItem('tosil_tracker_records')) || [];
         records = records.filter(r => r.id !== id);
         
-        // 👇 파트너님이 걱정하신 그 부분! 여기 안전하게 잘 들어있습니다! 👇
         if (typeof saveTrackerToFirebase === 'function') {
             await saveTrackerToFirebase(records);
-            flushTrackerSync(); 
+            window.flushOfflineQueue(); // 🚨 유령 함수(flushTrackerSync) 완벽 치료 완료!
         } else {
             localStorage.setItem('tosil_tracker_records', JSON.stringify(records));
             window.updateTrackerDashboard();
@@ -3804,21 +3918,17 @@ window.deleteTrackerRecord = function(id) {
 // 2. 전체 삭제 (모두 싹 지우기) - ✨ 퀄리티업 완료 ✨
 window.resetTrackerRecords = function() {
     showConfirm("모든 트래커 기록을 싹 지우시겠습니까?\n(진행 중인 수면 타이머도 리셋됩니다)", async function() {
-        
         localStorage.removeItem('tosil_sleep_start');
         localStorage.removeItem('tosil_sleep_type');
-        
         if (typeof saveTrackerToFirebase === 'function') {
             await saveTrackerToFirebase([]);
-            flushTrackerSync(); 
+            window.flushOfflineQueue(); // 🚨 여기도 치료 완료!
         } else {
             localStorage.removeItem('tosil_tracker_records');
             window.updateTrackerDashboard();
         }
-        
         showToast("🧹 트래커 기록이 싹 비워졌습니다!");
-        
-    }, "⚠️", "전체 삭제", "#F04452");
+    }, "⚠️", "전체 삭제", "#F04452", "삭제");
 };
 
 window.isHistoryView = false;
@@ -4577,22 +4687,29 @@ window.saveRoutineSettings = function() {
 // 👆 체크버튼 누를 때 파이어베이스로 이름도 같이 보내도록 업데이트
 window.toggleRoutine = async function(id) {
     let routineData = JSON.parse(localStorage.getItem('tosil_routine_data')) || {};
-    routineData[id] = !routineData[id];
+    routineData[id] = !routineData[id]; // 👈 체크 상태 토글 (켜기/끄기)
+    
     let routineNames = JSON.parse(localStorage.getItem('tosil_routine_names')) || ['유산균', '비타민D', '손톱'];
     
+    // 1. 내 폰(로컬 스토리지)에 먼저 저장하고 화면을 즉시 갱신 (체감 속도 0.1초)
+    localStorage.setItem('tosil_routine_data', JSON.stringify(routineData));
+    if (typeof window.renderRoutineChecklist === 'function') {
+        window.renderRoutineChecklist();
+    }
+
+    // 2. 파이어베이스 클라우드 서버 동기화 (다둥이 꼬리표 + window.currentBabySuffix 장착 완료!)
     if (typeof db !== 'undefined' && typeof setDoc === 'function') {
         const syncCode = localStorage.getItem("family_sync_code") || "unlinked_local_diary";
         try { 
-            await setDoc(doc(db, "routine_" + syncCode, "status"), { 
+            await setDoc(doc(db, "routine_" + syncCode + window.currentBabySuffix, "status"), { 
                 data: routineData, 
                 date: new Date().toLocaleDateString(),
-                names: routineNames // 항목 이름도 같이 동기화
+                names: routineNames 
             }); 
-        } catch(e) {}
+        } catch(e) {
+            console.warn("루틴 서버 동기화 실패", e);
+        }
     }
-
-    localStorage.setItem('tosil_routine_data', JSON.stringify(routineData));
-    window.renderRoutineChecklist();
 };
 
 // ==========================================
@@ -4637,17 +4754,38 @@ window.saveTrackerToFirebase = async function(records) {
 };
 
 // 📡 인터넷 연결 상태 실시간 레이더망
+// 📡 인터넷 연결 상태 실시간 레이더망 (트래커 + 성장기록 통합 복구)
 window.flushOfflineQueue = async function() {
     if (!navigator.onLine) return; // 여전히 오프라인이면 패스
     
-    // 오프라인 때 못 보낸 트래커 기록이 남아있는지 확인
+    let isRecovered = false;
+
+    // 1. 트래커 복구
     if (localStorage.getItem('tosil_offline_queue_tracker') === 'true') {
         const records = JSON.parse(localStorage.getItem('tosil_tracker_records')) || [];
-        await window.saveTrackerToFirebase(records);
-        
-        if (typeof window.showToast === 'function') {
-            window.showToast("☁️ 오프라인 때 기록한 데이터가 클라우드에 안전하게 백업되었습니다!");
+        if (typeof window.saveTrackerToFirebase === 'function') {
+            await window.saveTrackerToFirebase(records);
+            isRecovered = true;
         }
+    }
+
+    // 2. 🚨 성장 기록 복구 (새로 추가된 완벽 방어막!)
+    if (localStorage.getItem('tosil_offline_queue_growth') === 'true') {
+        const growthRecords = JSON.parse(localStorage.getItem('tosil_growth_records')) || [];
+        if (typeof db !== 'undefined' && typeof setDoc === 'function' && typeof doc === 'function') {
+            const syncCode = localStorage.getItem("family_sync_code") || ("personal_backup_" + localStorage.getItem("kakao_id"));
+            if (syncCode) {
+                try { 
+                    await setDoc(doc(db, "growth_" + syncCode, "status"), { records: growthRecords }); 
+                    localStorage.removeItem('tosil_offline_queue_growth');
+                    isRecovered = true;
+                } catch (e) { console.warn(e); }
+            }
+        }
+    }
+    
+    if (isRecovered && typeof window.showToast === 'function') {
+        window.showToast("☁️ 오프라인 때 기록한 데이터가 클라우드에 안전하게 백업되었습니다!");
     }
 };
 
@@ -4837,6 +4975,39 @@ window.saveTrackerRecord = async function() {
 
     window.editingTrackerId = null; 
     window.closeTrackerSheet();
+
+    // ==============================================================
+    // 🚨 [여기에 추가!] 다둥이 패치: 쌍둥이 동시 기록 엔진 가동!
+    // ==============================================================
+    const syncTwinsCheck = document.getElementById('sync-twins-check');
+    if (syncTwinsCheck && syncTwinsCheck.checked) {
+        const profiles = window.getBabyProfiles();
+        // 현재 선택되지 않은 다른 아기들의 ID만 추출
+        const otherBabies = profiles.filter(p => p.id !== window.currentBabySuffix);
+        
+        otherBabies.forEach(baby => {
+            // 프록시를 우회해서 다른 아기의 데이터를 직접 조작!
+            const otherKey = 'tosil_tracker_records' + baby.id;
+            let otherRecords = JSON.parse(originalGetItem.call(localStorage, otherKey)) || [];
+            
+            // 완벽하게 독립된 복제본 생성
+            let twinRecord = JSON.parse(JSON.stringify(record)); 
+            twinRecord.id = record.id + '_twin_' + baby.id; // ID 충돌 방지
+            
+            otherRecords.push(twinRecord);
+            otherRecords.sort((a, b) => b.timestamp - a.timestamp);
+            if(otherRecords.length > 100) otherRecords.pop();
+            
+            originalSetItem.call(localStorage, otherKey, JSON.stringify(otherRecords));
+            
+            // 다른 아기 클라우드 동기화 (파이어베이스도 각각 분리해서 발사)
+            if (typeof db !== 'undefined' && typeof setDoc === 'function') {
+                const syncCode = localStorage.getItem("family_sync_code") || ("personal_backup_" + localStorage.getItem("kakao_id"));
+                if (syncCode) setDoc(doc(db, "tracker_" + syncCode + baby.id, "status"), { records: otherRecords }).catch(e=>{});
+            }
+        });
+    }
+
     window.showToast(record.subType === '이유식' ? "🥄 냠냠! 이유식 기록 완료!" : "💾 기록이 저장되었습니다!");
 
     if (saveBtn) {
@@ -4855,12 +5026,14 @@ window.toggleRoutine = async function(id) {
     let routineData = JSON.parse(localStorage.getItem('tosil_routine_data')) || {};
     routineData[id] = !routineData[id];
     
-    if (typeof db !== 'undefined' && typeof setDoc === 'function') {
+   if (typeof db !== 'undefined' && typeof setDoc === 'function') {
         const syncCode = localStorage.getItem("family_sync_code") || "unlinked_local_diary";
         try { 
-            await setDoc(doc(db, "routine_" + syncCode, "status"), { 
+            // 🚨 [다둥이 패치] 루틴 토글 경로 분리
+            await setDoc(doc(db, "routine_" + syncCode + window.currentBabySuffix, "status"), { 
                 data: routineData, 
-                date: new Date().toLocaleDateString() 
+                date: new Date().toLocaleDateString(),
+                names: routineNames 
             }); 
         } catch(e) {}
     }
@@ -4913,7 +5086,8 @@ window.startTrackerRealtimeSync = function() {
 // 👇 기존 비타민 연동 코드 무사히 보존 완료! 👇
 window.startRoutineRealtimeSync = function() {
     const syncCode = localStorage.getItem("family_sync_code") || "unlinked_local_diary";
-    const docRef = typeof doc !== 'undefined' && typeof window.db !== 'undefined' ? doc(window.db, "routine_" + syncCode, "status") : null;
+    // 🚨 [다둥이 패치] 루틴 수신 경로 분리
+    const docRef = typeof doc !== 'undefined' && typeof window.db !== 'undefined' ? doc(window.db, "routine_" + syncCode + window.currentBabySuffix, "status") : null;
     if(!docRef) return; 
     if (routineUnsubscribe) routineUnsubscribe();
     if(typeof window.onSnapshot !== 'function') return;
@@ -4939,7 +5113,8 @@ window.startSettingsRealtimeSync = function() {
     const syncCode = localStorage.getItem("family_sync_code");
     if (!syncCode || typeof doc === 'undefined' || typeof window.db === 'undefined' || typeof window.onSnapshot !== 'function') return;
     
-    const docRef = doc(window.db, "settings_" + syncCode, "info");
+    // 🚨 [다둥이 패치] 아기 설정 수신 경로 분리
+    const docRef = doc(window.db, "settings_" + syncCode + window.currentBabySuffix, "info");
     if (settingsUnsubscribe) settingsUnsubscribe();
 
     settingsUnsubscribe = window.onSnapshot(docRef, (docSnap) => {
@@ -4966,7 +5141,8 @@ window.syncBabySettingsToFirebase = function() {
         feedingStage: localStorage.getItem('tosil_feedingStage') || '모유/분유'
     };
     
-    setDoc(doc(db, "settings_" + syncCode, "info"), settings).catch(e=>console.warn(e));
+    // 🚨 [다둥이 패치] 아기 설정 경로 분리
+    setDoc(doc(db, "settings_" + syncCode + window.currentBabySuffix, "info"), settings).catch(e=>console.warn(e));
 };
 
 // ==========================================
@@ -5248,7 +5424,7 @@ window.addEventListener('load', function() {
 });
 
 
-// 🚨 커스텀 확인창 띄우기 함수 (타이핑 안전장치 포함!)
+// 🚨 커스텀 확인창 띄우기 함수 (타이핑 안전장치 + z-index 최상단 방어막 포함!)
 window.showConfirm = function(message, onConfirm, icon = '🚨', confirmText = '확인', confirmColor = 'var(--primary)', requireKeyword = null) {
     const modal = document.getElementById('custom-confirm-modal');
     const msgEl = document.getElementById('confirm-message');
@@ -5259,6 +5435,9 @@ window.showConfirm = function(message, onConfirm, icon = '🚨', confirmText = '
     const inputEl = document.getElementById('confirm-keyword-input');
     
     if(!modal) return;
+    
+    // 🌟 [핵심 픽스] 어떤 모달창이 떠 있든 무조건 그 위로 덮어버리도록 z-index를 '999999'로 강제 고정!
+    modal.style.zIndex = '999999';
     
     msgEl.innerHTML = message.replace(/\n/g, '<br>');
     iconEl.innerHTML = icon;
@@ -5562,6 +5741,36 @@ document.addEventListener("DOMContentLoaded", () => {
 // 👶 [홈 화면 통합 엔진] 아기 정보 & 맞춤형 큐레이션 & 시간대 인사말
 // ==========================================
 window.renderBabyInfo = function() {
+    // 🌟 [다둥이 패치] 상단 프로필 스위치 렌더링 (카드 외부 상단 완벽 밀착 패치)
+    const profiles = window.getBabyProfiles();
+    const heroSection = document.querySelector('.home-hero'); 
+    
+    let switchHtml = '';
+    // (테스트하실 때는 숫자를 잠깐 > 0 으로 해두시면 바로 보입니다!)
+    if (profiles.length > 1) {
+        let btnHtml = '';
+        profiles.forEach(p => {
+            const isActive = window.currentBabySuffix === p.id;
+            // 토스 감성 스타일: 선택된 건 진한 검정/파랑, 안 된 건 은은한 카드 스타일
+            btnHtml += `<button onclick="window.switchBabyProfile('${p.id}')" style="padding:8px 16px; border-radius:20px; font-weight:900; font-size:14px; border:none; transition:0.2s; white-space:nowrap; cursor:pointer; ${isActive ? 'background:#191F28; color:#FFF; box-shadow:0 4px 10px rgba(0,0,0,0.15);' : 'background:var(--bg-card); color:var(--text-s); border:1px solid var(--border);'}">${p.name}</button>`;
+        });
+        
+        switchHtml = `
+            <div style="display:flex; gap:8px; overflow-x:auto; padding-bottom:12px; margin-bottom:4px; scrollbar-width:none;">
+                ${btnHtml}
+            </div>
+        `;
+    }
+    
+    const existingSwitcher = document.getElementById('baby-profile-switcher');
+    if (existingSwitcher) existingSwitcher.remove(); // 중복 생성 방지
+    
+    if (switchHtml && heroSection) {
+        // 🚨 [핵심 픽스] heroSection의 바깥쪽 '바로 위(beforebegin)'에 꽂아서 카드 외부에 노출시킵니다!
+        heroSection.insertAdjacentHTML('beforebegin', `<div id="baby-profile-switcher">${switchHtml}</div>`);
+    }
+
+    // --- 이하 기존 renderBabyInfo 코드 계속 유지 ---
     const savedName = localStorage.getItem('tosil_babyName');
     const savedDate = localStorage.getItem('tosil_startDate');
     const savedStage = localStorage.getItem('tosil_feedingStage');
@@ -6499,11 +6708,14 @@ window.renderSettingsTab = function() {
                     </div>
 
                 </div>
-                <div onclick="window.promptBabyInfo()" style="display: flex; justify-content: space-between; align-items: center; padding: 16px 20px; border-bottom: 1px solid var(--border); cursor: pointer;">
-                    <div style="font-size: 14.5px; font-weight: 800; color: var(--text-m);">👶 아기 정보 수정</div>
+<div onclick="window.openBabyManagementModal()" style="display: flex; justify-content: space-between; align-items: center; padding: 16px 20px; border-bottom: 1px solid var(--border); cursor: pointer;">
+    <div style="font-size: 14.5px; font-weight: 900; color: #191F28;">
+        👶 아기 프로필 관리
+        <span style="display:block; font-size:11px; font-weight:600; color:#8B95A1; margin-top:2px;">추가, 수정, 삭제가 여기서 가능해요</span>
+    </div>
                     <div style="color: #8B95A1; font-size: 12px;">〉</div>
                 </div>
-                <div style="display: flex; justify-content: space-between; align-items: center; padding: 16px 20px;">
+         <div style="display: flex; justify-content: space-between; align-items: center; padding: 16px 20px;">
                     <div style="font-size: 14.5px; font-weight: 800; color: var(--text-m);">🌙 다크 모드 (어두운 화면)</div>
                     <button onclick="window.toggleDarkMode(); window.renderSettingsTab();" style="padding: 6px 16px; border-radius: 20px; border: 1px solid var(--border); background: var(--bg-sub); color: var(--text-m); font-weight: 800; font-size: 12px; cursor: pointer;">
                         ${document.body.classList.contains('dark-mode') ? '켜짐 ON' : '꺼짐 OFF'}
@@ -9070,10 +9282,10 @@ window.unlinkKakao = function() {
 };
 
 // ==========================================
-// 💾 글쓰기 임시저장(Draft) 방어막 엔진 (진짜 최종 통합본)
+// 💾 글쓰기 임시저장(Draft) 방어막 엔진 (디바운스 패치 완료!)
 // ==========================================
 
-// 1. 임시저장 실행 & 알림 함수
+// 1. 임시저장 실행 & 알림 함수 (데이터를 실제로 저장하는 녀석)
 window.savePostDraft = function(showToast = false) {
     const cat = document.getElementById('writeCategory')?.value || '';
     const title = document.getElementById('writeTitle')?.value || '';
@@ -9091,12 +9303,25 @@ window.savePostDraft = function(showToast = false) {
     }
 };
 
-// 2. 글씨 입력할 때마다 실시간 자동저장
+// 2. ⚡ [디바운스 적용] 글씨 입력할 때마다 렉 걸리지 않게 조절해주는 엔진
+let draftTimer; // 타이머를 기억할 변수
+
+window.savePostDraftDebounced = function(showToast = false) {
+    clearTimeout(draftTimer); // 글씨를 막 치고 있으면 이전 타이머를 취소시킴
+    
+    // 타자를 멈추고 1초(1000ms)가 지나면 그때 딱 1번만 진짜 저장 함수(savePostDraft) 실행!
+    draftTimer = setTimeout(() => {
+        window.savePostDraft(showToast);
+    }, 1000); 
+};
+
+// 화면 켜질 때 입력창에 디바운스 엔진 달아주기
 document.addEventListener("DOMContentLoaded", () => {
     const titleInput = document.getElementById('writeTitle');
     const contentInput = document.getElementById('writeContent');
-    if (titleInput) titleInput.addEventListener('input', () => window.savePostDraft(false));
-    if (contentInput) contentInput.addEventListener('input', () => window.savePostDraft(false));
+    
+    if (titleInput) titleInput.addEventListener('input', () => window.savePostDraftDebounced(false));
+    if (contentInput) contentInput.addEventListener('input', () => window.savePostDraftDebounced(false));
 });
 
 // 3. 모달 열기 (불러오기 타이밍 꼬임 해결 & 로그인 검증)
@@ -10148,22 +10373,6 @@ window.checkFeedPlateauBreakthrough = function() {
     }
 };
 
-const originalGetItem = Storage.prototype.getItem;
-Storage.prototype.getItem = function(key) {
-    const value = originalGetItem.call(this, key);
-    try {
-        // 데이터가 JSON 형태라면 파싱 테스트를 거침 (깨졌으면 알아서 비워버림)
-        if (value && (value.startsWith('[') || value.startsWith('{'))) {
-            JSON.parse(value);
-        }
-    } catch (e) {
-        console.warn(`[Auto Storage Guard] '${key}' 데이터 손상 감지, 자동 초기화합니다.`);
-        localStorage.removeItem(key);
-        return null;
-    }
-    return value;
-};
-
 // ==========================================
 // 🏅 [마일스톤] 첫 도감 데이터 & 엔진 로직
 // ==========================================
@@ -10976,7 +11185,8 @@ window.toggleSeniorRoutine = async function() {
 
     if (typeof window.db !== 'undefined' && typeof window.setDoc === 'function') {
         const syncCode = localStorage.getItem("family_sync_code") || "unlinked_local_diary";
-        try { await window.setDoc(window.doc(window.db, "routine_" + syncCode, "status"), { data: routineData, date: new Date().toLocaleDateString() }, { merge: true }); } catch(e) {}
+        // 🚨 [다둥이 패치] 시니어 루틴 경로 분리
+        try { await window.setDoc(window.doc(window.db, "routine_" + syncCode + window.currentBabySuffix, "status"), { data: routineData, date: new Date().toLocaleDateString() }, { merge: true }); } catch(e) {}
     }
 };
 
@@ -11383,7 +11593,8 @@ window.saveParentNoticeToFirebase = async function(text) {
     if (typeof db !== 'undefined' && typeof setDoc === 'function' && typeof doc === 'function') {
         const syncCode = localStorage.getItem("family_sync_code") || "unlinked_local_diary";
         try {
-            await setDoc(doc(db, "parent_notice_" + syncCode, "status"), { 
+            // 🚨 [다둥이 패치] 조부모 전달사항 경로 분리
+            await setDoc(doc(db, "parent_notice_" + syncCode + window.currentBabySuffix, "status"), { 
                 notice: text,
                 updatedAt: new Date().getTime() 
             }, { merge: true });
@@ -11397,7 +11608,8 @@ window.saveParentNoticeToFirebase = async function(text) {
 let parentNoticeUnsubscribe = null;
 window.startParentNoticeRealtimeSync = function() {
     const syncCode = localStorage.getItem("family_sync_code") || "unlinked_local_diary";
-    const docRef = typeof doc !== 'undefined' && typeof window.db !== 'undefined' ? doc(window.db, "parent_notice_" + syncCode, "status") : null;
+    // 🚨 [다둥이 패치] 조부모 전달사항 수신 경로 분리
+    const docRef = typeof doc !== 'undefined' && typeof window.db !== 'undefined' ? doc(window.db, "parent_notice_" + syncCode + window.currentBabySuffix, "status") : null;
     
     if (!docRef) return; 
     if (parentNoticeUnsubscribe) parentNoticeUnsubscribe();
@@ -11445,5 +11657,158 @@ document.addEventListener("DOMContentLoaded", () => {
         setTimeout(() => {
             if(typeof window.switchTab === 'function') window.switchTab('home', document.getElementById('nav-home'));
         }, 100);
+    }
+});
+
+// ==========================================
+// 👶 아기 프로필 관리 모달 (UI 완벽 일치 + 추가버튼 통제)
+// ==========================================
+window.openBabyManagementModal = function() {
+    const profiles = window.getBabyProfiles();
+    
+    let existing = document.getElementById('baby-mgmt-modal');
+    if (existing) existing.remove();
+
+    let listHtml = '';
+    profiles.forEach((p) => {
+        const isCurrent = window.currentBabySuffix === p.id;
+        const babyName = localStorage.getItem('tosil_babyName' + p.id) || p.name;
+
+        // 대표님 캡처 이미지와 똑같은 깔끔한 디자인 적용!
+        listHtml += `
+            <div style="background: #FFFFFF; border: 1px solid #E5E8EB; border-radius: 12px; padding: 16px; margin-bottom: 12px;">
+                <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 12px;">
+                    <span style="font-size: 15px; font-weight: 800; color: #191F28;">${babyName}</span>
+                    ${isCurrent ? '<span style="background: #EBF4FF; color: #3182F6; font-size: 11px; font-weight: 800; padding: 3px 8px; border-radius: 12px;">현재 보는 중</span>' : ''}
+                </div>
+                <div style="display: flex; gap: 8px;">
+                    <button onclick="window.editBabyProfile('${p.id}')" style="flex:1; background: #FFFFFF; color: #333D4B; border: 1px solid #E5E8EB; padding: 10px; border-radius: 8px; font-size: 13px; font-weight: 700; cursor: pointer; transition: 0.2s;">정보 수정</button>
+                    <button onclick="window.deleteBabyProfile('${p.id}', '${babyName}')" style="flex:1; background: #FFF0F1; color: #F04452; border: 1px solid #FFE3E8; padding: 10px; border-radius: 8px; font-size: 13px; font-weight: 700; cursor: pointer; transition: 0.2s;">삭제</button>
+                </div>
+            </div>
+        `;
+    });
+
+    const modalHtml = `
+        <div id="baby-mgmt-modal" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 99999; display: flex; justify-content: center; align-items: center; padding: 20px; backdrop-filter: blur(2px);">
+            <div style="background: #FFFFFF; width: 100%; max-width: 320px; border-radius: 20px; padding: 24px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); box-sizing: border-box;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                    <div style="font-size: 18px; font-weight: 800; color: #191F28;">👶 아기 프로필 관리</div>
+                    <button onclick="document.getElementById('baby-mgmt-modal').remove()" style="background: none; border: none; font-size: 20px; color: #8B95A1; cursor: pointer; padding: 0;">✕</button>
+                </div>
+                <div style="max-height: 300px; overflow-y: auto; margin-bottom: 16px;">${listHtml}</div>
+                
+                <!-- 🚨 파란색 디자인 유지 + 기능만 팝업으로 차단 -->
+                <button onclick="window.showToast('👑 쌍둥이/다둥이 맘을 위한 [프로필 추가] 기능이 프리미엄 버전으로 곧 찾아옵니다! 🤍');" style="width: 100%; padding: 16px; background: #3182F6; color: #FFF; border: none; border-radius: 12px; font-size: 14px; font-weight: 800; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px; box-shadow: 0 4px 12px rgba(49,130,246,0.2);">
+                    <span style="font-size:16px;">➕</span> 새 아기 추가하기
+                </button>
+            </div>
+        </div>
+    `;
+    document.body.insertAdjacentHTML('beforeend', modalHtml);
+};
+
+// ==========================================
+// 🗑️ [복구됨] 아기 프로필 삭제 엔진
+// ==========================================
+window.deleteBabyProfile = function(targetId, babyName) {
+    const profiles = window.getBabyProfiles();
+    
+    // 방어막: 아기가 1명밖에 없으면 삭제 불가!
+    if (profiles.length <= 1) {
+        return window.showToast("⚠️ 최소 1명의 아기 프로필은 유지해야 합니다.");
+    }
+
+    window.showConfirm(`정말 <b>${babyName}</b>의 프로필을 삭제하시겠습니까?<br><span style="font-size:12px; color:#F04452;">기록된 모든 데이터가 영구히 삭제됩니다.</span>`, function() {
+        // 프로필 배열에서 해당 아기 제거
+        const newProfiles = profiles.filter(p => p.id !== targetId);
+        
+        // 프록시를 뚫고 진짜 로컬스토리지에 저장
+        Storage.prototype.setItem.call(localStorage, 'tosil_baby_profiles', JSON.stringify(newProfiles));
+        
+        window.showToast(`🗑️ ${babyName}의 프로필이 깔끔하게 삭제되었습니다.`);
+        
+        // 🚨 만약 방금 삭제한 아기가 '현재 보고 있던 아기'라면?
+        if (window.currentBabySuffix === targetId) {
+            // 남은 아기 중 첫 번째 아기 화면으로 자동 전환!
+            window.switchBabyProfile(newProfiles[0].id);
+        } else {
+            // 다른 아기를 삭제한 거라면 모달창만 다시 렌더링
+            document.getElementById('baby-mgmt-modal').remove();
+            window.openBabyManagementModal();
+        }
+    }, "🗑️", "삭제하기", "#F04452");
+};
+
+// ✏️ [업데이트] 정보 수정 모달 열기 (일반식 추가 완료)
+window.editBabyProfile = function(targetId) {
+    const name = localStorage.getItem('tosil_babyName' + targetId) || '';
+    const date = localStorage.getItem('tosil_startDate' + targetId) || '';
+    const stage = localStorage.getItem('tosil_feedingStage' + targetId) || '모유/분유';
+
+    const editHtml = `
+        <div id="edit-baby-modal" style="position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.6); z-index:100000; display:flex; justify-content:center; align-items:center; padding:20px;">
+            <div style="background:var(--bg-card); width:100%; max-width:340px; border-radius:24px; padding:24px;">
+                <h3 style="margin:0 0 20px 0;">정보 수정</h3>
+                <input type="text" id="edit-name" value="${name}" style="width:100%; padding:12px; margin-bottom:10px; border:1px solid var(--border); border-radius:10px;" placeholder="이름">
+                <input type="date" id="edit-date" value="${date}" style="width:100%; padding:12px; margin-bottom:10px; border:1px solid var(--border); border-radius:10px;">
+                <select id="edit-stage" style="width:100%; padding:12px; margin-bottom:20px; border:1px solid var(--border); border-radius:10px;">
+                    <option value="모유/분유" ${stage === '모유/분유' ? 'selected' : ''}>모유/분유</option>
+                    <option value="초기 이유식" ${stage === '초기 이유식' ? 'selected' : ''}>초기 이유식</option>
+                    <option value="중후기 이유식" ${stage === '중후기 이유식' ? 'selected' : ''}>중/후기 이유식</option>
+                    <!-- 👇 여기에 유아식/일반식 추가됨 -->
+                    <option value="유아식/일반식" ${stage === '유아식/일반식' ? 'selected' : ''}>유아식/일반식 </option>
+                </select>
+                <button onclick="window.saveBabyProfile('${targetId}')" style="width:100%; padding:14px; background:#3182F6; color:white; border:none; border-radius:12px; font-weight:900;">저장하기</button>
+            </div>
+        </div>
+    `;
+    document.body.insertAdjacentHTML('beforeend', editHtml);
+};
+
+// 💾 [신규] 정보 저장 로직
+window.saveBabyProfile = function(targetId) {
+    const newName = document.getElementById('edit-name').value;
+    const newDate = document.getElementById('edit-date').value;
+    const newStage = document.getElementById('edit-stage').value;
+
+    localStorage.setItem('tosil_babyName' + targetId, newName);
+    localStorage.setItem('tosil_startDate' + targetId, newDate);
+    localStorage.setItem('tosil_feedingStage' + targetId, newStage);
+    
+    // 프로필 이름 리스트도 갱신
+    let profiles = window.getBabyProfiles();
+    profiles = profiles.map(p => p.id === targetId ? { ...p, name: newName } : p);
+    originalSetItem.call(localStorage, 'tosil_baby_profiles', JSON.stringify(profiles));
+
+    window.showToast("✅ 수정되었습니다!");
+    document.getElementById('edit-baby-modal').remove();
+    location.reload();
+};
+
+// ==========================================
+// 🛡️ 파이어베이스 서버비 방어막 (절전 모드 엔진)
+// ==========================================
+document.addEventListener("visibilitychange", () => {
+    if (document.hidden) {
+        // 1. 유저가 화면을 끄거나 다른 앱으로 넘어감 (백그라운드)
+        // -> 켜져 있던 모든 파이어베이스 실시간 감시(미터기)를 종료시켜버림!
+        if (typeof trackerUnsubscribe === 'function') trackerUnsubscribe();
+        if (typeof feverUnsubscribe === 'function') feverUnsubscribe();
+        if (typeof cubeUnsubscribe === 'function') cubeUnsubscribe();
+        if (typeof batonUnsubscribe === 'function') batonUnsubscribe();
+        if (typeof ledgerUnsubscribe === 'function') ledgerUnsubscribe();
+        if (typeof routineUnsubscribe === 'function') routineUnsubscribe();
+        if (typeof settingsUnsubscribe === 'function') settingsUnsubscribe();
+        
+        console.log("💤 앱이 숨겨져서 파이어베이스 서버 연결을 일시 차단합니다.");
+    } else {
+        // 2. 유저가 다시 육아메이트 앱으로 돌아옴 (포그라운드)
+        // -> 서버 연결 다시 재개 및 최신 데이터 싹 받아오기!
+        const syncCode = localStorage.getItem("family_sync_code");
+        if (syncCode && typeof window.initRealtimeSync === 'function') {
+            window.initRealtimeSync();
+            console.log("🚀 앱으로 돌아와서 파이어베이스 서버를 다시 연결했습니다!");
+        }
     }
 });

@@ -138,23 +138,27 @@ body.mode-senior .hide-on-senior { display: none !important; }
                 </p>
 
                 <div style="display: flex; flex-direction: column; gap: 12px;">
-                    <button onclick="finishOnboarding('모유/분유')" style="width: 100%; padding: 20px; border-radius: 16px; background: #F8F9FA; border: 1px solid #E5E8EB; text-align: left; font-size: 16px; font-weight: 800; color: #191F28; cursor: pointer; transition: 0.2s;">
-                         아직 모유/분유만 먹어요
-                    </button>
-                    <button onclick="finishOnboarding('초기 이유식')" style="width: 100%; padding: 20px; border-radius: 16px; background: #F8F9FA; border: 1px solid #E5E8EB; text-align: left; font-size: 16px; font-weight: 800; color: #191F28; cursor: pointer; transition: 0.2s;">
-                         초기 이유식 시작했어요
-                    </button>
-                    <button onclick="finishOnboarding('중후기 이유식')" style="width: 100%; padding: 20px; border-radius: 16px; background: #F8F9FA; border: 1px solid #E5E8EB; text-align: left; font-size: 16px; font-weight: 800; color: #191F28; cursor: pointer; transition: 0.2s;">
-                         중/후기 이유식 진행 중이에요
-                    </button>
-                </div>
-            </div>
-            <div style="margin-bottom: 20px;">
-                <button onclick="nextOnboardingStep(2)" style="width: 100%; padding: 18px; border-radius: 16px; background: #F2F4F6; color: #4E5968; font-weight: 800; font-size: 16px; border: none; cursor: pointer;">
-                    이전
-                </button>
-            </div>
-        </div>
+    <button onclick="finishOnboarding('모유/분유')" style="width: 100%; padding: 20px; border-radius: 16px; background: #F8F9FA; border: 1px solid #E5E8EB; text-align: left; font-size: 16px; font-weight: 800; color: #191F28; cursor: pointer; transition: 0.2s;">
+         아직 모유/분유만 먹어요
+    </button>
+    <button onclick="finishOnboarding('초기 이유식')" style="width: 100%; padding: 20px; border-radius: 16px; background: #F8F9FA; border: 1px solid #E5E8EB; text-align: left; font-size: 16px; font-weight: 800; color: #191F28; cursor: pointer; transition: 0.2s;">
+         초기 이유식 시작했어요
+    </button>
+    <button onclick="finishOnboarding('중후기 이유식')" style="width: 100%; padding: 20px; border-radius: 16px; background: #F8F9FA; border: 1px solid #E5E8EB; text-align: left; font-size: 16px; font-weight: 800; color: #191F28; cursor: pointer; transition: 0.2s;">
+         중/후기 이유식 진행 중이에요
+    </button>
+    <!-- 👇 새로 추가된 유아식/일반식 버튼 -->
+    <button onclick="finishOnboarding('유아식/일반식')" style="width: 100%; padding: 20px; border-radius: 16px; background: #F8F9FA; border: 1px solid #E5E8EB; text-align: left; font-size: 16px; font-weight: 800; color: #191F28; cursor: pointer; transition: 0.2s;">
+         이제 어른처럼 유아식/일반식 먹어요 🍚
+    </button>
+</div>
+</div> <!-- 🚨 이거 빠지면 망가짐! (원래 대표님 코드에 있던 뼈대) -->
+<div style="margin-bottom: 20px;">
+    <button onclick="nextOnboardingStep(2)" style="width: 100%; padding: 18px; border-radius: 16px; background: #F2F4F6; color: #4E5968; font-weight: 800; font-size: 16px; border: none; cursor: pointer;">
+        이전
+    </button>
+</div>
+</div> <!-- 🚨 이것도 빠지면 망가짐! -->
 
        <div id="onboarding-step-loading" style="display: none; flex-direction: column; height: 100%; justify-content: center; align-items: center; text-align: center;">
             <div style="font-size: 56px; margin-bottom: 24px; animation: spin 1.5s linear infinite;">⏳</div>
@@ -212,7 +216,7 @@ body.mode-senior .hide-on-senior { display: none !important; }
         </div>
 
         <!-- 2. 메인 아기 사진 -->
-        <div style="padding: 0;">
+        <div class="home-hero" style="padding: 0;">
             <div class="home-hero-card" id="baby-dashboard" onclick="document.getElementById('baby-photo-input').click()" style="position: relative; border-radius: 28px; overflow: hidden; box-shadow: 0 8px 20px rgba(0,0,0,0.04); height: 240px; display: flex; flex-direction: column; cursor:pointer;">
                 <img src="img.jpg" class="home-hero-img" alt="아기 사진" style="position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover;" onerror="this.style.display='none'; this.parentNode.style.background='#D1D6DB';">
                 
