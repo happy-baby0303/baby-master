@@ -399,14 +399,103 @@ const playData = [
             "4. 아기가 거울에 비친 자기 모습을 보며 꼬물꼬물 스티커를 떼어내며 집중합니다."
         ],
         dadRole: "거울에 묻은 아기 침 자국과 손자국 닦아내기"
+    },
+       
+    // ==========================================
+    // 🌟 [추가본] 놀이 처방전 킬러 콘텐츠 7종 
+    // ==========================================
+    { 
+        id: "p33", title: "[눕육아] 인간 고슴도치 (빨래집게 떼기)", category: "lieDown", targetAge: ['flip', 'crawl', 'stand'], 
+        targetItem: "빨래집게 여러 개, 낡은 티셔츠", energyDrain: "0 (누워서 따가움만 참음)", playTime: 20,
+        desc: "엄마 옷에 붙은 빨래집게를 떼어내며 소근육을 폭발시키는 전설의 눕육아.",
+        steps: [
+            "1. 엄마는 버려도 되는 늘어난 티셔츠를 입고 바닥에 대자로 눕습니다.",
+            "2. 엄마의 소매, 바지 밑단, 배 쪽에 빨래집게를 잔뜩 집어 고슴도치가 됩니다.",
+            "3. 아기가 다가와서 빨래집게를 하나씩 톡톡 떼어내게 냅둡니다.",
+            "4. 살살 꼬집히는 고통만 참으면 20분간 완벽한 휴식을 취할 수 있습니다."
+        ],
+        dadRole: "아기가 다 뗀 빨래집게 다시 엄마 몸에 리필해주기"
+    },
+    { 
+        id: "p34", title: "찍찍이(돌돌이) 청소 반장", category: "zero", targetAge: ['crawl', 'stand'], 
+        targetItem: "테이프 클리너 (돌돌이)", energyDrain: "🔥 (집안이 깨끗해짐)", playTime: 15,
+        desc: "청소도 하고 아기 힘도 빼는 1석 2조 놀이! 은근히 엄청난 집중력을 발휘합니다.",
+        steps: [
+            "1. 테이프 클리너(돌돌이)의 접착력을 손으로 몇 번 만져서 살짝 약하게 만듭니다.",
+            "2. 기어 다니거나 걷기 시작한 아기 손에 쥐여줍니다.",
+            "3. 아기가 온 집안 매트와 바닥을 밀고 다니며 머리카락을 청소하게 둡니다.",
+            "4. 테이프에 먼지가 붙은 걸 보여주며 '우와! 깨끗해졌다!' 폭풍 칭찬을 해줍니다."
+        ],
+        dadRole: "돌돌이 테이프 다 쓰면 한 장씩 뜯어주기"
+    },
+    { 
+        id: "p35", title: "종이컵 에펠탑 파괴자", category: "zero", targetAge: ['crawl', 'stand'], 
+        targetItem: "다이소 종이컵 1~2줄", energyDrain: "🔥🔥 (무한 스트레스 해소)", playTime: 20,
+        desc: "단돈 1천 원으로 즐기는 파괴의 미학! 층간소음 없이 박살 내는 쾌감을 줍니다.",
+        steps: [
+            "1. 다이소에서 천 원 주고 산 종이컵을 거실 바닥에 피라미드 모양으로 높게 쌓습니다.",
+            "2. 아기가 기어 와서(또는 서서) 손으로 와르르 무너뜨리게 유도합니다.",
+            "3. 부서지는 소리가 크지 않아 층간소음 걱정이 전혀 없습니다.",
+            "4. 쌓고 무너뜨리고를 무한 반복하며 아기의 스트레스를 완벽히 날려버립니다."
+        ],
+        dadRole: "빛의 속도로 종이컵 다시 높게 쌓아 올리기 (무한 반복)"
+    },
+    { 
+        id: "p36", title: "인간 김밥 말이", category: "dad", targetAge: ['flip', 'crawl', 'stand'], 
+        targetItem: "큰 이불이나 극세사 담담요", energyDrain: "🔥🔥🔥🔥 (전신 운동)", playTime: 15,
+        desc: "촉각과 전정감각을 동시에 자극하는 아빠 전용 놀이. 웃음소리 보장합니다.",
+        steps: [
+            "1. 바닥에 큰 이불을 쭉 펼치고 그 끝에 아기를 눕힙니다.",
+            "2. 아빠가 이불 끝을 잡고 천천히 굴려서 아기를 '김밥'처럼 둥글게 맙니다.",
+            "3. '김밥 썰겠습니다~' 하면서 손날로 통통통 가볍게 마사지해 줍니다.",
+            "4. 이불 끝을 잡고 확 당겨서 김밥을 스르륵 풀어주면 꺄르르 넘어갑니다."
+        ],
+        dadRole: "김밥천국 이모님 빙의해서 찰지게 말고 썰기"
+    },
+    { 
+        id: "p37", title: "[만병통치] 내 얼굴 TV 시청", category: "sick", targetAge: ['newborn', 'tummy', 'flip', 'crawl', 'stand'], 
+        targetItem: "스마트폰 갤러리", energyDrain: "0 (안고 같이 보기)", playTime: 20,
+        desc: "열나고 아파서 뽀로로도 거부할 때, 신기하게 자기 얼굴 나오는 영상은 봅니다.",
+        steps: [
+            "1. 칭얼거리는 아기를 안고 소파에 편하게 기댑니다.",
+            "2. 스마트폰 갤러리를 열고 '아기가 꺄르르 웃던 시절'의 영상을 틉니다.",
+            "3. 화면 속 자기 모습을 보여주며 '어? 이게 누구지?' 하고 말을 겁니다.",
+            "4. 아이들은 자기 얼굴을 보는 걸 가장 좋아하기 때문에 금세 울음을 뚝 그칩니다."
+        ],
+        dadRole: "스마트폰 용량 터지도록 평소에 아기 영상 많이 찍어두기"
+    },
+    { 
+        id: "p38", title: "휴지심 터널 자동차", category: "zero", targetAge: ['crawl', 'stand'], 
+        targetItem: "다 쓴 휴지심, 미니 자동차", energyDrain: "🔥 (소근육/집중력)", playTime: 15,
+        desc: "휴지심 버리지 마세요! 자동차나 작은 공이 통과하는 마법의 터널이 됩니다.",
+        steps: [
+            "1. 다 쓴 두루마리 휴지심이나 키친타올 심을 준비합니다.",
+            "2. 한쪽 끝을 잡고 비스듬히 기울인 뒤, 미니 자동차나 작은 공을 굴려 넣습니다.",
+            "3. 쏙 빠져나오는 모습을 보여주면 아기가 스스로 물건을 넣으려고 애를 씁니다.",
+            "4. 벽에 테이프로 여러 개를 지그재그로 붙여 길고 거대한 미끄럼틀을 만들 수도 있습니다."
+        ],
+        dadRole: "휴지심 모아두고, 벽에 테이프로 미끄럼틀 설계해주기"
+    },
+    { 
+        id: "p39", title: "이유식 촉감 지옥 (국수 놀이)", category: "poop", targetAge: ['crawl', 'stand'], 
+        targetItem: "삶은 소면, 큰 김장 비닐", energyDrain: "🔥🔥🔥🔥 (치우는 게 일)", playTime: 30,
+        desc: "변비 직빵이자 최강의 촉감놀이! 치우는 게 두렵지만 효과는 확실합니다.",
+        steps: [
+            "1. 거실 바닥에 거대한 김장용 비닐이나 놀이 매트를 깔아둡니다.",
+            "2. 소면을 소금 없이 푹 삶아서 찬물에 헹군 뒤 던져줍니다.",
+            "3. 손으로 쪼물딱거리고 발로 밟고 입으로 쪽쪽 빨아먹으며 변비를 뚫어냅니다.",
+            "4. 아기가 마음껏 어지르도록 30분간 방치한 뒤 바로 욕실로 직행합니다."
+        ],
+        dadRole: "놀이 끝난 후 비닐 수거 및 바닥 걸레질 3회 실시"
     }
+
   ];    
 // ==========================================
 // 🛒 TRACK 2: [육아는 템빨] SOS 상황별 장난감 큐레이션 DB (35종)
 // ==========================================
 const toyData = [
     // 🍚 [sos-meal] 엄마 밥 먹을 시간 벌어주는 템
-    { id: 1, name: "회전 팝투브 흡착 스피너", imgIcon: "🧩", freeTime: "20분", milestone: "flip", theme: "sos-meal", tags: "#식당평화 #유리창착붙", battery: "필요 없음", batteryLink: "", fomo: "하이체어 트레이나 식당 유리창에 이거 안 붙이면 식사 시간 내내 전쟁입니다. 무조건 사세요.", coupangLink: "" },
+    { id: 1, name: "회전 팝튜브 흡착 스피너", imgIcon: "🧩", freeTime: "20분", milestone: "flip", theme: "sos-meal", tags: "#식당평화 #유리창착붙", battery: "필요 없음", batteryLink: "", fomo: "하이체어 트레이나 식당 유리창에 이거 안 붙이면 식사 시간 내내 전쟁입니다. 무조건 사세요.", coupangLink: "" },
     { id: 2, name: "타이니러브 모빌", imgIcon: "🌙", freeTime: "40분", milestone: "newborn", theme: "sos-meal", tags: "#신생아필수 #모빌계의샤넬", battery: "C형 3개", batteryLink: "https://link.coupang.com/a/eHwicCcyHY", fomo: "뒤집기 시작하면 늦습니다. 조리원 퇴소 직후 엄마가 밥 한술 뜨게 해주는 유일한 구원자.", coupangLink: "" },
     { id: 3, name: "코니스 에듀테이블", imgIcon: "🎪", freeTime: "40분", milestone: "all", theme: "sos-meal", tags: "#국밥템 #뽕뽑는장난감", battery: "AA 4개", batteryLink: "https://link.coupang.com/a/eHwctLSEI8", fomo: "누워있을 때부터 짚고 일어설 때까지. 엄마 밥 먹을 때 옆에 비스듬히 놔주면 혼자 피아노 치느라 조용합니다.", coupangLink: "" },
     { id: 4, name: "야마토야 하이체어 흡착 장난감", imgIcon: "🎡", freeTime: "15분", milestone: "flip", theme: "sos-meal", tags: "#이유식전쟁 #식탁착붙", battery: "필요 없음", batteryLink: "", fomo: "이유식 거부 오기 전에 식탁에 붙여두세요. 엄마가 밥 먹일 틈을 만들어줍니다.", coupangLink: "" },
@@ -446,5 +535,33 @@ const toyData = [
     { id: 32, name: "부기보드 물놀이 스티커", imgIcon: "🐠", freeTime: "25분", milestone: "stand", theme: "sos-shower", tags: "#욕실벽착붙 #물로지워지는", battery: "필요 없음", batteryLink: "", fomo: "욕실 벽 가득 낙서해도 물로 슥 지우면 끝! 돌 지나 낙서 본능 터졌을 때 가둬두기 좋습니다.", coupangLink: "" },
     { id: 33, name: "리틀타익스 액티비티 가든", imgIcon: "🎪", freeTime: "40분", milestone: "stand", theme: "sos-shower", tags: "#아기아지트 #완벽가두기", battery: "AAA 2개", batteryLink: "https://link.coupang.com/a/eHwdWJhAhU", fomo: "엄마 화장실 갈 때 여기 넣어두면 안전한 요새가 됩니다. 부피가 커도 포기할 수 없어요.", coupangLink: "" },
     { id: 34, name: "개구리 연못", imgIcon: "🐸", freeTime: "30분", milestone: "crawl", theme: "sos-shower", tags: "#공톡톡 #시선고정", battery: "C형 4개", batteryLink: "https://link.coupang.com/a/eHwicCcyHY", fomo: "화장실 문 열어두고 문 앞에 이거 켜주세요. 공 튀어 오르는 거 보느라 화장실 안으로 안 들어옵니다.", coupangLink: "" },
-    { id: 35, name: "피셔프라이스 피아노 체육관", imgIcon: "🎹", freeTime: "30분", milestone: "tummy", theme: "sos-shower", tags: "#발차기달인 #거울보기", battery: "AA 3개", batteryLink: "https://link.coupang.com/a/eHwctLSEI8", fomo: "신생아~뒤집기 전 필수템. 화장실 문 앞에 눕혀두고 씻으세요. 발차기하느라 엄마 안 찾습니다.", coupangLink: "" }
+    { id: 35, name: "피셔프라이스 피아노 체육관", imgIcon: "🎹", freeTime: "30분", milestone: "tummy", theme: "sos-shower", tags: "#발차기달인 #거울보기", battery: "AA 3개", batteryLink: "https://link.coupang.com/a/eHwctLSEI8", fomo: "신생아~뒤집기 전 필수템. 화장실 문 앞에 눕혀두고 씻으세요. 발차기하느라 엄마 안 찾습니다.", coupangLink: "" },
+    // ==========================================
+    // 🌟 [추가본] 객단가 폭발! 부피 큰 거물급 필수템 5종
+    // ==========================================
+    { 
+        id: 36, name: "야야 바닐라 실내 미끄럼틀", imgIcon: "🛝", freeTime: "40분", milestone: "stand", theme: "sos-sleep", 
+        tags: "#실내놀이터 #하체방전", battery: "필요 없음", batteryLink: "", 
+        fomo: "걷기 시작하면 집이 좁습니다. 이거 하나 거실에 두면 땀 뻘뻘 흘리며 오르락내리락하다가 밤에 기절합니다.", coupangLink: "" 
+    },
+    { 
+        id: 37, name: "제이맥 자석블럭 풀세트", imgIcon: "🧲", freeTime: "50분", milestone: "stand", theme: "sos-meal", 
+        tags: "#아빠로망 #시간순삭", battery: "필요 없음", batteryLink: "", 
+        fomo: "객단가가 높지만 돈값 제대로 하는 템! 아빠들이 더 좋아해서 성 만들고 자동차 만들다 보면 엄마 자유시간 1시간 보장입니다.", coupangLink: "" 
+    },
+    { 
+        id: 38, name: "파파스토이 팝튜브 세트", imgIcon: "🐛", freeTime: "25분", milestone: "crawl", theme: "sos-out", 
+        tags: "#식당조용 #소근육발달", battery: "필요 없음", batteryLink: "", 
+        fomo: "늘릴 때마다 나는 타다닥! 소리에 아기들 환장합니다. 식당에서 쥐여주면 이어 붙이고 구부리느라 정신을 못 차립니다.", coupangLink: "" 
+    },
+    { 
+        id: 39, name: "먼치킨 목욕 크레용/색연필", imgIcon: "🖍️", freeTime: "30분", milestone: "stand", theme: "sos-shower", 
+        tags: "#욕실벽화 #물로지워짐", battery: "필요 없음", batteryLink: "", 
+        fomo: "욕조 벽면에 마음껏 낙서하게 두세요. 물 뿌리면 스르륵 지워져서 청소도 편하고, 목욕 거부하는 아기 입수시키는 마법의 템입니다.", coupangLink: "" 
+    },
+    { 
+        id: 40, name: "포포베베 아기 비데", imgIcon: "🛁", freeTime: "엄마 손목 구원", milestone: "newborn", theme: "sos-shower", 
+        tags: "#응가테러방어 #손목보호", battery: "필요 없음", batteryLink: "", 
+        fomo: "하루에 똥 3번 싸는 신생아 시기, 한 손으로 안고 씻기다 손목 나갑니다. 세면대에 눕혀두고 양손으로 씻기면 천국이 열립니다.", coupangLink: "" 
+    }
 ];

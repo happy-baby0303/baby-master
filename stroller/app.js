@@ -1,24 +1,19 @@
 // ==========================================
-// 🛒 육아메이트 유모차 AI 엔진 V16.0 (강력한 감점 페널티 엔진 탑재!)
+// 🛒 육아메이트 유모차 AI 엔진 V16.2 (수익 극대화 & 모바일 최적화 패치 완료!)
 // ==========================================
 
 let isFavViewMode = false;
 
-// 🚀 유모차 글로벌 데이터 자동 동기화 (야무진 다이어트 & 구조화 완료)
+// 🚀 유모차 글로벌 데이터 자동 동기화
 function applyGlobalBabyProfile() {
     const birthStr = localStorage.getItem('tosil_startDate');
-    
-    // 🛡️ 야무진 포인트 1: 아기 정보가 없을 때의 방어 로직
-    // (유모차는 유저가 폼을 직접 선택해서 AI를 돌리는 구조라, 없으면 조용히 멈춥니다)
     if (!birthStr) return; 
 
-    // 1. 개월 수 정밀 계산 (더욱 안정적인 공식으로 통일)
     const birthDate = new Date(birthStr);
     const today = new Date();
     let months = (today.getFullYear() - birthDate.getFullYear()) * 12 + (today.getMonth() - birthDate.getMonth());
     if (months < 0) months = 0;
 
-    // ✂️ 2. 촌스러운 파란색 배너는 숨기고, 세련된 뱃지에 개월 수 쏘기!
     const banner = document.getElementById('auto-sync-banner');
     if (banner) banner.style.display = 'none';
 
@@ -26,7 +21,6 @@ function applyGlobalBabyProfile() {
         b.innerText = `생후 ${months}개월 맞춤`;
     });
 
-    // 🛒 3. 유모차 전용 월령 필터(Select Box) 자동 세팅 로직
     let ageFilter = 'all';
     if (months <= 6) ageFilter = 'newborn';
     else if (months > 12) ageFilter = 'giant';
@@ -35,9 +29,6 @@ function applyGlobalBabyProfile() {
     if (matBaby && ageFilter !== 'all') {
         matBaby.value = ageFilter;
     }
-
-    // 💡 야무진 포인트 2: (옵션) 만약 앱 켜자마자 AI 매칭 결과를 바로 보여주고 싶다면
-    // 이 부분에 유모차 결과 렌더링 함수를 호출하세요. (예: runAIEngine(); )
 }
 
 // 🚀 찜하기 (하트 토글)
@@ -140,13 +131,19 @@ function renderVS() {
 
     const i1 = strollerData[v1], i2 = strollerData[v2];
     res.innerHTML = `
-        <table class="vs-table" style="table-layout: fixed; word-break: keep-all; width: 100%;">
-            <tr><th class="vs-label">대조항목</th><th style="color:#3182F6; font-weight:800;">${i1.name}</th><th style="color:#6B31F6; font-weight:800;">${i2.name}</th></tr>
-            <tr><td class="vs-label">💰 공식가</td><td>${i1.price.toLocaleString()}원</td><td>${i2.price.toLocaleString()}원</td></tr>
-            <tr><td class="vs-label">💸 부대비용</td><td style="color:#E32636; font-size:11px;">+${(i1.hiddenTax?.cost || 0).toLocaleString()}원</td><td style="color:#E32636; font-size:11px;">+${(i2.hiddenTax?.cost || 0).toLocaleString()}원</td></tr>
-            <tr><td class="vs-label">🪶 무게</td><td>${i1.specs.weight}kg</td><td>${i2.specs.weight}kg</td></tr>
-            <tr><td class="vs-label">👶 2인확장</td><td>${i1.expand.includes('⭕')?'가능':'불가'}</td><td>${i2.expand.includes('⭕')?'가능':'불가'}</td></tr>
-        </table>
+        <div style="overflow-x: auto; padding-bottom: 8px;">
+            <table class="vs-table" style="width: 100%; min-width: 320px; border-collapse: collapse; text-align: center; font-size: 13.5px;">
+                <tr style="background: #F8F9FA; border-bottom: 2px solid #E5E8EB;">
+                    <th class="vs-label" style="padding:10px; width: 25%;">항목</th>
+                    <th style="color:#3182F6; font-weight:900; padding:10px; width: 37%;">${i1.name}</th>
+                    <th style="color:#6B31F6; font-weight:900; padding:10px; width: 37%;">${i2.name}</th>
+                </tr>
+                <tr style="border-bottom: 1px solid #F2F5F8;"><td class="vs-label" style="padding:12px 4px; font-weight:800; color:#4E5968;">💰 공식가</td><td>${i1.price.toLocaleString()}원</td><td>${i2.price.toLocaleString()}원</td></tr>
+                <tr style="border-bottom: 1px solid #F2F5F8;"><td class="vs-label" style="padding:12px 4px; font-weight:800; color:#4E5968;">💸 추가비용</td><td style="color:#E32636; font-size:12px; font-weight:700;">+${(i1.hiddenTax?.cost || 0).toLocaleString()}원</td><td style="color:#E32636; font-size:12px; font-weight:700;">+${(i2.hiddenTax?.cost || 0).toLocaleString()}원</td></tr>
+                <tr style="border-bottom: 1px solid #F2F5F8;"><td class="vs-label" style="padding:12px 4px; font-weight:800; color:#4E5968;">🪶 무게</td><td>${i1.specs.weight}kg</td><td>${i2.specs.weight}kg</td></tr>
+                <tr><td class="vs-label" style="padding:12px 4px; font-weight:800; color:#4E5968;">👶 2인확장</td><td>${i1.expand.includes('⭕')?'가능':'불가'}</td><td>${i2.expand.includes('⭕')?'가능':'불가'}</td></tr>
+            </table>
+        </div>
     `;
     res.style.display = 'block';
     res.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
@@ -174,7 +171,7 @@ function toggleOthers() {
     }
 }
 
-// 🌟 카드 렌더링 엔진 (대기업 템플릿 + 100% 매칭률 텍스트 다이어트 완료!)
+// 🌟 카드 렌더링 엔진 (대기업 템플릿 + 악세사리 수익화 통합 완료!)
 function generateCardHtml(item) {
     const cId = item.originalIndex !== undefined ? item.originalIndex : Math.floor(Math.random() * 10000);
     const itemId = item.id || item.name; 
@@ -257,7 +254,7 @@ function generateCardHtml(item) {
     const asTitle = item.asInfo?.status === 'good' ? 'A/S 안심 보장' : (item.asInfo?.status === 'warn' ? 'A/S 체크포인트' : 'A/S 리스크 경고');
     const asIcon = item.asInfo?.status === 'good' ? '🛡️' : (item.asInfo?.status === 'warn' ? '👀' : '🚨');
 
-    // ✨ 6. 구매버튼 및 방어 멘트 (수익 링크 쌍끌이 + CS 면책 철벽 방어!)
+    // 6. 구매버튼 및 방어 멘트
     const partnerCode = "flDiNnqr00";
     const searchKeyword = `${item.name} 유모차`;
     
@@ -266,18 +263,13 @@ function generateCardHtml(item) {
 
     let purchaseAreaHtml = `
         <div style="margin-top: 24px; display: flex; flex-direction: column; gap: 8px;">
-            <!-- 1. 쿠팡 버튼 (가장 먼저 누르게 유도) -->
             <a href="${coupangSearchUrl}" target="_blank" style="display: flex; justify-content: center; align-items: center; width: 100%; background: #191F28; color: #FFF; border: 1px solid #000; box-shadow: 0 4px 14px rgba(0,0,0,0.1); font-size: 15px; padding: 18px 0; border-radius: 14px; font-weight: 900; text-decoration: none; transition: 0.2s;">
                 🚀 쿠팡에서 로켓배송 최저가 찾기 〉
             </a>
-            
-            <!-- 2. 네이버 버튼 -->
             <a href="${naverSearchUrl}" target="_blank" style="display: flex; justify-content: center; align-items: center; width: 100%; background: #F2F5F8; color: #4E5968; border: 1px solid #E5E8EB; font-size: 14px; padding: 14px 0; border-radius: 14px; font-weight: 800; text-decoration: none; transition: 0.2s;">
                 🔍 네이버 쇼핑에서 공식몰 검색하기 〉
             </a>
         </div>
-        
-        <!-- ✨ 책임을 회피하고 정품 매입 팩트만 강조하는 방어 멘트 -->
         <div class="coupang-safety-guard" style="font-size: 11.5px; color: #8B95A1; font-weight: 600; text-align: center; margin-top: 12px; line-height: 1.5; word-break: keep-all;">
             ※ 고가의 유모차는 쿠팡이 직접 매입하여 교환/환불 처리가 빠른<br>
             <b>[로켓배송]</b> 마크가 있는 상품 위주로 탐색하시길 권장합니다.<br>
@@ -285,9 +277,45 @@ function generateCardHtml(item) {
         </div>
     `;
 
+    // ✨ 7. [수익 창출 패치] 유모차 찰떡 필수 악세사리 3대장 (디자인 수정본)
+    const accFanUrl = `https://www.coupang.com/np/search?q=${encodeURIComponent('유모차 선풍기')}&afag=${partnerCode}`;
+    const accBagUrl = `https://www.coupang.com/np/search?q=${encodeURIComponent('유모차 정리함 이너백')}&afag=${partnerCode}`;
+    const accHookUrl = `https://www.coupang.com/np/search?q=${encodeURIComponent('유모차 가방걸이 고리')}&afag=${partnerCode}`;
+
+    const accessoryHtml = `
+        <div style="background: #F9FAFB; padding: 18px; border-radius: 16px; margin-top: 24px; border: 1px solid #E5E8EB;">
+            <!-- 타이틀도 가운데 정렬 및 이모지 변경(🎁) -->
+            <div style="font-size: 13.5px; font-weight: 900; color: #191F28; margin-bottom: 12px; display: flex; align-items: center; justify-content: center; gap: 6px;">
+                <span>🎁</span> 유모차 뽑은 기념! 국민 육아템 3대장
+            </div>
+            
+            <!-- 박스들 가운데 정렬 (justify-content: center; 추가) -->
+            <div style="display: flex; justify-content: center; gap: 10px; overflow-x: auto; scrollbar-width: none; padding-bottom: 8px;">
+                <!-- 1. 선풍기 -->
+                <a href="${accFanUrl}" target="_blank" style="flex-shrink: 0; width: 105px; background: #FFF; border: 1px solid #E5E8EB; border-radius: 12px; padding: 12px 8px; text-align: center; text-decoration: none; box-shadow: 0 2px 4px rgba(0,0,0,0.02); transition: 0.2s;">
+                    <div style="font-size: 24px; margin-bottom: 6px;">❄️</div>
+                    <div style="font-size: 12px; font-weight: 800; color: #333D4B;">유모차 선풍기</div>
+                    <div style="font-size: 10.5px; font-weight: 600; color: #3182F6; margin-top: 4px;">로켓배송 〉</div>
+                </a>
+                <!-- 2. 정리함 -->
+                <a href="${accBagUrl}" target="_blank" style="flex-shrink: 0; width: 105px; background: #FFF; border: 1px solid #E5E8EB; border-radius: 12px; padding: 12px 8px; text-align: center; text-decoration: none; box-shadow: 0 2px 4px rgba(0,0,0,0.02); transition: 0.2s;">
+                    <div style="font-size: 24px; margin-bottom: 6px;">🧺</div>
+                    <div style="font-size: 12px; font-weight: 800; color: #333D4B;">유모차 정리함</div>
+                    <div style="font-size: 10.5px; font-weight: 600; color: #3182F6; margin-top: 4px;">로켓배송 〉</div>
+                </a>
+                <!-- 3. 고리 -->
+                <a href="${accHookUrl}" target="_blank" style="flex-shrink: 0; width: 105px; background: #FFF; border: 1px solid #E5E8EB; border-radius: 12px; padding: 12px 8px; text-align: center; text-decoration: none; box-shadow: 0 2px 4px rgba(0,0,0,0.02); transition: 0.2s;">
+                    <div style="font-size: 24px; margin-bottom: 6px;">🔗</div>
+                    <div style="font-size: 12px; font-weight: 800; color: #333D4B;">가방걸이 고리</div>
+                    <div style="font-size: 10.5px; font-weight: 600; color: #3182F6; margin-top: 4px;">로켓배송 〉</div>
+                </a>
+            </div>
+        </div>
+    `;
+
     const crossSellHtml = `<a href="../carseat/index.html" style="display:block; width:100%; background:#FFFBEB; border:1px solid #FDE68A; color:#B45309; padding:16px; border-radius:14px; font-weight:800; font-size:13.5px; text-align:center; text-decoration:none; transition:0.2s; margin-top:16px;">🚘 이 유모차와 어울리는 [안전 카시트] 알아보기 ➔</a>`;
 
-  // 7. 최종 렌더링 (단점 박스 위치 수정 완료!)
+    // 8. 최종 렌더링
     return `
     <div class="stroller-card" id="card-${cId}">
         
@@ -333,7 +361,6 @@ function generateCardHtml(item) {
                     <div class="fact-item ${asClass}"><div class="fact-icon">${asIcon}</div><div class="fact-info"><div class="fact-title">${asTitle}</div><div class="fact-desc">${item.asInfo?.text || ''}</div></div></div>
                 </div>
                 
-                <!-- ✨ 밖에서 겉돌던 단점 박스를 '실전팩트' 탭 안으로 쏙 넣었습니다! -->
                 <div class="insight-box" style="margin-top: 16px;">
                     <div class="title">💡 단점 & 아쉬운 점 팩트체크</div>
                     <div class="text">${item.flaw}</div>
@@ -355,12 +382,13 @@ function generateCardHtml(item) {
         </div>
 
         ${purchaseAreaHtml}
+        ${accessoryHtml}
         ${crossSellHtml}
     </div>
     `;
 }
 
-// 🧠 깐깐한 감점(Penalty) AI 리포팅 엔진 (예산 칼각 패치 완료!)
+// 🧠 깐깐한 감점(Penalty) AI 리포팅 엔진
 function renderList(isUserAction = false) {
     const topArea = document.getElementById('result-top-area');
     const otherArea = document.getElementById('result-other-area');
@@ -393,12 +421,13 @@ function renderList(isUserAction = false) {
         let score = 100;
         let reasons = [];
 
-        // 1. 💰 절대 조건: 예산 (자비 없는 칼각 컷팅!)
-        if (budget === 'under40' && item.price > 400000) {
-            score -= 50; reasons.push(`예산 초과 (공식가 ${(item.price/10000).toFixed(0)}만 원)`);
-        } else if (budget === 'under100' && item.price > 1000000) {
-            // ✨ 110만 원에서 100만 원으로 엄격하게 수정! 100만 원 넘으면 무조건 -50점!
-            score -= 50; reasons.push(`예산 초과 (공식가 ${(item.price/10000).toFixed(0)}만 원)`);
+       // 1. 💰 절대 조건: 예산 (자비 없는 칼각 컷팅! - 숨겨진 추가비용까지 합산해서 계산)
+        const realTotalPrice = item.price + (item.hiddenTax?.cost || 0);
+        
+        if (budget === 'under40' && realTotalPrice > 400000) {
+            score -= 50; reasons.push(`실결제 예산 초과 (총 ${(realTotalPrice/10000).toFixed(0)}만 원)`);
+        } else if (budget === 'under100' && realTotalPrice > 1000000) {
+            score -= 50; reasons.push(`실결제 예산 초과 (총 ${(realTotalPrice/10000).toFixed(0)}만 원)`);
         }
 
         // 2. 🏡 환경: 계단 없는 빌라면 무게가 깡패

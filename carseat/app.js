@@ -243,9 +243,28 @@ function runCarseatEngine() {
     const install = document.getElementById('filter-install').value; 
     const safety = document.getElementById('filter-safety').value;
     
-    // 조잡했던 전역 배너는 이제 삭제! (개별 AI 리포트에서 처리합니다)
+    // =========================================================
+    // 👇 여기서부터 (기존 배너 숨김 코드 지우고 이걸로 덮어쓰기!) 👇
+    // =========================================================
     const warningBanner = document.getElementById('vehicle-warning-banner');
-    if(warningBanner) warningBanner.style.display = 'none';
+    
+    // 🚨 카니발 선택 시 강력한 경고 배너 노출!
+    if (carSize === 'carnival') {
+        warningBanner.innerHTML = `
+            <div style="background: #FFF0F1; border: 1px solid #F04452; border-radius: 12px; padding: 16px; margin-bottom: 24px; display: flex; align-items: flex-start; gap: 10px;">
+                <span style="font-size: 20px;">🚨</span>
+                <div>
+                    <div style="font-size: 14px; font-weight: 900; color: #D32F2F; margin-bottom: 4px;">카니발 3열 장착 주의!</div>
+                    <div style="font-size: 12.5px; font-weight: 600; color: #4E5968; line-height: 1.4;">
+                        카니발 등 바닥에 수납함이 있는 차량은 기둥(레그)형 카시트 장착 시 뚜껑이 부서질 위험이 큽니다. 가급적 <b>'탑테더(끈으로 묶는 방식)'</b>를 권장합니다.
+                    </div>
+                </div>
+            </div>
+        `;
+        warningBanner.style.display = 'block';
+    } else {
+        if(warningBanner) warningBanner.style.display = 'none';
+    }
 
     const resultArea = document.getElementById('carseat-result-area');
     const isFilterActive = (age !== 'all' || carSize !== 'all' || install !== 'all' || safety !== 'all');

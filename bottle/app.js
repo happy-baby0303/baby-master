@@ -51,8 +51,6 @@ function toggleFavorite(id) {
             btn.style.background = isFav ? '#FFF2F2' : '#F2F4F6';
             btn.style.color = isFav ? '#E32636' : '#4E5968';
             btn.style.borderColor = isFav ? '#FCA5A5' : '#E5E8EB';
-            btn.style.whiteSpace = 'nowrap'; 
-            btn.style.flexShrink = '0';
         }
     }
 }
@@ -86,12 +84,47 @@ function renderFavorites() {
     }
 
     let favItems = bottleData.filter(item => favorites.includes(item.id));
+    
+    // 🚨 [신규 패치] 찜한 목록 상단에 '비교 요약 표' 제공
+    let summaryTable = `
+        <div style="background: #F9FAFB; padding: 16px; border-radius: 16px; margin-bottom: 24px; border: 1px solid #E5E8EB; overflow-x: auto;">
+            <div style="font-size: 13px; font-weight: 800; color: #4E5968; margin-bottom: 10px;">📊 찜한 젖병 한눈에 비교하기</div>
+            <table style="width: 100%; border-collapse: collapse; font-size: 12px; text-align: center; min-width: 300px;">
+                <thead>
+                    <tr style="background: #F2F5F8; color: #8B95A1;">
+                        <th style="padding: 8px; border-radius: 8px 0 0 8px;">브랜드</th>
+                        <th style="padding: 8px;">소재</th>
+                        <th style="padding: 8px;">가격대</th>
+                        <th style="padding: 8px; border-radius: 0 8px 8px 0;">배앓이</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    ${favItems.map(i => `
+                        <tr style="border-bottom: 1px solid #E5E8EB;">
+                            <td style="padding: 8px; font-weight: 700;">${i.brand}</td>
+                            <td style="padding: 8px; color: #3182F6;">${i.material.toUpperCase()}</td>
+                            <td style="padding: 8px;">${i.price === 'low' ? '💸가성비' : (i.price === 'mid' ? '보통' : '고급')}</td>
+                            <td style="padding: 8px;">${i.antiColic === 'super' ? '🔥특화' : '일반'}</td>
+                        </tr>
+                    `).join('')}
+                </tbody>
+            </table>
+        </div>
+    `;
+
     let htmlOutput = `<div style="font-size: 16px; font-weight: 900; color: #E32636; margin-bottom: 16px;">❤️ 내 찜 보관함 (${favItems.length}개)</div>`;
-    htmlOutput += favItems.map(item => generateCardHTML({ ...item, matchRate: null })).join('');
+    htmlOutput += summaryTable;
+    // 찜한 화면에서는 쿠팡 링크 무조건 보여주기 (rank = 1 부여)
+    htmlOutput += favItems.map(item => generateCardHTML({ ...item, matchRate: null }, 1)).join('');
+    
+    // 💰 [광고 배너 예시 자리] 나중에 협찬받으면 여기에 삽입!
+    // htmlOutput += `<div class="sponsor-banner">...</div>`;
+
     resultArea.innerHTML = htmlOutput;
 }
 
-function generateCardHTML(item) {
+// 🚨 [패치 완료] rank 파라미터를 추가하여 상위 3등 이내만 쿠팡 링크 노출!
+function generateCardHTML(item, rank) {
     const favorites = JSON.parse(localStorage.getItem('favBottles')) || [];
     const isFav = favorites.includes(item.id);
     const heartIcon = isFav ? '❤️ 찜 해제' : '🤍 찜하기';
@@ -118,8 +151,6 @@ function generateCardHTML(item) {
             cardBorderColor = '#F04452'; titleText = '❌ 비추천 (Mismatch)';
         }
 
-        // ✨ scoreHtml(100% 매칭 변수) 삭제 완료!
-
         let reasonLi = item.matchRate === 100 
             ? `<li style="margin-bottom:4px;"> ${item.matchReasons[0]}</li>`
             : item.matchReasons.map(r => `<li style="margin-bottom:4px; color:#4E5968;">🚨 <b>${r}</b></li>`).join('');
@@ -133,29 +164,41 @@ function generateCardHTML(item) {
 
     if (isFavViewMode) cardBorderColor = '#E32636';
 
- // ✨ 젖병 전용: 유저가 누른 젖병(브랜드+제품명)으로 알아서 검색해주는 다이렉트 링크!
-   const searchKeyword = `${item.brand} ${item.name}`; 
-   let myCoupangLink = `https://www.coupang.com/np/search?q=${encodeURIComponent(searchKeyword)}`;
+    const searchKeyword = `${item.brand} ${item.name}`; 
+    let myCoupangLink = `https://www.coupang.com/np/search?q=${encodeURIComponent(searchKeyword)}`;
    
-   let purchaseBtn = `
-       <div style="margin-top: 24px;">
-           <a href="${myCoupangLink}" target="_blank" class="buy-btn" style="display: flex; justify-content: center; align-items: center; width: 100%; margin-top: 0; background: #191F28; color: #FFF; border: 1px solid #000; box-shadow: 0 4px 14px rgba(0,0,0,0.1); font-size: 15px; padding: 18px 0; border-radius: 14px; font-weight: 900; text-decoration: none; transition: 0.2s;">
-               🚀 쿠팡 최저가 검색하기 〉
-           </a>
-       </div>
-       
-       <div class="coupang-safety-guard" style="font-size: 11.5px; color: #8B95A1; font-weight: 600; text-align: center; margin-top: 12px; line-height: 1.5; word-break: keep-all;">
-           ※ 안전하고 빠른 교환/환불을 위해 구매 시 가급적 <b>[로켓배송]</b> 마크가 있는 상품을 선택하시길 권장합니다.<br>
-           (A/S 및 교환/환불 규정은 해당 판매처 및 제조사 정책을 따릅니다)
-       </div>
-   `;
+    let purchaseBtn = '';
+    
+    // 🚨 [신뢰도 상승 패치] 3등 안에 들거나 찜한 목록에서만 쿠팡 링크 노출!
+    if (rank <= 3 || isFavViewMode) {
+        purchaseBtn = `
+            <div style="margin-top: 24px;">
+                <a href="${myCoupangLink}" target="_blank" class="buy-btn" style="display: flex; justify-content: center; align-items: center; width: 100%; margin-top: 0; background: #191F28; color: #FFF; border: 1px solid #000; box-shadow: 0 4px 14px rgba(0,0,0,0.1); font-size: 15px; padding: 18px 0; border-radius: 14px; font-weight: 900; text-decoration: none; transition: 0.2s;">
+                    🚀 쿠팡 최저가 검색하기 〉
+                </a>
+            </div>
+            
+            <div class="coupang-safety-guard" style="font-size: 11px; color: #8B95A1; font-weight: 600; text-align: center; margin-top: 12px; line-height: 1.5; word-break: keep-all;">
+                ※ 안전하고 빠른 교환/환불을 위해 가급적 <b>[로켓배송]</b> 마크가 있는 상품을 선택하세요.
+            </div>
+        `;
+    } else {
+        // 4등 이하는 정보성 버튼만 노출 (네이버 검색)
+        let naverSearchLink = `https://search.shopping.naver.com/search/all?query=${encodeURIComponent(searchKeyword)}`;
+        purchaseBtn = `
+            <div style="margin-top: 24px;">
+                <a href="${naverSearchLink}" target="_blank" class="buy-btn" style="display: flex; justify-content: center; align-items: center; width: 100%; margin-top: 0; background: #F2F5F8; color: #4E5968; border: 1px solid #E5E8EB; font-size: 14px; padding: 14px 0; border-radius: 14px; font-weight: 800; text-decoration: none; transition: 0.2s;">
+                    🔍 네이버 스펙 검색하기 〉
+                </a>
+            </div>
+        `;
+    }
 
     return `
         <div class="stroller-card" style="border-top: 4px solid ${cardBorderColor}; margin-bottom: 24px; padding: 28px 24px; background:#FFF; border-radius:24px; box-shadow:0 4px 16px rgba(0,0,0,0.04); border:1px solid #F2F5F8;">
             
             <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom: 24px; gap: 12px;">
                 <div style="flex: 1; min-width: 0;">
-                    <!-- ✨ margin-bottom 16px로 변경해서 뱃지와 제목 사이 간격 넓힘! -->
                     <div style="margin-bottom: 16px;">
                         <span style="background:#F2F5F8; color:#4E5968; font-size:12.5px; font-weight:800; padding:6px 12px; border-radius:8px;">${item.brand}</span>
                     </div>
@@ -163,7 +206,6 @@ function generateCardHTML(item) {
                         ${item.name}
                     </div>
                 </div>
-                <!-- ✨ 100% 삭제 완료! 오직 찜하기 버튼만 우측에 깔끔하게 배치! -->
                 <div style="display: flex; flex-direction: column; align-items: flex-end; flex-shrink: 0;">
                     <button id="fav-btn-${item.id}" onclick="toggleFavorite('${item.id}')" style="background:${heartColor}; color:${heartText}; border:1px solid ${heartBorder}; padding:8px 12px; border-radius:8px; font-weight:800; font-size:12px; cursor:pointer; transition:0.2s; white-space:nowrap;">
                         ${heartIcon}
@@ -173,13 +215,13 @@ function generateCardHTML(item) {
             
             ${aiReportHtml}
 
-            <!-- 큐레이션 포인트 (통일된 연회색 인사이트 박스) -->
+            <!-- 큐레이션 포인트 -->
             <div class="insight-box">
                 <div class="title">💡 큐레이션 포인트</div>
                 <div class="text">${item.desc}</div>
             </div>
             
-            <!-- 세부 스펙 스탯 (깔끔한 리스트) -->
+            <!-- 세부 스펙 스탯 -->
             <div style="background: #F9FAFB; padding: 16px; border-radius: 14px; border: 1px solid #E5E8EB; margin-bottom: 16px;">
                 <ul style="margin: 0; padding-left: 20px; font-size: 13.5px; color: #4E5968; line-height: 1.6; font-weight: 600;">
                     <li style="margin-bottom:6px;"><b>거부 극복:</b> ${item.rejection === 'super' ? '🔥 젖꼭지 거부 심한 아이 추천' : '⭐ 무난하게 잘 무는 젖꼭지'}</li>
@@ -193,7 +235,6 @@ function generateCardHTML(item) {
             <button onclick="shareToHusband('${item.id}', '${item.brand}', '${item.name}')" style="display:block; width:100%; background:#F9FAFB; border:1px solid #E5E8EB; color:#4E5968; padding:16px; border-radius:14px; font-weight:800; font-size:14px; text-align:center; transition:0.2s; margin-top:16px; cursor:pointer;">
                 💬 남편에게 이 [AI 분석 리포트] 공유하기
             </button>
-
             <a href="../food/index.html" style="display:block; width:100%; background:#F9FAFB; border:1px solid #E5E8EB; color:#4E5968; padding:16px; border-radius:14px; font-weight:800; font-size:14px; text-align:center; text-decoration:none; transition:0.2s; margin-top:12px;">
                 🍲 이 젖병 떼면 먹일 [이유식 식단] 미리보기 ➔
             </a>
@@ -259,14 +300,13 @@ function runBottleEngine() {
 
     if (isFilterActive) processedData.sort((a, b) => b.matchRate - a.matchRate);
 
-    // 🚨 방금 꼬였던 바로 그 부분 (안전하게 수정 완료)
     if (processedData.length === 0 || (isFilterActive && processedData[0].matchRate < 70)) {
         resultArea.innerHTML = `
             <div class="premium-empty-state" style="padding:40px; text-align:center; background:#FFF; border-radius:16px; border:1px dashed #D1D5DB; box-shadow: 0 4px 12px rgba(0,0,0,0.02);">
                 <div class="empty-icon" style="font-size:40px; margin-bottom:12px;">🍼</div>
                 <div class="empty-text" style="margin-bottom: 20px;">
-                    <b style="font-size: 15px; color: #191F28;">조건에 완벽하게 맞는 젖병이 없습니다.</b><br>
-                    <span style="font-size:13px; color:#8B95A1; line-height: 1.5; display: inline-block; margin-top: 4px;">조건을 너무 깐깐하게 고르셨나봐요!<br>필터를 초기화하고 다시 찾아볼까요?</span>
+                    <b style="font-size: 15px; color: #191F28;">아기에게 딱 맞는 걸 찾다 보니 조건이 까다로워졌네요!</b><br>
+<span style="font-size:13px; color:#8B95A1; line-height: 1.5; display: inline-block; margin-top: 4px;">완벽한 젖병은 없지만, 가장 가까운 대안을 찾아드릴게요.<br>조건을 1~2개만 풀어서 다시 검색해 볼까요? 🤍</span>
                 </div>
                 <button onclick="resetBottleFilters()" style="padding: 14px 24px; background: #191F28; color: #FFF; border: none; border-radius: 12px; font-weight: 800; font-size: 14px; cursor: pointer; box-shadow: 0 4px 12px rgba(0,0,0,0.15); transition: 0.2s;">
                     🔄 필터 초기화하기
@@ -280,7 +320,8 @@ function runBottleEngine() {
     let top3Results = processedData.slice(0, 3); 
     let otherResults = processedData.slice(3); 
     
-    htmlOutput += top3Results.map(item => generateCardHTML(item)).join('');
+    // 🚨 1~3등까지 랭크(rank) 정보 넘겨서 쿠팡 링크 달기!
+    htmlOutput += top3Results.map((item, index) => generateCardHTML(item, index + 1)).join('');
 
     if (otherResults.length > 0) {
         htmlOutput += `
@@ -288,7 +329,7 @@ function runBottleEngine() {
                 나머지 ${otherResults.length}개 결과 보기 ▾
             </button>
             <div id="bottle-other-area" style="display:none; flex-direction: column;">
-                ${otherResults.map(item => generateCardHTML(item)).join('')}
+                ${otherResults.map((item, index) => generateCardHTML(item, index + 4)).join('')}
             </div>
         `;
     }
@@ -304,6 +345,8 @@ function toggleBottleOthers() {
     } else {
         otherArea.style.display = 'none';
         btn.innerText = `나머지 결과 보기 ▾`;
+        // 접을 때 살짝 위로 스크롤 올려주는 디테일
+        document.getElementById('bottle-show-more-btn').scrollIntoView({ behavior: 'smooth', block: 'center' });
     }
 }
 
@@ -315,13 +358,12 @@ function resetBottleFilters() {
     if (isChanged && !isFavViewMode) runBottleEngine();
 }
 
-if (!Kakao.isInitialized()) {
+if (typeof Kakao !== 'undefined' && !Kakao.isInitialized()) {
     Kakao.init('68bca10ddfe2ec67112b07eb9a08da2b');
 }
 
-// 🚀 남편 카톡 공유 기능 (쿠팡 대신 육아메이트 앱으로 유도!)
 function shareToHusband(id, brand, name) {
-    const appUrl = window.location.href; // 유저가 보고 있는 이 앱 주소를 전달!
+    const appUrl = window.location.href; 
     
     Kakao.Share.sendDefault({
         objectType: 'feed',
@@ -338,28 +380,23 @@ function shareToHusband(id, brand, name) {
 }
 
 // ==========================================
-// 💎 [니치 UX] 필터 조작 시 햅틱 & 시선 유도 스크롤
+// 💎 [니치 UX] 필터 조작 시 햅틱 & 시선 유도 스크롤 (완벽 방어)
 // ==========================================
 document.querySelectorAll('.matrix-panel select').forEach(select => {
     select.addEventListener('change', () => {
         runBottleEngine();
         
-        // 1. 손맛 (미세 진동)
         if (navigator.vibrate) navigator.vibrate(10);
         
-        // 2. 결과창이 화면 아래에 숨어있다면 스무스하게 끌어올려줌
-        const resultArea = document.getElementById('bottle-result-area');
-        if(resultArea) {
-            const rect = resultArea.getBoundingClientRect();
-            // 결과창 꼭대기가 화면의 60%보다 밑에 있으면 살짝 위로 당겨줌
-            if(rect.top > window.innerHeight * 0.6) {
-                window.scrollBy({ top: rect.top - 120, behavior: 'smooth' });
-            }
+        // 🚨 필터 누르면 부드럽게 결과창 쪽으로 화면을 끌어올려줌 (시선 유도)
+        const resultHeader = document.getElementById('bottle-result-area');
+        if(resultArea && window.scrollY < 200) { // 화면 위에 있을 때만
+             const yOffset = resultHeader.getBoundingClientRect().top + window.pageYOffset - 100; // 헤더 밑 여백 확보
+             window.scrollTo({top: yOffset, behavior: 'smooth'});
         }
     });
 });
 
-// 🚨 [필수 복구] 앱 처음 켤 때 시동 거는 코드 (이게 날아가서 화면이 안 떴던 겁니다!)
 window.onload = () => { 
     applyGlobalBabyProfile(); 
     runBottleEngine(); 

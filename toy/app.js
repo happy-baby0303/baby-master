@@ -1,5 +1,5 @@
 // ==========================================
-// ⚙️ 코어 로직 및 카카오 초기화
+// 🧸 육아메이트 장난감 & 놀이 AI 엔진 V2.0 (버그 픽스 및 통합 필터링 완료)
 // ==========================================
 let isFavViewMode = false; 
 
@@ -7,7 +7,9 @@ if (!Kakao.isInitialized()) {
     Kakao.init('68bca10ddfe2ec67112b07eb9a08da2b'); // 파트너님 키
 }
 
-let globalMilestone = 'all'; // 전역으로 아기 발달단계 저장
+// ✨ 통합 필터링을 위한 전역 상태 관리
+let globalMilestone = 'all'; 
+let currentToyTheme = 'all';
 
 document.addEventListener('DOMContentLoaded', () => {
     applyGlobalBabyProfile(); // 아기 개월수 세팅 및 초기 렌더링
@@ -19,12 +21,11 @@ document.addEventListener('DOMContentLoaded', () => {
     msChips.forEach(chip => {
         chip.addEventListener('click', (e) => {
             msChips.forEach(c => c.classList.remove('active'));
-            themeCards.forEach(c => c.classList.remove('active'));
             e.target.classList.add('active');
             
-            const ms = e.target.getAttribute('data-milestone');
-            renderToys(ms === 'all' ? toyData : toyData.filter(t => t.milestone === ms || t.milestone === 'all'));
-
+            globalMilestone = e.target.getAttribute('data-milestone');
+            updateToyView(); // ✨ 통합 필터링 함수 호출
+            
             document.getElementById('view-toy-gear').scrollIntoView({ behavior: 'smooth', block: 'start' });
         });
     });
@@ -32,14 +33,18 @@ document.addEventListener('DOMContentLoaded', () => {
     // (장난감 탭) SOS 테마 카드 클릭 이벤트
     themeCards.forEach(card => {
         card.addEventListener('click', (e) => {
-            themeCards.forEach(c => c.classList.remove('active'));
-            msChips.forEach(c => c.classList.remove('active'));
-            e.currentTarget.classList.add('active');
+            // 이미 선택된 테마를 다시 누르면 선택 해제 (전체보기)
+            if (e.currentTarget.classList.contains('active')) {
+                e.currentTarget.classList.remove('active');
+                currentToyTheme = 'all';
+            } else {
+                themeCards.forEach(c => c.classList.remove('active'));
+                e.currentTarget.classList.add('active');
+                currentToyTheme = e.currentTarget.getAttribute('data-theme');
+            }
             
-            const theme = e.currentTarget.getAttribute('data-theme');
-            renderToys(toyData.filter(t => t.theme === theme));
-
-           document.getElementById('view-toy-gear').scrollIntoView({ behavior: 'smooth', block: 'start' });
+            updateToyView(); // ✨ 통합 필터링 함수 호출
+            document.getElementById('view-toy-gear').scrollIntoView({ behavior: 'smooth', block: 'start' });
         });
     });
 });
@@ -53,9 +58,6 @@ function applyGlobalBabyProfile() {
         const today = new Date();
         let months = (today.getFullYear() - birthDate.getFullYear()) * 12 + (today.getMonth() - birthDate.getMonth());
         if (months < 0) months = 0;
-
-        const banner = document.getElementById('auto-sync-banner');
-        if (banner) banner.style.display = 'none';
 
         document.querySelectorAll('.dynamic-age-badge').forEach(b => {
             b.innerText = `생후 ${months}개월 맞춤`;
@@ -75,13 +77,22 @@ function applyGlobalBabyProfile() {
         }
     }
 
-    // 초기 화면 렌더링 (놀이 처방전 & 장난감 모두)
+    // 초기 화면 렌더링
     renderPlays(); 
-    
-    const initialToyData = autoMilestone === 'all' 
-        ? toyData 
-        : toyData.filter(t => t.milestone === autoMilestone || t.milestone === 'all');
-    renderToys(initialToyData); 
+    updateToyView(); 
+}
+
+// ✨ 테마 + 발달단계 교집합 통합 필터링 함수
+function updateToyView() {
+    if (isFavViewMode) return;
+
+    const filteredData = toyData.filter(t => {
+        const themeMatch = currentToyTheme === 'all' || t.theme === currentToyTheme;
+        const msMatch = globalMilestone === 'all' || t.milestone === globalMilestone || t.milestone === 'all';
+        return themeMatch && msMatch;
+    });
+
+    renderToys(filteredData);
 }
 
 // ==========================================
@@ -119,21 +130,19 @@ function filterPlays(category, btnEl) {
     currentPlayCategory = category;
     renderPlays();
     
-    // ✨ 추가: 필터 클릭 시 결과 리스트 상단으로 부드럽게 스크롤
     document.getElementById('view-toy-play').scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
+
 function renderPlays() {
     const container = document.getElementById('play-result-area');
     
-    // 💡 미친 니치: 카테고리 필터링 + 아기 월령(globalMilestone) 자동 필터링 교집합!
     const filtered = playData.filter(p => {
         const catMatch = currentPlayCategory === 'all' || p.category === currentPlayCategory;
         const ageMatch = globalMilestone === 'all' || p.targetAge.includes(globalMilestone);
         return catMatch && ageMatch;
     });
 
-if (filtered.length === 0) {
-        // 기존 밋밋한 코드를 아래 코드로 덮어쓰기
+    if (filtered.length === 0) {
         container.innerHTML = `
             <div class="premium-empty-state" style="padding:40px; text-align:center; background:#FFF; border-radius:16px; border:1px dashed #D1D5DB; margin-top: 16px;">
                 <div class="empty-icon" style="font-size:40px; margin-bottom:12px;">🥲</div>
@@ -147,13 +156,12 @@ if (filtered.length === 0) {
 
     let html = '';
     filtered.forEach(p => {
-        // 🎨 카테고리별 다이나믹 뱃지 컬러 & 텍스트 (여기 완벽하게 적용되었습니다!)
-        let badgeColor = '#3182F6', badgeBg = '#E8F3FF', badgeText = '🧸 장난감 뽕뽑기';
+        let badgeColor = '#3182F6', badgeBg = '#E8F3FF', badgeText = '🧸 국민템 뽕뽑기';
         
-        if (p.category === 'zero') { badgeColor = '#00B37A'; badgeBg = '#E2F5EB'; badgeText = '🏠 0원 집구석 놀이'; }
+        if (p.category === 'zero') { badgeColor = '#059669'; badgeBg = '#ECFDF5'; badgeText = '🏠 0원 집구석 놀이'; }
         else if (p.category === 'dad') { badgeColor = '#E32636'; badgeBg = '#FFF2F2'; badgeText = '🏋️ 아빠 육체노동'; }
         else if (p.category === 'lieDown') { badgeColor = '#8B5CF6'; badgeBg = '#F5F3FF'; badgeText = '🛌 합법적 눕육아'; }
-        else if (p.category === 'poop') { badgeColor = '#B45309'; badgeBg = '#FEF3C7'; badgeText = '💩 장운동 쾌변 놀이'; }
+        else if (p.category === 'poop') { badgeColor = '#D97706'; badgeBg = '#FFFBEB'; badgeText = '💩 장운동 쾌변 기원'; }
         else if (p.category === 'sick') { badgeColor = '#EA580C'; badgeBg = '#FFEDD5'; badgeText = '🤒 껌딱지 진정 놀이'; }
 
         const stepsHtml = p.steps.map(step => `<li style="margin-bottom: 8px;">${step}</li>`).join('');
@@ -192,11 +200,10 @@ if (filtered.length === 0) {
     container.innerHTML = html;
 }
 
-// ⏳ 생존 놀이 인라인 타이머 기믹
 let playTimers = {};
 function startPlayTimer(playId, minutes) {
     const btn = document.getElementById(`timer-btn-${playId}`);
-    const p = playData.find(x => x.id === playId); // 💡 현재 실행 중인 놀이 정보 찾기!
+    const p = playData.find(x => x.id === playId); 
     
     if (playTimers[playId]) {
         clearInterval(playTimers[playId]);
@@ -218,7 +225,6 @@ function startPlayTimer(playId, minutes) {
         const m = Math.floor(secondsLeft / 60).toString().padStart(2, '0');
         const s = (secondsLeft % 60).toString().padStart(2, '0');
         
-        // 1분 남으면 긴급하게 빨간색으로 변경!
         if(secondsLeft <= 60 && secondsLeft > 0) {
             btn.style.background = '#FFF2F2';
             btn.style.color = '#E32636';
@@ -227,12 +233,10 @@ function startPlayTimer(playId, minutes) {
 
         btn.innerHTML = `⏳ <b>${m}:${s}</b> 버티는 중... (터치 시 정지)`;
 
-        // 🎉 타이머 완료 시 도파민 폭발 이펙트!
         if (secondsLeft <= 0) {
             clearInterval(playTimers[playId]);
             delete playTimers[playId];
             
-            // 💡 [핵심] 아빠 놀이는 아빠 칭찬, 눕육아는 엄마 충전! 상황별 맞춤 멘트!
             let successText = '🎉 미션 완료! 엄마 아빠 최고! 💖';
             if (p) {
                 if (p.category === 'dad') successText = '🎉 미션 완료! 아빠 체력 진짜 최고! 💪';
@@ -242,25 +246,25 @@ function startPlayTimer(playId, minutes) {
             }
             
             btn.innerHTML = successText;
-            btn.style.background = '#00B37A'; 
+            btn.style.background = '#059669'; 
             btn.style.color = '#FFF'; 
             btn.style.border = 'none';
-            btn.style.boxShadow = '0 0 15px rgba(0, 179, 122, 0.4)'; // 빛나는 효과
+            btn.style.boxShadow = '0 0 15px rgba(5, 150, 105, 0.4)'; 
             
-            // 0.5초마다 글씨가 깜빡이는 효과 (진짜 해낸 것 같은 성취감!)
             let blink = false;
             let blinkInterval = setInterval(() => {
                 btn.style.opacity = blink ? '1' : '0.8';
                 blink = !blink;
             }, 500);
             
-            // 3초 뒤에 깜빡임 멈추기
-            setTimeout(() => clearInterval(blinkInterval), 3000);
+            setTimeout(() => {
+                clearInterval(blinkInterval);
+                btn.style.opacity = '1';
+            }, 3000);
         }
     }, 1000);
 }
 
-// 💬 아빠 카톡 미션 전송
 function sharePlayMission(playId) {
     const p = playData.find(x => x.id === playId);
     if (!p) return;
@@ -276,9 +280,8 @@ function sharePlayMission(playId) {
     });
 }
 
-
 // ==========================================
-// 🛒 TRACK 2: 육아는 템빨 (기존 장난감 렌더링 및 찜하기)
+// 🛒 TRACK 2: 육아는 템빨 (장난감 렌더링)
 // ==========================================
 function toggleFavView() {
     isFavViewMode = !isFavViewMode;
@@ -291,25 +294,28 @@ function toggleFavView() {
     } else {
         btn.innerHTML = '❤️ 내가 찜한 장난감 모아보기';
         btn.style.background = '#FFF2F2'; btn.style.color = '#E32636'; btn.style.borderColor = '#FCA5A5';
-        
-        const activeChip = document.querySelector('.ms-chip.active');
-        const ms = activeChip ? activeChip.getAttribute('data-milestone') : 'all';
-        const filteredData = ms === 'all' ? toyData : toyData.filter(t => t.milestone === ms || t.milestone === 'all');
-        renderToys(filteredData);
+        updateToyView(); // ✨ 에러가 나던 renderList(false)를 올바른 함수로 수정!
     }
 }
 
 function toggleFavorite(id) {
     let favs = JSON.parse(localStorage.getItem('favToys')) || [];
-    if(favs.includes(id)) favs = favs.filter(f => f !== id);
-    else favs.push(id);
+    // 숫자로 변환하여 비교 (데이터의 id가 숫자이므로)
+    const numericId = parseInt(id, 10);
+    
+    if(favs.includes(numericId)) {
+        favs = favs.filter(f => f !== numericId);
+    } else {
+        favs.push(numericId);
+    }
     localStorage.setItem('favToys', JSON.stringify(favs));
     
-    if (isFavViewMode) renderFavorites(); 
-    else {
-        const btn = document.getElementById(`fav-btn-${id}`);
+    if (isFavViewMode) {
+        renderFavorites(); 
+    } else {
+        const btn = document.getElementById(`fav-btn-${numericId}`);
         if (btn) {
-            const isFav = favs.includes(id);
+            const isFav = favs.includes(numericId);
             btn.innerHTML = isFav ? '❤️ 찜 해제' : '🤍 찜하기';
             btn.style.background = isFav ? '#FFF2F2' : '#F2F4F6';
             btn.style.color = isFav ? '#E32636' : '#4E5968';
@@ -344,7 +350,14 @@ function renderToys(filteredData) {
     const favs = JSON.parse(localStorage.getItem('favToys')) || [];
     
     if (filteredData.length === 0) {
-        resultArea.innerHTML = `<div style="text-align:center; padding:40px; color:#8B95A1;">해당 상황에 맞는 장난감이 없습니다.</div>`;
+        resultArea.innerHTML = `
+            <div class="premium-empty-state" style="padding:40px; text-align:center; background:#FFF; border-radius:16px; border:1px dashed #D1D5DB; margin-top: 16px;">
+                <div class="empty-icon" style="font-size:40px; margin-bottom:12px;">🥲</div>
+                <div class="empty-text">
+                    <b style="font-size:16px; color:#191F28; font-weight:800; display:block; margin-bottom:6px;">해당 상황에 맞는 아이템이 없네요.</b>
+                    <span style="font-size:13px; color:#8B95A1;">아기 월령이나 테마를 조금 바꿔보세요!</span>
+                </div>
+            </div>`;
         return;
     }
     resultArea.innerHTML = `<div style="font-weight:800; color:#191F28; margin-bottom:16px;">✨ 시간 확보 추천 라인업 (${filteredData.length}개)</div>` 
@@ -360,18 +373,16 @@ function generateToyHTML(toy, favs) {
 
     const partnerCode = "flDiNnqr00"; // 파트너님 고유 파트너스 코드
 
-    // ⚡ 1. 건전지 종류에 따른 파트너스 링크 스마트 자동 할당 & 필요 없는 경우 완전 숨김
+    // ⚡ 1. 건전지 자동 할당 로직
     let batteryHtml = '';
-    
-    // "없음" 이라는 단어가 배터리 정보에 안 들어있을 때만 렌더링!
     if (toy.battery && !toy.battery.includes("없음")) {
         let actualBatteryLink = "";
         if (toy.battery.includes("C형")) {
-            actualBatteryLink = "https://link.coupang.com/a/fnbuI6bwpU"; // 파트너님 C형
+            actualBatteryLink = "https://link.coupang.com/a/fnbuI6bwpU"; 
         } else if (toy.battery.includes("AAA")) {
-            actualBatteryLink = "https://link.coupang.com/a/fnb4qGk95o"; // 파트너님 AAA (신규 추가!)
+            actualBatteryLink = "https://link.coupang.com/a/fnb4qGk95o"; 
         } else if (toy.battery.includes("AA")) {
-            actualBatteryLink = "https://link.coupang.com/a/fnbqrsnU2C"; // 파트너님 AA
+            actualBatteryLink = "https://link.coupang.com/a/fnbqrsnU2C"; 
         } else {
             actualBatteryLink = toy.batteryLink || `https://www.coupang.com/np/search?q=건전지&afag=${partnerCode}`;
         }
@@ -400,7 +411,8 @@ function generateToyHTML(toy, favs) {
                         <div style="color: #3182F6; font-size: 13px; font-weight: 700; margin-top: 6px; word-break:keep-all;">${toy.tags}</div>
                     </div>
                 </div>
-                <button id="fav-btn-${toy.id}" onclick="toggleFavorite(${toy.id})" style="background:${hBg}; color:${hCol}; border:1px solid ${hBor}; padding:8px 12px; border-radius:8px; font-weight:800; font-size:12px; cursor:pointer; white-space:nowrap; flex-shrink:0;">
+                <!-- 따옴표 추가로 안정성 확보 -->
+                <button id="fav-btn-${toy.id}" onclick="toggleFavorite('${toy.id}')" style="background:${hBg}; color:${hCol}; border:1px solid ${hBor}; padding:8px 12px; border-radius:8px; font-weight:800; font-size:12px; cursor:pointer; white-space:nowrap; flex-shrink:0;">
                     ${hIcon}
                 </button>
             </div>
@@ -423,7 +435,7 @@ function generateToyHTML(toy, favs) {
                 ${btnText}
             </a>
 
-            <button onclick="shareToHusbandToy(${toy.id})" style="display:flex; justify-content:center; align-items:center; gap:8px; width:100%; background:#FEE500; color:#191919; border:none; padding:16px; border-radius:14px; font-weight:900; font-size:15px; cursor:pointer; box-shadow: 0 4px 12px rgba(254, 229, 0, 0.2); transition:0.2s;">
+            <button onclick="shareToHusbandToy('${toy.id}')" style="display:flex; justify-content:center; align-items:center; gap:8px; width:100%; background:#FEE500; color:#191919; border:none; padding:16px; border-radius:14px; font-weight:900; font-size:15px; cursor:pointer; box-shadow: 0 4px 12px rgba(254, 229, 0, 0.2); transition:0.2s;">
                 <span style="font-size:18px;">💬</span> 남편에게 내 '자유시간' 사달라고 톡 보내기
             </button>
 
@@ -437,7 +449,7 @@ function generateToyHTML(toy, favs) {
 }
 
 function shareToHusbandToy(id) {
-    const toy = toyData.find(t => t.id === id);
+    const toy = toyData.find(t => t.id == id);
     if(!toy) return;
 
     const partnerCode = "flDiNnqr00";

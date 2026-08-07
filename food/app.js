@@ -292,14 +292,27 @@ function runFoodEngine() {
         if (item.age !== age) return false;
         if (goal !== 'all' && item.goal !== goal) return false;
         
-        // 1. 알레르기 차단
+        // 1. ✨ 알레르기 철벽 차단 (스마트 한영 매핑 로직)
         if (customAllergies.length > 0) {
-            const hasCustomAllergy = customAllergies.some(customItem => 
-                item.name.includes(customItem) || 
-                item.ingredients.includes(customItem) ||
-                (item.allergens && item.allergens.some(a => a.includes(customItem)))
-            );
-            if (hasCustomAllergy) return false;
+            // 엄마들이 자주 입력하는 한글 알레르기 키워드를 영어 DB(allergens)와 매핑
+            const allergyDictionary = {
+                '계란': 'egg', '달걀': 'egg', '흰자': 'egg', '노른자': 'egg',
+                '우유': 'dairy', '치즈': 'dairy', '유제품': 'dairy', '요거트': 'dairy',
+                '밀가루': 'flour', '밀': 'flour', '면': 'flour', '빵': 'flour',
+                '콩': 'soy', '대두': 'soy', '두부': 'soy', '된장': 'soy',
+                '새우': 'shellfish', '게': 'shellfish', '갑각류': 'shellfish',
+                '생선': 'seafood', '조개': 'seafood', '해산물': 'seafood',
+                '땅콩': 'peanut', '호두': 'peanut', '견과': 'peanut', '견과류': 'peanut'
+            };
+
+            const hasCustomAllergy = customAllergies.some(customItem => {
+                const mappedEng = allergyDictionary[customItem]; // "유제품" -> "dairy" 변환
+                
+                return item.name.includes(customItem) || 
+                       item.ingredients.includes(customItem) ||
+                       (item.allergens && item.allergens.includes(mappedEng)); // 영어 DB 완벽 매칭
+            });
+            if (hasCustomAllergy) return false; // 하나라도 걸리면 즉시 아웃!
         }
         
         // 2. 냉장고 파먹기
@@ -313,6 +326,7 @@ function runFoodEngine() {
 
         return true;
     });
+
 
     if (filtered.length === 0) {
         resultArea.innerHTML = `<div class="premium-empty-state"><div class="empty-text"><b>조건에 맞는 레시피가 없습니다.</b><span>냉장고 재료나 필터를 변경해 보세요.</span></div></div>`;
