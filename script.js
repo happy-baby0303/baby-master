@@ -3199,20 +3199,22 @@ window.setTrackerDateOffset = function(offset) {
 };
 
 // ==========================================
-// 💡 모유수유 버그 및 투약 버튼 컬러 토글 엔진 완벽 수정본
+// 💡 투약/기저귀/수면 버튼 컬러 토글 엔진 (소프트 UI 보더리스 패치)
 // ==========================================
 window.selectTrackerBtn = function(btn, category) {
     // 1. 모유 양쪽 버튼 로직
     if (category === 'breast_both') {
         const siblings = btn.parentElement.children;
         for(let i=0; i<siblings.length; i++) {
-            siblings[i].style.setProperty('background', 'var(--bg-card)', 'important');
-            siblings[i].style.setProperty('color', 'var(--text-s)', 'important');
-            siblings[i].style.setProperty('border', '1px solid var(--border)', 'important');
+            siblings[i].style.setProperty('background', 'var(--bg-sub)', 'important');
+            siblings[i].style.setProperty('color', '#8B95A1', 'important');
+            siblings[i].style.setProperty('border', 'none', 'important');
+            siblings[i].style.setProperty('font-weight', '700', 'important');
         }
-        btn.style.setProperty('background', '#F0F7FF', 'important');
+        btn.style.setProperty('background', '#EBF4FF', 'important');
         btn.style.setProperty('color', '#3182F6', 'important');
-        btn.style.setProperty('border', '1px solid #3182F6', 'important');
+        btn.style.setProperty('border', 'none', 'important');
+        btn.style.setProperty('font-weight', '900', 'important');
         window.trackerState.status = '양쪽';
         return;
     }
@@ -3222,20 +3224,22 @@ window.selectTrackerBtn = function(btn, category) {
         const siblings = btn.parentElement.children;
         for(let i=0; i<siblings.length; i++) {
             siblings[i].style.setProperty('background', 'var(--bg-sub)', 'important');
-            siblings[i].style.setProperty('color', 'var(--text-s)', 'important');
-            siblings[i].style.setProperty('border', '1px solid var(--border)', 'important');
+            siblings[i].style.setProperty('color', '#8B95A1', 'important');
+            siblings[i].style.setProperty('border', 'none', 'important');
+            siblings[i].style.setProperty('font-weight', '700', 'important');
         }
-        btn.style.setProperty('background', '#ECFDF5', 'important'); // 초록색 하이라이트
+        btn.style.setProperty('background', '#ECFDF5', 'important'); 
         btn.style.setProperty('color', '#059669', 'important');
-        btn.style.setProperty('border', '1px solid #059669', 'important');
+        btn.style.setProperty('border', 'none', 'important');
+        btn.style.setProperty('font-weight', '900', 'important');
         
         window.trackerState.subType = btn.innerText;
         const customInput = document.getElementById('v-med-custom');
-        if(customInput) customInput.value = ''; // 직접 입력창 비우기
+        if(customInput) customInput.value = ''; 
         return;
     }
 
-    // 3. 똥 색깔 버튼 로직 (그대로 유지)
+    // 3. 똥 색깔 버튼 로직
     if (category.includes('status_')) {
         const siblings = btn.parentElement.children;
         const warningArea = document.getElementById('poop-warning-msg');
@@ -3245,10 +3249,7 @@ window.selectTrackerBtn = function(btn, category) {
             siblings[i].style.setProperty('box-shadow', 'none', 'important');
             siblings[i].style.setProperty('opacity', '0.35', 'important');
             siblings[i].style.setProperty('filter', 'grayscale(100%)', 'important');
-            siblings[i].style.setProperty('border', 'none', 'important');
-            if(siblings[i].innerText.includes('흰')) {
-                siblings[i].style.setProperty('border', '1px solid #E5E8EB', 'important');
-            }
+            siblings[i].style.setProperty('border', 'none', 'important'); 
         }
         
         btn.style.setProperty('transform', 'scale(1.05)', 'important');
@@ -3259,11 +3260,10 @@ window.selectTrackerBtn = function(btn, category) {
 
         let statusTxt = '';
         let warningTxt = '🚨 단순 참고용: 평소와 다르다면 반드시 전문의의 진료를 받으세요.';
-        let warningColor = '#8B95A1';
-        let warningBg = 'transparent';
+        let warningColor = '#8B95A1'; let warningBg = 'transparent';
 
         const feedingStage = localStorage.getItem('tosil_feedingStage') || '모유/분유';
-        const isSolidFood = feedingStage.includes('이유식');
+        const isSolidFood = feedingStage.includes('이유식') || feedingStage.includes('유아식');
 
         if (category === 'status_golden') { 
             btn.style.setProperty('background', '#FBBF24', 'important'); btn.style.setProperty('color', '#000', 'important'); statusTxt = '황금색'; 
@@ -3278,7 +3278,7 @@ window.selectTrackerBtn = function(btn, category) {
         else if (category === 'status_brown') { 
             btn.style.setProperty('background', '#B45309', 'important'); btn.style.setProperty('color', '#FFF', 'important'); statusTxt = '갈색'; 
             if (isSolidFood) {
-                warningTxt = '🟢 건강한 갈색 변입니다!<br>이유식을 먹으면서 어른처럼 변이 짙어지는 자연스러운 과정입니다.';
+                warningTxt = '🟢 건강한 갈색 변입니다!<br>어른처럼 변이 짙어지는 자연스러운 과정입니다.';
                 warningColor = '#00B37A'; warningBg = '#E6F7F2';
             } else {
                 warningTxt = '⚠️ 수분 부족 / 변비 의심!<br>모유/분유만 먹는데 짙은 갈색에 딱딱하다면 수분 부족일 수 있습니다.';
@@ -3286,7 +3286,7 @@ window.selectTrackerBtn = function(btn, category) {
             }
         }
         else if (category === 'status_white') { 
-            btn.style.setProperty('background', '#FFFFFF', 'important'); btn.style.setProperty('color', '#191F28', 'important'); statusTxt = '흰/회색';
+            btn.style.setProperty('background', '#F2F5F8', 'important'); btn.style.setProperty('color', '#191F28', 'important'); statusTxt = '흰/회색';
             warningTxt = '🚨 소아과 방문 요망! 담도폐쇄증이 의심될 수 있는 색상입니다.';
             warningColor = '#D32F2F'; warningBg = '#FFF0F1';
         }
@@ -3302,60 +3302,46 @@ window.selectTrackerBtn = function(btn, category) {
         }
         
         window.trackerState.status = statusTxt;
-        
         if(warningArea) {
-            warningArea.innerHTML = warningTxt;
-            warningArea.style.color = warningColor;
-            warningArea.style.background = warningBg;
-            warningArea.style.padding = '8px 12px';
-            warningArea.style.borderRadius = '8px';
+            warningArea.innerHTML = warningTxt; warningArea.style.color = warningColor;
+            warningArea.style.background = warningBg; warningArea.style.padding = '10px 14px';
+            warningArea.style.borderRadius = '12px'; warningArea.style.marginTop = '16px';
         }
         return; 
     }
 
-    // 4. 일반 카테고리 버튼들 초기화
+    // 4. 일반 카테고리 버튼들 초기화 (소프트 UI)
     const siblings = btn.parentElement.children;
     for(let i=0; i<siblings.length; i++) {
-        siblings[i].style.setProperty('background', 'var(--bg-card)', 'important');
-        siblings[i].style.setProperty('color', 'var(--text-s)', 'important');
-        siblings[i].style.setProperty('border', '1px solid var(--border)', 'important');
+        siblings[i].style.setProperty('background', 'var(--bg-sub)', 'important');
+        siblings[i].style.setProperty('color', '#8B95A1', 'important');
+        siblings[i].style.setProperty('border', 'none', 'important');
+        siblings[i].style.setProperty('font-weight', '700', 'important');
     }
 
-    if (category.includes('feed') || category.includes('breast')) {
-        btn.style.setProperty('background', '#F0F7FF', 'important');
+    // 활성화된 버튼 색상 입히기 (테두리 없음!)
+    if (category.includes('feed') || category.includes('breast') || category.includes('diaper_pee')) {
+        btn.style.setProperty('background', '#EBF4FF', 'important');
         btn.style.setProperty('color', '#3182F6', 'important');
-        btn.style.setProperty('border', '1px solid #3182F6', 'important');
-    } else if (category.includes('diaper_pee')) {
-        btn.style.setProperty('background', '#EBF8FF', 'important');
-        btn.style.setProperty('color', '#3182F6', 'important');
-        btn.style.setProperty('border', '1px solid #3182F6', 'important');
     } else if (category.includes('diaper_poop')) {
         btn.style.setProperty('background', '#FFF0F1', 'important');
         btn.style.setProperty('color', '#F04452', 'important');
-        btn.style.setProperty('border', '1px solid #F04452', 'important');
     } else if (category === 'diaper_both' || category === 'sleep_night') {
         btn.style.setProperty('background', '#F3E8FF', 'important');
         btn.style.setProperty('color', '#7C3AED', 'important');
-        btn.style.setProperty('border', '1px solid #C4B5FD', 'important');
     } else if (category === 'sleep_day') {
         btn.style.setProperty('background', '#FFF9E6', 'important');
         btn.style.setProperty('color', '#B78103', 'important');
-        btn.style.setProperty('border', '1px solid #FFE58F', 'important');
     }
+    btn.style.setProperty('border', 'none', 'important');
+    btn.style.setProperty('font-weight', '900', 'important');
 
-    // 🚨 [핵심 패치] 모유 직수 버튼을 눌렀을 때 제대로 왼쪽/오른쪽 타이머 화면으로 넘어가게 하는 부분!
     if (category === 'feed') {
-        const rawText = btn.innerText.replace(/[^가-힣]/g, ''); // '모유직수' 추출
-
-        if (rawText.includes('모유')) {
-            window.trackerState.subType = '모유';
-        } else if (rawText.includes('분유')) {
-            window.trackerState.subType = '분유';
-        } else if (rawText.includes('유축')) {
-            window.trackerState.subType = '유축';
-        } else {
-            window.trackerState.subType = rawText;
-        }
+        const rawText = btn.innerText.replace(/[^가-힣]/g, ''); 
+        if (rawText.includes('모유')) window.trackerState.subType = '모유';
+        else if (rawText.includes('분유')) window.trackerState.subType = '분유';
+        else if (rawText.includes('유축')) window.trackerState.subType = '유축';
+        else window.trackerState.subType = rawText;
 
         const mlArea = document.getElementById('feed-ml-area');
         const breastArea = document.getElementById('feed-breast-area');
@@ -3368,11 +3354,9 @@ window.selectTrackerBtn = function(btn, category) {
             if(breastArea) breastArea.style.display = 'none';
             window.trackerState.status = '';
         }
-    } else if (category === 'breast_left') {
-        window.trackerState.status = '왼쪽';
-    } else if (category === 'breast_right') {
-        window.trackerState.status = '오른쪽';
-    } else if (category === 'diaper_pee') {
+    } else if (category === 'breast_left') window.trackerState.status = '왼쪽';
+    else if (category === 'breast_right') window.trackerState.status = '오른쪽';
+    else if (category === 'diaper_pee') {
         window.trackerState.subType = '소변';
         const statusArea = document.getElementById('diaper-status-area');
         if(statusArea) statusArea.style.display = 'none';
@@ -3389,12 +3373,12 @@ window.selectTrackerBtn = function(btn, category) {
     else if (category === 'sleep_night') window.trackerState.subType = '밤잠';
 };
 
-// 투약 직접 입력시 칩 버튼 색깔 해제 
 window.clearMedButtons = function() {
     document.querySelectorAll('button[onclick*="med_"]').forEach(btn => {
         btn.style.setProperty('background', 'var(--bg-sub)', 'important');
-        btn.style.setProperty('color', 'var(--text-s)', 'important');
-        btn.style.setProperty('border', '1px solid var(--border)', 'important');
+        btn.style.setProperty('color', '#8B95A1', 'important');
+        btn.style.setProperty('border', 'none', 'important');
+        btn.style.setProperty('font-weight', '700', 'important');
     });
     window.trackerState.subType = ''; 
 };
@@ -3465,28 +3449,60 @@ window.openTrackerSheet = function(type, editId = null, preSelect = null) {
         }
     }
 
-    // 🚨 상하 여백은 원래대로 타이트하게 줄이고, 날짜만 완벽하게 정중앙에 배치!
+   // 🚨 안드로이드 날짜 쏠림 현상 원천 차단 & 대표님의 천재적인 UX 아이디어(연도 삭제+통합) 반영!
+    let selectedD = new Date(displayDateStr);
+    let todayD = new Date();
+    let isToday = selectedD.toDateString() === todayD.toDateString();
+    let initialDateText = isToday ? '오늘' : String(selectedD.getMonth()+1).padStart(2,'0') + '.' + String(selectedD.getDate()).padStart(2,'0');
+    let initialDateColor = isToday ? '#3182F6' : 'var(--text-m)';
+
+   // 🚨 [혁신적 UX] 대표님 기획 반영: 날짜+시간 통합 4륜 구동 스와이프 UI (완벽 대칭 패치!)
     const baseTimeInputHtml = `
-        <div style="text-align: center; margin-bottom: 20px;">
-            <div style="display:flex; justify-content:center; align-items:center; margin-bottom:16px; width:100%;">
-                <div style="display:inline-flex; align-items:center; justify-content:center; background:var(--bg-sub); padding:6px 16px; border-radius:12px; border:1px solid var(--border);">
-                    <span style="font-size:13px; font-weight:800; color:var(--text-s); margin-right:8px;">날짜</span>
-                    <input type="date" id="v-tracker-custom-date" value="${displayDateStr}" style="background:transparent; border:none; outline:none; color:var(--text-m); font-family:inherit; font-size:15px; font-weight:900; letter-spacing:-0.5px; padding:0; width:135px; text-align:center;">
-                </div>
-            </div>
-            ${pastDateBadgeHtml}
-            <div style="font-size:12.5px; font-weight:800; color:var(--text-s); margin-bottom:10px;">기록 시간 (스와이프하여 수정)</div>
+        <div style="text-align: center; margin-bottom: 24px;">
+            <div style="font-size:12.5px; font-weight:800; color:var(--text-s); margin-bottom:12px;">기록 시간 (스와이프하여 수정)</div>
             <style>
                 .drum-picker::-webkit-scrollbar { display: none; }
                 .drum-picker { -ms-overflow-style: none; scrollbar-width: none; }
-                input[type="date"]::-webkit-calendar-picker-indicator { cursor: pointer; opacity: 0.6; padding:4px;}
+                /* 💡 비활성 숫자는 작고 연하게, 선택된 숫자는 크고 진하게 확실한 대비 주기 */
+                .drum-item { height: 44px; display: flex; align-items: center; justify-content: center; font-size: 18px; font-weight: 700; color: #B0B8C1; transition: all 0.2s cubic-bezier(0.2, 0.8, 0.2, 1); }
+                .drum-item.active { font-size: 24px; font-weight: 900; color: var(--text-m); }
             </style>
+            
             <div style="display:flex; justify-content:center; align-items:center; height: 140px; position:relative; overflow:hidden; background:var(--bg-sub); border-radius:20px; box-shadow:inset 0 2px 6px rgba(0,0,0,0.02);">
-                <div style="position:absolute; top:50%; left:20px; right:20px; height:44px; transform:translateY(-50%); background:rgba(49, 130, 246, 0.08); border-radius:12px; pointer-events:none; border: 1px solid rgba(49, 130, 246, 0.15);"></div>
-                <div id="picker-hour" class="drum-picker" style="height:100%; overflow-y:auto; scroll-snap-type:y mandatory; width:80px; text-align:center; display:flex; flex-direction:column; scroll-behavior: smooth;"></div>
-                <div style="font-size:22px; font-weight:900; color:var(--text-s); margin:0 10px; z-index:1; padding-bottom:4px;">:</div>
-                <div id="picker-minute" class="drum-picker" style="height:100%; overflow-y:auto; scroll-snap-type:y mandatory; width:80px; text-align:center; display:flex; flex-direction:column; scroll-behavior: smooth;"></div>
+                
+                <!-- 선택 영역 파란색 하이라이트 박스 -->
+                <div style="position:absolute; top:50%; left:12px; right:12px; height:44px; transform:translateY(-50%); background:rgba(49, 130, 246, 0.08); border-radius:12px; pointer-events:none; border: 1px solid rgba(49, 130, 246, 0.15);"></div>
+
+                <!-- 🌟 레이아웃을 정확히 5:5로 쪼개서 한가운데 틈이 생기지 않도록 강제 정렬! -->
+                <div style="display: flex; width: 100%; height: 100%; z-index: 1;">
+                    
+                    <!-- 📅 왼쪽 그룹: 월, 일 (우측 정렬로 가운데를 향해 바짝 붙임) -->
+                    <div style="flex: 1; display: flex; justify-content: flex-end; align-items: center; padding-right: 16px;">
+                        <div id="picker-month" class="drum-picker" style="height:100%; overflow-y:auto; scroll-snap-type:y mandatory; width:36px;"></div>
+                        <div style="font-size:14px; font-weight:800; color:var(--text-m); margin:0 6px 0 2px;">월</div>
+                        
+                        <div id="picker-day" class="drum-picker" style="height:100%; overflow-y:auto; scroll-snap-type:y mandatory; width:36px;"></div>
+                        <div style="font-size:14px; font-weight:800; color:var(--text-m); margin-left:2px;">일</div>
+                    </div>
+
+                    <!-- ➖ 정중앙 그룹: 구분선 (무조건 화면 한가운데 오차 없이 고정) -->
+                    <div style="display: flex; align-items: center; justify-content: center;">
+                        <div style="width:2px; height:24px; background:var(--border); border-radius:1px; opacity:0.6;"></div>
+                    </div>
+
+                    <!-- ⏰ 오른쪽 그룹: 시, 분 (좌측 정렬로 가운데를 향해 바짝 붙임) -->
+                    <div style="flex: 1; display: flex; justify-content: flex-start; align-items: center; padding-left: 16px;">
+                        <div id="picker-hour" class="drum-picker" style="height:100%; overflow-y:auto; scroll-snap-type:y mandatory; width:36px;"></div>
+                        <div style="font-size:22px; font-weight:900; color:var(--text-m); margin:0 4px; padding-bottom:4px;">:</div>
+                        <div id="picker-minute" class="drum-picker" style="height:100%; overflow-y:auto; scroll-snap-type:y mandatory; width:36px;"></div>
+                    </div>
+
+                </div>
             </div>
+            
+            <!-- 백그라운드 데이터 저장용 -->
+            <input type="hidden" id="v-tracker-year" value="${new Date(displayDateStr).getFullYear()}">
+            <input type="hidden" id="v-tracker-custom-date" value="${displayDateStr}">
             <input type="hidden" id="v-tracker-time" value="${targetTime}">
         </div>
     `;
@@ -3496,74 +3512,67 @@ window.openTrackerSheet = function(type, editId = null, preSelect = null) {
         let records = JSON.parse(localStorage.getItem('tosil_tracker_records')) || [];
         
         let feedRecords = records.filter(r => r.type === 'feed' && r.subType !== '모유' && r.subType !== '이유식' && r.amount > 0);
-        
-        // 🌟 [복구 완료] 최근 기록 중 서로 다른 양(ml) 최대 2개까지 정확하게 수집!
         let uniqueAmounts = [];
         for (let r of feedRecords) {
             if (!uniqueAmounts.includes(r.amount)) uniqueAmounts.push(r.amount);
             if (uniqueAmounts.length >= 2) break;
         }
 
-        // 수집된 '늘 먹던 양' 버튼들을 생성
         let quickButtonsHtml = '';
         if (uniqueAmounts.length > 0) {
             uniqueAmounts.forEach(amt => {
-                quickButtonsHtml += `<button type="button" class="quick-btn active" onclick="window.setFeedAmount(${amt})" style="flex-shrink: 0; padding: 8px 12px; background: #EBF4FF; color: #3182F6; border: none; border-radius: 10px; font-weight: 900; font-size: 13px; cursor: pointer;">🍼 ${amt}ml</button>`;
+                quickButtonsHtml += `<button type="button" class="quick-btn active" onclick="window.setFeedAmount(${amt})" style="flex-shrink: 0; padding: 10px 14px; background: #EBF4FF; color: #3182F6; border: none; border-radius: 12px; font-weight: 900; font-size: 13.5px; cursor: pointer;">🍼 ${amt}ml</button>`;
             });
         } else {
-            quickButtonsHtml = `<button type="button" class="quick-btn active" onclick="window.setFeedAmount(160)" style="flex-shrink: 0; padding: 8px 12px; background: #EBF4FF; color: #3182F6; border: none; border-radius: 10px; font-weight: 900; font-size: 13px; cursor: pointer;">🍼 160ml</button>`;
+            quickButtonsHtml = `<button type="button" class="quick-btn active" onclick="window.setFeedAmount(160)" style="flex-shrink: 0; padding: 10px 14px; background: #EBF4FF; color: #3182F6; border: none; border-radius: 12px; font-weight: 900; font-size: 13.5px; cursor: pointer;">🍼 160ml</button>`;
         }
 
         let foodRecords = records.filter(r => r.type === 'feed' && r.subType === '이유식' && r.amount > 0);
         let recentFoodAmount = foodRecords.length > 0 ? foodRecords[0].amount : 60;
         let foodQuickHtml = foodRecords.length > 0
-            ? `<button type="button" class="quick-btn active" onclick="window.adjustFoodAmount(${recentFoodAmount} - parseInt(document.getElementById('v-food-amount').value||0))" style="flex-shrink: 0; padding: 8px 12px; background: #E6F7F2; color: #00B37A; border: none; border-radius: 10px; font-weight: 900; font-size: 13px; cursor: pointer;">🥄 늘 먹던 ${recentFoodAmount}g</button>`
+            ? `<button type="button" class="quick-btn active" onclick="window.adjustFoodAmount(${recentFoodAmount} - parseInt(document.getElementById('v-food-amount').value||0))" style="flex-shrink: 0; padding: 10px 14px; background: #E6F7F2; color: #00B37A; border: none; border-radius: 12px; font-weight: 900; font-size: 13.5px; cursor: pointer;">🥄 늘 먹던 ${recentFoodAmount}g</button>`
             : '';
 
         let milkHtml = `
             <div id="milk-input-area" style="margin-top: 10px;">
-                
-                <!-- 분유/유축 vs 모유 직수 선택 버튼 -->
-                <div style="display: flex; gap: 8px; margin-bottom: 20px;">
-                    <button class="btn-main" onclick="window.selectTrackerBtn(this, 'feed')" style="flex: 1; display: flex; align-items: center; justify-content: center; background: var(--bg-card); color: var(--text-s); border: 1px solid var(--border); box-shadow: none; margin:0; transition:0.2s; padding: 14px 0; border-radius: 14px; font-weight: 800; font-size: 14px;">🍼 분유/유축</button>
-                    <button class="btn-main" onclick="window.selectTrackerBtn(this, 'feed')" style="flex: 1; display: flex; align-items: center; justify-content: center; background: var(--bg-card); color: var(--text-s); border: 1px solid var(--border); box-shadow: none; margin:0; transition:0.2s; padding: 14px 0; border-radius: 14px; font-weight: 800; font-size: 14px;">🤱 모유 직수</button>
+                <div style="display: flex; gap: 8px; margin-bottom: 24px;">
+                    <button class="btn-main" onclick="window.selectTrackerBtn(this, 'feed')" style="flex: 1; display: flex; align-items: center; justify-content: center; background: var(--bg-sub); color: #8B95A1; border: none; margin:0; transition:0.2s; padding: 16px 0; border-radius: 16px; font-weight: 700; font-size: 14.5px;">🍼 분유/유축</button>
+                    <button class="btn-main" onclick="window.selectTrackerBtn(this, 'feed')" style="flex: 1; display: flex; align-items: center; justify-content: center; background: var(--bg-sub); color: #8B95A1; border: none; margin:0; transition:0.2s; padding: 16px 0; border-radius: 16px; font-weight: 700; font-size: 14.5px;">🤱 모유 직수</button>
                 </div>
 
-                <!-- 🍼 분유/유축 영역 -->
                 <div id="feed-ml-area" style="text-align: center; margin-bottom: 20px;">
                     <div style="font-size: 13px; font-weight: 800; color: var(--text-s); margin-bottom: 8px;">먹은 양 (ml)</div>
-                    <div style="display: flex; justify-content: center; align-items: baseline; gap: 4px; margin-bottom: 14px;">
-                        <input type="number" id="v-feed-amount" placeholder="${uniqueAmounts[0] || 160}" style="font-size: 42px; font-weight: 900; color: var(--text-m); border: none; outline: none; background: transparent; text-align: center; width: 130px; padding: 0; margin: 0; transition: 0.3s;">
+                    <div style="display: flex; justify-content: center; align-items: baseline; gap: 4px; margin-bottom: 16px;">
+                        <input type="number" id="v-feed-amount" placeholder="${uniqueAmounts[0] || 160}" style="font-size: 46px; font-weight: 900; color: var(--text-m); border: none; outline: none; background: transparent; text-align: center; width: 130px; padding: 0; margin: 0; transition: 0.3s;">
                         <span style="font-size: 17px; font-weight: 800; color: var(--text-s);">ml</span>
                     </div>
-                    <div style="display: flex; justify-content: center; gap: 6px; overflow-x: auto; padding-bottom: 4px; scrollbar-width: none;">
+                    <div style="display: flex; justify-content: center; gap: 8px; overflow-x: auto; padding-bottom: 4px; scrollbar-width: none;">
                         ${quickButtonsHtml}
-                        <div style="width: 1px; background: var(--border); margin: 0 2px;"></div>
-                        <button type="button" onclick="window.adjustFeedAmount(10)" style="flex-shrink: 0; padding: 8px 12px; background: var(--bg-sub); color: var(--text-m); border: none; border-radius: 10px; font-weight: 900; font-size: 13px; cursor: pointer;">+10</button>
-                        <button type="button" onclick="window.adjustFeedAmount(-10)" style="flex-shrink: 0; padding: 8px 12px; background: var(--bg-sub); color: var(--text-m); border: none; border-radius: 10px; font-weight: 900; font-size: 13px; cursor: pointer;">-10</button>
+                        <div style="width: 1px; background: var(--border); margin: 0 4px;"></div>
+                        <button type="button" onclick="window.adjustFeedAmount(10)" style="flex-shrink: 0; padding: 10px 14px; background: var(--bg-sub); color: var(--text-m); border: none; border-radius: 12px; font-weight: 900; font-size: 13.5px; cursor: pointer;">+10</button>
+                        <button type="button" onclick="window.adjustFeedAmount(-10)" style="flex-shrink: 0; padding: 10px 14px; background: var(--bg-sub); color: var(--text-m); border: none; border-radius: 12px; font-weight: 900; font-size: 13.5px; cursor: pointer;">-10</button>
                     </div>
                 </div>
 
-                <!-- 🤱 모유 직수 영역 (타이머 포함) -->
                 <div id="feed-breast-area" style="display: none; margin-bottom: 20px;">
-                    <div style="font-size: 13px; font-weight: 800; color: var(--text-s); margin-bottom: 10px; text-align:center;">방향을 선택해주세요</div>
-                    <div style="display: flex; justify-content: center; gap: 8px; margin-bottom: 20px;">
-                        <button class="btn-main" onclick="window.selectTrackerBtn(this, 'breast_left')" style="flex:1; display: flex; align-items: center; justify-content: center; padding: 12px 0; background: var(--bg-sub); color: var(--text-s); border: 1px solid var(--border); border-radius: 12px; margin:0; transition:0.2s; font-size: 14px; font-weight:800;">왼쪽 (L)</button>
-                        <button class="btn-main" onclick="window.selectTrackerBtn(this, 'breast_right')" style="flex:1; display: flex; align-items: center; justify-content: center; padding: 12px 0; background: var(--bg-sub); color: var(--text-s); border: 1px solid var(--border); border-radius: 12px; margin:0; transition:0.2s; font-size: 14px; font-weight:800;">오른쪽 (R)</button>
-                        <button class="btn-main" onclick="window.selectTrackerBtn(this, 'breast_both')" style="flex:1; display: flex; align-items: center; justify-content: center; padding: 12px 0; background: var(--bg-sub); color: var(--text-s); border: 1px solid var(--border); border-radius: 12px; margin:0; transition:0.2s; font-size: 14px; font-weight:800;">양쪽 다</button>
+                    <div style="font-size: 13px; font-weight: 800; color: var(--text-s); margin-bottom: 12px; text-align:center;">방향을 선택해주세요</div>
+                    <div style="display: flex; justify-content: center; gap: 8px; margin-bottom: 24px;">
+                        <button class="btn-main" onclick="window.selectTrackerBtn(this, 'breast_left')" style="flex:1; display: flex; align-items: center; justify-content: center; padding: 14px 0; background: var(--bg-sub); color: #8B95A1; border: none; border-radius: 14px; margin:0; transition:0.2s; font-size: 14.5px; font-weight:700;">왼쪽 (L)</button>
+                        <button class="btn-main" onclick="window.selectTrackerBtn(this, 'breast_right')" style="flex:1; display: flex; align-items: center; justify-content: center; padding: 14px 0; background: var(--bg-sub); color: #8B95A1; border: none; border-radius: 14px; margin:0; transition:0.2s; font-size: 14.5px; font-weight:700;">오른쪽 (R)</button>
+                        <button class="btn-main" onclick="window.selectTrackerBtn(this, 'breast_both')" style="flex:1; display: flex; align-items: center; justify-content: center; padding: 14px 0; background: var(--bg-sub); color: #8B95A1; border: none; border-radius: 14px; margin:0; transition:0.2s; font-size: 14.5px; font-weight:700;">양쪽 다</button>
                     </div>
                     
-                    <div style="background: var(--bg-sub); border-radius: 20px; padding: 18px 0; text-align: center; border: 1px solid var(--border);">
-                        <div style="font-size: 12.5px; font-weight: 800; color: var(--text-s); margin-bottom: 6px;">직수 시간</div>
+                    <div style="background: var(--bg-sub); border-radius: 20px; padding: 24px 0; text-align: center; border: none;">
+                        <div style="font-size: 13px; font-weight: 800; color: var(--text-s); margin-bottom: 8px;">직수 시간</div>
                         
-                        <div style="display: flex; justify-content: center; align-items: baseline; gap: 4px; margin-bottom: 14px; height: 55px;">
-                            <input type="number" id="v-breast-amount" placeholder="0" style="font-size: 42px; font-weight: 900; color: var(--text-m); border: none; outline: none; background: transparent; text-align: center; width: 100px; padding: 0; margin: 0; transition: 0.3s;">
+                        <div style="display: flex; justify-content: center; align-items: baseline; gap: 4px; margin-bottom: 20px; height: 55px;">
+                            <input type="number" id="v-breast-amount" placeholder="0" style="font-size: 46px; font-weight: 900; color: var(--text-m); border: none; outline: none; background: transparent; text-align: center; width: 100px; padding: 0; margin: 0; transition: 0.3s;">
                             <span id="v-breast-unit" style="font-size: 17px; font-weight: 800; color: var(--text-s);">분</span>
                             
-                            <div id="v-breast-display" style="display: none; font-size: 42px; font-weight: 900; color: var(--text-m); text-align: center; font-variant-numeric: tabular-nums; letter-spacing: -1px;">00:00</div>
+                            <div id="v-breast-display" style="display: none; font-size: 46px; font-weight: 900; color: var(--text-m); text-align: center; font-variant-numeric: tabular-nums; letter-spacing: -1px;">00:00</div>
                         </div>
 
-                        <button id="btn-breast-timer" onclick="window.toggleBreastTimer()" style="padding: 12px 28px; background: var(--bg-card); color: var(--primary); border: 1px solid var(--border); border-radius: 100px; font-size: 14px; font-weight: 900; cursor: pointer; transition: 0.2s; box-shadow: 0 2px 6px rgba(0,0,0,0.04);">
+                        <button id="btn-breast-timer" onclick="window.toggleBreastTimer()" style="padding: 14px 32px; background: var(--bg-card); color: var(--primary); border: none; border-radius: 100px; font-size: 15px; font-weight: 900; cursor: pointer; transition: 0.2s; box-shadow: 0 4px 12px rgba(0,0,0,0.05);">
                             ▶ 타이머 시작
                         </button>
                     </div>
@@ -3573,50 +3582,48 @@ window.openTrackerSheet = function(type, editId = null, preSelect = null) {
         let foodHtml = `
             <div id="food-input-area" style="display: none; text-align: center; margin-bottom: 20px;">
                 <div style="font-size: 13px; font-weight: 800; color: var(--text-s); margin-bottom: 8px;">먹은 이유식 양 (g)</div>
-                <div style="display: flex; justify-content: center; align-items: baseline; gap: 4px; margin-bottom: 14px;">
-                    <input type="number" id="v-food-amount" placeholder="${recentFoodAmount}" style="font-size: 42px; font-weight: 900; color: var(--text-m); border: none; outline: none; background: transparent; text-align: center; width: 130px; padding: 0; margin: 0; transition: 0.3s;">
+                <div style="display: flex; justify-content: center; align-items: baseline; gap: 4px; margin-bottom: 16px;">
+                    <input type="number" id="v-food-amount" placeholder="${recentFoodAmount}" style="font-size: 46px; font-weight: 900; color: var(--text-m); border: none; outline: none; background: transparent; text-align: center; width: 130px; padding: 0; margin: 0; transition: 0.3s;">
                     <span style="font-size: 17px; font-weight: 800; color: var(--text-s);">g</span>
                 </div>
-                <div style="display: flex; justify-content: center; gap: 6px; overflow-x: auto; padding-bottom: 4px; scrollbar-width: none;">
+                <div style="display: flex; justify-content: center; gap: 8px; overflow-x: auto; padding-bottom: 4px; scrollbar-width: none;">
                     ${foodQuickHtml}
-                    <div style="width: 1px; background: var(--border); margin: 0 2px;"></div>
-                    <button type="button" onclick="window.adjustFoodAmount(10)" style="padding: 8px 14px; background: rgba(16, 185, 129, 0.1); color: #10B981; border: none; border-radius: 10px; font-weight: 800; font-size: 13px; cursor: pointer; flex-shrink:0;">+10</button>
-                    <button type="button" onclick="window.adjustFoodAmount(-10)" style="padding: 8px 14px; background: rgba(240, 68, 82, 0.1); color: #F04452; border: none; border-radius: 10px; font-weight: 800; font-size: 13px; cursor: pointer; flex-shrink:0;">-10</button>
+                    <div style="width: 1px; background: var(--border); margin: 0 4px;"></div>
+                    <button type="button" onclick="window.adjustFoodAmount(10)" style="padding: 10px 16px; background: rgba(16, 185, 129, 0.1); color: #10B981; border: none; border-radius: 12px; font-weight: 800; font-size: 13.5px; cursor: pointer; flex-shrink:0;">+10</button>
+                    <button type="button" onclick="window.adjustFoodAmount(-10)" style="padding: 10px 16px; background: rgba(240, 68, 82, 0.1); color: #F04452; border: none; border-radius: 12px; font-weight: 800; font-size: 13.5px; cursor: pointer; flex-shrink:0;">-10</button>
                 </div>
             </div>`;
 
-   // 🚨 [디자인 최종 교정] 높이와 패딩을 완벽하게 고정하여 수직 정중앙 강제 배치
         body.innerHTML = baseTimeInputHtml + `
-            <div style="display: flex; align-items: center; justify-content: center; background: var(--bg-sub); border-radius: 16px; padding: 4px; margin-bottom: 20px; border: 1px solid var(--border); box-sizing: border-box; height: 50px;">
-                <button id="tab-btn-milk" class="btn-main" onclick="window.toggleMammaTab('milk')" style="flex: 1; height: 42px; display: flex; align-items: center; justify-content: center; margin: 0; background: var(--bg-card); color: var(--text-m); border: none; border-radius: 12px; font-size: 14px; font-weight: 900; cursor: pointer; box-shadow: 0 2px 6px rgba(0,0,0,0.04); transition: 0.2s;">🍼 수유</button>
-                <button id="tab-btn-food" class="btn-main" onclick="window.toggleMammaTab('food')" style="flex: 1; height: 42px; display: flex; align-items: center; justify-content: center; margin: 0; background: transparent; color: var(--text-s); border: none; border-radius: 12px; font-size: 14px; font-weight: 800; cursor: pointer; transition: 0.2s;">🥄 이유식</button>
+            <div style="display: flex; align-items: center; justify-content: center; background: var(--bg-sub); border-radius: 18px; padding: 4px; margin-bottom: 24px; border: none; box-sizing: border-box; height: 54px;">
+                <button id="tab-btn-milk" class="btn-main" onclick="window.toggleMammaTab('milk')" style="flex: 1; height: 46px; display: flex; align-items: center; justify-content: center; margin: 0; background: var(--bg-card); color: var(--text-m); border: none; border-radius: 14px; font-size: 15px; font-weight: 900; cursor: pointer; box-shadow: 0 2px 8px rgba(0,0,0,0.04); transition: 0.2s;">🍼 수유</button>
+                <button id="tab-btn-food" class="btn-main" onclick="window.toggleMammaTab('food')" style="flex: 1; height: 46px; display: flex; align-items: center; justify-content: center; margin: 0; background: transparent; color: var(--text-s); border: none; border-radius: 14px; font-size: 15px; font-weight: 800; cursor: pointer; transition: 0.2s;">🥄 이유식</button>
             </div>
             ${milkHtml}
             ${foodHtml}
         `;
         if(saveBtn) saveBtn.style.display = 'block';
     }
-
     else if (type === 'diaper') {
         title.innerHTML = '💩 기저귀 기록하기';
         body.innerHTML = baseTimeInputHtml + `
-            <div style="display: flex; gap: 8px; margin-bottom: 20px;">
-                <button class="btn-main" onclick="window.selectTrackerBtn(this, 'diaper_pee')" style="flex: 1; background: var(--bg-card); color: var(--text-s); border: 1px solid var(--border); box-shadow: none; margin:0; transition:0.2s; padding:12px 0;">💧 소변</button>
-                <button class="btn-main" onclick="window.selectTrackerBtn(this, 'diaper_poop')" style="flex: 1; background: var(--bg-card); color: var(--text-s); border: 1px solid var(--border); box-shadow: none; margin:0; transition:0.2s; padding:12px 0;">💩 대변</button>
-                <button class="btn-main" onclick="window.selectTrackerBtn(this, 'diaper_both')" style="flex: 1; background: var(--bg-card); color: var(--text-s); border: 1px solid var(--border); box-shadow: none; margin:0; transition:0.2s; padding:12px 0;">💩 둘 다</button>
+            <div style="display: flex; gap: 8px; margin-bottom: 24px;">
+                <button class="btn-main" onclick="window.selectTrackerBtn(this, 'diaper_pee')" style="flex: 1; background: var(--bg-sub); color: #8B95A1; border: none; box-shadow: none; margin:0; transition:0.2s; padding:16px 0; border-radius:16px; font-weight:700; font-size: 14.5px;">💧 소변</button>
+                <button class="btn-main" onclick="window.selectTrackerBtn(this, 'diaper_poop')" style="flex: 1; background: var(--bg-sub); color: #8B95A1; border: none; box-shadow: none; margin:0; transition:0.2s; padding:16px 0; border-radius:16px; font-weight:700; font-size: 14.5px;">💩 대변</button>
+                <button class="btn-main" onclick="window.selectTrackerBtn(this, 'diaper_both')" style="flex: 1; background: var(--bg-sub); color: #8B95A1; border: none; box-shadow: none; margin:0; transition:0.2s; padding:16px 0; border-radius:16px; font-weight:700; font-size: 14.5px;">💩 둘 다</button>
             </div>
             
             <div id="diaper-status-area" style="display:none; margin-bottom:10px;">
-                <div style="font-size: 12px; font-weight: 800; color: var(--text-s); margin-bottom: 10px; text-align:left;">어떤 색깔인가요?</div>
-                <div style="display: flex; flex-wrap: wrap; gap: 6px; justify-content: space-between;">
-                    <button onclick="window.selectTrackerBtn(this, 'status_golden')" style="flex:1; min-width:30%; padding: 12px 0; background: var(--bg-card); color: var(--text-s); border-radius: 8px; font-weight: 900; font-size: 13.5px; border: 1px solid var(--border); cursor:pointer; transition:0.2s;">황금</button>
-                    <button onclick="window.selectTrackerBtn(this, 'status_green')" style="flex:1; min-width:30%; padding: 12px 0; background: var(--bg-card); color: var(--text-s); border-radius: 8px; font-weight: 900; font-size: 13.5px; border: 1px solid var(--border); cursor:pointer; transition:0.2s;">녹색</button>
-                    <button onclick="window.selectTrackerBtn(this, 'status_brown')" style="flex:1; min-width:30%; padding: 12px 0; background: var(--bg-card); color: var(--text-s); border-radius: 8px; font-weight: 900; font-size: 13.5px; border: 1px solid var(--border); cursor:pointer; transition:0.2s;">갈색</button>
-                    <button onclick="window.selectTrackerBtn(this, 'status_white')" style="flex:1; min-width:30%; padding: 12px 0; background: var(--bg-card); color: var(--text-s); border-radius: 8px; font-weight: 900; font-size: 13.5px; border: 1px solid var(--border); cursor:pointer; transition:0.2s;">흰/회색</button>
-                    <button onclick="window.selectTrackerBtn(this, 'status_red')" style="flex:1; min-width:30%; padding: 12px 0; background: var(--bg-card); color: var(--text-s); border-radius: 8px; font-weight: 900; font-size: 13.5px; border: 1px solid var(--border); cursor:pointer; transition:0.2s;">붉은색</button>
-                    <button onclick="window.selectTrackerBtn(this, 'status_black')" style="flex:1; min-width:30%; padding: 12px 0; background: var(--bg-card); color: var(--text-s); border-radius: 8px; font-weight: 900; font-size: 13.5px; border: 1px solid var(--border); cursor:pointer; transition:0.2s;">검은색</button>
+                <div style="font-size: 13px; font-weight: 800; color: var(--text-s); margin-bottom: 12px; text-align:left;">어떤 색깔인가요?</div>
+                <div style="display: flex; flex-wrap: wrap; gap: 8px; justify-content: space-between;">
+                    <button onclick="window.selectTrackerBtn(this, 'status_golden')" style="flex:1; min-width:30%; padding: 14px 0; background: var(--bg-sub); color: #8B95A1; border-radius: 14px; font-weight: 700; font-size: 14px; border: none; cursor:pointer; transition:0.2s;">황금</button>
+                    <button onclick="window.selectTrackerBtn(this, 'status_green')" style="flex:1; min-width:30%; padding: 14px 0; background: var(--bg-sub); color: #8B95A1; border-radius: 14px; font-weight: 700; font-size: 14px; border: none; cursor:pointer; transition:0.2s;">녹색</button>
+                    <button onclick="window.selectTrackerBtn(this, 'status_brown')" style="flex:1; min-width:30%; padding: 14px 0; background: var(--bg-sub); color: #8B95A1; border-radius: 14px; font-weight: 700; font-size: 14px; border: none; cursor:pointer; transition:0.2s;">갈색</button>
+                    <button onclick="window.selectTrackerBtn(this, 'status_white')" style="flex:1; min-width:30%; padding: 14px 0; background: var(--bg-sub); color: #8B95A1; border-radius: 14px; font-weight: 700; font-size: 14px; border: none; cursor:pointer; transition:0.2s;">흰/회색</button>
+                    <button onclick="window.selectTrackerBtn(this, 'status_red')" style="flex:1; min-width:30%; padding: 14px 0; background: var(--bg-sub); color: #8B95A1; border-radius: 14px; font-weight: 700; font-size: 14px; border: none; cursor:pointer; transition:0.2s;">붉은색</button>
+                    <button onclick="window.selectTrackerBtn(this, 'status_black')" style="flex:1; min-width:30%; padding: 14px 0; background: var(--bg-sub); color: #8B95A1; border-radius: 14px; font-weight: 700; font-size: 14px; border: none; cursor:pointer; transition:0.2s;">검은색</button>
                 </div>
-                <div id="poop-warning-msg" style="font-size:10.5px; color:var(--text-s); margin-top:12px; text-align:left; font-weight:700; transition:0.3s; padding:0;">🚨 단순 참고용: 평소와 다르다면 반드시 전문의의 진료를 받으세요.</div>
+                <div id="poop-warning-msg" style="font-size:11px; color:var(--text-s); text-align:left; font-weight:700; transition:0.3s; padding:0;"></div>
             </div>
         `;
         if(saveBtn) saveBtn.style.display = 'block';
@@ -3663,48 +3670,45 @@ window.openTrackerSheet = function(type, editId = null, preSelect = null) {
         window.trackerState.subType = activeSubType; 
 
         body.innerHTML = `
-            <div style="display: flex; gap: 8px; margin-bottom: 16px;" id="sleep-type-buttons">
-                <button class="btn-main" onclick="window.selectTrackerBtn(this, 'sleep_day')" style="flex: 1; background: var(--bg-card); color: var(--text-s); border: 1px solid var(--border); box-shadow: none; margin:0; padding:14px 0; font-size:15px; font-weight:800; transition:0.2s; border-radius:14px;">낮잠</button>
-                <button class="btn-main" onclick="window.selectTrackerBtn(this, 'sleep_night')" style="flex: 1; background: var(--bg-card); color: var(--text-s); border: 1px solid var(--border); box-shadow: none; margin:0; padding:14px 0; font-size:15px; font-weight:800; transition:0.2s; border-radius:14px;">밤잠</button>
+            <div style="display: flex; gap: 8px; margin-bottom: 24px;" id="sleep-type-buttons">
+                <button class="btn-main" onclick="window.selectTrackerBtn(this, 'sleep_day')" style="flex: 1; background: var(--bg-sub); color: #8B95A1; border: none; box-shadow: none; margin:0; padding:16px 0; font-size:15px; font-weight:700; transition:0.2s; border-radius:16px;">☀️ 낮잠</button>
+                <button class="btn-main" onclick="window.selectTrackerBtn(this, 'sleep_night')" style="flex: 1; background: var(--bg-sub); color: #8B95A1; border: none; box-shadow: none; margin:0; padding:16px 0; font-size:15px; font-weight:700; transition:0.2s; border-radius:16px;">🌙 밤잠</button>
             </div>
 
-            <div style="background: var(--bg-card); padding: 20px 16px; border-radius: 20px; margin-bottom: 16px; border: 1px solid var(--border); box-shadow: 0 4px 16px rgba(0,0,0,0.03);">
+            <!-- 🚨 수면 시간 박스: 테두리 삭제 & 둥글기 증가 -->
+            <div style="background: var(--bg-card); padding: 24px 20px; border-radius: 24px; margin-bottom: 24px; box-shadow: 0 4px 16px rgba(0,0,0,0.03);">
                 <!-- 잠든 시간 -->
-                <div style="margin-bottom: 20px;">
-                    <div style="text-align: center; font-size: 15px; font-weight: 900; color: var(--text-m); margin-bottom: 12px;">
-                        <span style="display:inline-block; width:8px; height:8px; background:#3182F6; border-radius:50%; margin-right:6px; vertical-align: middle;"></span><span style="vertical-align: middle;">잠든 시간</span>
-                    </div>
+                <div style="margin-bottom: 24px;">
+                    <div style="text-align: center; font-size: 14px; font-weight: 800; color: #8B95A1; margin-bottom: 12px;">잠든 시간</div>
                     <div style="display: flex; gap: 8px; width: 100%;">
-                        <input type="date" id="v-sleep-start-date" value="${sleepStartD}" onchange="window.calcSleepRange()" style="flex: 1.2; box-sizing: border-box; padding: 14px 8px; border-radius: 12px; border: 1px solid var(--border); background: var(--bg-sub); font-size: 15px; font-weight: 800; color: var(--text-m); outline: none; text-align: center;">
-                        <input type="time" id="v-sleep-start-time" value="${sleepStartT}" onchange="window.calcSleepRange()" style="flex: 1; box-sizing: border-box; padding: 14px 8px; border-radius: 12px; border: 1px solid var(--border); background: var(--bg-sub); font-size: 16px; font-weight: 900; color: var(--text-m); outline: none; text-align: center;">
+                        <input type="date" id="v-sleep-start-date" value="${sleepStartD}" onchange="window.calcSleepRange()" style="flex: 1.2; box-sizing: border-box; padding: 14px 8px; border-radius: 12px; border: none; background: var(--bg-sub); font-size: 15px; font-weight: 800; color: var(--text-m); outline: none; text-align: center;">
+                        <input type="time" id="v-sleep-start-time" value="${sleepStartT}" onchange="window.calcSleepRange()" style="flex: 1; box-sizing: border-box; padding: 14px 8px; border-radius: 12px; border: none; background: var(--bg-sub); font-size: 16px; font-weight: 900; color: var(--text-m); outline: none; text-align: center;">
                     </div>
                 </div>
                 
                 <!-- 일어난 시간 -->
-                <div id="sleep-end-area" style="display: none; border-top: 1px dashed var(--border); padding-top: 20px;">
-                    <div style="text-align: center; font-size: 15px; font-weight: 900; color: var(--text-m); margin-bottom: 12px;">
-                        <span style="display:inline-block; width:8px; height:8px; background:#F59E0B; border-radius:50%; margin-right:6px; vertical-align: middle;"></span><span style="vertical-align: middle;">일어난 시간</span>
-                    </div>
+                <div id="sleep-end-area" style="display: none; border-top: 1px dashed var(--border); padding-top: 24px;">
+                    <div style="text-align: center; font-size: 14px; font-weight: 800; color: #8B95A1; margin-bottom: 12px;">일어난 시간</div>
                     <div style="display: flex; gap: 8px; width: 100%;">
-                        <input type="date" id="v-sleep-end-date" value="${sleepEndD}" onchange="window.calcSleepRange()" style="flex: 1.2; box-sizing: border-box; padding: 14px 8px; border-radius: 12px; border: 1px solid var(--border); background: var(--bg-sub); font-size: 15px; font-weight: 800; color: var(--text-m); outline: none; text-align: center;">
-                        <input type="time" id="v-sleep-end-time" value="${sleepEndT}" onchange="window.calcSleepRange()" style="flex: 1; box-sizing: border-box; padding: 14px 8px; border-radius: 12px; border: 1px solid var(--border); background: var(--bg-sub); font-size: 16px; font-weight: 900; color: var(--text-m); outline: none; text-align: center;">
+                        <input type="date" id="v-sleep-end-date" value="${sleepEndD}" onchange="window.calcSleepRange()" style="flex: 1.2; box-sizing: border-box; padding: 14px 8px; border-radius: 12px; border: none; background: var(--bg-sub); font-size: 15px; font-weight: 800; color: var(--text-m); outline: none; text-align: center;">
+                        <input type="time" id="v-sleep-end-time" value="${sleepEndT}" onchange="window.calcSleepRange()" style="flex: 1; box-sizing: border-box; padding: 14px 8px; border-radius: 12px; border: none; background: var(--bg-sub); font-size: 16px; font-weight: 900; color: var(--text-m); outline: none; text-align: center;">
                     </div>
                 </div>
             </div>
 
             <!-- 총 수면 시간 표시 -->
-            <div style="text-align: center; margin-bottom: 20px;">
-                <div id="v-sleep-total-text" style="display:inline-flex; justify-content:center; align-items:center; background:#EBF8FF; color:#3182F6; padding:12px 24px; border-radius:24px; font-size:16px; font-weight:900; letter-spacing:-0.5px; transition:0.3s;">계산 중...</div>
+            <div style="text-align: center; margin-bottom: 24px;">
+                <div id="v-sleep-total-text" style="display:inline-flex; justify-content:center; align-items:center; background:#EBF8FF; color:#3182F6; padding:12px 24px; border-radius:100px; font-size:16px; font-weight:900; letter-spacing:-0.5px; transition:0.3s;">계산 중...</div>
             </div>
 
             ${window.getBabyProfiles().length > 1 ? `
-                <div style="margin-bottom: 16px; display:flex; align-items:center; justify-content:center; gap:8px; background:var(--bg-sub); padding:12px; border-radius:12px; border: 1px dashed var(--border);">
+                <div style="margin-bottom: 20px; display:flex; align-items:center; justify-content:center; gap:8px; background:var(--bg-sub); padding:14px; border-radius:16px; border: none;">
                     <input type="checkbox" id="sync-twins-check" style="transform:scale(1.3); cursor:pointer;">
-                    <label for="sync-twins-check" style="font-size:13.5px; font-weight:900; color:var(--text-m); cursor:pointer;">👶👶 다른 아기도 똑같이 (동시 기록)</label>
+                    <label for="sync-twins-check" style="font-size:14px; font-weight:800; color:var(--text-m); cursor:pointer;">👶👶 다른 아기도 똑같이 (동시 기록)</label>
                 </div>
             ` : ''}
 
-            <!-- 🚨 깔끔해진 하단 컨트롤 박스 -->
+            <!-- 하단 컨트롤 박스 -->
             <div id="sleep-control-box" style="display: flex; gap: 10px; margin-bottom: 0;">
             </div>
             
@@ -3729,34 +3733,31 @@ window.openTrackerSheet = function(type, editId = null, preSelect = null) {
             }, 60000); 
         }, 10);
     }
-    // ✨ [수정 완료] 투약(영양제/약) 기록 시트 - 가로 스와이프 칩 대폭 확장!
     else if (type === 'med') {
-        // 💡 랜덤 팁 문구 생성 엔진
         const medTips = [
-            "💡 <b>팁:</b> 유산균, 비타민 등 매일 먹는 영양제는 홈 화면 <b>[데일리 케어]</b>에서 V 체크하는 게 훨씬 편해요!",
-            "💡 <b>팁:</b> 해열제 교차복용 시간 계산 및 타이머가 필요하다면 홈 화면 <b>[스마트 해열]</b>을 이용해주세요!",
-            "💡 <b>팁:</b> 항생제는 임의로 중단하지 말고 의사가 처방한 기간과 횟수를 꼭 지켜서 먹이세요."
+            "💡 <b>팁:</b> 영양제는 홈 화면 <b>[데일리 루틴]</b>에서 체크하는 게 훨씬 편해요!",
+            "💡 <b>팁:</b> 해열제 타이머는 홈 화면 <b>[스마트 해열]</b>을 이용해주세요!",
+            "💡 <b>팁:</b> 항생제는 임의로 중단하지 말고 의사 처방을 꼭 지켜주세요."
         ];
         const randomTip = medTips[Math.floor(Math.random() * medTips.length)];
 
         title.innerHTML = '💊 투약(감기/약) 기록';
         body.innerHTML = baseTimeInputHtml + `
-            <div style="background: var(--bg-card); padding: 20px; border-radius: 16px; border: 1px solid var(--border); margin-bottom: 20px;">
-                <label style="font-size: 13.5px; font-weight: 800; color: var(--text-m); display: block; margin-bottom: 12px;">어떤 약/영양제를 먹이셨나요?</label>
+            <div style="background: var(--bg-card); padding: 24px 20px; border-radius: 24px; border: none; margin-bottom: 24px; box-shadow: 0 4px 16px rgba(0,0,0,0.03);">
+                <label style="font-size: 14px; font-weight: 900; color: var(--text-m); display: block; margin-bottom: 16px; text-align:center;">어떤 약/영양제를 먹이셨나요?</label>
                 
-                <!-- 🌟 그리드(Grid)를 사용해 가로스크롤 없이 한눈에 들어오게 꽉 채움 -->
-                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 16px;">
-                    <button class="btn-main" onclick="window.selectTrackerBtn(this, 'med_fever')" style="padding:12px 10px; background:var(--bg-sub); color:var(--text-s); border:1px solid var(--border); font-size:13.5px; font-weight:800; border-radius:12px; margin:0; transition:0.2s;">🌡️ 해열제</button>
-                    <button class="btn-main" onclick="window.selectTrackerBtn(this, 'med_cold')" style="padding:12px 10px; background:var(--bg-sub); color:var(--text-s); border:1px solid var(--border); font-size:13.5px; font-weight:800; border-radius:12px; margin:0; transition:0.2s;">🤧 감기약</button>
-                    <button class="btn-main" onclick="window.selectTrackerBtn(this, 'med_anti')" style="padding:12px 10px; background:var(--bg-sub); color:var(--text-s); border:1px solid var(--border); font-size:13.5px; font-weight:800; border-radius:12px; margin:0; transition:0.2s;">💊 항생제</button>
-                    <button class="btn-main" onclick="window.selectTrackerBtn(this, 'med_oint')" style="padding:12px 10px; background:var(--bg-sub); color:var(--text-s); border:1px solid var(--border); font-size:13.5px; font-weight:800; border-radius:12px; margin:0; transition:0.2s;">🩹 연고류</button>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 20px;">
+                    <button class="btn-main" onclick="window.selectTrackerBtn(this, 'med_fever')" style="padding:16px 10px; background:var(--bg-sub); color:#8B95A1; border:none; font-size:14.5px; font-weight:700; border-radius:16px; margin:0; transition:0.2s;">🌡️ 해열제</button>
+                    <button class="btn-main" onclick="window.selectTrackerBtn(this, 'med_cold')" style="padding:16px 10px; background:var(--bg-sub); color:#8B95A1; border:none; font-size:14.5px; font-weight:700; border-radius:16px; margin:0; transition:0.2s;">🤧 감기약</button>
+                    <button class="btn-main" onclick="window.selectTrackerBtn(this, 'med_anti')" style="padding:16px 10px; background:var(--bg-sub); color:#8B95A1; border:none; font-size:14.5px; font-weight:700; border-radius:16px; margin:0; transition:0.2s;">💊 항생제</button>
+                    <button class="btn-main" onclick="window.selectTrackerBtn(this, 'med_oint')" style="padding:16px 10px; background:var(--bg-sub); color:#8B95A1; border:none; font-size:14.5px; font-weight:700; border-radius:16px; margin:0; transition:0.2s;">🩹 연고류</button>
                 </div>
 
-                <div style="font-size: 11.5px; color: var(--text-s); margin-bottom: 8px; font-weight:700;">찾는 약이 없다면 직접 입력하세요 👇</div>
-                <input type="text" id="v-med-custom" placeholder="직접 입력 (예: 코미시럽 3ml 등)" oninput="window.clearMedButtons()" style="width: 100%; box-sizing: border-box; padding: 14px; border-radius: 12px; border: 1px solid var(--border); background: var(--bg-main); font-size: 14px; font-weight: 800; color: var(--text-m); outline: none; transition: 0.2s;" onfocus="this.style.borderColor='var(--primary)'" onblur="this.style.borderColor='var(--border)'">
+                <div style="font-size: 12px; color: var(--text-s); margin-bottom: 8px; font-weight:700; text-align:left;">찾는 약이 없다면 직접 입력하세요 👇</div>
+                <input type="text" id="v-med-custom" placeholder="직접 입력 (예: 코미시럽 3ml 등)" oninput="window.clearMedButtons()" style="width: 100%; box-sizing: border-box; padding: 16px; border-radius: 16px; border: none; background: var(--bg-sub); font-size: 15px; font-weight: 800; color: var(--text-m); outline: none; transition: 0.2s;">
             </div>
             
-            <div style="font-size: 11.5px; color: var(--text-s); text-align: left; word-break: keep-all; line-height: 1.5; background: var(--bg-sub); padding: 14px; border-radius: 12px; border: 1px dashed var(--border);">
+            <div style="font-size: 12px; color: var(--text-s); text-align: left; word-break: keep-all; line-height: 1.5; background: var(--bg-sub); padding: 16px; border-radius: 16px; border: none;">
                 ${randomTip}
             </div>
         `;
@@ -3766,6 +3767,7 @@ window.openTrackerSheet = function(type, editId = null, preSelect = null) {
     if (window.editingTrackerId) {
         title.innerHTML = title.innerHTML.replace('기록하기', '수정하기');
         if(saveBtn) saveBtn.innerText = '수정 완료';
+// ... 이하 코드 그대로 유지
         let records = JSON.parse(localStorage.getItem('tosil_tracker_records')) || [];
         let recordToEdit = records.find(r => r.id === window.editingTrackerId);
         
@@ -3858,12 +3860,19 @@ window.openTrackerSheet = function(type, editId = null, preSelect = null) {
         if(saveBtn) saveBtn.innerText = '저장하기';
     }
 
+    // 🚀 [스와이프 엔진 교체] 못생긴 달력 팝업창을 삭제하고 4륜 구동 스크롤 엔진 적용!
     setTimeout(() => {
         let initialTargetTime = currentTimeStr;
+        let initialDateStr = displayDateStr; // 기본 날짜
+
         if (window.editingTrackerId) {
             let records = JSON.parse(localStorage.getItem('tosil_tracker_records')) || [];
             let recordToEdit = records.find(r => r.id === window.editingTrackerId);
-            if (recordToEdit) initialTargetTime = recordToEdit.time;
+            if (recordToEdit) {
+                initialTargetTime = recordToEdit.time;
+                const eDate = new Date(recordToEdit.timestamp);
+                initialDateStr = `${eDate.getFullYear()}-${String(eDate.getMonth()+1).padStart(2,'0')}-${String(eDate.getDate()).padStart(2,'0')}`;
+            }
         }
         
         if (type === 'diaper' && preSelect && !window.editingTrackerId) {
@@ -3879,8 +3888,93 @@ window.openTrackerSheet = function(type, editId = null, preSelect = null) {
             });
         }
 
-        if (typeof window.initDrumPicker === 'function') {
-            window.initDrumPicker(initialTargetTime);
+        // 💡 4개의 드럼(월/일/시/분) 자동 계산 렌더링 로직
+        const yearInput = document.getElementById('v-tracker-year');
+        const dateInput = document.getElementById('v-tracker-custom-date');
+        const timeInput = document.getElementById('v-tracker-time');
+        
+        if (!yearInput || !dateInput || !timeInput) return; // 기존 모드(2륜)일 땐 패스
+        
+        let currentDate = new Date(initialDateStr);
+        let currentMonth = currentDate.getMonth() + 1;
+        let currentDay = currentDate.getDate();
+        let [currentHour, currentMinute] = initialTargetTime.split(':').map(Number);
+        
+        function getDaysInMonth(year, month) {
+            return new Date(year, month, 0).getDate();
+        }
+
+        function buildDrum(id, min, max, current) {
+            const el = document.getElementById(id);
+            if(!el) return;
+            el.innerHTML = '<div style="height:48px; scroll-snap-align: center; flex-shrink:0;"></div>';
+            for(let i=min; i<=max; i++) {
+                let val = String(i).padStart(2, '0');
+                let activeClass = i === current ? 'active' : '';
+                el.innerHTML += `<div class="drum-item ${activeClass}" data-val="${val}" style="scroll-snap-align: center; flex-shrink:0;">${val}</div>`;
+            }
+            el.innerHTML += '<div style="height:48px; scroll-snap-align: center; flex-shrink:0;"></div>';
+            
+            // 초기 위치 스크롤 세팅
+            const items = el.querySelectorAll('.drum-item');
+            items.forEach((item, index) => {
+                if(parseInt(item.dataset.val) === current) {
+                    el.scrollTop = index * 44;
+                }
+            });
+
+            // 스크롤 감지 및 날짜 보정 로직
+            el.addEventListener('scroll', () => {
+                clearTimeout(el.isScrolling);
+                el.isScrolling = setTimeout(() => {
+                    let index = Math.round(el.scrollTop / 44);
+                    items.forEach(i => i.classList.remove('active'));
+                    if(items[index]) {
+                        items[index].classList.add('active');
+                        updateHiddenValues();
+                        
+                        // 🚨 2월 28일/30일 자동 렌더링 매직!
+                        if(id === 'picker-month') {
+                            let newMonth = parseInt(items[index].dataset.val);
+                            let newYear = parseInt(yearInput.value);
+                            let maxDays = getDaysInMonth(newYear, newMonth);
+                            
+                            let currentDayElem = document.querySelector('#picker-day .active');
+                            let selectedDay = currentDayElem ? parseInt(currentDayElem.dataset.val) : 1;
+                            if(selectedDay > maxDays) selectedDay = maxDays; 
+                            
+                            buildDrum('picker-day', 1, maxDays, selectedDay);
+                        }
+                    }
+                }, 80);
+            });
+        }
+        
+        // 4개 바퀴 장착!
+        buildDrum('picker-month', 1, 12, currentMonth);
+        buildDrum('picker-day', 1, getDaysInMonth(currentDate.getFullYear(), currentMonth), currentDay);
+        buildDrum('picker-hour', 0, 23, currentHour);
+        buildDrum('picker-minute', 0, 59, currentMinute);
+        
+        // 저장하기용 히든 데이터 업데이트
+        function updateHiddenValues() {
+            const m = document.querySelector('#picker-month .active')?.dataset.val || "01";
+            const d = document.querySelector('#picker-day .active')?.dataset.val || "01";
+            const h = document.querySelector('#picker-hour .active')?.dataset.val || "00";
+            const min = document.querySelector('#picker-minute .active')?.dataset.val || "00";
+            
+            dateInput.value = `${yearInput.value}-${m}-${d}`;
+            timeInput.value = `${h}:${min}`;
+            
+            // "오늘" 텍스트 업데이트 (옵션)
+            const textElem = document.getElementById('display-date-text');
+            if(textElem) {
+                const today = new Date();
+                const selDate = new Date(`${yearInput.value}-${m}-${d}`);
+                const isToday = selDate.toDateString() === today.toDateString();
+                textElem.innerText = isToday ? '오늘' : `${m}.${d}`;
+                textElem.style.color = isToday ? '#3182F6' : 'var(--text-m)';
+            }
         }
     }, 80);
 };
