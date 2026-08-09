@@ -50,12 +50,14 @@
         .day-badge-wrap { display: flex; align-items: center; justify-content: center; gap: 16px; margin-bottom: 24px; }
         .nav-badge { background: #F5F1EA; color: var(--text-sub); width: 36px; height: 36px; border-radius: 50%; font-size: 14px; font-weight: 900; cursor: pointer; border: none; }
         .day-text { font-family: 'Georgia', serif; font-size: 16px; font-weight: 900; color: var(--primary); letter-spacing: 1px; }
-        .question { font-size: 21px; font-weight: 800; line-height: 1.6; color: var(--text-title); word-break: keep-all; margin-bottom: 36px; padding: 0 10px; }
+        
+        /* 🚨 메인 작성 화면 질문도 좌측 에세이 정렬로 변경 */
+        .question { font-size: 19px; font-weight: 800; line-height: 1.6; color: var(--text-title); text-align: left; word-break: keep-all; margin-bottom: 36px; padding: 0 10px; }
 
         .unlinked-notice { display: inline-flex; align-items: center; justify-content: center; gap: 6px; background: #FFF5F2; border: 1.5px dashed #FFB4A2; padding: 12px 20px; border-radius: 20px; margin: 0 auto 28px auto; box-shadow: 0 4px 12px rgba(255, 133, 112, 0.08); }
         .unlinked-notice p { font-size: 13px; color: #D25E4B; margin: 0; font-weight: 700; word-break: keep-all; }
 
-        textarea { width: 100%; min-height: 180px; border: 2px solid var(--border-color); background: #FDFBF9; font-size: 16px; color: var(--text-main); resize: none; outline: none; line-height: 1.8; text-align: center; font-weight: 600; padding: 32px 24px; border-radius: 24px; box-shadow: inset 0 4px 12px rgba(138, 126, 116, 0.04); }
+        textarea { width: 100%; min-height: 180px; border: 2px solid var(--border-color); background: #FDFBF9; font-size: 16px; color: var(--text-main); resize: none; outline: none; line-height: 1.8; text-align: left; font-weight: 600; padding: 32px 24px; border-radius: 24px; box-shadow: inset 0 4px 12px rgba(138, 126, 116, 0.04); }
         textarea:focus { border-color: #FFB4A2; background: #FFF; box-shadow: 0 0 0 4px var(--primary-light), inset 0 2px 8px rgba(138, 126, 116, 0.02); }
         
         .answer-bubble { background: #FDFBF9; border: 1px solid var(--border-color); padding: 24px 20px; border-radius: 24px; margin-bottom: 16px; text-align: left; position: relative; box-shadow: var(--shadow-sm); }
@@ -73,7 +75,7 @@
         .history-card { background: var(--card-bg); border-radius: 20px; padding: 24px; box-shadow: var(--shadow-sm); border: 1px solid var(--border-color); }
         .card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
         .history-day-label { font-family: 'Georgia', serif; font-size: 13px; font-weight: 800; color: var(--primary); letter-spacing: 1px; }
-        .q-text { font-size: 18px; font-weight: 900; color: var(--text-title); margin-bottom: 20px; line-height: 1.4; word-break: keep-all; }
+        .q-text { font-size: 18px; font-weight: 900; color: var(--text-title); margin-bottom: 20px; line-height: 1.5; word-break: keep-all; }
         .a-text { font-size: 15px; color: var(--text-main); line-height: 1.6; margin-bottom: 12px; background: #FDFBF9; padding: 16px; border-radius: 14px; }
         .a-role { font-size: 12px; font-weight: 900; color: var(--text-sub); margin-bottom: 6px; }
 
@@ -87,18 +89,13 @@
         
         .pdf-body { flex: 1; overflow-y: auto; padding: 40px 20px; display: flex; flex-direction: column; gap: 32px; background: #EFEBE4; align-items: center; }
         
-        .premium-book-page { width: 100%; max-width: 360px; min-height: 480px; padding: 50px 32px; position: relative; box-shadow: 2px 4px 16px rgba(0,0,0,0.08), 0 0 1px rgba(0,0,0,0.1); border-radius: 2px 6px 6px 2px; }
+        .premium-book-page { width: 100%; max-width: 360px; min-height: 480px; padding: 50px 36px; position: relative; box-shadow: 2px 4px 16px rgba(0,0,0,0.08), 0 0 1px rgba(0,0,0,0.1); border-radius: 2px 6px 6px 2px; }
         .premium-book-page::before { content: ''; position: absolute; top: 0; left: 0; bottom: 0; width: 30px; background: linear-gradient(to right, rgba(0,0,0,0.06) 0%, rgba(0,0,0,0) 100%); pointer-events: none; }
         
-        .premium-cover { display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; border-left: 4px solid; }
-        .essay-date { font-family: 'Georgia', serif; font-size: 12px; color: #A39992; letter-spacing: 2px; margin-bottom: 24px; text-align: center; }
-        .essay-q { font-size: 17px; font-weight: 800; color: #3E3A37; text-align: center; margin-bottom: 40px; line-height: 1.6; word-break: keep-all; }
-        .essay-ans-wrap { display: flex; flex-direction: column; gap: 32px; }
-        .essay-role { font-family: 'Georgia', serif; font-size: 11px; font-weight: bold; color: #B0B8C1; letter-spacing: 1px; margin-bottom: 8px; text-align: center; }
-        .essay-text { font-size: 14px; color: #5C5652; line-height: 1.8; text-align: justify; word-break: keep-all; }
+        .premium-cover { display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; border-left: 4px solid; padding: 60px 30px; }
 
         /* =======================================================
-           📚 프리미엄 북 테마 상점 모달 (NEW)
+           📚 프리미엄 북 테마 상점 모달
            ======================================================= */
         .store-modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.75); backdrop-filter: blur(8px); display: none; flex-direction: column; justify-content: flex-end; z-index: 9999; }
         .store-modal-content { background: var(--bg-color); width: 100%; height: 90vh; border-radius: 32px 32px 0 0; display: flex; flex-direction: column; overflow: hidden; transform: translateY(100%); transition: transform 0.4s cubic-bezier(0.2, 0.8, 0.2, 1); box-shadow: 0 -20px 50px rgba(0,0,0,0.2); }
@@ -127,17 +124,11 @@
 </head>
 <body>
     <div class="wrapper">
-        <header class="nav-header">
+       <header class="nav-header">
             <div style="display:flex; gap:8px;">
                 <button class="home-btn" onclick="window.location.href='index.html'">❮ 홈</button>
             </div>
-            
-            <!-- 🚨 [대표님 전용 치트키] 테스트 끝나면 이 버튼은 지워주세요! -->
-            <button onclick="localStorage.setItem('tosil_coins', parseInt(localStorage.getItem('tosil_coins')||0) + 10000); window.updateCoinUI(); alert('💸 10,000 코인 충전 완료! 상점을 싹쓸이 해보세요!');" style="background:#191F28; color:#fff; border:none; padding:8px 14px; border-radius:12px; font-weight:900; font-size:12px; box-shadow:0 4px 10px rgba(0,0,0,0.2);">
-                🛠️ 코인 충전
-            </button>
 
-            <!-- 코인 배지를 누르면 북 테마 상점으로 이동합니다! -->
             <div class="coin-badge" onclick="openStoreModal()">
                 <span>🪙</span> <span id="header-coin-count">0</span>
             </div>
@@ -166,7 +157,7 @@
                         <div class="unlinked-notice" id="unlinked-notice" style="display: none;">
                             <p>💌 연동 전 작성한 글은 <b>나만의 일기장</b>에 쏙 보관돼요!</p>
                         </div>
-                        <textarea id="my-answer" placeholder="오늘 하루도 고생 많았어요.&#13;&#10;가장 솔직한 마음을 한 줄 남겨주세요..."></textarea>
+                        <textarea id="my-answer" placeholder="오늘 하루도 고생 많았어요.&#13;&#10;가장 솔직한 마음을 편안하게 남겨주세요..."></textarea>
                         <button class="save-btn" id="btn-submit">기록 남기기</button>
                     </div>
 
@@ -190,10 +181,7 @@
         </div>
 
         <!-- 📖 서재 (모아보기) 탭 -->
-        <!-- 📖 서재 (모아보기) 탭 -->
         <div id="view-read" class="view-section">
-            
-            <!-- 🚨 [디자인 개편] 너무 광고 같던 배너를 감성적이고 여유로운 초대장 느낌으로 변경 -->
             <div class="book-progress-wrap" style="display: flex; justify-content: space-between; align-items: center; background: #F8F9FA; padding: 24px 20px; border-radius: 20px; border: 1px solid #E5E8EB; margin-bottom: 48px; box-shadow: 0 4px 12px rgba(0,0,0,0.02);">
                 <div style="text-align: left;">
                     <div style="font-family: 'Georgia', serif; font-size: 11px; color: #A39D98; letter-spacing: 1.5px; margin-bottom: 6px;">Premium Essay</div>
@@ -203,7 +191,6 @@
                     미리보기 〉
                 </button>
             </div>
-
             <main class="history-list" id="history-container"></main>
         </div>
     </div>
@@ -221,13 +208,16 @@
                 </div>
             </div>
             
-            <div class="store-preview-area" id="store-preview-area">
-                <!-- 미니북 렌더링 영역 -->
-            </div>
+            <div class="store-preview-area" id="store-preview-area"></div>
 
             <div class="shop-area">
                 <div style="font-size: 14px; font-weight: 800; color: var(--text-sub); margin-bottom: 16px;">프리미엄 한정판 표지</div>
                 <div class="shop-grid" id="store-grid-container"></div>
+                
+                <!-- 🚨 [방어 문구 추가] -->
+                <div style="margin-top: 24px; font-size: 11px; color: #A39D98; text-align: center; line-height: 1.5; letter-spacing: -0.3px;">
+                    * 기기 해상도 및 실제 양장본 원단의 특성에 따라<br>화면과 실제 인쇄물의 색상에 미세한 차이가 있을 수 있습니다.
+                </div>
             </div>
         </div>
     </div>
@@ -241,10 +231,14 @@
             </div>
             <div class="pdf-body" id="pdf-pages-container"></div>
             
-            <!-- 결제 유도 하단 바 -->
-            <div style="padding: 20px; background:#FFFFFF; border-top:1px solid #E8E3DD; text-align:center; flex-shrink: 0;">
-                <button onclick="alert('✨ 프리미엄 출판 서비스는 추후 업데이트될 예정입니다. 조금만 기다려주세요! 🤍');" style="width:100%; padding:18px; background:#4A413C; color:#FFF; border:none; border-radius:16px; font-weight:900; font-size:16px; cursor:pointer; box-shadow: 0 8px 16px rgba(74, 65, 60, 0.2);">
-                    실물 양장본 및 PDF 출판하기
+           <!-- 🌟 투명하고 세련된 출판 안내 하단 바 (오해 방지 & 기대감 고취) -->
+            <div style="padding: 20px 24px; background:#FFFFFF; border-top:1px solid #E8E3DD; text-align:center; flex-shrink: 0;">
+                <div style="font-size: 11.5px; color: #8A7E78; margin-bottom: 12px; line-height: 1.5; font-weight: 600; letter-spacing: -0.3px;">
+                    ✨ 100일의 기록이 완성되면, 세상에 단 한 권뿐인<br>
+                    <b style="color: #4A413C;">하드커버 양장본 실물 책 (유료 제작 상품)</b>으로 소장하실 수 있습니다.
+                </div>
+                <button onclick="alert('💌 [사전 예약 안내]\n\n정식 출판 서비스 오픈 시, 앱을 통해 가장 먼저 제작 신청을 하실 수 있도록 안내해 드릴게요! 열심히 기록을 채워주세요 🤍');" style="width:100%; padding:16px; background:#4A413C; color:#FFF; border:none; border-radius:16px; font-weight:900; font-size:15px; cursor:pointer; box-shadow: 0 8px 16px rgba(74, 65, 60, 0.15); transition: 0.2s;">
+                    실물 양장본 출판 사전 안내 신청하기
                 </button>
             </div>
         </div>
@@ -262,11 +256,9 @@
         </div>
     </div>
 
-    <!-- 🚨 외부 DATA.js 파일 연결 (200개 질문 불러오기) -->
     <script src="DATA.js"></script>
     
     <script>
-      // 📚 [NEW] 프리미엄 북 테마 DB (채도 쫙 뺀 감성 컬러로 리뉴얼)
         const STORE_DB = [
             { id: 'theme_beige', name: '크림 화이트 (기본)', desc: '가장 편안하고 클래식한 종이 질감', price: 0, bg: '#FCFBF8', borderLeft: '#EAE5DF', textTitle: '#4A413C', textSub: '#A39992', line: '#EAE5DF' },
             { id: 'theme_sand', name: '뮤트 샌드', desc: '차분하고 따뜻한 모래빛 감성', price: 500, bg: '#F4F1EB', borderLeft: '#D6CFC4', textTitle: '#4A413C', textSub: '#8A7E78', line: '#D6CFC4' },
@@ -281,24 +273,16 @@
             if(document.getElementById('modal-coin-count')) document.getElementById('modal-coin-count').innerText = coins;
         };
 
-        // =====================================
-        // 📚 상점 UI 및 테마 로직
-        // =====================================
         window.openStoreModal = function() {
             window.updateCoinUI();
-            
-            // 인벤토리 세팅 (기본 테마는 항상 보유)
             let inventory = JSON.parse(localStorage.getItem('tosil_inventory')) || [];
             if(!inventory.includes('theme_beige')) {
                 inventory.push('theme_beige');
                 localStorage.setItem('tosil_inventory', JSON.stringify(inventory));
             }
-
             window.renderStore();
             document.getElementById('store-modal').style.display = 'flex';
-            setTimeout(() => {
-                document.querySelector('.store-modal-content').style.transform = 'translateY(0)';
-            }, 10);
+            setTimeout(() => { document.querySelector('.store-modal-content').style.transform = 'translateY(0)'; }, 10);
         };
 
         window.closeStoreModalForce = function() {
@@ -368,10 +352,7 @@
             let coins = parseInt(localStorage.getItem('tosil_coins')) || 0;
 
             if (!inventory.includes(id)) {
-                // 구매 로직
-                if (coins < price) {
-                    return window.showToast("🪙 코인이 부족해요! 매일 일기를 쓰면 코인이 모여요.");
-                }
+                if (coins < price) return window.showToast("🪙 코인이 부족해요! 매일 일기를 쓰면 코인이 모여요.");
                 if (confirm(`[${STORE_DB.find(i=>i.id===id).name}] 테마를 ${price}코인에 구매할까요?`)) {
                     coins -= price;
                     inventory.push(id);
@@ -383,15 +364,12 @@
                 }
             }
             
-            // 적용 로직 (구매 직후 또는 이미 보유중일 때)
             localStorage.setItem('tosil_active_theme', id);
             window.updateCoinUI();
             window.renderStore();
         };
-
     </script>
     
-    <!-- 🚨 [서버 연동 스크립트 모듈] -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
         import { getFirestore, doc, setDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
@@ -410,7 +388,7 @@
         const db = getFirestore(app); 
         const auth = getAuth(app);
         
-        signInAnonymously(auth).catch(() => console.log("익명로그인 무시"));
+        signInAnonymously(auth).catch(() => {});
 
         let unsubscribe = null;
 
@@ -418,7 +396,6 @@
             return parseInt(document.getElementById("diary-day").innerText.replace("DAY ", "")) || 1;
         };
 
-        // 👩‍❤️‍👨 부부 이름 실시간 동기화 엔진
         window.startFamilyNameSync = function() {
             const syncCode = localStorage.getItem("family_sync_code");
             const myKakaoName = localStorage.getItem("kakao_nickname");
@@ -578,7 +555,6 @@
             
             window.renderCurrentCard(localData, currentRole);
             
-            // 🪙 보상 로직 추가 (하루 한 번만 코인 지급)
             const claimedKey = `day_${currentDay}_coin_claimed_${currentRole}`;
             if (!localStorage.getItem(claimedKey)) {
                 let coins = parseInt(localStorage.getItem('tosil_coins')) || 0;
@@ -640,7 +616,9 @@
             const todayData = questionDB[index] || { target:"가족", question: "오늘 하루는 어땠나요?", context:"육아" };
 
             document.getElementById("diary-day").innerText = `DAY ${window.viewingDay}`;
-            let qText = todayData.question.replace(/{babyName}/g, window.babyName);
+            
+            // 🚨 메인화면: 질문에 Q. 를 붙여 시선을 잡아줌
+            let qText = "Q. " + todayData.question.replace(/{babyName}/g, window.babyName);
             document.getElementById("question-text").innerText = qText;
         };
 
@@ -675,7 +653,7 @@
                                 <div class="card-header">
                                     <span class="history-day-label">DAY ${i}</span>
                                 </div>
-                                <p class="q-text">${qText}</p>
+                                <p class="q-text">Q. ${qText}</p>
                                 ${d.husbandAns ? `<div class="a-text" style="border-left: 3px solid var(--dad-color);"><div class="a-role">아빠</div>${d.husbandAns.replace(/\n/g,'<br>')}</div>` : ''}
                                 ${d.wifeAns ? `<div class="a-text" style="border-left: 3px solid var(--mom-color);"><div class="a-role">엄마</div>${d.wifeAns.replace(/\n/g,'<br>')}</div>` : ''}
                             `;
@@ -696,7 +674,6 @@
             location.reload(); 
         };
 
-        // 🚨 [프리미엄 뷰어] 구매한 테마 적용 엔진
         window.openPdfPreview = function() {
             const modal = document.getElementById('pdf-preview-modal');
             const container = document.getElementById('pdf-pages-container');
@@ -720,47 +697,39 @@
             if (myRole === 'wife' && myKakaoName) momName = myKakaoName;
             if (myRole === 'husband' && myKakaoName) dadName = myKakaoName;
 
-            // 구매한 테마 불러오기
             let activeThemeId = localStorage.getItem('tosil_active_theme') || 'theme_beige';
             let theme = STORE_DB.find(t => t.id === activeThemeId) || STORE_DB[0];
             
             let momDisplayStr = momName ? `엄마 <span style="color:${theme.textTitle}; font-weight:900;">${momName}</span>` : `엄마 <span style="color:${theme.textSub}; font-weight:700;">[엄마 성함]</span>`;
             let dadDisplayStr = dadName ? `아빠 <span style="color:${theme.textTitle}; font-weight:900;">${dadName}</span>` : `아빠 <span style="color:${theme.textSub}; font-weight:700;">[아빠 성함]</span>`;
 
-            // 1. 🌟 표지 (테마 색상 동적 적용)
+            // 🚨 표지에도 테마 배경색이 완벽하게 적용되도록 수정!
             let html = `
-                <div class="premium-book-page premium-cover" style="padding: 60px 30px; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; background: ${theme.bg}; border-left-color: ${theme.borderLeft};">
-                    
+                <div class="premium-book-page premium-cover" style="background: ${theme.bg}; border-left-color: ${theme.borderLeft};">
                     <div style="text-align: center; width: 100%;">
                         <div style="font-family: 'Georgia', serif; font-size: 11px; color: ${theme.textSub}; letter-spacing: 2px; line-height: 1.8; margin-bottom: 28px;">
                             " 너라는 우주가<br>우리에게 쏟아지던 날 "
                         </div>
-
                         <div style="font-size: 24px; font-weight: 900; color: ${theme.textTitle}; letter-spacing: -1px; line-height: 1.4; margin-bottom: 32px;">
                             우리가 처음 만난<br>그 해의 기록
                         </div>
-
                         <div style="margin-bottom: 28px;">
                             <div style="font-size: 18px; font-weight: 900; color: ${theme.textTitle}; margin-bottom: 6px; letter-spacing: 1px;">${babyName}</div>
                             <div style="font-family: 'Georgia', serif; font-size: 12px; font-weight: 600; color: ${theme.textSub}; letter-spacing: 1.5px;">${formattedDate}</div>
                         </div>
-                        
                         <div style="width: 20px; height: 1px; background: ${theme.line}; margin: 0 auto 28px auto;"></div>
-
                         <div style="font-size: 13.5px; color: ${theme.textTitle}; font-weight: 600; line-height: 1.8; letter-spacing: 0.5px; margin-bottom: 12px;">
                             ${momDisplayStr}<br>
                             ${dadDisplayStr}
                         </div>
-                        
                         <div style="font-size: 11px; color: ${theme.textSub}; font-weight: 600; letter-spacing: -0.3px;">
                             * 실제 출판 시 카카오 본명이 반영됩니다
                         </div>
                     </div>
-
                 </div>
             `;
 
-            // 2. 일기 내지 렌더링
+            // 🚨 내지(DAY n) 에디토리얼 레이아웃 전면 개편
             let hasRecord = false;
             for (let i = 1; i <= window.viewingDay; i++) {
                 const rawData = localStorage.getItem(`day_${i}_data`);
@@ -771,58 +740,35 @@
                             hasRecord = true;
                             const qData = questionDB[(i - 1) % questionDB.length];
                             const qText = qData ? qData.question.replace(/{babyName}/g, babyName) : '';
-                            
-                            const context = qData ? (qData.context || '육아') : '육아';
-                            let roleLabelDad = context === '부부' ? '남편' : '아빠';
-                            let roleLabelMom = context === '부부' ? '아내' : '엄마';
-
-                            let displayDad = dadName 
-                                ? `<span style="font-size:10px; color:${theme.textSub}; letter-spacing:1px; margin-bottom:2px;">${roleLabelDad}</span>
-                                   <span style="font-size:13px; color:${theme.textTitle}; font-weight:900;">${dadName}</span>`
-                                : `<span style="font-size:13px; color:${theme.textTitle}; font-weight:900;">${roleLabelDad}</span>`;
-
-                            let displayMom = momName 
-                                ? `<span style="font-size:10px; color:${theme.textSub}; letter-spacing:1px; margin-bottom:2px;">${roleLabelMom}</span>
-                                   <span style="font-size:13px; color:${theme.textTitle}; font-weight:900;">${momName}</span>`
-                                : `<span style="font-size:13px; color:${theme.textTitle}; font-weight:900;">${roleLabelMom}</span>`;
 
                             html += `
-                                <div class="premium-book-page" style="background: ${theme.bg}; border-left-color: ${theme.borderLeft}; color: ${theme.textTitle};">
-                                    <div class="essay-date" style="color: ${theme.textSub};">- DAY ${i} -</div>
-                                    <div class="essay-q" style="color: ${theme.textTitle};">${qText}</div>
-                                    <div class="essay-ans-wrap">
+                                <div class="premium-book-page" style="background: ${theme.bg}; border-left-color: ${theme.borderLeft}; color: ${theme.textTitle}; display: flex; flex-direction: column; justify-content: flex-start; padding: 50px 36px;">
+                                    <div class="essay-date" style="color: ${theme.textSub}; text-align: left; border-bottom: 1px solid ${theme.line}; padding-bottom: 16px; margin-bottom: 32px;">- DAY ${i} -</div>
+                                    
+                                    <div class="essay-q" style="color: ${theme.textTitle}; font-size: 16px; font-weight: 700; line-height: 1.7; text-align: left; word-break: keep-all; margin-bottom: 40px; opacity: 0.95;">
+                                        Q. ${qText}
+                                    </div>
+                                    
+                                    <div class="essay-ans-wrap" style="display: flex; flex-direction: column; gap: 36px; text-align: left;">
                                         ${d.husbandAns ? `
                                             <div>
-                                                <div class="essay-role" style="display:flex; flex-direction:column; align-items:center; margin-bottom:12px;">
-                                                    ${displayDad}
+                                                <div style="font-size: 11px; font-weight: 800; color: ${theme.textSub}; letter-spacing: 2px; margin-bottom: 8px; display: flex; align-items: center; gap: 6px;">
+                                                    <div style="width: 12px; height: 1px; background: ${theme.textSub}; opacity: 0.5;"></div> 아빠
                                                 </div>
-                                                <div class="essay-text" style="color: ${theme.textTitle}; opacity: 0.9;">${d.husbandAns.replace(/\n/g, '<br>')}</div>
+                                                <div style="font-size: 14px; line-height: 1.9; color: ${theme.textTitle}; opacity: 0.85;">${d.husbandAns.replace(/\n/g, '<br>')}</div>
                                             </div>
                                         ` : ''}
                                         ${d.wifeAns ? `
                                             <div>
-                                                <div class="essay-role" style="display:flex; flex-direction:column; align-items:center; margin-bottom:12px;">
-                                                    ${displayMom}
+                                                <div style="font-size: 11px; font-weight: 800; color: ${theme.textSub}; letter-spacing: 2px; margin-bottom: 8px; display: flex; align-items: center; gap: 6px;">
+                                                    <div style="width: 12px; height: 1px; background: ${theme.textSub}; opacity: 0.5;"></div> 엄마
                                                 </div>
-                                                <div class="essay-text" style="color: ${theme.textTitle}; opacity: 0.9;">${d.wifeAns.replace(/\n/g, '<br>')}</div>
+                                                <div style="font-size: 14px; line-height: 1.9; color: ${theme.textTitle}; opacity: 0.85;">${d.wifeAns.replace(/\n/g, '<br>')}</div>
                                             </div>
                                         ` : ''}
                                     </div>
                                 </div>
                             `;
-
-                            if (i === 1) {
-                                html += `
-                                    <div class="premium-book-page" style="background: ${theme.bg}; border-left-color: ${theme.borderLeft};">
-                                        <div class="essay-date" style="color: ${theme.textSub};">- MILESTONE -</div>
-                                        <div class="photo-frame" style="background: ${theme.line}; color: ${theme.textSub};">📸</div>
-                                        <div class="photo-caption" style="color: ${theme.textSub};">
-                                            우리가 처음으로 함께 웃었던 날.<br><br>
-                                            <span style="color:${theme.textTitle}; font-weight:800; font-size:11.5px; opacity:0.8;">* 출판 시, 마일스톤 사진들이<br>이렇게 예쁜 화보처럼 함께 수록됩니다.</span>
-                                        </div>
-                                    </div>
-                                `;
-                            }
                         }
                     } catch(e) {}
                 }
