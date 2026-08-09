@@ -85,11 +85,23 @@ body.mode-senior .ai-matrix-container,
 body.mode-senior .premium-banner-wrap,
 body.mode-senior .hide-on-senior { display: none !important; }
 
-/* 🚨 다크모드 상단 흰색 틈새(눈뽕) 완벽 방어 패치 */
-body.dark-mode { background-color: #000000 !important; }
-html { background-color: var(--bg-main); }
-.global-header { top: -1px !important; padding-top: 13px !important; border-top: none !important; box-shadow: none !important; }
-
+/* ========================================== */
+        /* 🌙 1단계: 고집불통 인라인 스타일까지 씹어먹는 강력 다크모드 */
+        /* ========================================== */
+        /* 🚨 상단 1px 흰줄 완벽 차단 (html 태그까지 검게 칠함) */
+        html.dark-mode, body.dark-mode {
+            background-color: #000000 !important;
+            color: #F9FAFB !important;
+        }
+        body.dark-mode .global-header {
+            background-color: #000000 !important;
+            border-bottom: 1px solid #191F28 !important;
+            margin-top: -1px; /* 틈새 원천 봉쇄 */
+        }
+        body.dark-mode .wrapper {
+            background-color: #000000 !important;
+            box-shadow: none !important;
+        }
 </style>
 
 </head>
@@ -846,7 +858,7 @@ html { background-color: var(--bg-main); }
                     </div> <!-- 🚨 여기가 빠져있던 박스 닫기 태그입니다!! -->
             
                     <button class="btn-main" onclick="calcHealthMaster()" style="width: 100%; padding: 18px; font-size: 16px; font-weight: 800; border-radius: 14px; border: none; background: #00B37A !important; color: white !important; box-shadow: 0 4px 12px rgba(0, 179, 122, 0.25); cursor: pointer; transition: 0.2s;">
-                        ✨ 대한민국 100명 중 몇 등? 분석하기
+                        ✨ 100명 중 몇 등? 분석하기
                     </button>
                 </div>
             
