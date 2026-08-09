@@ -248,10 +248,7 @@
 
             <main class="history-list" id="history-container"></main>
 
-            <!-- 🚨 [테스트용 강제 초기화 버튼 복구] (모든 테스트 끝난 후 지우시면 됩니다) -->
-            <button onclick="clearDiaryData()" style="margin: 20px auto 40px auto; display: block; background: #FFF0F1; color: #F04452; border: 1px dashed #F04452; padding: 14px 20px; border-radius: 12px; font-size: 14px; font-weight: 800; cursor: pointer; transition:0.2s;">
-                🗑️ 테스트용 다이어리 전체 초기화 (서버포함)
-            </button>
+
         </div>
     </div>
 
@@ -714,15 +711,13 @@
             location.reload(); 
         };
 
-     // 🚨 [프리미엄 뷰어] 영문 텍스트 완전 제거 & 여백 극대화 하이엔드 표지
-        window.openPdfPreview = function() {
+     window.openPdfPreview = function() {
             const modal = document.getElementById('pdf-preview-modal');
             const container = document.getElementById('pdf-pages-container');
             
-            // 데이터 불러오기
             const babyName = window.babyName || '우리아기';
             const rawDate = localStorage.getItem('tosil_startDate');
-            let formattedDate = "202X. XX. XX"; 
+            let formattedDate = "202X. 03. 03"; 
             if (rawDate) {
                 const d = new Date(rawDate);
                 formattedDate = `${d.getFullYear()}. ${String(d.getMonth()+1).padStart(2,'0')}. ${String(d.getDate()).padStart(2,'0')}`;
@@ -731,48 +726,51 @@
             const myKakaoName = localStorage.getItem('kakao_nickname') || '';
             const myRole = localStorage.getItem('tosil_userRole') || 'husband'; 
             
-            let dadName = (myRole === 'husband' && myKakaoName) ? myKakaoName : '아빠';
-            let momName = (myRole === 'wife' && myKakaoName) ? myKakaoName : '엄마';
+            // 💡 이름이 있으면 이름을 쓰고, 없으면 안내용 텍스트를 띄워 중복(엄마 엄마)을 방지합니다.
+            let momName = (myRole === 'wife' && myKakaoName) ? myKakaoName : '';
+            let dadName = (myRole === 'husband' && myKakaoName) ? myKakaoName : '';
             
-            // 1. 🌟 하이엔드 표지 (영문 삭제 & 완벽한 여백 레이아웃)
+            let momDisplayStr = momName ? `엄마 <span style="color:#FF8570; font-weight:900;">${momName}</span>` : `엄마 <span style="color:#A39992; font-weight:700;">[엄마 성함]</span>`;
+            let dadDisplayStr = dadName ? `아빠 <span style="color:#3182F6; font-weight:900;">${dadName}</span>` : `아빠 <span style="color:#A39992; font-weight:700;">[아빠 성함]</span>`;
+
             let html = `
-                <div class="premium-book-page premium-cover" style="padding: 80px 30px 60px 30px; display: flex; flex-direction: column; justify-content: space-between; align-items: center;">
+                <div class="premium-book-page premium-cover" style="padding: 60px 30px; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center;">
                     
                     <div style="text-align: center; width: 100%;">
                         <!-- 🌿 상단: 감성 문구 -->
-                        <div style="font-family: 'Georgia', serif; font-size: 11.5px; color: #A39992; letter-spacing: 2px; line-height: 1.8; margin-bottom: 36px;">
+                        <div style="font-family: 'Georgia', serif; font-size: 11px; color: #A39992; letter-spacing: 2px; line-height: 1.8; margin-bottom: 28px;">
                             " 너라는 우주가<br>우리에게 쏟아지던 날 "
                         </div>
 
                         <!-- 📖 중앙 1: 메인 타이틀 -->
-                        <div style="font-size: 26px; font-weight: 900; color: #3E3A37; letter-spacing: -1px; line-height: 1.4; margin-bottom: 44px;">
+                        <div style="font-size: 24px; font-weight: 900; color: #3E3A37; letter-spacing: -1px; line-height: 1.4; margin-bottom: 32px;">
                             우리가 처음 만난<br>그 해의 기록
                         </div>
-                        
-                        <!-- 은은한 구분선 -->
-                        <div style="width: 24px; height: 1px; background: #D1C7BD; margin: 0 auto 40px auto;"></div>
 
-                        <!-- 👶 중앙 2: 아기 프로필 (영문 타이틀 제거 후 이름과 생년월일만 묵직하게 배치) -->
-                        <div style="margin-bottom: 44px;">
-                            <div style="font-size: 18px; font-weight: 900; color: #4A413C; margin-bottom: 8px; letter-spacing: 1px;">${babyName}</div>
-                            <div style="font-family: 'Georgia', serif; font-size: 12.5px; font-weight: 600; color: #8A7E78; letter-spacing: 1.5px;">${formattedDate}</div>
+                        <!-- 👶 중앙 2: 아기 프로필 -->
+                        <div style="margin-bottom: 28px;">
+                            <div style="font-size: 18px; font-weight: 900; color: #4A413C; margin-bottom: 6px; letter-spacing: 1px;">${babyName}</div>
+                            <div style="font-family: 'Georgia', serif; font-size: 12px; font-weight: 600; color: #8A7E78; letter-spacing: 1.5px;">${formattedDate}</div>
                         </div>
                         
                         <!-- 은은한 구분선 -->
-                        <div style="width: 24px; height: 1px; background: #D1C7BD; margin: 0 auto 40px auto;"></div>
+                        <div style="width: 20px; height: 1px; background: #D1C7BD; margin: 0 auto 28px auto;"></div>
 
-                        <!-- ✍️ 중앙 3: 지은이 (엄마 아빠) -->
-                        <div style="font-size: 13.5px; color: #5C5652; font-weight: 600; line-height: 2.0; letter-spacing: 0.5px;">
-                            엄마 <span style="color:#FF8570; font-weight:900;">${momName}</span><br>
-                            아빠 <span style="color:#3182F6; font-weight:900;">${dadName}</span>
+                        <!-- ✍️ 중앙 3: 지은이 (엄마 아빠 이름 안내 문구 추가) -->
+                        <div style="font-size: 13.5px; color: #5C5652; font-weight: 600; line-height: 1.8; letter-spacing: 0.5px; margin-bottom: 12px;">
+                            ${momDisplayStr}<br>
+                            ${dadDisplayStr}
+                        </div>
+                        
+                        <!-- 💡 유저가 오해하지 않도록 띄워주는 친절한 설명 가이드 -->
+                        <div style="font-size: 11px; color: #A39992; font-weight: 600; letter-spacing: -0.3px;">
+                            * 실제 출판 시 카카오톡 로그인 이름이 반영됩니다
                         </div>
                     </div>
 
-                    <!-- 🏷️ 최하단 여백 마무리 -->
-                    <div style="height: 10px;"></div>
                 </div>
             `;
-
+            
             // 2. 일기 내지 렌더링
             let hasRecord = false;
             for (let i = 1; i <= window.viewingDay; i++) {
