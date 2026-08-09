@@ -33,19 +33,6 @@
             --shadow-float: 0 20px 40px rgba(138, 126, 116, 0.12);
         }
 
-        html.dark-mode {
-            --bg-color: #121212;
-            --card-bg: #1C1C1E;
-            --text-title: #F5F5F7;
-            --text-main: #D1D1D6;
-            --text-sub: #8E8E93;
-            --border-color: #2C2C2E;
-            --primary: #FF8A75;
-            --shadow-sm: 0 4px 16px rgba(0, 0, 0, 0.4);
-            --shadow-md: 0 12px 32px rgba(0, 0, 0, 0.6);
-            --shadow-float: 0 20px 40px rgba(0, 0, 0, 0.8);
-        }
-
         body { background: var(--bg-color); color: var(--text-main); display: flex; justify-content: center; min-height: 100vh; transition: background 0.3s, color 0.3s; overflow-x: hidden; }
         .wrapper { width: 100%; max-width: 480px; padding: 20px 20px 60px 20px; display: flex; flex-direction: column; position: relative; }
         
@@ -95,92 +82,24 @@
         .next-btn { width: 100%; padding: 20px; background: #F2F0EB; color: var(--text-main); border: none; border-radius: 20px; font-size: 15px; font-weight: 800; cursor: pointer; display: none; margin-top: 10px; transition: 0.2s; }
 
         /* =======================================================
-           🎮 2. 거실 꾸미기 모달
+           🎮 거실 꾸미기 모달
            ======================================================= */
         .room-modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); backdrop-filter: blur(10px); display: none; flex-direction: column; justify-content: flex-end; z-index: 9999; }
         .room-modal-content { background: var(--bg-color); width: 100%; height: 90vh; border-radius: 32px 32px 0 0; display: flex; flex-direction: column; overflow: hidden; transform: translateY(100%); transition: transform 0.5s cubic-bezier(0.2, 0.8, 0.2, 1); box-shadow: 0 -20px 50px rgba(0,0,0,0.15); }
         .room-header { padding: 24px; display: flex; justify-content: space-between; align-items: center; background: #FFF; border-bottom: 1px solid var(--border-color); z-index: 20; }
         
-        .virtual-room { 
-            position: relative; 
-            height: 260px; 
-            background: #FCFAED; 
-            overflow: hidden; 
-            display: flex; 
-            flex-direction: column; 
-            align-items: center; 
-            justify-content: center; 
-            flex-shrink: 0;
-        }
-
-        .room-window-base {
-            position: absolute;
-            top: 6%;
-            left: 50%;
-            transform: translateX(-50%);
-            width: 110px;
-            height: 120px;
-            background: linear-gradient(to bottom, #FFDAB9, #AEE2FF); 
-            border: 8px solid #FFFFFF;
-            border-radius: 55px 55px 0 0;
-            box-shadow: inset 0 6px 12px rgba(0,0,0,0.08), 0 6px 20px rgba(255,255,255,0.8);
-            z-index: 1;
-            overflow: hidden;
-        }
+        .virtual-room { position: relative; height: 260px; background: #FCFAED; overflow: hidden; display: flex; flex-direction: column; align-items: center; justify-content: center; flex-shrink: 0; }
+        .room-window-base { position: absolute; top: 6%; left: 50%; transform: translateX(-50%); width: 110px; height: 120px; background: linear-gradient(to bottom, #FFDAB9, #AEE2FF); border: 8px solid #FFFFFF; border-radius: 55px 55px 0 0; box-shadow: inset 0 6px 12px rgba(0,0,0,0.08), 0 6px 20px rgba(255,255,255,0.8); z-index: 1; overflow: hidden; }
         .room-window-base::before { content: ''; position: absolute; top: 0; left: 50%; width: 4px; height: 100%; background: #FFF; transform: translateX(-50%); }
         .room-window-base::after { content: ''; position: absolute; top: 50%; left: 0; width: 100%; height: 4px; background: #FFF; transform: translateY(-50%); }
         .cloud { position: absolute; font-size: 20px; opacity: 0.9; animation: floatCloud 25s linear infinite; z-index: 0; }
         @keyframes floatCloud { from { transform: translateX(110px); } to { transform: translateX(-40px); } }
-
-        .wainscoting {
-            position: absolute;
-            bottom: 35%; left: 0; width: 100%; height: 25%;
-            background: transparent;
-            border-top: 1px solid #EAE3D9;
-            display: flex;
-            justify-content: space-evenly;
-            align-items: center;
-            z-index: 0;
-        }
+        .wainscoting { position: absolute; bottom: 35%; left: 0; width: 100%; height: 25%; background: transparent; border-top: 1px solid #EAE3D9; display: flex; justify-content: space-evenly; align-items: center; z-index: 0; }
         .wainscoting-panel { width: 30%; height: 70%; border: 1.5px solid #F0ECE6; border-radius: 4px; }
+        .room-floor { position: absolute; bottom: 0; left: 0; width: 100%; height: 35%; background-color: #E2D3C4; background-image: linear-gradient(0deg, rgba(100,80,60,0.04) 1px, transparent 1px); background-size: 100% 16px; border-top: 10px solid #FFFFFF; z-index: 0; }
+        .room-rug { position: absolute; bottom: 4%; left: 50%; transform: translateX(-50%); width: 210px; height: 55px; background: #FDFBF9; border-radius: 50%; box-shadow: 0 6px 12px rgba(100,80,60,0.08); border: 1.5px dashed #EAE3D9; z-index: 1; }
 
-        .room-floor {
-            position: absolute;
-            bottom: 0; left: 0; width: 100%; height: 35%;
-            background-color: #E2D3C4;
-            background-image: linear-gradient(0deg, rgba(100,80,60,0.04) 1px, transparent 1px);
-            background-size: 100% 16px;
-            border-top: 10px solid #FFFFFF;
-            z-index: 0;
-        }
-
-        .room-rug {
-            position: absolute;
-            bottom: 4%;
-            left: 50%;
-            transform: translateX(-50%);
-            width: 210px;
-            height: 55px;
-            background: #FDFBF9;
-            border-radius: 50%;
-            box-shadow: 0 6px 12px rgba(100,80,60,0.08);
-            border: 1.5px dashed #EAE3D9;
-            z-index: 1;
-        }
-
-        .pedestal {
-            position: absolute;
-            width: 65px; 
-            height: 18px;
-            background: linear-gradient(135deg, #FFFFFF 0%, #E5E8EB 100%);
-            border-radius: 50%;
-            box-shadow: 0 8px 12px rgba(0,0,0,0.08);
-            display: flex;
-            justify-content: center;
-            opacity: 0;
-            transform: scale(0);
-            transition: 0.4s ease-out;
-        }
+        .pedestal { position: absolute; width: 65px; height: 18px; background: linear-gradient(135deg, #FFFFFF 0%, #E5E8EB 100%); border-radius: 50%; box-shadow: 0 8px 12px rgba(0,0,0,0.08); display: flex; justify-content: center; opacity: 0; transform: scale(0); transition: 0.4s ease-out; }
         .pedestal.active { opacity: 1; transform: scale(1); }
         .pedestal-item { position: absolute; bottom: 10px; font-size: 48px; filter: drop-shadow(0 8px 8px rgba(0,0,0,0.12)); }
 
@@ -189,12 +108,10 @@
         .shop-item { background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 16px; padding: 16px 20px; display: flex; align-items: center; justify-content: space-between; cursor: pointer; transition: 0.2s; box-shadow: var(--shadow-sm); }
         .shop-item:active { transform: scale(0.98); }
         .shop-item.owned { opacity: 0.4; pointer-events: none; background: transparent; box-shadow: none; border: 1px dashed var(--border-color); filter: grayscale(100%); }
-        
         .shop-item-left { display: flex; align-items: center; gap: 16px; }
         .shop-item-icon-wrap { width: 50px; height: 50px; background: #F8F9FA; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 28px; flex-shrink: 0; }
         .shop-item-name { font-size: 15px; font-weight: 800; color: var(--text-title); margin-bottom: 4px; }
         .shop-item-desc { font-size: 12px; font-weight: 600; color: var(--text-sub); }
-        
         .shop-item-price { font-size: 14px; font-weight: 900; color: #191F28; background: #F2F4F6; padding: 8px 16px; border-radius: 12px; flex-shrink: 0; }
         .shop-item.owned .shop-item-price { background: transparent; color: var(--text-sub); padding: 0; }
 
@@ -206,8 +123,52 @@
         .q-text { font-size: 18px; font-weight: 900; color: var(--text-title); margin-bottom: 20px; line-height: 1.4; word-break: keep-all; }
         .a-text { font-size: 15px; color: var(--text-main); line-height: 1.6; margin-bottom: 12px; background: #FDFBF9; padding: 16px; border-radius: 14px; }
         .a-role { font-size: 12px; font-weight: 900; color: var(--text-sub); margin-bottom: 6px; }
-
         .book-progress-wrap { background: var(--card-bg); padding: 24px; border-radius: 24px; box-shadow: var(--shadow-sm); margin-bottom: 24px; border: 1px solid var(--border-color); }
+
+        /* =======================================================
+           📖 프리미엄 베이비북(PDF) 하이엔드 미리보기 모달
+           ======================================================= */
+        .pdf-modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); backdrop-filter: blur(8px); display: none; justify-content: center; align-items: center; z-index: 9999; padding: 20px; opacity: 0; transition: opacity 0.3s; }
+        .pdf-modal-content { background: #EFEBE4; width: 100%; max-width: 480px; height: 85vh; border-radius: 24px; display: flex; flex-direction: column; overflow: hidden; box-shadow: 0 20px 50px rgba(0,0,0,0.4); transform: translateY(50px); transition: transform 0.4s cubic-bezier(0.2, 0.8, 0.2, 1); }
+        .pdf-header { padding: 20px 24px; display: flex; justify-content: space-between; align-items: center; background: #FFFFFF; border-bottom: 1px solid #E5E0DA; z-index: 10; }
+        .pdf-header h2 { font-size: 16px; font-weight: 900; color: #3E3A37; margin: 0; letter-spacing: -0.5px; }
+        
+        .pdf-body { flex: 1; overflow-y: auto; padding: 40px 20px; display: flex; flex-direction: column; gap: 32px; background: #EFEBE4; align-items: center; }
+        
+        /* 📘 실제 책 페이지 뼈대 */
+        .premium-book-page { 
+            background: #FDFBF8; 
+            width: 100%; 
+            max-width: 360px; 
+            min-height: 480px;
+            padding: 50px 32px; 
+            position: relative;
+            box-shadow: 2px 4px 16px rgba(0,0,0,0.06), 0 0 1px rgba(0,0,0,0.1);
+            border-radius: 2px 6px 6px 2px;
+            border-left: 1px solid #EBE5DD;
+        }
+        /* 책 제본선(책등) 그림자 효과 */
+        .premium-book-page::before {
+            content: ''; position: absolute; top: 0; left: 0; bottom: 0; width: 30px;
+            background: linear-gradient(to right, rgba(0,0,0,0.04) 0%, rgba(0,0,0,0) 100%);
+            pointer-events: none;
+        }
+
+        /* 📘 표지 디자인 */
+        .premium-cover { display: flex; flex-direction: column; justify-content: center; align-items: center; background: #EBE5DD; border-left: 4px solid #D1C7BD; }
+        .cover-title { font-size: 24px; font-weight: 800; color: #4A413C; margin-bottom: 16px; letter-spacing: -0.5px; line-height: 1.4; text-align: center; }
+        .cover-subtitle { font-family: 'Georgia', serif; font-size: 11px; letter-spacing: 4px; color: #8A7E78; margin-top: auto; }
+        
+        /* 📘 내지 디자인 */
+        .essay-date { font-family: 'Georgia', serif; font-size: 12px; color: #A39992; letter-spacing: 2px; margin-bottom: 24px; text-align: center; }
+        .essay-q { font-size: 17px; font-weight: 800; color: #3E3A37; text-align: center; margin-bottom: 40px; line-height: 1.6; word-break: keep-all; }
+        .essay-ans-wrap { display: flex; flex-direction: column; gap: 32px; }
+        .essay-role { font-family: 'Georgia', serif; font-size: 11px; font-weight: bold; color: #B0B8C1; letter-spacing: 1px; margin-bottom: 8px; text-align: center; }
+        .essay-text { font-size: 14px; color: #5C5652; line-height: 1.8; text-align: justify; word-break: keep-all; }
+        
+        /* 📘 사진 화보 예시 레이아웃 */
+        .photo-frame { width: 100%; height: 220px; background: #E5E0DA; border-radius: 4px; display: flex; justify-content: center; align-items: center; margin-bottom: 24px; font-size: 32px; box-shadow: inset 0 2px 8px rgba(0,0,0,0.05); }
+        .photo-caption { font-size: 12px; color: #8A7E78; text-align: center; line-height: 1.6; }
     </style>
 </head>
 <body>
@@ -278,8 +239,10 @@
                     <span style="color:var(--primary); font-weight:900;">프리미엄 출판 서비스</span>를 통해 세상에 하나뿐인<br>
                     우리 두 사람만의 책을 소장할 수 있어요.
                 </div>
-                <button onclick="window.showToast('✨ 곧 프리미엄 출판 서비스 상세페이지가 공개됩니다!')" style="background:var(--primary); color:white; border:none; padding:10px 20px; border-radius:12px; font-size:12px; font-weight:900; cursor:pointer;">
-                    프리미엄 혜택 확인하기
+                
+                <!-- 🚨 [변경됨] 토스트 메시지 대신, 미리보기 모달을 띄우는 함수로 연결합니다! -->
+                <button onclick="openPdfPreview()" style="background:var(--primary); color:white; border:none; padding:10px 20px; border-radius:12px; font-size:12px; font-weight:900; cursor:pointer; transition:0.2s;">
+                    미리보기 및 혜택 확인
                 </button>
             </div>
 
@@ -325,6 +288,26 @@
         </div>
     </div>
 
+    <!-- 📖 프리미엄 에세이북 미리보기 모달 뼈대 -->
+    <div id="pdf-preview-modal" class="pdf-modal-overlay">
+        <div class="pdf-modal-content">
+            <div class="pdf-header">
+                <h2>📖 프리미엄 에세이 미리보기</h2>
+                <button onclick="closePdfPreview()" style="background:none; border:none; font-size:24px; color:#A39992; cursor:pointer;">✕</button>
+            </div>
+            
+            <!-- 책 페이지가 들어가는 캔버스 -->
+            <div class="pdf-body" id="pdf-pages-container"></div>
+            
+            <!-- 결제 유도 하단 바 -->
+<div style="padding: 20px; background:#FFFFFF; border-top:1px solid #E8E3DD; text-align:center; flex-shrink: 0;">
+    <button onclick="alert('✨ 프리미엄 출판 서비스는 추후 업데이트될 예정입니다. 조금만 기다려주세요! 🤍');" style="width:100%; padding:18px; background:#4A413C; color:#FFF; border:none; border-radius:16px; font-weight:900; font-size:16px; cursor:pointer; box-shadow: 0 8px 16px rgba(74, 65, 60, 0.2);">
+        실물 양장본 및 PDF 출판하기
+    </button>
+</div>
+        </div>
+    </div>
+
     <!-- 👩‍👧 온보딩 모달 -->
     <div id="setup-modal" class="modal-overlay" style="display:none; z-index:99999; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.7); backdrop-filter:blur(4px); justify-content:center; align-items:center;">
         <div style="background:var(--card-bg); width:100%; max-width:320px; border-radius:24px; padding:32px 24px; text-align:center;">
@@ -337,14 +320,8 @@
         </div>
     </div>
 
+    <script src="DATA.js"></script>
     <script>
-        const questionDB = [
-            { id: 1, target: "부부 공통", category: "위로", question: "오늘 하루, 육아와 일상으로 고생한 서로에게 가장 먼저 건네고 싶은 말은 무엇인가요?" },
-            { id: 2, target: "부부 공통", category: "사랑", question: "배우자가 아기를 안고 있을 때, 가장 아름답고 고맙다고 느꼈던 순간은 언제인가요?" },
-            { id: 3, target: "부부 공통", category: "성장", question: "육아를 하면서 나의 부모님을 비로소 깊게 이해하게 된 순간이 있나요?" },
-            { id: 4, target: "부부 공통", category: "미래", question: "아기가 10살이 되면, 주말에 세 식구가 다 함께 어떤 취미를 공유하고 싶나요?" }
-        ];
-
         const FURNITURE_DB = [
             { id: 'tent', name: '인디언 텐트', desc: '아늑한 우리 가족 아지트', price: 100, icon: '⛺', style: 'bottom: 20%; left: 8%; font-size: 90px; z-index: 3;' },
             { id: 'sofa', name: '패브릭 소파', desc: '푹신하고 편안한 휴식 공간', price: 150, icon: '🛋️', style: 'bottom: 22%; right: 8%; font-size: 85px; z-index: 4;' },
@@ -355,7 +332,6 @@
     
     <!-- 🚨 [서버 연동 & 완전 폭파 스크립트 모듈] -->
     <script type="module">
-        // deleteDoc 을 추가로 불러와야 파이어베이스에 남은 좀비 기록을 죽일 수 있습니다.
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
         import { getFirestore, doc, setDoc, onSnapshot, getDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
         import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
@@ -736,6 +712,157 @@
             localStorage.setItem('tosil_userRole', roleVal);
             document.getElementById('setup-modal').style.display = 'none';
             location.reload(); 
+        };
+
+     // 🚨 [프리미엄 뷰어] 영문 텍스트 완전 제거 & 여백 극대화 하이엔드 표지
+        window.openPdfPreview = function() {
+            const modal = document.getElementById('pdf-preview-modal');
+            const container = document.getElementById('pdf-pages-container');
+            
+            // 데이터 불러오기
+            const babyName = window.babyName || '우리아기';
+            const rawDate = localStorage.getItem('tosil_startDate');
+            let formattedDate = "202X. XX. XX"; 
+            if (rawDate) {
+                const d = new Date(rawDate);
+                formattedDate = `${d.getFullYear()}. ${String(d.getMonth()+1).padStart(2,'0')}. ${String(d.getDate()).padStart(2,'0')}`;
+            }
+            
+            const myKakaoName = localStorage.getItem('kakao_nickname') || '';
+            const myRole = localStorage.getItem('tosil_userRole') || 'husband'; 
+            
+            let dadName = (myRole === 'husband' && myKakaoName) ? myKakaoName : '아빠';
+            let momName = (myRole === 'wife' && myKakaoName) ? myKakaoName : '엄마';
+            
+            // 1. 🌟 하이엔드 표지 (영문 삭제 & 완벽한 여백 레이아웃)
+            let html = `
+                <div class="premium-book-page premium-cover" style="padding: 80px 30px 60px 30px; display: flex; flex-direction: column; justify-content: space-between; align-items: center;">
+                    
+                    <div style="text-align: center; width: 100%;">
+                        <!-- 🌿 상단: 감성 문구 -->
+                        <div style="font-family: 'Georgia', serif; font-size: 11.5px; color: #A39992; letter-spacing: 2px; line-height: 1.8; margin-bottom: 36px;">
+                            " 너라는 우주가<br>우리에게 쏟아지던 날 "
+                        </div>
+
+                        <!-- 📖 중앙 1: 메인 타이틀 -->
+                        <div style="font-size: 26px; font-weight: 900; color: #3E3A37; letter-spacing: -1px; line-height: 1.4; margin-bottom: 44px;">
+                            우리가 처음 만난<br>그 해의 기록
+                        </div>
+                        
+                        <!-- 은은한 구분선 -->
+                        <div style="width: 24px; height: 1px; background: #D1C7BD; margin: 0 auto 40px auto;"></div>
+
+                        <!-- 👶 중앙 2: 아기 프로필 (영문 타이틀 제거 후 이름과 생년월일만 묵직하게 배치) -->
+                        <div style="margin-bottom: 44px;">
+                            <div style="font-size: 18px; font-weight: 900; color: #4A413C; margin-bottom: 8px; letter-spacing: 1px;">${babyName}</div>
+                            <div style="font-family: 'Georgia', serif; font-size: 12.5px; font-weight: 600; color: #8A7E78; letter-spacing: 1.5px;">${formattedDate}</div>
+                        </div>
+                        
+                        <!-- 은은한 구분선 -->
+                        <div style="width: 24px; height: 1px; background: #D1C7BD; margin: 0 auto 40px auto;"></div>
+
+                        <!-- ✍️ 중앙 3: 지은이 (엄마 아빠) -->
+                        <div style="font-size: 13.5px; color: #5C5652; font-weight: 600; line-height: 2.0; letter-spacing: 0.5px;">
+                            엄마 <span style="color:#FF8570; font-weight:900;">${momName}</span><br>
+                            아빠 <span style="color:#3182F6; font-weight:900;">${dadName}</span>
+                        </div>
+                    </div>
+
+                    <!-- 🏷️ 최하단 여백 마무리 -->
+                    <div style="height: 10px;"></div>
+                </div>
+            `;
+
+            // 2. 일기 내지 렌더링
+            let hasRecord = false;
+            for (let i = 1; i <= window.viewingDay; i++) {
+                const rawData = localStorage.getItem(`day_${i}_data`);
+                if (rawData) {
+                    try {
+                        const d = JSON.parse(rawData);
+                        if(d.husbandAns || d.wifeAns) {
+                            hasRecord = true;
+                            const qData = questionDB[(i - 1) % questionDB.length];
+                            const qText = qData ? qData.question.replace(/{babyName}/g, babyName) : '';
+                            
+                            const context = qData ? (qData.context || '육아') : '육아';
+                            
+                            let roleLabelDad = context === '부부' ? '남편' : '아빠';
+                            let roleLabelMom = context === '부부' ? '아내' : '엄마';
+
+                            let displayDad = (myRole === 'husband' && myKakaoName) 
+                                ? `<span style="font-size:10px; color:#A39992; letter-spacing:1px; margin-bottom:2px;">${roleLabelDad}</span>
+                                   <span style="font-size:13px; color:#3182F6; font-weight:900;">${myKakaoName}</span>`
+                                : `<span style="font-size:13px; color:#3182F6; font-weight:900;">${roleLabelDad}</span>`;
+
+                            let displayMom = (myRole === 'wife' && myKakaoName) 
+                                ? `<span style="font-size:10px; color:#A39992; letter-spacing:1px; margin-bottom:2px;">${roleLabelMom}</span>
+                                   <span style="font-size:13px; color:#FF8570; font-weight:900;">${myKakaoName}</span>`
+                                : `<span style="font-size:13px; color:#FF8570; font-weight:900;">${roleLabelMom}</span>`;
+
+                            html += `
+                                <div class="premium-book-page">
+                                    <div class="essay-date">- DAY ${i} -</div>
+                                    <div class="essay-q">${qText}</div>
+                                    <div class="essay-ans-wrap">
+                                        ${d.husbandAns ? `
+                                            <div>
+                                                <div class="essay-role" style="display:flex; flex-direction:column; align-items:center; margin-bottom:12px;">
+                                                    ${displayDad}
+                                                </div>
+                                                <div class="essay-text">${d.husbandAns.replace(/\n/g, '<br>')}</div>
+                                            </div>
+                                        ` : ''}
+                                        ${d.wifeAns ? `
+                                            <div>
+                                                <div class="essay-role" style="display:flex; flex-direction:column; align-items:center; margin-bottom:12px;">
+                                                    ${displayMom}
+                                                </div>
+                                                <div class="essay-text">${d.wifeAns.replace(/\n/g, '<br>')}</div>
+                                            </div>
+                                        ` : ''}
+                                    </div>
+                                </div>
+                            `;
+
+                            // 📸 [마일스톤 사진 화보 예시] Day 1 뒤에 살짝 보여주기
+                            if (i === 1) {
+                                html += `
+                                    <div class="premium-book-page">
+                                        <div class="essay-date">- MILESTONE -</div>
+                                        <div class="photo-frame">📸</div>
+                                        <div class="photo-caption">
+                                            우리가 처음으로 함께 웃었던 날.<br><br>
+                                            <span style="color:#FF8570; font-weight:800; font-size:11.5px;">* 출판 시, 마일스톤 사진들이<br>이렇게 예쁜 화보처럼 함께 수록됩니다.</span>
+                                        </div>
+                                    </div>
+                                `;
+                            }
+                        }
+                    } catch(e) {}
+                }
+            }
+
+            if(!hasRecord) {
+                html += `<div style="text-align:center; color:#8B95A1; padding:40px; font-weight: 700;">아직 기록된 페이지가 없습니다.</div>`;
+            }
+
+            container.innerHTML = html;
+            modal.style.display = 'flex';
+            
+            container.scrollTop = 0; 
+
+            setTimeout(() => { 
+                modal.style.opacity = '1'; 
+                modal.firstElementChild.style.transform = 'translateY(0)'; 
+            }, 10);
+        };
+
+        window.closePdfPreview = function() {
+            const modal = document.getElementById('pdf-preview-modal');
+            modal.style.opacity = '0';
+            modal.firstElementChild.style.transform = 'translateY(50px)';
+            setTimeout(() => { modal.style.display = 'none'; }, 300);
         };
 
         window.addEventListener('DOMContentLoaded', () => {
