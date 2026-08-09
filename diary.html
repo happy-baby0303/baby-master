@@ -22,15 +22,12 @@
             --text-main: #5C5652;
             --text-sub: #A39D98;
             --border-color: #F0ECE6;
-            
             --primary: #FF8570; 
             --primary-light: #FFF2EF;
             --dad-color: #6DA0FF; 
             --mom-color: #FF8570;
-            
             --shadow-sm: 0 4px 16px rgba(138, 126, 116, 0.05);
             --shadow-md: 0 12px 32px rgba(138, 126, 116, 0.08);
-            --shadow-float: 0 20px 40px rgba(138, 126, 116, 0.12);
         }
 
         body { background: var(--bg-color); color: var(--text-main); display: flex; justify-content: center; min-height: 100vh; transition: background 0.3s, color 0.3s; overflow-x: hidden; }
@@ -38,10 +35,7 @@
         
         .nav-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 24px; padding-top: 10px; }
         .home-btn { background: var(--card-bg); border: 1px solid var(--border-color); font-size: 15px; color: var(--text-main); cursor: pointer; font-weight: 800; padding: 10px 16px; border-radius: 14px; transition: 0.2s; box-shadow: var(--shadow-sm); }
-        .home-btn:active { transform: scale(0.95); }
-        
         .coin-badge { background: #FFF7E6; color: #D48806; padding: 10px 16px; border-radius: 16px; font-size: 15px; font-weight: 900; display: flex; align-items: center; gap: 6px; cursor: pointer; border: 1px solid #FFE58F; box-shadow: 0 4px 12px rgba(212, 136, 6, 0.15); transition: 0.2s; }
-        .coin-badge:active { transform: scale(0.95); }
         
         .tab-group { display: flex; background: #EBE5DD; border-radius: 20px; overflow: hidden; padding: 4px; margin-bottom: 24px; }
         .tab-btn { flex: 1; background: transparent; color: #8A7E78; border: none; padding: 12px 0; border-radius: 16px; font-weight: 800; font-size: 15px; cursor: pointer; transition: 0.2s; }
@@ -51,21 +45,18 @@
         .view-section.active { display: flex; flex-direction: column; flex-grow: 1; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 
-        .card { background: var(--card-bg); border-radius: 36px; padding: 48px 24px 32px 24px; box-shadow: var(--shadow-md); border: 1px solid #FFFFFF; text-align: center; display: flex; flex-direction: column; margin-bottom: 20px; transition: 0.3s; position: relative; overflow: hidden; }
+        .card { background: var(--card-bg); border-radius: 36px; padding: 48px 24px 32px 24px; box-shadow: var(--shadow-md); border: 1px solid #FFFFFF; text-align: center; display: flex; flex-direction: column; margin-bottom: 20px; position: relative; overflow: hidden; }
 
         .day-badge-wrap { display: flex; align-items: center; justify-content: center; gap: 16px; margin-bottom: 24px; }
-        .nav-badge { background: #F5F1EA; color: var(--text-sub); width: 36px; height: 36px; border-radius: 50%; font-size: 14px; font-weight: 900; cursor: pointer; display: flex; justify-content: center; align-items: center; transition: 0.2s; border: none; }
-        .nav-badge:active { transform: scale(0.9); background: #EBE5DD; }
-        
+        .nav-badge { background: #F5F1EA; color: var(--text-sub); width: 36px; height: 36px; border-radius: 50%; font-size: 14px; font-weight: 900; cursor: pointer; border: none; }
         .day-text { font-family: 'Georgia', serif; font-size: 16px; font-weight: 900; color: var(--primary); letter-spacing: 1px; }
-        .question { font-size: 21px; font-weight: 800; line-height: 1.6; color: var(--text-title); word-break: keep-all; letter-spacing: -0.5px; margin-bottom: 36px; padding: 0 10px; }
-        
+        .question { font-size: 21px; font-weight: 800; line-height: 1.6; color: var(--text-title); word-break: keep-all; margin-bottom: 36px; padding: 0 10px; }
+
         .unlinked-notice { display: inline-flex; align-items: center; justify-content: center; gap: 6px; background: #FFF5F2; border: 1.5px dashed #FFB4A2; padding: 12px 20px; border-radius: 20px; margin: 0 auto 28px auto; box-shadow: 0 4px 12px rgba(255, 133, 112, 0.08); }
         .unlinked-notice p { font-size: 13px; color: #D25E4B; margin: 0; font-weight: 700; word-break: keep-all; }
 
-        textarea { width: 100%; min-height: 180px; border: 2px solid var(--border-color); background: #FDFBF9; font-size: 16px; color: var(--text-main); resize: none; outline: none; line-height: 1.8; text-align: center; font-weight: 600; padding: 32px 24px; border-radius: 24px; transition: 0.3s; box-shadow: inset 0 4px 12px rgba(138, 126, 116, 0.04); }
+        textarea { width: 100%; min-height: 180px; border: 2px solid var(--border-color); background: #FDFBF9; font-size: 16px; color: var(--text-main); resize: none; outline: none; line-height: 1.8; text-align: center; font-weight: 600; padding: 32px 24px; border-radius: 24px; box-shadow: inset 0 4px 12px rgba(138, 126, 116, 0.04); }
         textarea:focus { border-color: #FFB4A2; background: #FFF; box-shadow: 0 0 0 4px var(--primary-light), inset 0 2px 8px rgba(138, 126, 116, 0.02); }
-        textarea::placeholder { color: #C2BDB8; font-weight: 500; }
         
         .answer-bubble { background: #FDFBF9; border: 1px solid var(--border-color); padding: 24px 20px; border-radius: 24px; margin-bottom: 16px; text-align: left; position: relative; box-shadow: var(--shadow-sm); }
         .answer-bubble.dad { border-top: 4px solid var(--dad-color); }
@@ -73,47 +64,9 @@
         .bubble-role { font-size: 13px; font-weight: 900; margin-bottom: 12px; color: var(--text-sub); letter-spacing: 0.5px; }
         .bubble-text { font-size: 16px; line-height: 1.7; color: var(--text-main); white-space: pre-wrap; word-break: keep-all; font-weight: 600; }
         
-        .edit-answer-btn { position: absolute; top: 16px; right: 16px; background: #FFF; color: var(--text-sub); border: 1px solid var(--border-color); border-radius: 10px; padding: 6px 12px; font-size: 12px; font-weight: 800; cursor: pointer; transition: 0.2s; box-shadow: var(--shadow-sm); }
-        .edit-answer-btn:active { transform: scale(0.95); }
-
-        .save-btn { width: 100%; padding: 20px; background: #5D5651; color: #FFF; border: none; border-radius: 20px; font-size: 16px; font-weight: 800; cursor: pointer; transition: 0.2s; box-shadow: 0 8px 24px rgba(93, 86, 81, 0.2); margin-top: 24px; }
-        .save-btn:active { transform: scale(0.97); }
-
-        .next-btn { width: 100%; padding: 20px; background: #F2F0EB; color: var(--text-main); border: none; border-radius: 20px; font-size: 15px; font-weight: 800; cursor: pointer; display: none; margin-top: 10px; transition: 0.2s; }
-
-        /* =======================================================
-           🎮 거실 꾸미기 모달
-           ======================================================= */
-        .room-modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); backdrop-filter: blur(10px); display: none; flex-direction: column; justify-content: flex-end; z-index: 9999; }
-        .room-modal-content { background: var(--bg-color); width: 100%; height: 90vh; border-radius: 32px 32px 0 0; display: flex; flex-direction: column; overflow: hidden; transform: translateY(100%); transition: transform 0.5s cubic-bezier(0.2, 0.8, 0.2, 1); box-shadow: 0 -20px 50px rgba(0,0,0,0.15); }
-        .room-header { padding: 24px; display: flex; justify-content: space-between; align-items: center; background: #FFF; border-bottom: 1px solid var(--border-color); z-index: 20; }
-        
-        .virtual-room { position: relative; height: 260px; background: #FCFAED; overflow: hidden; display: flex; flex-direction: column; align-items: center; justify-content: center; flex-shrink: 0; }
-        .room-window-base { position: absolute; top: 6%; left: 50%; transform: translateX(-50%); width: 110px; height: 120px; background: linear-gradient(to bottom, #FFDAB9, #AEE2FF); border: 8px solid #FFFFFF; border-radius: 55px 55px 0 0; box-shadow: inset 0 6px 12px rgba(0,0,0,0.08), 0 6px 20px rgba(255,255,255,0.8); z-index: 1; overflow: hidden; }
-        .room-window-base::before { content: ''; position: absolute; top: 0; left: 50%; width: 4px; height: 100%; background: #FFF; transform: translateX(-50%); }
-        .room-window-base::after { content: ''; position: absolute; top: 50%; left: 0; width: 100%; height: 4px; background: #FFF; transform: translateY(-50%); }
-        .cloud { position: absolute; font-size: 20px; opacity: 0.9; animation: floatCloud 25s linear infinite; z-index: 0; }
-        @keyframes floatCloud { from { transform: translateX(110px); } to { transform: translateX(-40px); } }
-        .wainscoting { position: absolute; bottom: 35%; left: 0; width: 100%; height: 25%; background: transparent; border-top: 1px solid #EAE3D9; display: flex; justify-content: space-evenly; align-items: center; z-index: 0; }
-        .wainscoting-panel { width: 30%; height: 70%; border: 1.5px solid #F0ECE6; border-radius: 4px; }
-        .room-floor { position: absolute; bottom: 0; left: 0; width: 100%; height: 35%; background-color: #E2D3C4; background-image: linear-gradient(0deg, rgba(100,80,60,0.04) 1px, transparent 1px); background-size: 100% 16px; border-top: 10px solid #FFFFFF; z-index: 0; }
-        .room-rug { position: absolute; bottom: 4%; left: 50%; transform: translateX(-50%); width: 210px; height: 55px; background: #FDFBF9; border-radius: 50%; box-shadow: 0 6px 12px rgba(100,80,60,0.08); border: 1.5px dashed #EAE3D9; z-index: 1; }
-
-        .pedestal { position: absolute; width: 65px; height: 18px; background: linear-gradient(135deg, #FFFFFF 0%, #E5E8EB 100%); border-radius: 50%; box-shadow: 0 8px 12px rgba(0,0,0,0.08); display: flex; justify-content: center; opacity: 0; transform: scale(0); transition: 0.4s ease-out; }
-        .pedestal.active { opacity: 1; transform: scale(1); }
-        .pedestal-item { position: absolute; bottom: 10px; font-size: 48px; filter: drop-shadow(0 8px 8px rgba(0,0,0,0.12)); }
-
-        .shop-area { flex: 1; background: var(--input-bg); padding: 20px; overflow-y: auto; z-index: 20; position: relative; }
-        .shop-grid { display: flex; flex-direction: column; gap: 12px; }
-        .shop-item { background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 16px; padding: 16px 20px; display: flex; align-items: center; justify-content: space-between; cursor: pointer; transition: 0.2s; box-shadow: var(--shadow-sm); }
-        .shop-item:active { transform: scale(0.98); }
-        .shop-item.owned { opacity: 0.4; pointer-events: none; background: transparent; box-shadow: none; border: 1px dashed var(--border-color); filter: grayscale(100%); }
-        .shop-item-left { display: flex; align-items: center; gap: 16px; }
-        .shop-item-icon-wrap { width: 50px; height: 50px; background: #F8F9FA; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 28px; flex-shrink: 0; }
-        .shop-item-name { font-size: 15px; font-weight: 800; color: var(--text-title); margin-bottom: 4px; }
-        .shop-item-desc { font-size: 12px; font-weight: 600; color: var(--text-sub); }
-        .shop-item-price { font-size: 14px; font-weight: 900; color: #191F28; background: #F2F4F6; padding: 8px 16px; border-radius: 12px; flex-shrink: 0; }
-        .shop-item.owned .shop-item-price { background: transparent; color: var(--text-sub); padding: 0; }
+        .edit-answer-btn { position: absolute; top: 16px; right: 16px; background: #FFF; color: var(--text-sub); border: 1px solid var(--border-color); border-radius: 10px; padding: 6px 12px; font-size: 12px; font-weight: 800; cursor: pointer; box-shadow: var(--shadow-sm); }
+        .save-btn { width: 100%; padding: 20px; background: #5D5651; color: #FFF; border: none; border-radius: 20px; font-size: 16px; font-weight: 800; cursor: pointer; margin-top: 24px; box-shadow: 0 8px 24px rgba(93, 86, 81, 0.2); }
+        .next-btn { width: 100%; padding: 20px; background: #F2F0EB; color: var(--text-main); border: none; border-radius: 20px; font-size: 15px; font-weight: 800; cursor: pointer; display: none; margin-top: 10px; }
 
         .history-list { display: flex; flex-direction: column; gap: 16px; padding-bottom: 40px; }
         .empty-state { text-align: center; padding: 60px 20px; color: var(--text-sub); font-size: 15px; line-height: 1.6; font-weight: 700; }
@@ -123,10 +76,9 @@
         .q-text { font-size: 18px; font-weight: 900; color: var(--text-title); margin-bottom: 20px; line-height: 1.4; word-break: keep-all; }
         .a-text { font-size: 15px; color: var(--text-main); line-height: 1.6; margin-bottom: 12px; background: #FDFBF9; padding: 16px; border-radius: 14px; }
         .a-role { font-size: 12px; font-weight: 900; color: var(--text-sub); margin-bottom: 6px; }
-        .book-progress-wrap { background: var(--card-bg); padding: 24px; border-radius: 24px; box-shadow: var(--shadow-sm); margin-bottom: 24px; border: 1px solid var(--border-color); }
 
         /* =======================================================
-           📖 프리미엄 베이비북(PDF) 하이엔드 미리보기 모달
+           📖 프리미엄 베이비북(PDF) 하이엔드 뷰어 모달
            ======================================================= */
         .pdf-modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); backdrop-filter: blur(8px); display: none; justify-content: center; align-items: center; z-index: 9999; padding: 20px; opacity: 0; transition: opacity 0.3s; }
         .pdf-modal-content { background: #EFEBE4; width: 100%; max-width: 480px; height: 85vh; border-radius: 24px; display: flex; flex-direction: column; overflow: hidden; box-shadow: 0 20px 50px rgba(0,0,0,0.4); transform: translateY(50px); transition: transform 0.4s cubic-bezier(0.2, 0.8, 0.2, 1); }
@@ -135,40 +87,42 @@
         
         .pdf-body { flex: 1; overflow-y: auto; padding: 40px 20px; display: flex; flex-direction: column; gap: 32px; background: #EFEBE4; align-items: center; }
         
-        /* 📘 실제 책 페이지 뼈대 */
-        .premium-book-page { 
-            background: #FDFBF8; 
-            width: 100%; 
-            max-width: 360px; 
-            min-height: 480px;
-            padding: 50px 32px; 
-            position: relative;
-            box-shadow: 2px 4px 16px rgba(0,0,0,0.06), 0 0 1px rgba(0,0,0,0.1);
-            border-radius: 2px 6px 6px 2px;
-            border-left: 1px solid #EBE5DD;
-        }
-        /* 책 제본선(책등) 그림자 효과 */
-        .premium-book-page::before {
-            content: ''; position: absolute; top: 0; left: 0; bottom: 0; width: 30px;
-            background: linear-gradient(to right, rgba(0,0,0,0.04) 0%, rgba(0,0,0,0) 100%);
-            pointer-events: none;
-        }
-
-        /* 📘 표지 디자인 */
-        .premium-cover { display: flex; flex-direction: column; justify-content: center; align-items: center; background: #EBE5DD; border-left: 4px solid #D1C7BD; }
-        .cover-title { font-size: 24px; font-weight: 800; color: #4A413C; margin-bottom: 16px; letter-spacing: -0.5px; line-height: 1.4; text-align: center; }
-        .cover-subtitle { font-family: 'Georgia', serif; font-size: 11px; letter-spacing: 4px; color: #8A7E78; margin-top: auto; }
+        .premium-book-page { width: 100%; max-width: 360px; min-height: 480px; padding: 50px 32px; position: relative; box-shadow: 2px 4px 16px rgba(0,0,0,0.08), 0 0 1px rgba(0,0,0,0.1); border-radius: 2px 6px 6px 2px; }
+        .premium-book-page::before { content: ''; position: absolute; top: 0; left: 0; bottom: 0; width: 30px; background: linear-gradient(to right, rgba(0,0,0,0.06) 0%, rgba(0,0,0,0) 100%); pointer-events: none; }
         
-        /* 📘 내지 디자인 */
+        .premium-cover { display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; border-left: 4px solid; }
         .essay-date { font-family: 'Georgia', serif; font-size: 12px; color: #A39992; letter-spacing: 2px; margin-bottom: 24px; text-align: center; }
         .essay-q { font-size: 17px; font-weight: 800; color: #3E3A37; text-align: center; margin-bottom: 40px; line-height: 1.6; word-break: keep-all; }
         .essay-ans-wrap { display: flex; flex-direction: column; gap: 32px; }
         .essay-role { font-family: 'Georgia', serif; font-size: 11px; font-weight: bold; color: #B0B8C1; letter-spacing: 1px; margin-bottom: 8px; text-align: center; }
         .essay-text { font-size: 14px; color: #5C5652; line-height: 1.8; text-align: justify; word-break: keep-all; }
+
+        /* =======================================================
+           📚 프리미엄 북 테마 상점 모달 (NEW)
+           ======================================================= */
+        .store-modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.75); backdrop-filter: blur(8px); display: none; flex-direction: column; justify-content: flex-end; z-index: 9999; }
+        .store-modal-content { background: var(--bg-color); width: 100%; height: 90vh; border-radius: 32px 32px 0 0; display: flex; flex-direction: column; overflow: hidden; transform: translateY(100%); transition: transform 0.4s cubic-bezier(0.2, 0.8, 0.2, 1); box-shadow: 0 -20px 50px rgba(0,0,0,0.2); }
+        .store-header { padding: 24px; display: flex; justify-content: space-between; align-items: center; background: #FFF; border-bottom: 1px solid var(--border-color); z-index: 20; }
         
-        /* 📘 사진 화보 예시 레이아웃 */
-        .photo-frame { width: 100%; height: 220px; background: #E5E0DA; border-radius: 4px; display: flex; justify-content: center; align-items: center; margin-bottom: 24px; font-size: 32px; box-shadow: inset 0 2px 8px rgba(0,0,0,0.05); }
-        .photo-caption { font-size: 12px; color: #8A7E78; text-align: center; line-height: 1.6; }
+        .store-preview-area { height: 260px; background: #F8F9FA; border-bottom: 1px solid var(--border-color); display: flex; justify-content: center; align-items: center; position: relative; overflow: hidden; }
+        .mini-book-wrap { display: flex; align-items: center; justify-content: center; width: 100%; height: 100%; }
+        
+        .mini-book { width: 140px; height: 200px; border-radius: 2px 6px 6px 2px; box-shadow: 4px 8px 24px rgba(0,0,0,0.1); border-left: 4px solid; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; padding: 20px 16px; position: relative; transition: 0.3s; }
+        .mini-book::before { content: ''; position: absolute; top: 0; left: 0; bottom: 0; width: 15px; background: linear-gradient(to right, rgba(0,0,0,0.06) 0%, rgba(0,0,0,0) 100%); pointer-events: none; }
+        
+        .shop-area { flex: 1; background: #FDFBF9; padding: 20px; overflow-y: auto; }
+        .shop-grid { display: flex; flex-direction: column; gap: 12px; }
+        .shop-item { background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 16px; padding: 16px 20px; display: flex; align-items: center; justify-content: space-between; cursor: pointer; transition: 0.2s; box-shadow: var(--shadow-sm); }
+        .shop-item:active { transform: scale(0.98); }
+        .shop-item.active-theme { border: 2px solid #3182F6; background: #F0F7FF; }
+        .shop-item-left { display: flex; align-items: center; gap: 16px; }
+        .theme-color-circle { width: 44px; height: 44px; border-radius: 50%; box-shadow: inset 0 2px 6px rgba(0,0,0,0.1); flex-shrink: 0; }
+        .shop-item-name { font-size: 15px; font-weight: 900; color: var(--text-title); margin-bottom: 4px; }
+        .shop-item-desc { font-size: 12px; font-weight: 600; color: var(--text-sub); }
+        .shop-item-btn { font-size: 13px; font-weight: 900; padding: 8px 16px; border-radius: 12px; flex-shrink: 0; transition: 0.2s; border: none; cursor: pointer; }
+        .btn-buy { background: #191F28; color: #FFF; box-shadow: 0 4px 10px rgba(0,0,0,0.2); }
+        .btn-equip { background: #EBE5DD; color: #4A413C; }
+        .btn-equipped { background: transparent; color: #3182F6; pointer-events: none; }
     </style>
 </head>
 <body>
@@ -177,7 +131,14 @@
             <div style="display:flex; gap:8px;">
                 <button class="home-btn" onclick="window.location.href='index.html'">❮ 홈</button>
             </div>
-            <div class="coin-badge" onclick="openRoomModal()">
+            
+            <!-- 🚨 [대표님 전용 치트키] 테스트 끝나면 이 버튼은 지워주세요! -->
+            <button onclick="localStorage.setItem('tosil_coins', parseInt(localStorage.getItem('tosil_coins')||0) + 10000); window.updateCoinUI(); alert('💸 10,000 코인 충전 완료! 상점을 싹쓸이 해보세요!');" style="background:#191F28; color:#fff; border:none; padding:8px 14px; border-radius:12px; font-weight:900; font-size:12px; box-shadow:0 4px 10px rgba(0,0,0,0.2);">
+                🛠️ 코인 충전
+            </button>
+
+            <!-- 코인 배지를 누르면 북 테마 상점으로 이동합니다! -->
+            <div class="coin-badge" onclick="openStoreModal()">
                 <span>🪙</span> <span id="header-coin-count">0</span>
             </div>
         </header>
@@ -201,7 +162,6 @@
                 <h1 class="question" id="question-text">질문을 불러오는 중입니다...</h1>
                 
                 <div id="answer-section">
-                    <!-- 입력 모드 -->
                     <div id="input-mode">
                         <div class="unlinked-notice" id="unlinked-notice" style="display: none;">
                             <p>💌 연동 전 작성한 글은 <b>나만의 일기장</b>에 쏙 보관돼요!</p>
@@ -210,7 +170,6 @@
                         <button class="save-btn" id="btn-submit">기록 남기기</button>
                     </div>
 
-                    <!-- 보기 모드 -->
                     <div id="view-mode" style="display: none;">
                         <div class="answer-bubble dad" id="view-husband-card" style="display:none;">
                             <button class="edit-answer-btn" onclick="enableEditMode('husband')" id="edit-btn-husband" style="display:none;">수정</button>
@@ -231,77 +190,63 @@
         </div>
 
         <!-- 📖 서재 (모아보기) 탭 -->
+        <!-- 📖 서재 (모아보기) 탭 -->
         <div id="view-read" class="view-section">
-            <div class="book-progress-wrap" style="text-align: center; border: 1px solid var(--primary); background: #FFF5F2;">
-                <div style="font-size:16px; font-weight:900; color:var(--text-title); margin-bottom: 8px;">📖 우리 부부만의 프리미엄 에세이 북</div>
-                <div style="font-size:13px; color:var(--text-main); line-height: 1.5; font-weight: 600; margin-bottom: 16px;">
-                    100개의 소중한 기록이 모이면,<br>
-                    <span style="color:var(--primary); font-weight:900;">프리미엄 출판 서비스</span>를 통해 세상에 하나뿐인<br>
-                    우리 두 사람만의 책을 소장할 수 있어요.
+            
+            <!-- 🚨 [디자인 개편] 너무 광고 같던 배너를 감성적이고 여유로운 초대장 느낌으로 변경 -->
+            <div class="book-progress-wrap" style="display: flex; justify-content: space-between; align-items: center; background: #F8F9FA; padding: 24px 20px; border-radius: 20px; border: 1px solid #E5E8EB; margin-bottom: 48px; box-shadow: 0 4px 12px rgba(0,0,0,0.02);">
+                <div style="text-align: left;">
+                    <div style="font-family: 'Georgia', serif; font-size: 11px; color: #A39D98; letter-spacing: 1.5px; margin-bottom: 6px;">Premium Essay</div>
+                    <div style="font-size: 15px; font-weight: 800; color: #3E3A37; line-height: 1.4;">우리의 기록이 모여<br>한 권의 책이 됩니다</div>
                 </div>
-                
-                <!-- 🚨 [변경됨] 토스트 메시지 대신, 미리보기 모달을 띄우는 함수로 연결합니다! -->
-                <button onclick="openPdfPreview()" style="background:var(--primary); color:white; border:none; padding:10px 20px; border-radius:12px; font-size:12px; font-weight:900; cursor:pointer; transition:0.2s;">
-                    미리보기 및 혜택 확인
+                <button onclick="openPdfPreview()" style="background: #FFFFFF; color: #4E5968; border: 1px solid #D1D6DB; padding: 12px 16px; border-radius: 12px; font-size: 13px; font-weight: 800; cursor: pointer; box-shadow: 0 2px 4px rgba(0,0,0,0.02); transition: 0.2s;">
+                    미리보기 〉
                 </button>
             </div>
 
             <main class="history-list" id="history-container"></main>
-
-
         </div>
     </div>
 
-    <!-- 🎮 거실 꾸미기 모달 -->
-    <div id="room-modal" class="room-modal-overlay" onclick="closeRoomModal(event)">
-        <div class="room-modal-content" onclick="event.stopPropagation()">
-            <div class="room-header">
-                <div style="font-size: 18px; font-weight: 900; color: var(--text-title);">🧸 우리가족 거실</div>
+    <!-- 📚 프리미엄 북 테마 상점 모달 -->
+    <div id="store-modal" class="store-modal-overlay" onclick="closeStoreModal(event)">
+        <div class="store-modal-content" onclick="event.stopPropagation()">
+            <div class="store-header">
+                <div style="font-size: 18px; font-weight: 900; color: var(--text-title);">📚 북 테마 상점</div>
                 <div style="display: flex; align-items: center; gap: 12px;">
                     <div class="coin-badge" style="margin: 0; padding: 8px 12px; background:var(--bg-color); border:none; box-shadow:none; color:var(--text-title);">
                         <span>🪙</span> <span id="modal-coin-count">0</span>
                     </div>
-                    <button onclick="closeRoomModalForce()" style="background: none; border: none; font-size: 24px; color: var(--text-sub); cursor: pointer;">✕</button>
+                    <button onclick="closeStoreModalForce()" style="background: none; border: none; font-size: 24px; color: var(--text-sub); cursor: pointer;">✕</button>
                 </div>
             </div>
             
-            <div class="virtual-room">
-                <div class="room-window-base">
-                    <div class="cloud" style="top: 15px; animation-duration: 18s;">☁️</div>
-                </div>
-                <div class="wainscoting">
-                    <div class="wainscoting-panel"></div>
-                    <div class="wainscoting-panel"></div>
-                </div>
-                <div class="room-floor"></div>
-                <div class="room-rug"></div>
-                <div id="virtual-room-area" style="position:absolute; top:0; left:0; width:100%; height:100%; z-index:10;"></div>
+            <div class="store-preview-area" id="store-preview-area">
+                <!-- 미니북 렌더링 영역 -->
             </div>
 
             <div class="shop-area">
-                <div style="font-size: 14px; font-weight: 800; color: var(--text-sub); margin-bottom: 16px;">가구 상점</div>
-                <div class="shop-grid" id="shop-grid-container"></div>
+                <div style="font-size: 14px; font-weight: 800; color: var(--text-sub); margin-bottom: 16px;">프리미엄 한정판 표지</div>
+                <div class="shop-grid" id="store-grid-container"></div>
             </div>
         </div>
     </div>
 
-    <!-- 📖 프리미엄 에세이북 미리보기 모달 뼈대 -->
+    <!-- 📖 프리미엄 에세이북 미리보기 모달 -->
     <div id="pdf-preview-modal" class="pdf-modal-overlay">
         <div class="pdf-modal-content">
             <div class="pdf-header">
                 <h2>📖 프리미엄 에세이 미리보기</h2>
                 <button onclick="closePdfPreview()" style="background:none; border:none; font-size:24px; color:#A39992; cursor:pointer;">✕</button>
             </div>
-            
-            <!-- 책 페이지가 들어가는 캔버스 -->
             <div class="pdf-body" id="pdf-pages-container"></div>
             
             <!-- 결제 유도 하단 바 -->
-<div style="padding: 20px; background:#FFFFFF; border-top:1px solid #E8E3DD; text-align:center; flex-shrink: 0;">
-    <button onclick="alert('✨ 프리미엄 출판 서비스는 추후 업데이트될 예정입니다. 조금만 기다려주세요! 🤍');" style="width:100%; padding:18px; background:#4A413C; color:#FFF; border:none; border-radius:16px; font-weight:900; font-size:16px; cursor:pointer; box-shadow: 0 8px 16px rgba(74, 65, 60, 0.2);">
-        실물 양장본 및 PDF 출판하기
-    </button>
-</div>
+            <div style="padding: 20px; background:#FFFFFF; border-top:1px solid #E8E3DD; text-align:center; flex-shrink: 0;">
+                <button onclick="alert('✨ 프리미엄 출판 서비스는 추후 업데이트될 예정입니다. 조금만 기다려주세요! 🤍');" style="width:100%; padding:18px; background:#4A413C; color:#FFF; border:none; border-radius:16px; font-weight:900; font-size:16px; cursor:pointer; box-shadow: 0 8px 16px rgba(74, 65, 60, 0.2);">
+                    실물 양장본 및 PDF 출판하기
+                </button>
+            </div>
         </div>
     </div>
 
@@ -317,20 +262,139 @@
         </div>
     </div>
 
-    <script src="data.js"></script>
-    <script>
-        const FURNITURE_DB = [
-            { id: 'tent', name: '인디언 텐트', desc: '아늑한 우리 가족 아지트', price: 100, icon: '⛺', style: 'bottom: 20%; left: 8%; font-size: 90px; z-index: 3;' },
-            { id: 'sofa', name: '패브릭 소파', desc: '푹신하고 편안한 휴식 공간', price: 150, icon: '🛋️', style: 'bottom: 22%; right: 8%; font-size: 85px; z-index: 4;' },
-            { id: 'mobile', name: '원목 모빌', desc: '바람에 살랑이는 빙글빙글 모빌', price: 200, icon: '🎐', style: 'top: 10%; left: 25%; font-size: 60px; z-index: 10;' },
-            { id: 'toy', name: '애착 인형', desc: '매일 품에 꼭 안고 자는 곰돌이', price: 250, icon: '🧸', style: 'bottom: 15%; left: 45%; font-size: 50px; z-index: 6;' }
-        ];
-    </script> 
+    <!-- 🚨 외부 DATA.js 파일 연결 (200개 질문 불러오기) -->
+    <script src="DATA.js"></script>
     
-    <!-- 🚨 [서버 연동 & 완전 폭파 스크립트 모듈] -->
+    <script>
+      // 📚 [NEW] 프리미엄 북 테마 DB (채도 쫙 뺀 감성 컬러로 리뉴얼)
+        const STORE_DB = [
+            { id: 'theme_beige', name: '크림 화이트 (기본)', desc: '가장 편안하고 클래식한 종이 질감', price: 0, bg: '#FCFBF8', borderLeft: '#EAE5DF', textTitle: '#4A413C', textSub: '#A39992', line: '#EAE5DF' },
+            { id: 'theme_sand', name: '뮤트 샌드', desc: '차분하고 따뜻한 모래빛 감성', price: 500, bg: '#F4F1EB', borderLeft: '#D6CFC4', textTitle: '#4A413C', textSub: '#8A7E78', line: '#D6CFC4' },
+            { id: 'theme_blossom', name: '페일 로즈', desc: '채도를 확 낮춘 차분한 말린 장미빛', price: 800, bg: '#F8F1F1', borderLeft: '#E6D5D5', textTitle: '#5C414A', textSub: '#A89299', line: '#E6D5D5' },
+            { id: 'theme_forest', name: '소프트 세이지', desc: '눈이 편안해지는 은은한 풀잎색', price: 1200, bg: '#F1F4F2', borderLeft: '#C8D4CB', textTitle: '#2C3A32', textSub: '#7B8C81', line: '#C8D4CB' },
+            { id: 'theme_navy', name: '미드나잇 블루', desc: '세련된 무드의 우아한 프리미엄', price: 1500, bg: '#2B2F36', borderLeft: '#3A3F4A', textTitle: '#F0EDE6', textSub: '#8E94A0', line: '#3A3F4A' }
+        ];
+
+        window.updateCoinUI = function() {
+            let coins = parseInt(localStorage.getItem('tosil_coins')) || 0;
+            document.getElementById('header-coin-count').innerText = coins;
+            if(document.getElementById('modal-coin-count')) document.getElementById('modal-coin-count').innerText = coins;
+        };
+
+        // =====================================
+        // 📚 상점 UI 및 테마 로직
+        // =====================================
+        window.openStoreModal = function() {
+            window.updateCoinUI();
+            
+            // 인벤토리 세팅 (기본 테마는 항상 보유)
+            let inventory = JSON.parse(localStorage.getItem('tosil_inventory')) || [];
+            if(!inventory.includes('theme_beige')) {
+                inventory.push('theme_beige');
+                localStorage.setItem('tosil_inventory', JSON.stringify(inventory));
+            }
+
+            window.renderStore();
+            document.getElementById('store-modal').style.display = 'flex';
+            setTimeout(() => {
+                document.querySelector('.store-modal-content').style.transform = 'translateY(0)';
+            }, 10);
+        };
+
+        window.closeStoreModalForce = function() {
+            document.querySelector('.store-modal-content').style.transform = 'translateY(100%)';
+            setTimeout(() => { document.getElementById('store-modal').style.display = 'none'; }, 400);
+        };
+
+        window.closeStoreModal = function(e) {
+            if (e.target.id === 'store-modal') window.closeStoreModalForce();
+        };
+
+        window.renderStore = function() {
+            const container = document.getElementById('store-grid-container');
+            let inventory = JSON.parse(localStorage.getItem('tosil_inventory')) || ['theme_beige'];
+            let activeThemeId = localStorage.getItem('tosil_active_theme') || 'theme_beige';
+            
+            window.renderMiniBookPreview(activeThemeId);
+            
+            let html = '';
+            STORE_DB.forEach(item => {
+                const isOwned = inventory.includes(item.id);
+                const isActive = activeThemeId === item.id;
+                
+                let btnHtml = '';
+                if (isActive) {
+                    btnHtml = `<button class="shop-item-btn btn-equipped">적용됨</button>`;
+                } else if (isOwned) {
+                    btnHtml = `<button class="shop-item-btn btn-equip" onclick="window.buyOrApplyTheme('${item.id}', 0)">적용하기</button>`;
+                } else {
+                    btnHtml = `<button class="shop-item-btn btn-buy" onclick="window.buyOrApplyTheme('${item.id}', ${item.price})">${item.price}🪙 구매</button>`;
+                }
+
+                html += `
+                    <div class="shop-item ${isActive ? 'active-theme' : ''}">
+                        <div class="shop-item-left">
+                            <div class="theme-color-circle" style="background: ${item.bg}; border: 1px solid ${item.line};"></div>
+                            <div style="text-align:left;">
+                                <div class="shop-item-name">${item.name}</div>
+                                <div class="shop-item-desc">${item.desc}</div>
+                            </div>
+                        </div>
+                        ${btnHtml}
+                    </div>
+                `;
+            });
+            container.innerHTML = html;
+        };
+
+        window.renderMiniBookPreview = function(themeId) {
+            const theme = STORE_DB.find(t => t.id === themeId) || STORE_DB[0];
+            const area = document.getElementById('store-preview-area');
+            const babyName = localStorage.getItem('tosil_babyName') || '아기';
+            
+            area.innerHTML = `
+                <div class="mini-book-wrap">
+                    <div class="mini-book" style="background: ${theme.bg}; border-left-color: ${theme.borderLeft};">
+                        <div style="font-size: 8px; color: ${theme.textSub}; margin-bottom: 12px; letter-spacing: 1px;">우리가 처음 만난<br>그 해의 기록</div>
+                        <div style="font-size: 14px; font-weight: 900; color: ${theme.textTitle}; margin-bottom: 6px;">${babyName}</div>
+                        <div style="width: 12px; height: 1px; background: ${theme.line}; margin: 0 auto;"></div>
+                    </div>
+                </div>
+            `;
+        };
+
+        window.buyOrApplyTheme = function(id, price) {
+            let inventory = JSON.parse(localStorage.getItem('tosil_inventory')) || ['theme_beige'];
+            let coins = parseInt(localStorage.getItem('tosil_coins')) || 0;
+
+            if (!inventory.includes(id)) {
+                // 구매 로직
+                if (coins < price) {
+                    return window.showToast("🪙 코인이 부족해요! 매일 일기를 쓰면 코인이 모여요.");
+                }
+                if (confirm(`[${STORE_DB.find(i=>i.id===id).name}] 테마를 ${price}코인에 구매할까요?`)) {
+                    coins -= price;
+                    inventory.push(id);
+                    localStorage.setItem('tosil_coins', coins);
+                    localStorage.setItem('tosil_inventory', JSON.stringify(inventory));
+                    window.showToast("🎁 예쁜 새 표지를 획득했어요!");
+                } else {
+                    return;
+                }
+            }
+            
+            // 적용 로직 (구매 직후 또는 이미 보유중일 때)
+            localStorage.setItem('tosil_active_theme', id);
+            window.updateCoinUI();
+            window.renderStore();
+        };
+
+    </script>
+    
+    <!-- 🚨 [서버 연동 스크립트 모듈] -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-        import { getFirestore, doc, setDoc, onSnapshot, getDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+        import { getFirestore, doc, setDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
         import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
         const firebaseConfig = {
@@ -354,7 +418,31 @@
             return parseInt(document.getElementById("diary-day").innerText.replace("DAY ", "")) || 1;
         };
 
+        // 👩‍❤️‍👨 부부 이름 실시간 동기화 엔진
+        window.startFamilyNameSync = function() {
+            const syncCode = localStorage.getItem("family_sync_code");
+            const myKakaoName = localStorage.getItem("kakao_nickname");
+            const myRole = localStorage.getItem("tosil_userRole"); 
+            
+            if (!syncCode) return; 
+            
+            const nameDocRef = doc(db, "settings_" + syncCode, "family_names");
+            if (myKakaoName && myRole) {
+                setDoc(nameDocRef, { [myRole]: myKakaoName }, { merge: true }).catch(()=>{});
+            }
+            
+            onSnapshot(nameDocRef, (docSnap) => {
+                if (docSnap.exists()) {
+                    const data = docSnap.data();
+                    if (data.wife) localStorage.setItem('family_wife_name', data.wife);
+                    if (data.husband) localStorage.setItem('family_husband_name', data.husband);
+                }
+            });
+        };
+
         window.startSync = function() {
+            window.startFamilyNameSync();
+            
             const currentDay = window.getCurrentDay();
             const currentRole = localStorage.getItem("tosil_userRole") || "husband";
             const syncCode = localStorage.getItem("family_sync_code") || "unlinked_local_diary";
@@ -489,34 +577,20 @@
             btn.disabled = false;
             
             window.renderCurrentCard(localData, currentRole);
-            window.showToast("🎉 기록이 예쁘게 저장되었습니다!");
-        });
-
-        // 🚨 [강제 초기화 패치] 기기(로컬) + 파이어베이스(서버) 찌꺼기 완벽 소각!
-        window.clearDiaryData = async function() {
-            if (confirm("정말 지금까지 쓴 모든 일기를 삭제하시겠습니까?\n(테스트 데이터를 지울 때만 사용하세요!)")) {
-                const syncCode = localStorage.getItem("family_sync_code") || "unlinked_local_diary";
-
-                for (let i = 1; i <= 200; i++) {
-                    // 1. 기기 데이터 삭제
-                    localStorage.removeItem(`day_${i}_data`);
-                    localStorage.removeItem(`day_${i}_coin_claimed`);
-                    
-                    // 2. 서버(파이어베이스) 데이터 삭제 요청 (좀비 데이터 박멸)
-                    try {
-                        await deleteDoc(doc(db, "diary_" + syncCode, `day_${i}`));
-                    } catch(e) {}
-                }
-
-                localStorage.removeItem('diary_last_written');
-                localStorage.setItem('tosil_coins', '0');
-                localStorage.setItem('tosil_inventory', '[]');
-                
-                window.viewingDay = 1;
-                alert("🗑️ 다이어리 및 거실 가구가 서버에서도 완전히 삭제되었습니다.");
-                location.reload(true);
+            
+            // 🪙 보상 로직 추가 (하루 한 번만 코인 지급)
+            const claimedKey = `day_${currentDay}_coin_claimed_${currentRole}`;
+            if (!localStorage.getItem(claimedKey)) {
+                let coins = parseInt(localStorage.getItem('tosil_coins')) || 0;
+                coins += 100;
+                localStorage.setItem('tosil_coins', coins);
+                localStorage.setItem(claimedKey, 'true');
+                window.updateCoinUI();
+                window.showToast("🎉 기록 저장 완료! 보상으로 100 코인을 받았습니다! 🪙");
+            } else {
+                window.showToast("🎉 기록이 예쁘게 수정되었습니다!");
             }
-        };
+        });
 
         window.showToast = function(msg) {
             const oldToast = document.getElementById('diary-toast');
@@ -528,95 +602,6 @@
             document.body.appendChild(toast);
             setTimeout(() => toast.style.opacity = '1', 10);
             setTimeout(() => { toast.style.opacity = '0'; setTimeout(() => toast.remove(), 300); }, 2500);
-        };
-    </script>
-
-    <script>
-        window.updateCoinUI = function() {
-            let coins = parseInt(localStorage.getItem('tosil_coins')) || 0;
-            document.getElementById('header-coin-count').innerText = coins;
-            document.getElementById('modal-coin-count').innerText = coins;
-        };
-
-        window.openRoomModal = function() {
-            window.updateCoinUI();
-            window.renderShop();
-            window.renderRoom();
-            document.getElementById('room-modal').style.display = 'flex';
-            setTimeout(() => {
-                document.querySelector('.room-modal-content').style.transform = 'translateY(0)';
-            }, 10);
-        };
-
-        window.closeRoomModalForce = function() {
-            document.querySelector('.room-modal-content').style.transform = 'translateY(100%)';
-            setTimeout(() => { document.getElementById('room-modal').style.display = 'none'; }, 400);
-        };
-
-        window.closeRoomModal = function(e) {
-            if (e.target.id === 'room-modal') window.closeRoomModalForce();
-        };
-
-        window.renderShop = function() {
-            const container = document.getElementById('shop-grid-container');
-            let inventory = JSON.parse(localStorage.getItem('tosil_inventory')) || [];
-            
-            let html = '';
-            FURNITURE_DB.forEach(item => {
-                const isOwned = inventory.includes(item.id);
-                html += `
-                    <div class="shop-item ${isOwned ? 'owned' : ''}" onclick="window.buyItem('${item.id}', ${item.price})">
-                        <div class="shop-item-left">
-                            <div class="shop-item-icon-wrap">${item.icon}</div>
-                            <div style="text-align:left;">
-                                <div class="shop-item-name">${item.name}</div>
-                                <div class="shop-item-desc">${item.desc || ''}</div>
-                            </div>
-                        </div>
-                        <div class="shop-item-price">${isOwned ? '보유중' : item.price + '🪙'}</div>
-                    </div>
-                `;
-            });
-            container.innerHTML = html;
-        };
-
-        window.buyItem = function(id, price) {
-            let inventory = JSON.parse(localStorage.getItem('tosil_inventory')) || [];
-            if (inventory.includes(id)) return; 
-
-            let coins = parseInt(localStorage.getItem('tosil_coins')) || 0;
-            if (coins < price) {
-                return window.showToast("🪙 코인이 부족해요! 부부가 함께 일기를 쓰면 코인이 모여요.");
-            }
-
-            if (confirm(`[${FURNITURE_DB.find(i=>i.id===id).name}] 아이템을 방에 놓을까요?`)) {
-                coins -= price;
-                inventory.push(id);
-                localStorage.setItem('tosil_coins', coins);
-                localStorage.setItem('tosil_inventory', JSON.stringify(inventory));
-                
-                window.updateCoinUI();
-                window.renderShop();
-                window.renderRoom();
-                window.showToast("🎁 거실에 새로운 아이템이 배치되었어요!");
-            }
-        };
-
-        window.renderRoom = function() {
-            let inventory = JSON.parse(localStorage.getItem('tosil_inventory')) || [];
-            const roomArea = document.getElementById('virtual-room-area');
-            
-            let html = ``;
-            FURNITURE_DB.forEach(item => {
-                const isActive = inventory.includes(item.id) ? 'active' : '';
-                html += `
-                    <div id="item-${item.id}" class="pedestal ${isActive}" style="${item.style}">
-                        <div class="pedestal-item">${item.icon}</div>
-                    </div>
-                `;
-            });
-            
-            roomArea.innerHTML = html;
         };
     </script>
 
@@ -652,7 +637,7 @@
         window.initAppUI = function() {
             window.updateCoinUI(); 
             const index = (window.viewingDay - 1) % questionDB.length; 
-            const todayData = questionDB[index] || { target:"가족", question: "오늘 하루는 어땠나요?" };
+            const todayData = questionDB[index] || { target:"가족", question: "오늘 하루는 어땠나요?", context:"육아" };
 
             document.getElementById("diary-day").innerText = `DAY ${window.viewingDay}`;
             let qText = todayData.question.replace(/{babyName}/g, window.babyName);
@@ -711,7 +696,8 @@
             location.reload(); 
         };
 
-     window.openPdfPreview = function() {
+        // 🚨 [프리미엄 뷰어] 구매한 테마 적용 엔진
+        window.openPdfPreview = function() {
             const modal = document.getElementById('pdf-preview-modal');
             const container = document.getElementById('pdf-pages-container');
             
@@ -726,51 +712,54 @@
             const myKakaoName = localStorage.getItem('kakao_nickname') || '';
             const myRole = localStorage.getItem('tosil_userRole') || 'husband'; 
             
-            // 💡 이름이 있으면 이름을 쓰고, 없으면 안내용 텍스트를 띄워 중복(엄마 엄마)을 방지합니다.
-            let momName = (myRole === 'wife' && myKakaoName) ? myKakaoName : '';
-            let dadName = (myRole === 'husband' && myKakaoName) ? myKakaoName : '';
+            const familyMomName = localStorage.getItem('family_wife_name') || '';
+            const familyDadName = localStorage.getItem('family_husband_name') || '';
             
-            let momDisplayStr = momName ? `엄마 <span style="color:#FF8570; font-weight:900;">${momName}</span>` : `엄마 <span style="color:#A39992; font-weight:700;">[엄마 성함]</span>`;
-            let dadDisplayStr = dadName ? `아빠 <span style="color:#3182F6; font-weight:900;">${dadName}</span>` : `아빠 <span style="color:#A39992; font-weight:700;">[아빠 성함]</span>`;
+            let momName = familyMomName;
+            let dadName = familyDadName;
+            if (myRole === 'wife' && myKakaoName) momName = myKakaoName;
+            if (myRole === 'husband' && myKakaoName) dadName = myKakaoName;
 
+            // 구매한 테마 불러오기
+            let activeThemeId = localStorage.getItem('tosil_active_theme') || 'theme_beige';
+            let theme = STORE_DB.find(t => t.id === activeThemeId) || STORE_DB[0];
+            
+            let momDisplayStr = momName ? `엄마 <span style="color:${theme.textTitle}; font-weight:900;">${momName}</span>` : `엄마 <span style="color:${theme.textSub}; font-weight:700;">[엄마 성함]</span>`;
+            let dadDisplayStr = dadName ? `아빠 <span style="color:${theme.textTitle}; font-weight:900;">${dadName}</span>` : `아빠 <span style="color:${theme.textSub}; font-weight:700;">[아빠 성함]</span>`;
+
+            // 1. 🌟 표지 (테마 색상 동적 적용)
             let html = `
-                <div class="premium-book-page premium-cover" style="padding: 60px 30px; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center;">
+                <div class="premium-book-page premium-cover" style="padding: 60px 30px; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; background: ${theme.bg}; border-left-color: ${theme.borderLeft};">
                     
                     <div style="text-align: center; width: 100%;">
-                        <!-- 🌿 상단: 감성 문구 -->
-                        <div style="font-family: 'Georgia', serif; font-size: 11px; color: #A39992; letter-spacing: 2px; line-height: 1.8; margin-bottom: 28px;">
+                        <div style="font-family: 'Georgia', serif; font-size: 11px; color: ${theme.textSub}; letter-spacing: 2px; line-height: 1.8; margin-bottom: 28px;">
                             " 너라는 우주가<br>우리에게 쏟아지던 날 "
                         </div>
 
-                        <!-- 📖 중앙 1: 메인 타이틀 -->
-                        <div style="font-size: 24px; font-weight: 900; color: #3E3A37; letter-spacing: -1px; line-height: 1.4; margin-bottom: 32px;">
+                        <div style="font-size: 24px; font-weight: 900; color: ${theme.textTitle}; letter-spacing: -1px; line-height: 1.4; margin-bottom: 32px;">
                             우리가 처음 만난<br>그 해의 기록
                         </div>
 
-                        <!-- 👶 중앙 2: 아기 프로필 -->
                         <div style="margin-bottom: 28px;">
-                            <div style="font-size: 18px; font-weight: 900; color: #4A413C; margin-bottom: 6px; letter-spacing: 1px;">${babyName}</div>
-                            <div style="font-family: 'Georgia', serif; font-size: 12px; font-weight: 600; color: #8A7E78; letter-spacing: 1.5px;">${formattedDate}</div>
+                            <div style="font-size: 18px; font-weight: 900; color: ${theme.textTitle}; margin-bottom: 6px; letter-spacing: 1px;">${babyName}</div>
+                            <div style="font-family: 'Georgia', serif; font-size: 12px; font-weight: 600; color: ${theme.textSub}; letter-spacing: 1.5px;">${formattedDate}</div>
                         </div>
                         
-                        <!-- 은은한 구분선 -->
-                        <div style="width: 20px; height: 1px; background: #D1C7BD; margin: 0 auto 28px auto;"></div>
+                        <div style="width: 20px; height: 1px; background: ${theme.line}; margin: 0 auto 28px auto;"></div>
 
-                        <!-- ✍️ 중앙 3: 지은이 (엄마 아빠 이름 안내 문구 추가) -->
-                        <div style="font-size: 13.5px; color: #5C5652; font-weight: 600; line-height: 1.8; letter-spacing: 0.5px; margin-bottom: 12px;">
+                        <div style="font-size: 13.5px; color: ${theme.textTitle}; font-weight: 600; line-height: 1.8; letter-spacing: 0.5px; margin-bottom: 12px;">
                             ${momDisplayStr}<br>
                             ${dadDisplayStr}
                         </div>
                         
-                        <!-- 💡 유저가 오해하지 않도록 띄워주는 친절한 설명 가이드 -->
-                        <div style="font-size: 11px; color: #A39992; font-weight: 600; letter-spacing: -0.3px;">
-                            * 실제 출판 시 카카오톡 로그인 이름이 반영됩니다
+                        <div style="font-size: 11px; color: ${theme.textSub}; font-weight: 600; letter-spacing: -0.3px;">
+                            * 실제 출판 시 카카오 본명이 반영됩니다
                         </div>
                     </div>
 
                 </div>
             `;
-            
+
             // 2. 일기 내지 렌더링
             let hasRecord = false;
             for (let i = 1; i <= window.viewingDay; i++) {
@@ -784,31 +773,30 @@
                             const qText = qData ? qData.question.replace(/{babyName}/g, babyName) : '';
                             
                             const context = qData ? (qData.context || '육아') : '육아';
-                            
                             let roleLabelDad = context === '부부' ? '남편' : '아빠';
                             let roleLabelMom = context === '부부' ? '아내' : '엄마';
 
-                            let displayDad = (myRole === 'husband' && myKakaoName) 
-                                ? `<span style="font-size:10px; color:#A39992; letter-spacing:1px; margin-bottom:2px;">${roleLabelDad}</span>
-                                   <span style="font-size:13px; color:#3182F6; font-weight:900;">${myKakaoName}</span>`
-                                : `<span style="font-size:13px; color:#3182F6; font-weight:900;">${roleLabelDad}</span>`;
+                            let displayDad = dadName 
+                                ? `<span style="font-size:10px; color:${theme.textSub}; letter-spacing:1px; margin-bottom:2px;">${roleLabelDad}</span>
+                                   <span style="font-size:13px; color:${theme.textTitle}; font-weight:900;">${dadName}</span>`
+                                : `<span style="font-size:13px; color:${theme.textTitle}; font-weight:900;">${roleLabelDad}</span>`;
 
-                            let displayMom = (myRole === 'wife' && myKakaoName) 
-                                ? `<span style="font-size:10px; color:#A39992; letter-spacing:1px; margin-bottom:2px;">${roleLabelMom}</span>
-                                   <span style="font-size:13px; color:#FF8570; font-weight:900;">${myKakaoName}</span>`
-                                : `<span style="font-size:13px; color:#FF8570; font-weight:900;">${roleLabelMom}</span>`;
+                            let displayMom = momName 
+                                ? `<span style="font-size:10px; color:${theme.textSub}; letter-spacing:1px; margin-bottom:2px;">${roleLabelMom}</span>
+                                   <span style="font-size:13px; color:${theme.textTitle}; font-weight:900;">${momName}</span>`
+                                : `<span style="font-size:13px; color:${theme.textTitle}; font-weight:900;">${roleLabelMom}</span>`;
 
                             html += `
-                                <div class="premium-book-page">
-                                    <div class="essay-date">- DAY ${i} -</div>
-                                    <div class="essay-q">${qText}</div>
+                                <div class="premium-book-page" style="background: ${theme.bg}; border-left-color: ${theme.borderLeft}; color: ${theme.textTitle};">
+                                    <div class="essay-date" style="color: ${theme.textSub};">- DAY ${i} -</div>
+                                    <div class="essay-q" style="color: ${theme.textTitle};">${qText}</div>
                                     <div class="essay-ans-wrap">
                                         ${d.husbandAns ? `
                                             <div>
                                                 <div class="essay-role" style="display:flex; flex-direction:column; align-items:center; margin-bottom:12px;">
                                                     ${displayDad}
                                                 </div>
-                                                <div class="essay-text">${d.husbandAns.replace(/\n/g, '<br>')}</div>
+                                                <div class="essay-text" style="color: ${theme.textTitle}; opacity: 0.9;">${d.husbandAns.replace(/\n/g, '<br>')}</div>
                                             </div>
                                         ` : ''}
                                         ${d.wifeAns ? `
@@ -816,22 +804,21 @@
                                                 <div class="essay-role" style="display:flex; flex-direction:column; align-items:center; margin-bottom:12px;">
                                                     ${displayMom}
                                                 </div>
-                                                <div class="essay-text">${d.wifeAns.replace(/\n/g, '<br>')}</div>
+                                                <div class="essay-text" style="color: ${theme.textTitle}; opacity: 0.9;">${d.wifeAns.replace(/\n/g, '<br>')}</div>
                                             </div>
                                         ` : ''}
                                     </div>
                                 </div>
                             `;
 
-                            // 📸 [마일스톤 사진 화보 예시] Day 1 뒤에 살짝 보여주기
                             if (i === 1) {
                                 html += `
-                                    <div class="premium-book-page">
-                                        <div class="essay-date">- MILESTONE -</div>
-                                        <div class="photo-frame">📸</div>
-                                        <div class="photo-caption">
+                                    <div class="premium-book-page" style="background: ${theme.bg}; border-left-color: ${theme.borderLeft};">
+                                        <div class="essay-date" style="color: ${theme.textSub};">- MILESTONE -</div>
+                                        <div class="photo-frame" style="background: ${theme.line}; color: ${theme.textSub};">📸</div>
+                                        <div class="photo-caption" style="color: ${theme.textSub};">
                                             우리가 처음으로 함께 웃었던 날.<br><br>
-                                            <span style="color:#FF8570; font-weight:800; font-size:11.5px;">* 출판 시, 마일스톤 사진들이<br>이렇게 예쁜 화보처럼 함께 수록됩니다.</span>
+                                            <span style="color:${theme.textTitle}; font-weight:800; font-size:11.5px; opacity:0.8;">* 출판 시, 마일스톤 사진들이<br>이렇게 예쁜 화보처럼 함께 수록됩니다.</span>
                                         </div>
                                     </div>
                                 `;
@@ -847,7 +834,6 @@
 
             container.innerHTML = html;
             modal.style.display = 'flex';
-            
             container.scrollTop = 0; 
 
             setTimeout(() => { 
