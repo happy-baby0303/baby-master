@@ -2037,13 +2037,13 @@ body.mode-senior .hide-on-senior { display: none !important; }
 <script src="playdata.js"></script>
 <script src="receiptData.js"></script>
 
-<!-- Firebase 로직 유지 -->
+<!-- Firebase 로직 유지 (도구 추가 장착 완료!) -->
 <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-    import { getFirestore, doc, setDoc, getDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+    import { getFirestore, doc, setDoc, getDoc, onSnapshot, collection, deleteDoc, query, orderBy, limit } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
     import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
     
-    // 🚨 [추가 1] 사진 전용 창고(Storage) 도구 가져오기!
+    // 🚨 사진 전용 창고(Storage) 도구
     import { getStorage, ref, uploadString, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-storage.js";
 
     const firebaseConfig = {
@@ -2062,7 +2062,14 @@ body.mode-senior .hide-on-senior { display: none !important; }
     window.getDoc = getDoc;
     window.onSnapshot = onSnapshot;
 
-    // 🚨 [추가 2] 창고를 앱에 장착!
+    // 🌟 새롭게 장착한 커뮤니티 전용 고급 도구들
+    window.collection = collection;
+    window.deleteDoc = deleteDoc;
+    window.query = query;
+    window.orderBy = orderBy;
+    window.limit = limit;
+
+    // 🚨 사진 창고(Storage)를 앱에 장착!
     window.storage = getStorage(app);
     window.storageRef = ref;
     window.uploadString = uploadString;
@@ -2075,6 +2082,7 @@ body.mode-senior .hide-on-senior { display: none !important; }
     }).catch((err) => {
         console.error("❌ 익명 로그인 실패: ", err);
     });
+</script>
 
    // ==========================================
 // 🔗 [아내 데이터 100% 이관] 가족 코드 생성 및 전체 백업 엔진

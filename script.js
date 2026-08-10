@@ -1,3 +1,14 @@
+// 🛡️ XSS 방어막 (태그 무력화 엔진)
+window.escapeHTML = function(text) {
+    if (!text) return '';
+    return text.replace(/[&<>'"]/g, function(tag) {
+        const charsToReplace = { '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' };
+        return charsToReplace[tag] || tag;
+    });
+};
+
+
+
 // ==========================================
 // 🧬 [다둥이 코어 엔진] Storage Proxy (데이터 완벽 분리 마법)
 // ==========================================
@@ -8483,7 +8494,7 @@ window.setCommSort = function(sortType) {
     window.renderCommunityFeed();
 };
 
-window.submitPost = function(btnElement) { 
+window.submitPost = function(btnElement) {  
     // 🚨 1. 누르는 순간 버튼 비활성화 & 로딩 UI 변환 (따닥 방어막 가동!)
     if (btnElement) {
         if (btnElement.disabled) return; // 이미 처리 중이면 막아버림 (중복 등록 방지)
@@ -8515,8 +8526,9 @@ window.submitPost = function(btnElement) {
     }
 
     const category = catEl.value;
-    const title = titleEl.value;
-    const content = contentEl.value;
+    // 🚨 해킹 방어막 적용 완료!
+    const title = window.escapeHTML(titleEl.value);
+    const content = window.escapeHTML(contentEl.value);
     const isAnonymous = anonEl ? anonEl.checked : false;
 
     // 빈칸 검증 시에도 버튼을 꼭 살려줘야 유저가 다시 누를 수 있습니다.
@@ -8529,6 +8541,8 @@ window.submitPost = function(btnElement) {
     const authorName = isAnonymous ? '익명마미' : myName;
     const authorIcon = window.getCurrentUserProfileIcon(isAnonymous);
 
+    let targetPost = null; // 파이어베이스 저장을 위해 선언
+
     if (window.editingPostId) {
         // 👉 [기존 글 수정]
         const postIdx = posts.findIndex(p => p.id === window.editingPostId);
@@ -8539,11 +8553,12 @@ window.submitPost = function(btnElement) {
             posts[postIdx].images = window.attachedImages ? [...window.attachedImages] : [];
             posts[postIdx].authorName = authorName; 
             posts[postIdx].authorIcon = authorIcon;
+            
+            targetPost = posts[postIdx]; // 저장할 대상 지정
         }
         window.showToast('📝 게시글이 성공적으로 수정되었습니다!');
-    // 🛠️ [패치 2-1] submitPost 함수 안쪽 (새로운 글 등록 부분)
     } else {
-        // 👉 [새로운 글 등록]
+        // 👉 [new! 새로운 글 등록]
         const timestamp = new Date().getTime();
         const newPost = {
             id: 'post_' + timestamp,
@@ -8558,6 +8573,7 @@ window.submitPost = function(btnElement) {
             comments: 0
         };
         posts.unshift(newPost);
+        targetPost = newPost; // 저장할 대상 지정
         
         // 🚨 [핵심 방어막] 최신 글 50개만 남기고 옛날 글은 날려서 로컬 용량 확보!
         if (posts.length > 50) {
@@ -8575,6 +8591,12 @@ window.submitPost = function(btnElement) {
         return window.showToast('⚠️ 용량이 꽉 찼습니다! 기기의 캐시를 비우거나 사진 갯수를 줄여주세요.');
     }
 
+    // 🚨 [수술 완료] 통짜 배열 저장이 아닌 '개별 글 ID'로 파이어베이스에 각각 독립 저장!
+    if (typeof window.db !== 'undefined' && typeof window.setDoc === 'function' && targetPost) {
+        window.setDoc(window.doc(window.db, "community_posts", targetPost.id), targetPost, { merge: true })
+            .catch(e => console.error("커뮤니티 글쓰기 파이어베이스 연동 에러:", e));
+    }
+
     // 폼 초기화
     catEl.value = ''; titleEl.value = ''; contentEl.value = '';
     if(anonEl) anonEl.checked = false;
@@ -8585,7 +8607,7 @@ window.submitPost = function(btnElement) {
     
     window.editingPostId = null; 
 
-    // 🚨 2. 저장이 무사히 끝나면 0.5초(500ms) 뒤에 창을 닫습니다. (유저에게 '저장 중'이라는 안도감 부여)
+    // 🚨 저장이 무사히 끝나면 0.5초 뒤에 창을 닫습니다.
     setTimeout(() => {
         resetBtn(); // 버튼 원상복구
         window.closeWriteModal();
@@ -8595,15 +8617,6 @@ window.submitPost = function(btnElement) {
             window.openPostDetail(window.currentActivePostId);
         }
     }, 500);
-
-   /* 
-      ========================================================
-      💡 [나중에 맘수다 정식 오픈할 때 이 주석을 풀면 서버와 즉시 연동됩니다!]
-      ========================================================
-      if (typeof window.db !== 'undefined' && typeof window.setDoc === 'function') {
-          window.setDoc(window.doc(window.db, "community", "posts"), { records: posts }).catch(e=>{});
-      }
-    */
 };
 
 // ==========================================
@@ -8855,21 +8868,6 @@ window.editPost = function(postId) {
     document.getElementById('post-action-sheet').remove();
 };
 
-window.deletePost = function(postId) {
-    if (!confirm('이 게시글을 정말 삭제하시겠습니까?')) return;
-    let posts = JSON.parse(localStorage.getItem('tosil_community_posts')) || [];
-    posts = posts.filter(p => p.id !== postId);
-    localStorage.setItem('tosil_community_posts', JSON.stringify(posts));
-
-    if (typeof window.db !== 'undefined' && typeof window.setDoc === 'function') {
-        window.setDoc(window.doc(window.db, "community", "posts"), { records: posts }).catch(e=>{});
-    }
-
-    window.closePostDetail(); 
-    window.showToast('🗑️ 게시글이 깔끔하게 삭제되었습니다.');
-    window.renderCommunityFeed(); 
-};
-
 // 7. 검색 및 모달 관리, My 활동 내역
 window.doCommSearch = function() {
     const inputEl = document.getElementById('commSearchInput');
@@ -8989,60 +8987,61 @@ window.closeActivityAndOpenPost = function(postId) {
 };
 
 // ==========================================
-// 🔄 커뮤니티 게시글 & 댓글 로컬 전용 모드 (정식 오픈 시 주석 해제)
+// 🔄 커뮤니티 게시글 & 댓글 실시간 독립 문서화 동기화 엔진
 // ==========================================
+
 let commUnsubscribe = null;
 window.startCommunityRealtimeSync = function() {
     if (typeof window.renderCommunityFeed === 'function') {
         window.renderCommunityFeed();
     }
 
-    /* 
-      ========================================================
-      💡 [나중에 정식 오픈할 때 아래 주석을 풀면 서버와 즉시 연동됩니다!]
-      ========================================================
-      if (typeof window.doc === 'undefined' || typeof window.db === 'undefined') return;
-      const docRef = window.doc(window.db, "community", "posts");
-      if (commUnsubscribe) commUnsubscribe();
-      commUnsubscribe = window.onSnapshot(docRef, (docSnap) => {
-          if (docSnap.exists()) {
-              const data = docSnap.data();
-              localStorage.setItem('tosil_community_posts', JSON.stringify(data.records || []));
-              window.renderCommunityFeed(); 
-          }
-      });
-    */
+    // 🚨 수술 완료: 통짜 배열이 아니라 community_posts 폴더의 최신 글 100개 긁어오기
+    if (typeof window.collection === 'undefined' || typeof window.db === 'undefined') return;
+    
+    const q = window.query(window.collection(window.db, "community_posts"), window.orderBy("timestamp", "desc"), window.limit(100));
+    
+    if (commUnsubscribe) commUnsubscribe();
+    
+    commUnsubscribe = window.onSnapshot(q, (snapshot) => {
+        let serverPosts = [];
+        snapshot.forEach((doc) => {
+            serverPosts.push(doc.data());
+        });
+        
+        localStorage.setItem('tosil_community_posts', JSON.stringify(serverPosts));
+        window.renderCommunityFeed(); 
+    });
 };
 
 let commentUnsubscribe = null;
 window.startCommentRealtimeSync = function() {
     const inputField = document.getElementById('newCommentInput');
-    if (inputField && document.getElementById('postDetailPage')?.classList.contains('active')) {
-        const currentPostId = inputField.getAttribute('data-post-id');
-        if (currentPostId && typeof window.renderComments === 'function') {
-            window.renderComments(currentPostId);
-        }
-    }
+    if (!inputField) return;
 
-    /* 
-      ========================================================
-      💡 [나중에 정식 오픈할 때 아래 주석을 풀면 서버와 즉시 연동됩니다!]
-      ========================================================
-      if (typeof window.doc === 'undefined' || typeof window.db === 'undefined') return;
-      const docRef = window.doc(window.db, "community", "comments");
-      if (commentUnsubscribe) commentUnsubscribe();
-      commentUnsubscribe = window.onSnapshot(docRef, (docSnap) => {
-          if (docSnap.exists()) {
-              const data = docSnap.data();
-              localStorage.setItem('tosil_community_comments', JSON.stringify(data.records || []));
-              const inputField = document.getElementById('newCommentInput');
-              if (inputField && document.getElementById('postDetailPage')?.classList.contains('active')) {
-                  const currentPostId = inputField.getAttribute('data-post-id');
-                  if (currentPostId) window.renderComments(currentPostId);
-              }
-          }
-      });
-    */
+    const currentPostId = inputField.getAttribute('data-post-id');
+    if (!currentPostId || typeof window.collection === 'undefined' || typeof window.db === 'undefined') return;
+
+    // 🚨 수술 완료: 댓글도 community_comments 폴더에서 해당 글(postId)에 달린 것만 긁어오기
+    // (만약 query에 where 조건을 아직 안 쓰셨다면, 일단 전체를 가져와서 필터링하거나 아래처럼 쿼리 연동)
+    const q = window.query(window.collection(window.db, "community_comments"), window.orderBy("timestamp", "asc"), window.limit(200));
+
+    if (commentUnsubscribe) commentUnsubscribe();
+
+    commentUnsubscribe = window.onSnapshot(q, (snapshot) => {
+        let allComments = [];
+        snapshot.forEach((doc) => {
+            allComments.push(doc.data());
+        });
+
+        localStorage.setItem('tosil_community_comments', JSON.stringify(allComments));
+
+        if (document.getElementById('postDetailPage')?.classList.contains('active')) {
+            if (currentPostId && typeof window.renderComments === 'function') {
+                window.renderComments(currentPostId);
+            }
+        }
+    });
 };
 
 // ==========================================
@@ -9159,8 +9158,8 @@ window.changeNickname = function() {
     const input = document.getElementById('comm-nickname-input');
     if(!input) return;
     
-    const newName = input.value.trim();
-
+    // 🚨 해킹 방어막 적용 완료!
+    const newName = window.escapeHTML(input.value.trim());
     // 🕵️ [대표님 전용 비밀 명령어] 
     // 닉네임 칸에 #내아이디# 라고 치고 변경을 누르면, 화면에는 안 남고 경고창(Alert)으로만 내 카카오 ID를 띄워줍니다!
     if (newName === '#내아이디#') {
@@ -9243,9 +9242,12 @@ window.deletePost = function(postId) {
         posts = posts.filter(p => p.id !== postId);
         localStorage.setItem('tosil_community_posts', JSON.stringify(posts));
 
-        if (typeof window.db !== 'undefined' && typeof window.setDoc === 'function') {
-            window.setDoc(window.doc(window.db, "community", "posts"), { records: posts }).catch(e=>{});
+        // 🚨 수술 완료: 통짜 배열 덮어쓰기가 아니라 해당 글 ID의 문서만 핀포인트로 삭제!
+        if (typeof window.db !== 'undefined' && typeof window.deleteDoc === 'function') {
+            window.deleteDoc(window.doc(window.db, "community_posts", postId))
+                .catch(e => console.error("커뮤니티 글 삭제 파이어베이스 연동 에러:", e));
         }
+
         window.closePostDetail(); 
         window.showToast('🗑️ 게시글이 깔끔하게 삭제되었습니다.');
         window.renderCommunityFeed(); 
@@ -10365,8 +10367,10 @@ window.addComment = function() {
 
     const inputField = document.getElementById('newCommentInput');
     if(!inputField) return;
-    const commentText = inputField.value.trim();
-    const postId = inputField.getAttribute('data-post-id'); 
+    
+    // 🚨 해킹 방어막 적용 완료!
+    const commentText = window.escapeHTML(inputField.value.trim());
+    const postId = inputField.getAttribute('data-post-id');
 
     if (!commentText) {
         window.showToast('⚠️ 댓글 내용을 입력해주세요!');
