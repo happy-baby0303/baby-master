@@ -311,23 +311,45 @@ function toggleAccordion(index) {
 
 function openGoogleForm() { window.open('https://forms.gle/gWYhuNrwiKNvyCEQA', '_blank'); }
 
-// 🚨 [패치 완료] 핫플 탭에서도 세부 지역 필터 나오게 수정
+// 🚨 [패치 완료] 핫플 탭에서도 세부 지역 필터 나오게 수정 + 행사 없는 지역 빼기 로직 추가!
 function generateSubFilters(mainRegion) {
-    const subRow = document.getElementById('sub-filter-row'), subRegions = new Set();
+    const subRow = document.getElementById('sub-filter-row');
+    const subRegions = new Set();
     if(!subRow) return;
 
     let source = [];
+    
+    // 🚨 1. 현재 탭에 맞춰서 행사 데이터인지 핫플 데이터인지 원본 데이터를 정합니다.
     if (currentSubTab === 'event') {
-        source = [...apiFestivals, ...hotplacesData.filter(p => p.isEvent)];
+        const now = new Date();
+        const todayNum = parseInt(now.toISOString().split('T')[0].replace(/-/g,''));
+        const currentMonthNum = parseInt(now.toISOString().split('T')[0].replace(/-/g,'').substring(0, 6));
+
+        // 행사 데이터는 끝나버린 행사인지 여기서 미리 한 번 걸러냅니다! (빈 깡통 지역 방지)
+        source = [...apiFestivals, ...hotplacesData.filter(p => p.isEvent)].filter(p => {
+            if (p.expiryDate && now.toISOString().split('T')[0] > p.expiryDate) return false; 
+            
+            let rawStartDate = String(p.eventstartdate || p.datetime || '').replace(/[^0-9]/g, '');
+            let rawEndDate = String(p.eventenddate || p.endDate || '').replace(/[^0-9]/g, '');
+            
+            let sMonth = rawStartDate.length >= 8 ? parseInt(rawStartDate.substring(0, 6)) : 0;
+            let eDate = rawEndDate.length >= 8 ? parseInt(rawEndDate.substring(0, 8)) : 0;
+
+            if (eDate && eDate < todayNum) return false; // 이미 끝난 행사
+            if (sMonth && sMonth > currentMonthNum) return false; // 다음 달 이후 행사
+            
+            return true; // 진짜 현재 유효한 행사만 남김!
+        });
     } else {
         source = hotplacesData.filter(p => !p.isEvent);
     }
 
+    // 2. 남은 유효한 데이터들을 돌면서 지역 필터를 생성합니다.
     source.forEach(item => {
         const addr = item.locText || item.addr1 || item.addr || '';
         let isMatched = false;
 
-        // 🌟 1. 데이터에 region 속성이 있으면 무조건 통과! (의왕, 하남 누락 방지)
+        // 🌟 큰 지역(전국/서울/경기 등) 카테고리 매칭 검사
         if (item.region === mainRegion) {
             isMatched = true;
         } else {
@@ -340,8 +362,8 @@ function generateSubFilters(mainRegion) {
             if (mainRegion === 'jeju' && addr.includes('제주')) isMatched = true;
         }
         
+        // 🌟 큰 지역에 맞다면, 그 안의 세부 시/군/구를 뽑아서 목록에 넣습니다.
         if (isMatched) { 
-            // 🌟 2. locText가 있으면 무조건 우선 추가
             if (item.locText && item.locText.length >= 1 && item.locText !== '경기외곽' && item.locText !== '서울') {
                 subRegions.add(item.locText);
             } else {
@@ -351,8 +373,13 @@ function generateSubFilters(mainRegion) {
         }
     });
 
-    if (subRegions.size === 0) { subRow.style.display = 'none'; return; }
+    // 🚨 3. 만약 살아남은 세부 지역이 하나도 없다면 가로 스크롤 막대를 아예 숨깁니다!
+    if (subRegions.size === 0) { 
+        subRow.style.display = 'none'; 
+        return; 
+    }
     
+    // 4. 지역이 있다면 버튼들을 예쁘게 그려줍니다.
     subRow.style.display = 'flex';
     subRow.style.overflowX = 'auto'; 
     subRow.style.gap = '8px';
@@ -5919,22 +5946,81 @@ window.calcSleepToNow = function() {
 };
 
 // ==========================================
-// 🚀 [온보딩 & 정보수정 엔진] 최종 완성본 (이것만 남기세요!)
+// 🚀 [온보딩 & 정보수정 엔진] 카카오 로그인 강제(하드 게이팅) 버전
 // ==========================================
 document.addEventListener("DOMContentLoaded", () => {
+    const savedKakaoId = localStorage.getItem('kakao_id');
     const savedName = localStorage.getItem('tosil_babyName');
     const savedDate = localStorage.getItem('tosil_startDate');
     
-    // 🔥 무한 반복 버그 해결 완!
-    if (savedName && savedDate) {
-        document.getElementById('onboarding-overlay').style.display = 'none';
-        updateBabyDashboard(); 
-    } else {
-        document.getElementById('onboarding-overlay').style.display = 'flex';
+    // 1. 로그인도 했고, 아기 정보도 다 있으면 프리패스 (메인 화면)
+    if (savedKakaoId && savedName && savedDate) {
+        const overlay = document.getElementById('onboarding-overlay');
+        if(overlay) overlay.style.display = 'none';
+        
+        // 아기 대시보드 및 정보 렌더링
+        if(typeof window.renderBabyInfo === 'function') window.renderBabyInfo();
+    } 
+    // 2. 뭔가 하나라도 빠져있으면 온보딩 모달창 띄우기
+    else {
+        const overlay = document.getElementById('onboarding-overlay');
+        if(overlay) overlay.style.display = 'flex';
+        
+        // 2-1. [새로운 Step 0] 카카오 로그인을 안 했다면? 강제 로그인 화면 생성!
+        if (!savedKakaoId) {
+            window.showForcedLoginStep();
+        } 
+        // 2-2. 로그인은 했는데 아기 정보가 없으면? 기존 이름 묻는 Step 1 띄우기
+        else {
+            const step0 = document.getElementById('onboarding-step-0');
+            if(step0) step0.style.display = 'none';
+            document.getElementById('onboarding-step-1').style.display = 'flex';
+            document.getElementById('onboarding-step-2').style.display = 'none';
+            document.getElementById('onboarding-step-3').style.display = 'none';
+        }
     }
 });
 
-// 🔄 다음/이전 단계 연결
+// 🌟 [핵심] 로그인 전용 시작 화면(Step 0)을 화면에 예쁘게 그리는 함수
+window.showForcedLoginStep = function() {
+    // 기존 단계들 다 숨기기
+    document.getElementById('onboarding-step-1').style.display = 'none';
+    document.getElementById('onboarding-step-2').style.display = 'none';
+    document.getElementById('onboarding-step-3').style.display = 'none';
+
+    let step0 = document.getElementById('onboarding-step-0');
+    if (!step0) {
+        step0 = document.createElement('div');
+        step0.id = 'onboarding-step-0';
+        step0.style.cssText = 'display: flex; flex-direction: column; align-items: center; justify-content: center; width: 100%; height: 100%; animation: fadeIn 0.5s ease; text-align: center;';
+        
+        step0.innerHTML = `
+            <div style="font-size: 60px; margin-bottom: 20px; animation: bounce 2s infinite;">🐥</div>
+            <h2 style="font-size: 24px; font-weight: 900; color: #191F28; margin: 0 0 12px 0; letter-spacing: -0.5px; line-height: 1.4;">
+                우리 아기 육아메이트<br>환영합니다!
+            </h2>
+            <p style="font-size: 14.5px; font-weight: 600; color: #8B95A1; line-height: 1.5; margin: 0 0 40px 0; word-break: keep-all;">
+                소중한 육아 기록을 평생 안전하게 보관하고<br>
+                가족들과 실시간으로 공유하세요 🤍
+            </p>
+            
+            <button onclick="window.loginWithKakao()" style="width: 100%; max-width: 300px; padding: 16px; background: #FEE500; color: #191F28; border: none; border-radius: 16px; font-size: 16px; font-weight: 900; cursor: pointer; display: flex; justify-content: center; align-items: center; gap: 8px; box-shadow: 0 4px 12px rgba(254, 229, 0, 0.3); transition: transform 0.2s;" onmousedown="this.style.transform='scale(0.95)'" onmouseup="this.style.transform='scale(1)'">
+                💬 카카오로 3초 만에 시작하기
+            </button>
+            
+            <div style="font-size: 11px; font-weight: 600; color: #B0B8C1; margin-top: 20px;">
+                시작 시 이용약관 및 개인정보처리방침에 동의하게 됩니다.
+            </div>
+        `;
+        // 온보딩 컨테이너 안쪽에 붙여넣기
+        const overlay = document.getElementById('onboarding-overlay');
+        const innerCard = overlay.querySelector('div[style*="background: white"]');
+        if(innerCard) innerCard.appendChild(step0);
+    }
+    step0.style.display = 'flex';
+};
+
+// 🔄 다음/이전 단계 연결 (기존과 동일)
 window.nextOnboardingStep = function(step) {
     if (step === 2) {
         const name = document.getElementById('ob-name').value.trim();
@@ -5960,7 +6046,7 @@ window.nextOnboardingStep = function(step) {
     }
 };
 
-// 🎉 온보딩 완료 및 로딩 마술 발동! (여기가 핵심!)
+// 🎉 온보딩 완료 및 로딩 마술 발동!
 window.finishOnboarding = function(feedingStage) {
     const name = document.getElementById('ob-name').value.trim();
     const date = document.getElementById('ob-date').value;
@@ -5992,14 +6078,20 @@ window.finishOnboarding = function(feedingStage) {
         localStorage.setItem('tosil_baby', JSON.stringify({name: name, birth: date, stage: feedingStage}));
 
         document.getElementById('onboarding-overlay').style.display = 'none';
+        
+        // 🚀 마지막으로 앱을 리로드해서 메인 화면(대시보드)으로 완벽하게 진입시킵니다!
         location.reload(); 
     }, 3500); 
 };
 
-// ✏️ 메인화면에서 연필 눌러서 수정할 때
+// ✏️ 메인화면에서 연필 눌러서 수정할 때 (정보 수정 팝업)
 window.promptBabyInfo = function() {
     document.getElementById('ob-name').value = localStorage.getItem('tosil_babyName') || '';
     document.getElementById('ob-date').value = localStorage.getItem('tosil_startDate') || '';
+    
+    // 강제 로그인 창(Step 0)이 있으면 숨김
+    const step0 = document.getElementById('onboarding-step-0');
+    if(step0) step0.style.display = 'none';
     
     document.getElementById('onboarding-step-1').style.display = 'flex';
     document.getElementById('onboarding-step-2').style.display = 'none';
@@ -6009,7 +6101,6 @@ window.promptBabyInfo = function() {
     
     document.getElementById('onboarding-overlay').style.display = 'flex';
 };
-
 
 // ==========================================
 // 🎣 [바이럴 엔진] 남편 강제 소환 (평생 1번만 등장 + 카카오 찐연동)
@@ -9542,30 +9633,92 @@ window.updateMyPageProfile = async function() {
 };
 
 // ==========================================
-// 📇 전체 유저 명부 파이어베이스 자동 기록 엔진
+// 📇 전체 유저 명부 & 얼리버드(500명) 자동 판독 엔진
 // ==========================================
 window.saveUserInfoToFirebase = async function() {
     const myKakaoId = localStorage.getItem('kakao_id');
-    let myNickname = localStorage.getItem('community_nickname') || '익명의 곰돌이';
+    let myNickname = localStorage.getItem('community_nickname') || localStorage.getItem('kakao_nickname') || '익명의 곰돌이';
 
-    // 파이어베이스 DB가 연결되어 있고, 카카오 ID가 있을 때만 실행
-    if (typeof window.db !== 'undefined' && typeof window.setDoc === 'function' && myKakaoId) {
+    // 🚨 1. 익명 유저는 혜택 대상에서 제외! (로그인을 해야만 혜택을 줌)
+    if (!myKakaoId) return;
+
+    if (typeof window.db !== 'undefined') {
         try {
-            // 'users' 라는 컬렉션(폴더)에 카카오 ID를 이름으로 하는 문서 생성
-            await window.setDoc(window.doc(window.db, "users", String(myKakaoId)), {
-                kakao_id: myKakaoId,
-                nickname: myNickname,
-                last_login: new Date().toISOString()
-            }, { merge: true }); // 기존 데이터(작성 글 수 등)가 있다면 덮어쓰지 않고 유지
-            
-            console.log("✅ 유저 정보 파이어베이스 동기화 완료");
+            // v8 vs v9 호환성 처리
+            const userRef = (typeof window.doc === 'function') 
+                ? window.doc(window.db, "users", String(myKakaoId)) 
+                : window.db.collection("users").doc(String(myKakaoId));
+
+            const userSnap = await (typeof window.getDoc === 'function' ? window.getDoc(userRef) : userRef.get());
+            const exists = typeof userSnap.exists === 'function' ? userSnap.exists() : userSnap.exists;
+
+            // 🌟 [케이스 A] 완전 처음 로그인한 신규 유저일 때 (DB에 기록이 없음)
+            if (!exists) {
+                
+                // 관리자가 파이어베이스에서 이벤트 종료 스위치(founder_event_closed)를 켰는지 확인!
+                let isEventClosed = false;
+                const settingsRef = (typeof window.doc === 'function') ? window.doc(window.db, "app_settings", "global_notice") : window.db.collection("app_settings").doc("global_notice");
+                const settingsSnap = await (typeof window.getDoc === 'function' ? window.getDoc(settingsRef) : settingsRef.get());
+                
+                const sExists = settingsSnap && (typeof settingsSnap.exists === 'function' ? settingsSnap.exists() : settingsSnap.exists);
+                if (sExists) {
+                    const sData = typeof settingsSnap.data === 'function' ? settingsSnap.data() : settingsSnap.data;
+                    if (sData && sData.founder_event_closed === true) isEventClosed = true;
+                }
+
+                // 👑 이벤트가 안 끝났으면 평생 무료(founder) 권한 부여!
+                const isFounder = !isEventClosed;
+
+                const newUserData = {
+                    kakao_id: myKakaoId,
+                    nickname: myNickname,
+                    joinedAt: new Date().toISOString(), // 👈 가입 시간 초단위로 정확히 기록! (나중에 엑셀로 뽑아볼 수 있음)
+                    is_founder: isFounder,
+                    last_login: new Date().toISOString()
+                };
+
+                if (typeof window.setDoc === 'function') {
+                    await window.setDoc(userRef, newUserData, { merge: true });
+                } else {
+                    await userRef.set(newUserData, { merge: true });
+                }
+
+                // 이벤트 당첨자라면 내 폰에도 황금 뱃지 부여
+                if (isFounder) {
+                    localStorage.setItem('tosil_is_founder', 'true');
+                    // 유저 기분 좋게 1.5초 뒤에 팝업 띄워주기
+                    setTimeout(() => {
+                        window.showToast("🎉 축하합니다! 선착순 얼리버드(프리미엄 평생 무료) 혜택에 당첨되셨습니다! 💎");
+                        if(typeof window.renderSettingsTab === 'function') window.renderSettingsTab();
+                    }, 1500);
+                }
+
+            } 
+            // 🌟 [케이스 B] 이미 가입했던 유저일 때 (앱을 지웠다 다시 깔았거나 매일 접속 시)
+            else {
+                const userData = typeof userSnap.data === 'function' ? userSnap.data() : userSnap.data;
+                
+                // DB에 저장된 내 신분이 VIP면 폰에도 똑같이 복구해줌 (폰 바꿨을 때 혜택 유지)
+                if (userData.is_founder) {
+                    localStorage.setItem('tosil_is_founder', 'true');
+                } else {
+                    localStorage.removeItem('tosil_is_founder');
+                }
+
+                // 최근 접속 시간만 업데이트
+                if (typeof window.setDoc === 'function') {
+                    await window.setDoc(userRef, { last_login: new Date().toISOString(), nickname: myNickname }, { merge: true });
+                } else {
+                    await userRef.set({ last_login: new Date().toISOString(), nickname: myNickname }, { merge: true });
+                }
+            }
         } catch (e) {
-            console.warn("🚨 유저 정보 동기화 실패 (오프라인 모드일 수 있음)", e);
+            console.warn("🚨 유저 정보 동기화 및 VIP 판독 실패:", e);
         }
     }
 };
 
-// 앱 로딩 직후(1.5초 뒤) 및 닉네임 변경 시 자동으로 명부 업데이트 실행
+// 앱 로딩 직후(1.5초 뒤) 자동으로 명부 업데이트 및 VIP 검사 실행
 setTimeout(() => { 
     if (typeof window.saveUserInfoToFirebase === 'function') {
         window.saveUserInfoToFirebase(); 
@@ -12427,4 +12580,152 @@ window.cancelBreastTimer = function() {
     window.closeTrackerSheet();
     window.updateTrackerDashboard();
     window.showToast("🗑️ 수유 기록이 취소되었습니다.");
+};
+
+// ==========================================
+// 👑 [육아메이트 플러스] 프리미엄 및 얼리버드 통제 엔진
+// ==========================================
+
+// 1. 유저가 프리미엄(또는 500명 얼리버드)인지 확인하는 판독기
+window.isPremiumUser = function() {
+    // 💡 나중에 서버에서 이 값을 true로 쏴주면 영구 무료가 됩니다!
+    // (테스트하실 땐 브라우저 콘솔에 localStorage.setItem('tosil_is_founder', 'true') 를 치시면 바로 VIP가 됩니다)
+    const isFounder = localStorage.getItem('tosil_is_founder') === 'true';
+    const isPremium = localStorage.getItem('tosil_premium') === 'true';
+    return isFounder || isPremium;
+};
+
+// 2. 하이엔드 페이월(결제 유도창) 렌더링
+window.showPaywall = function() {
+    let existing = document.getElementById('premium-paywall-modal');
+    if (existing) existing.remove();
+
+    const paywallHtml = `
+        <div id="premium-paywall-modal" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: 999999; display: flex; justify-content: center; align-items: center; padding: 20px; backdrop-filter: blur(8px); opacity: 0; transition: opacity 0.3s;">
+            <div style="background: #FFFFFF; width: 100%; max-width: 340px; border-radius: 24px; padding: 32px 24px 24px 24px; box-shadow: 0 20px 40px rgba(0,0,0,0.2); position: relative; transform: translateY(20px); transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);">
+                
+                <button onclick="document.getElementById('premium-paywall-modal').style.opacity='0'; setTimeout(()=>document.getElementById('premium-paywall-modal').remove(),300);" style="position: absolute; top: 16px; right: 16px; background: #F2F5F8; border: none; width: 32px; height: 32px; border-radius: 50%; font-size: 14px; font-weight: 900; color: #8B95A1; cursor: pointer;">✕</button>
+
+                <div style="text-align: center; margin-bottom: 24px;">
+                    <div style="font-size: 48px; margin-bottom: 12px; animation: bounce 2s infinite;">👑</div>
+                    <div style="font-size: 13px; font-weight: 800; color: #8B5CF6; letter-spacing: 2px; margin-bottom: 4px;">육아메이트 플러스</div>
+                    <div style="font-size: 22px; font-weight: 900; color: #191F28; line-height: 1.4; letter-spacing: -0.5px;">더 편안한 육아를 위한<br>프리미엄 기능입니다</div>
+                </div>
+
+                <div style="display: flex; flex-direction: column; gap: 12px; margin-bottom: 32px;">
+                    <div style="display: flex; align-items: center; gap: 12px; background: #F8FAFC; padding: 14px; border-radius: 16px; border: 1px solid #E2E8F0;">
+                        <div style="font-size: 24px;">👶👶</div>
+                        <div>
+                            <div style="font-size: 14px; font-weight: 900; color: #333D4B; margin-bottom: 2px;">다둥이 무제한 추가</div>
+                            <div style="font-size: 12px; font-weight: 600; color: #8B95A1;">둘째, 셋째도 완벽하게 분리 기록</div>
+                        </div>
+                    </div>
+                    <div style="display: flex; align-items: center; gap: 12px; background: #F8FAFC; padding: 14px; border-radius: 16px; border: 1px solid #E2E8F0;">
+                        <div style="font-size: 24px;">👵</div>
+                        <div>
+                            <div style="font-size: 14px; font-weight: 900; color: #333D4B; margin-bottom: 2px;">조부모 / 시터 케어 모드</div>
+                            <div style="font-size: 12px; font-weight: 600; color: #8B95A1;">큰 글씨와 초간편 원터치 기록창</div>
+                        </div>
+                    </div>
+                    <div style="display: flex; align-items: center; gap: 12px; background: #F8FAFC; padding: 14px; border-radius: 16px; border: 1px solid #E2E8F0;">
+                        <div style="font-size: 24px;">💾</div>
+                        <div>
+                            <div style="font-size: 14px; font-weight: 900; color: #333D4B; margin-bottom: 2px;">데이터 영구 보관 & 추출</div>
+                            <div style="font-size: 12px; font-weight: 600; color: #8B95A1;">소아과 제출용 엑셀(CSV) 내보내기</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div style="text-align: center;">
+                    <button disabled style="width: 100%; padding: 18px; background: #191F28; color: #FFF; border: none; border-radius: 16px; font-size: 15px; font-weight: 900; cursor: not-allowed; margin-bottom: 12px;">
+                        결제 시스템 오픈 준비 중 🛠️
+                    </button>
+                    <div style="font-size: 12px; font-weight: 700; color: #F04452; background: #FFF0F1; padding: 8px; border-radius: 8px; display: inline-block;">
+                        💡 선착순 500명은 런칭 시 평생 무료!
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    `;
+    
+    document.body.insertAdjacentHTML('beforeend', paywallHtml);
+    setTimeout(() => {
+        const modal = document.getElementById('premium-paywall-modal');
+        modal.style.opacity = '1';
+        modal.firstElementChild.style.transform = 'translateY(0)';
+    }, 10);
+};
+
+// ==========================================
+// 🚨 기존 핵심 함수들을 가로채서 자물쇠(Lock) 걸기!
+// ==========================================
+
+// 1. 다둥이 추가 자물쇠
+const originalAddNewBabyProfile = window.addNewBabyProfile;
+window.addNewBabyProfile = function() {
+    const profiles = window.getBabyProfiles();
+    
+    // 무료 유저는 1명(배열길이 1) 이상 추가 불가능!
+    if (profiles.length >= 1 && !window.isPremiumUser()) {
+        if(navigator.vibrate) navigator.vibrate([20, 50, 20]);
+        return window.showPaywall();
+    }
+    
+    // VIP라도 최대 3명까지만
+    if (profiles.length >= 3) return alert("👶 아기 프로필은 최대 3명까지 등록 가능합니다!");
+    
+    // 조건 통과하면 원래 함수 실행
+    originalAddNewBabyProfile();
+};
+
+// 2. 조부모 모드 자물쇠
+const originalChangeUserRole = window.changeUserRole;
+window.changeUserRole = function(role) {
+    if (role === 'senior' && !window.isPremiumUser()) {
+        if(navigator.vibrate) navigator.vibrate([20, 50, 20]);
+        return window.showPaywall();
+    }
+    originalChangeUserRole(role);
+};
+
+// 3. 엑셀 내보내기 자물쇠
+const originalExportToExcel = window.exportToExcel;
+window.exportToExcel = function() {
+    if (!window.isPremiumUser()) {
+        if(navigator.vibrate) navigator.vibrate([20, 50, 20]);
+        return window.showPaywall();
+    }
+    originalExportToExcel();
+};
+
+// ==========================================
+// ✨ [마이페이지 설정] VIP 얼리버드 전용 황금 배지 렌더링
+// ==========================================
+const originalRenderSettingsTab = window.renderSettingsTab;
+window.renderSettingsTab = function() {
+    originalRenderSettingsTab(); // 원래 화면 먼저 그리고
+    
+    // 내가 프리미엄(얼리버드) 유저라면 프로필 상단에 황금 배지 달아주기!
+    if (window.isPremiumUser()) {
+        const container = document.getElementById('tab-settings');
+        const profileBox = container.querySelector('div[style*="padding: 24px 20px 40px"]');
+        
+        if (profileBox && !document.getElementById('vip-badge-ribbon')) {
+            const badgeHtml = `
+                <div id="vip-badge-ribbon" style="background: linear-gradient(135deg, #191F28 0%, #333D4B 100%); border-radius: 16px; padding: 16px 20px; margin-bottom: 20px; display: flex; align-items: center; justify-content: space-between; box-shadow: 0 8px 24px rgba(0,0,0,0.15);">
+                    <div style="display: flex; align-items: center; gap: 12px;">
+                        <div style="font-size: 28px;">💎</div>
+                        <div>
+                            <div style="font-size: 11px; font-weight: 800; color: #FBBF24; margin-bottom: 2px;">FOUNDER MEMBER</div>
+                            <div style="font-size: 14.5px; font-weight: 900; color: #FFF; letter-spacing: -0.5px;">얼리버드 평생 무료 패스 적용중</div>
+                        </div>
+                    </div>
+                </div>
+            `;
+            // 타이틀 "설정" 바로 아래에 삽입
+            const titleEl = profileBox.querySelector('div[style*="font-size: 24px"]');
+            if (titleEl) titleEl.insertAdjacentHTML('afterend', badgeHtml);
+        }
+    }
 };
