@@ -1372,7 +1372,7 @@ function toggleCheck(e) { if(e.target.tagName !== 'INPUT') { const cb = document
 
 function calcFever() {
     const agreeCb = document.getElementById('agree-check');
-    if(agreeCb && !agreeCb.checked) return alert("⚠️ 위험 고지 및 면책조항 동의 확인이 필요합니다.");
+    if(agreeCb && !agreeCb.checked) return window.showToast("⚠️ 위험 고지 및 면책조항 동의 확인이 필요합니다.");
     const w = Number(document.getElementById('v-weight').value);
     if(!w) return alert("체중 값을 계측하여 정확히 입력하십시오.");
     
@@ -3942,33 +3942,56 @@ window.openTrackerSheet = function(type, editId = null, preSelect = null) {
         function buildDrum(id, min, max, current) {
             const el = document.getElementById(id);
             if(!el) return;
-            el.innerHTML = '<div style="height:48px; scroll-snap-align: center; flex-shrink:0;"></div>';
-            for(let i=min; i<=max; i++) {
-                let val = String(i).padStart(2, '0');
-                let activeClass = i === current ? 'active' : '';
-                el.innerHTML += `<div class="drum-item ${activeClass}" data-val="${val}" style="scroll-snap-align: center; flex-shrink:0;">${val}</div>`;
-            }
-            el.innerHTML += '<div style="height:48px; scroll-snap-align: center; flex-shrink:0;"></div>';
-            
-            // 초기 위치 스크롤 세팅
-            const items = el.querySelectorAll('.drum-item');
-            items.forEach((item, index) => {
-                if(parseInt(item.dataset.val) === current) {
-                    el.scrollTop = index * 44;
-                }
-            });
 
-            // 스크롤 감지 및 날짜 보정 로직
+            // ✨ 핵심 패치: 숫자를 31세트 반복해서 물리적으로 끝이 없게 만듭니다!
+            const REPEAT = 31; 
+            const CENTER = 15; 
+            const count = max - min + 1; // 갯수 (예: 60분은 60개)
+
+            // 화면 렉을 없애기 위해 글자를 하나씩 붙이지 않고 배열에 담아서 한 번에 렌더링
+            let htmlArray = ['<div style="height:48px; scroll-snap-align: center; flex-shrink:0; pointer-events:none;"></div>'];
+
+            for(let loop = 0; loop < REPEAT; loop++) {
+                for(let i=min; i<=max; i++) {
+                    let val = String(i).padStart(2, '0');
+                    // 정중앙 세트에만 초기 active 컬러 칠하기
+                    let activeClass = (loop === CENTER && i === current) ? 'active' : '';
+                    htmlArray.push(`<div class="drum-item ${activeClass}" data-val="${val}" style="scroll-snap-align: center; flex-shrink:0;">${val}</div>`);
+                }
+            }
+            htmlArray.push('<div style="height:48px; scroll-snap-align: center; flex-shrink:0; pointer-events:none;"></div>');
+            el.innerHTML = htmlArray.join('');
+
+            const items = el.querySelectorAll('.drum-item');
+
+            // 🌟 스크롤을 시작하자마자 정중앙(15번째 세트)으로 스르륵 순간이동
+            const targetIndex = (current - min) + (count * CENTER);
+            el.style.scrollBehavior = 'auto'; // 순간이동을 위해 애니메이션 끄기
+            el.scrollTop = targetIndex * 44;
+
+            setTimeout(() => { el.style.scrollBehavior = 'smooth'; }, 50); // 위치 잡은 후 부드러움 ON
+
+            // 스크롤 감지 및 무한 휠 마술
             el.addEventListener('scroll', () => {
                 clearTimeout(el.isScrolling);
                 el.isScrolling = setTimeout(() => {
                     let index = Math.round(el.scrollTop / 44);
+
+                    // 💡 [무한 스와이프의 핵심] 너무 끝(위/아래)으로 밀었으면 유저 몰래 다시 정중앙으로 스크롤을 워프시킵니다!
+                    if (index < count * 5 || index > count * 25) {
+                        el.style.scrollBehavior = 'auto'; // 눈치채지 못하게 애니메이션 끄기
+                        const centerIndex = (index % count) + (count * CENTER);
+                        el.scrollTop = centerIndex * 44;
+                        index = centerIndex; // 인덱스도 보정
+                        setTimeout(() => { el.style.scrollBehavior = 'smooth'; }, 50);
+                    }
+
                     items.forEach(i => i.classList.remove('active'));
                     if(items[index]) {
                         items[index].classList.add('active');
                         updateHiddenValues();
                         
-                        // 🚨 2월 28일/30일 자동 렌더링 매직!
+                        // 🚨 2월 28일/30일 자동 렌더링 매직! (대표님 기존 로직 완벽 유지)
                         if(id === 'picker-month') {
                             let newMonth = parseInt(items[index].dataset.val);
                             let newYear = parseInt(yearInput.value);
@@ -3976,7 +3999,7 @@ window.openTrackerSheet = function(type, editId = null, preSelect = null) {
                             
                             let currentDayElem = document.querySelector('#picker-day .active');
                             let selectedDay = currentDayElem ? parseInt(currentDayElem.dataset.val) : 1;
-                            if(selectedDay > maxDays) selectedDay = maxDays; 
+                            if(selectedDay > maxDays) selectedDay = maxDays;
                             
                             buildDrum('picker-day', 1, maxDays, selectedDay);
                         }
@@ -4356,7 +4379,7 @@ window.saveTrackerSettings = function() {
     localStorage.setItem('tosil_diaper_interval', dHour * 60);
     window.closeTrackerSettingsForce();
     window.updateTrackerDashboard();
-    alert("✅ 우리 아기 맞춤형 텀이 저장되었습니다!");
+    window.showToast("✅ 우리 아기 맞춤형 텀이 저장되었습니다!");
 };
 // ==========================================
 // 👑 [엄마 모드 고도화] 초직관적 하이엔드 트래커 대시보드 (수면 엇갈림 완벽 자가치유 패치)
@@ -5352,6 +5375,9 @@ window.saveTrackerRecord = async function() {
             saveBtn.style.opacity = '1';
         }, 500);
     }
+    
+    // 👇 방금 추가한 스마트 팝업 검사기를 여기에 꽂아줍니다!
+    if (typeof window.checkAndShowInviteNudge === 'function') window.checkAndShowInviteNudge();
 };
 
 // ==========================================
@@ -6058,18 +6084,21 @@ window.sendKakaoInvite = function() {
     }
 };
 
-// 🌟 홈 화면 방아쇠 (앱 켜질 때 알아서 띄우기)
-document.addEventListener("DOMContentLoaded", () => {
-    // 온보딩이 끝나서 아기 이름이 있을 때만 띄웁니다!
-    if(localStorage.getItem('tosil_babyName')) {
-        // 캐시 지우기용 테스트를 원하시면 여기 주석(//)을 해제하고 새로고침하세요!
-         //localStorage.removeItem('tosil_has_seen_invite'); 
-        
-        setTimeout(() => {
-            if(typeof window.showInviteNudge === 'function') window.showInviteNudge();
-        }, 100);
+// 🌟 스마트 초대 방아쇠 (트래커 3번 이상 썼을 때만 조용히 등장)
+window.checkAndShowInviteNudge = function() {
+    if (localStorage.getItem('tosil_has_seen_invite')) return;
+    
+    const records = JSON.parse(localStorage.getItem('tosil_tracker_records')) || [];
+    if (records.length >= 3) {
+        const babyName = localStorage.getItem('tosil_babyName') || '우리아기';
+        const nameEl = document.getElementById('invite-baby-name');
+        if(nameEl) nameEl.innerText = babyName;
+
+        const sheet = document.getElementById('invite-bottom-sheet');
+        if(sheet) sheet.style.display = 'flex';
+        localStorage.setItem('tosil_has_seen_invite', 'true'); // 다시 안 뜨게 도장 쾅!
     }
-});
+};
 
 // ==========================================
 // 👶 [홈 화면 통합 엔진] 아기 정보 & 맞춤형 큐레이션 & 시간대 인사말
@@ -7057,7 +7086,14 @@ window.renderSettingsTab = function() {
             </div>
 
             <!-- 데이터 관리 -->
-            <div style="font-size: 13.5px; font-weight: 900; color: var(--text-s); margin-bottom: 12px;">데이터 관리</div>
+            <div style="font-size: 13.5px; font-weight: 900; color: var(--text-s); margin-bottom: 12px; display:flex; align-items:center; gap:6px;">
+                데이터 관리 
+                <span style="font-size:10px; font-weight:700; color:#F04452; background:#FFF0F1; padding:2px 6px; border-radius:6px;">주의</span>
+            </div>
+            <div style="font-size: 11.5px; color: #8B95A1; line-height: 1.4; margin-bottom: 12px; padding: 0 4px; word-break: keep-all;">
+                가족 연동(또는 로그인)을 안 하셨다면 모든 기록은 이 스마트폰에만 임시 저장됩니다.<br>
+                인터넷 사용기록을 지우면 <strong style="color:#D32F2F;">데이터가 영구 삭제</strong>되므로 주기적으로 엑셀 백업을 권장합니다.
+            </div>
             <div style="background: var(--bg-card); border: 1px solid var(--border); border-radius: 16px; overflow: hidden; margin-bottom: 32px; box-shadow: 0 2px 8px rgba(0,0,0,0.02); box-sizing: border-box; width: 100%;">
                 <div onclick="window.exportToExcel()" style="display: flex; justify-content: space-between; align-items: center; padding: 18px 20px; border-bottom: 1px solid var(--border); cursor: pointer;">
                     <div style="font-size: 14.5px; font-weight: 800; color: var(--text-m);">기록 데이터 엑셀 내보내기</div>
@@ -7997,7 +8033,7 @@ window.copySymptomMemo = function() {
 };
 
 // ==========================================
-// ⏰ [하이엔드 패치] 무한 스와이프 휠(드럼 피커) 엔진
+// ⏰ [초정밀 패치] 무한 스와이프 휠(드럼 피커) 엔진 (iOS/안드로이드 완벽 호환)
 // ==========================================
 window.initDrumPicker = function(timeStr) {
     const hourContainer = document.getElementById('picker-hour');
@@ -8005,97 +8041,114 @@ window.initDrumPicker = function(timeStr) {
     if(!hourContainer || !minContainer) return;
 
     const itemHeight = 44; 
-    const paddingHeight = 53; 
-    
-    // ✨ 무한 휠 트릭: 숫자를 5세트 만들어두고 유저는 항상 3번째 세트(가운데)에서 시작!
-    const REPEAT_COUNT = 5; 
-    const CENTER_INDEX = 2; 
+    // 🚨 핵심 방어: 140(전체) - 44(아이템) / 2 = 48px. 이 수학이 맞아야 자석처럼 정확히 꽂힙니다!
+    const paddingHeight = 48; 
 
-    // 숫자 리스트 무한으로 찍어내기
+    // 세트 수를 넉넉하게 30번 반복시켜 물리적으로 절대 끝에 닿지 않게 만듭니다.
+    const REPEAT_COUNT = 30; 
+    const CENTER_INDEX = 15; 
+
     const generateInfiniteItems = (max) => {
-        let html = `<div style="height:${paddingHeight}px; flex-shrink:0;"></div>`;
+        let html = `<div style="height:${paddingHeight}px; flex-shrink:0; pointer-events:none;"></div>`;
         for(let loop = 0; loop < REPEAT_COUNT; loop++) {
             for(let i=0; i<=max; i++) {
                 let val = String(i).padStart(2, '0');
-                html += `<div class="picker-item" style="height:${itemHeight}px; line-height:${itemHeight}px; font-size:20px; font-weight:700; color:#B0B8C1; scroll-snap-align:center; flex-shrink:0; transition:all 0.2s;">${val}</div>`;
+                // 부드러움을 위해 display:flex 강제 주입
+                html += `<div class="drum-item" data-val="${val}" style="height:${itemHeight}px; line-height:${itemHeight}px; font-size:20px; font-weight:700; color:#B0B8C1; scroll-snap-align:center; flex-shrink:0; display:flex; align-items:center; justify-content:center; transition: font-size 0.1s, color 0.1s;">${val}</div>`;
             }
         }
-        html += `<div style="height:${paddingHeight}px; flex-shrink:0;"></div>`;
+        html += `<div style="height:${paddingHeight}px; flex-shrink:0; pointer-events:none;"></div>`;
         return html;
     };
 
     hourContainer.innerHTML = generateInfiniteItems(23);
     minContainer.innerHTML = generateInfiniteItems(59);
 
-    // 스크롤이 멈췄을 때 실행되는 함수
-    const updateHiddenInput = () => {
+    // 이전 인덱스를 기억해서 딱 2개(이전 꺼, 새 거)만 색상을 바꿔 렉을 없앱니다 (O(1) 속도)
+    let lastHIdx = -1;
+    let lastMIdx = -1;
+
+    // 🚨 스크롤 할 때마다 딜레이 없이 즉각 반응하는 UI 업데이트 함수
+    const updateUI = () => {
         let hRawIdx = Math.round(hourContainer.scrollTop / itemHeight);
         let mRawIdx = Math.round(minContainer.scrollTop / itemHeight);
-        
-        // 🚨 무한 루프 마법: 너무 위나 아래로 스크롤하면, 유저 몰래 다시 한가운데 세트로 원상복구!
-        if (hRawIdx < 24 || hRawIdx >= 24 * 4) {
-            hourContainer.style.scrollBehavior = 'auto'; // 애니메이션 끄기
-            hRawIdx = (hRawIdx % 24) + (24 * CENTER_INDEX);
-            hourContainer.scrollTop = hRawIdx * itemHeight;
-            setTimeout(() => hourContainer.style.scrollBehavior = 'smooth', 10);
+
+        if(hRawIdx < 0) hRawIdx = 0;
+        if(mRawIdx < 0) mRawIdx = 0;
+
+        // 시(Hour) 업데이트
+        if (hRawIdx !== lastHIdx) {
+            if (lastHIdx >= 0) {
+                const oldEl = hourContainer.children[lastHIdx + 1]; // +1은 상단 패딩 div 때문
+                if (oldEl) { oldEl.style.fontSize = '20px'; oldEl.style.fontWeight = '700'; oldEl.style.color = '#B0B8C1'; }
+            }
+            const newEl = hourContainer.children[hRawIdx + 1];
+            if (newEl) { newEl.style.fontSize = '26px'; newEl.style.fontWeight = '900'; newEl.style.color = '#3182F6'; }
+            lastHIdx = hRawIdx;
         }
-        if (mRawIdx < 60 || mRawIdx >= 60 * 4) {
-            minContainer.style.scrollBehavior = 'auto';
-            mRawIdx = (mRawIdx % 60) + (60 * CENTER_INDEX);
-            minContainer.scrollTop = mRawIdx * itemHeight;
-            setTimeout(() => minContainer.style.scrollBehavior = 'smooth', 10);
+
+        // 분(Minute) 업데이트
+        if (mRawIdx !== lastMIdx) {
+            if (lastMIdx >= 0) {
+                const oldEl = minContainer.children[lastMIdx + 1];
+                if (oldEl) { oldEl.style.fontSize = '20px'; oldEl.style.fontWeight = '700'; oldEl.style.color = '#B0B8C1'; }
+            }
+            const newEl = minContainer.children[mRawIdx + 1];
+            if (newEl) { newEl.style.fontSize = '26px'; newEl.style.fontWeight = '900'; newEl.style.color = '#3182F6'; }
+            lastMIdx = mRawIdx;
         }
 
-        // 실제 추출할 값 (0~23, 0~59)
-        let hVal = hRawIdx % 24;
-        let mVal = mRawIdx % 60;
-
-        // 선택된 숫자만 크고 파란색으로 뽝! 강조
-        hourContainer.querySelectorAll('.picker-item').forEach((el, i) => { 
-            el.style.color = i === hRawIdx ? '#3182F6' : '#B0B8C1'; 
-            el.style.fontWeight = i === hRawIdx ? '900' : '700'; 
-            el.style.fontSize = i === hRawIdx ? '26px' : '20px'; 
-        });
-        minContainer.querySelectorAll('.picker-item').forEach((el, i) => { 
-            el.style.color = i === mRawIdx ? '#3182F6' : '#B0B8C1'; 
-            el.style.fontWeight = i === mRawIdx ? '900' : '700'; 
-            el.style.fontSize = i === mRawIdx ? '26px' : '20px'; 
-        });
-
-        let hh = String(hVal).padStart(2, '0');
-        let mm = String(mVal).padStart(2, '0');
-
-        // 기존 시스템이 읽어가는 숨겨진 input 업데이트
+        // 백그라운드 데이터는 조용히 업데이트
+        const hVal = String(hRawIdx % 24).padStart(2, '0');
+        const mVal = String(mRawIdx % 60).padStart(2, '0');
         const hiddenEl = document.getElementById('v-tracker-time');
-        if (hiddenEl && hiddenEl.value !== `${hh}:${mm}`) {
-            hiddenEl.value = `${hh}:${mm}`;
-            if (hiddenEl.onchange) hiddenEl.onchange(); // 수면 시간 자동 계산 등 트리거
+        if (hiddenEl && hiddenEl.value !== `${hVal}:${mVal}`) {
+            hiddenEl.value = `${hVal}:${mVal}`;
+            if (hiddenEl.onchange) hiddenEl.onchange(); 
         }
     };
 
-    // 스크롤 감지 (터치 떼고 바퀴가 멈추면 작동)
+    // passive: true 를 주어 모바일에서 브라우저 스크롤 엔진이 버벅이지 않게 강제 최적화
+    hourContainer.addEventListener('scroll', updateUI, { passive: true });
+    minContainer.addEventListener('scroll', updateUI, { passive: true });
+
+    // 🌟 핵심: 유저가 스크롤을 "완전히 멈췄을 때만" 티 안 나게 중앙 세트로 텔레포트 시킴
     let scrollTimeout;
-    const onScroll = () => {
+    const onScrollStop = () => {
         clearTimeout(scrollTimeout);
-        scrollTimeout = setTimeout(updateHiddenInput, 80); // 바퀴 멈추고 0.08초 뒤 인식
+        scrollTimeout = setTimeout(() => {
+            const hRawIdx = Math.round(hourContainer.scrollTop / itemHeight);
+            if (hRawIdx < 24 * 5 || hRawIdx > 24 * 25) { // 너무 끝으로 가면 중앙으로 이동
+                hourContainer.style.scrollBehavior = 'auto'; // 순간이동을 위해 애니메이션 끄기
+                hourContainer.scrollTop = ((hRawIdx % 24) + (24 * CENTER_INDEX)) * itemHeight;
+            }
+            const mRawIdx = Math.round(minContainer.scrollTop / itemHeight);
+            if (mRawIdx < 60 * 5 || mRawIdx > 60 * 25) {
+                minContainer.style.scrollBehavior = 'auto';
+                minContainer.scrollTop = ((mRawIdx % 60) + (60 * CENTER_INDEX)) * itemHeight;
+            }
+        }, 300); // 휠이 멈추고 0.3초 뒤에 몰래 점프
     };
 
-    hourContainer.addEventListener('scroll', onScroll);
-    minContainer.addEventListener('scroll', onScroll);
+    hourContainer.addEventListener('scroll', onScrollStop, { passive: true });
+    minContainer.addEventListener('scroll', onScrollStop, { passive: true });
 
-    // 창이 처음 열렸을 때 현재 시간으로 스크롤 딱! 맞춰놓기 (한가운데 세트로 점프)
+    // 🌟 최초 로딩 시 현재 시간에 맞추기
     const [initH, initM] = timeStr.split(':').map(Number);
+    hourContainer.style.scrollBehavior = 'auto';
+    minContainer.style.scrollBehavior = 'auto';
+
+    // UI가 화면에 완전히 그려질 시간을 10ms 벌어준 뒤에 스크롤을 꽂아넣습니다.
     setTimeout(() => {
-        hourContainer.style.scrollBehavior = 'auto'; 
-        minContainer.style.scrollBehavior = 'auto';
-        
         hourContainer.scrollTop = (initH + (24 * CENTER_INDEX)) * itemHeight;
         minContainer.scrollTop = (initM + (60 * CENTER_INDEX)) * itemHeight;
+        updateUI(); // 색상 강제 입히기
         
-        updateHiddenInput();
-        
-        // 이동 후에는 부드럽게 굴러가도록 원상복구
-        setTimeout(() => { hourContainer.style.scrollBehavior = 'smooth'; minContainer.style.scrollBehavior = 'smooth'; }, 50);
+        // 셋팅이 끝나면 다시 스크롤 부드럽게 원상복구
+        setTimeout(() => {
+            hourContainer.style.scrollBehavior = 'smooth';
+            minContainer.style.scrollBehavior = 'smooth';
+        }, 50);
     }, 10);
 };
 
@@ -9213,157 +9266,94 @@ window.searchByTag = function(tag) {
     }
 };
 
+// 🌟 알림 신청 누르면 파이어베이스 '대기 명단'에 저장하는 함수
+window.applyCommunityWaitlist = function(btn) {
+    // 1. 이미 신청했는지 확인 (로컬)
+    if(localStorage.getItem('tosil_waitlist_done')) {
+        return window.showToast('이미 신청하셨어요! 조금만 기다려주세요 🤍');
+    }
+
+    // 2. 카카오 로그인 안 했으면 튕겨내기
+    const myKakaoId = localStorage.getItem('kakao_id');
+    const myNickname = localStorage.getItem('kakao_nickname') || '익명엄빠';
+    
+    if(!myKakaoId) {
+        return window.showConfirm("알림을 받으시려면 먼저 로그인해주세요!", function() {
+            window.switchTab('settings');
+        }, "💬", "로그인 하러가기", "#3182F6");
+    }
+
+    // 3. 파이어베이스 [waitlist] 폴더에 카카오ID 저장!
+    if (typeof db !== 'undefined' && typeof setDoc === 'function' && typeof doc === 'function') {
+        setDoc(doc(db, "waitlist", String(myKakaoId)), {
+            kakaoId: myKakaoId,
+            nickname: myNickname,
+            appliedAt: new Date().toISOString()
+        }, {merge: true}).then(() => {
+            // 성공하면 내 폰에도 완료 도장 쾅!
+            localStorage.setItem('tosil_waitlist_done', 'true');
+            window.showToast('🔔 알림 신청 완료! 정식 오픈 시 가장 먼저 알려드릴게요 🤍');
+            
+            // 버튼 모양 바꾸기
+            btn.innerText = "✅ 알림 신청 완료";
+            btn.style.background = "#00B37A";
+            btn.style.boxShadow = "none";
+        }).catch((e) => {
+            console.error("대기명단 저장 에러:", e);
+            window.showToast("앗, 일시적인 오류가 발생했어요. 다시 시도해주세요.");
+        });
+    } else {
+        window.showToast("오프라인 상태입니다. 나중에 다시 시도해주세요.");
+    }
+};
+
+
 // ==========================================
-// 🎨 하이엔드 피드 렌더링 엔진 (먹통 에러 완전 해결본)
+// 🎨 맘수다 공사중(티저) 렌더링 화면
 // ==========================================
 window.renderCommunityFeed = function() {
     const container = document.getElementById('community-feed');
     if(!container) return;
 
-    let posts = JSON.parse(localStorage.getItem('tosil_community_posts')) || [];
-    let blockedUsers = JSON.parse(localStorage.getItem('tosil_blocked_users')) || [];
+    const today = new Date();
+    const waitlistCount = 128 + (today.getDate() * 3); 
 
-    // 차단 유저 필터링
-    posts = posts.filter(p => !blockedUsers.includes(p.authorName));
+    // 이미 신청한 사람인지 확인해서 버튼 모양을 미리 바꿔둠
+    const isApplied = localStorage.getItem('tosil_waitlist_done');
+    const btnStyle = isApplied 
+        ? "background: #00B37A; box-shadow: none;" 
+        : "background: #8B5CF6; box-shadow: 0 8px 24px rgba(139, 92, 246, 0.3);";
+    const btnText = isApplied ? "✅ 알림 신청 완료" : "🔔 정식 오픈 알림 받기";
 
-    if (window.currentCommCategory !== 'all') {
-        posts = posts.filter(p => p.category === window.currentCommCategory);
-    }
+    const html = `
+        <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; height: 70vh; padding: 0 20px; text-align: center; animation: fadeIn 0.5s ease-out;">
+            
+            <div style="font-size: 72px; margin-bottom: 24px; animation: bounce 2s infinite;">☕️</div>
+            
+            <h2 style="font-size: 22px; font-weight: 900; color: var(--text-title); margin: 0 0 12px 0; letter-spacing: -0.5px; line-height:1.4;">
+                동네 엄빠들의 따뜻한 수다방<br>
+                <span style="color: #8B5CF6;">'맘수다'</span>가 곧 오픈합니다!
+            </h2>
+            
+            <p style="font-size: 14.5px; font-weight: 600; color: var(--text-sub); line-height: 1.6; word-break: keep-all; margin: 0 0 32px 0;">
+                더 쾌적하고 맘 편한 소통 공간을 만들기 위해<br>
+                육아메이트가 열심히 단장하고 있어요 🛠️<br>
+                조금만 기다려주시면 짠! 하고 돌아올게요.
+            </p>
 
-    if (window.currentCommSort === 'popular') {
-        posts.sort((a, b) => (b.likes || 0) - (a.likes || 0) || b.timestamp - a.timestamp);
-    } else {
-        posts.sort((a, b) => b.timestamp - a.timestamp);
-    }
-
-// 🏷️ 실시간 인기 태그 칩
-    const popularTags = ['#수유텀', '#수면교육', '#당근나눔', '#핫딜공유', '#이유식거부', '#유모차추천'];
-    
-    // 🚨 촌스러운 흰색 배경 삭제! 화면 양끝까지 시원하게 스와이프 되도록 네거티브 마진(-20px) 마법 적용
-    let tagsHtml = `<div style="display: flex; overflow-x: auto; gap: 8px; margin: 0 -20px 20px -20px; padding: 0 20px 8px 20px; scrollbar-width: none;">`;
-    popularTags.forEach(tag => {
-        tagsHtml += `<button onclick="window.searchByTag('${tag}')" style="flex-shrink: 0; padding: 8px 14px; background: #FFFFFF; border: 1px solid #E5E8EB; border-radius: 20px; font-size: 13px; font-weight: 800; color: #4E5968; box-shadow: 0 2px 4px rgba(0,0,0,0.02); cursor: pointer; transition: 0.2s;">${tag}</button>`;
-    });
-    tagsHtml += `</div>`;
-
-    // 🌟 레이아웃 재배치: 태그 -> 정렬 버튼 -> 공지배너 순서로 자연스럽게!
-    let html = `
-        ${tagsHtml}
-        
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
-            <div style="font-size: 15px; font-weight: 900; color: var(--text-m);">🔥 실시간 인기글</div>
-            <div style="display: flex; gap: 8px;">
-                <button onclick="window.setCommSort('latest')" style="padding: 6px 14px; border: none; border-radius: 20px; font-size: 12px; font-weight: 800; cursor: pointer; transition: 0.2s; background: ${window.currentCommSort === 'latest' ? '#333D4B' : 'transparent'}; color: ${window.currentCommSort === 'latest' ? '#FFFFFF' : '#8B95A1'};">최신순</button>
-                <button onclick="window.setCommSort('popular')" style="padding: 6px 14px; border: none; border-radius: 20px; font-size: 12px; font-weight: 800; cursor: pointer; transition: 0.2s; background: ${window.currentCommSort === 'popular' ? '#F04452' : 'transparent'}; color: ${window.currentCommSort === 'popular' ? '#FFFFFF' : '#8B95A1'};">인기순</button>
+            <div style="background: #F3E8FF; border: 1px solid #D8B4FE; border-radius: 20px; padding: 10px 18px; margin-bottom: 32px; display: inline-flex; align-items: center; gap: 8px;">
+                <span style="font-size: 18px;">🔥</span>
+                <span style="font-size: 13.5px; font-weight: 800; color: #7C3AED;">현재 <span style="font-size: 15px; font-weight: 900;">${waitlistCount}</span>명의 엄빠가 대기 중!</span>
             </div>
-        </div>
 
-        <div style="background: linear-gradient(135deg, #F0F7FF 0%, #E0EDFF 100%); border-radius: 16px; padding: 18px 20px; margin-bottom: 20px; display: flex; align-items: center; gap: 14px; box-shadow: 0 4px 12px rgba(49, 130, 246, 0.08);">
-            <div style="font-size: 24px; animation: bounce 2s infinite;">🚀</div>
-            <div style="flex: 1;">
-                <div style="font-size: 14px; font-weight: 900; color: #1C64F2; margin-bottom: 4px;">맘수다 커뮤니티 오픈 준비 중!</div>
-                <div style="font-size: 12.5px; font-weight: 600; color: #3F83F8; line-height: 1.4; word-break: keep-all;">현재 베타 테스트 중입니다. 작성된 글은 내 스마트폰에서만 보입니다.</div>
-            </div>
+            <!-- 👇 아까 만든 찐 수집 함수 연결! -->
+            <button onclick="window.applyCommunityWaitlist(this)" style="width: 100%; max-width: 300px; padding: 18px; color: #FFF; border: none; border-radius: 16px; font-size: 15px; font-weight: 900; cursor: pointer; transition: 0.2s; ${btnStyle}" onmousedown="this.style.transform='scale(0.95)'" onmouseup="this.style.transform='scale(1)'">
+                ${btnText}
+            </button>
+            
         </div>
     `;
 
-    // 📢 운영자 공지글
-    if (window.currentCommCategory === 'all' || window.currentCommCategory === 'talk') {
-        html += `
-        <div class="feed-card" style="background: #F8FAFC; border-radius: 20px; padding: 20px; margin-bottom: 16px; border: 1px solid #E2E8F0; box-shadow: 0 4px 16px rgba(0,0,0,0.02);">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
-                <span style="font-size: 11px; font-weight: 900; padding: 4px 10px; border-radius: 8px; color: #FFFFFF; background: #3182F6;">📢 운영자 공지</span>
-                <span style="font-size: 12px; color: #3182F6; font-weight: 800;">📌 고정됨</span>
-            </div>
-            <div style="font-size: 16.5px; font-weight: 900; color: #191F28; margin-bottom: 8px; letter-spacing: -0.5px; line-height: 1.4; word-break: keep-all;">
-                안녕하세요! 맘수다 게시판은 현재 정식 오픈 준비 중입니다 🚀
-            </div>
-            <div style="font-size: 14px; color: #4E5968; line-height: 1.5; margin-bottom: 16px; word-break: keep-all; font-weight: 500;">
-                엄빠님들과 따뜻한 소통을 나눌 수 있는 '맘수다' 커뮤니티가 곧 정식으로 찾아옵니다!<br><br>
-                유저분들의 트래픽을 감당할 수 있는 쾌적하고 안전한 서버 환경을 만들기 위해 열심히 구축하고 있어요. 조금만 기다려 주시면 더 유용한 기능들과 함께 짠! 하고 오픈하겠습니다 🤍<br>
-                <span style="color:#8B95A1; font-size:12px; margin-top: 8px; display: block;">* 현재 글쓰기 및 댓글 기능은 테스트용으로 내 기기에서만 작동합니다.</span>
-            </div>
-            <div style="display: flex; justify-content: space-between; align-items: center; border-top: 1px dashed rgba(0,0,0,0.05); padding-top: 14px;">
-                <div style="display: flex; align-items: center; gap: 6px;">
-                    <div style="width: 24px; height: 24px; background: #EBF4FF; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px;">👑</div>
-                    <span style="font-size: 12.5px; font-weight: 800; color: #191F28;">육아메이트 하윤맘</span>
-                </div>
-                <div style="display: flex; gap: 12px; font-size: 13px; font-weight: 700; color: var(--text-sub);">
-                    <div style="display: flex; align-items: center; gap: 4px; padding: 4px 8px; background: #FFF0F1; border-radius: 10px;">
-                        <span style="color: #FF5A5F; font-size: 13px;">❤️</span> <span style="color: #F04452;">999+</span>
-                    </div>
-                </div>
-            </div>
-        </div>
-        `;
-    }
-
-    if (posts.length === 0) {
-        html += `
-            <div style="text-align:center; padding:60px 20px; background:transparent;">
-                <div style="font-size:40px; margin-bottom:16px; opacity:0.3;">💬</div>
-                <div style="font-size:16px; font-weight:800; color:var(--text-sub); margin-bottom:8px;">아직 등록된 유저 게시글이 없어요!</div>
-                <div style="font-size:13.5px; font-weight:600; color:var(--text-s);">가장 먼저 일상을 공유해 보세요 ✍️</div>
-            </div>`;
-        container.innerHTML = html;
-        return;
-    }
-
-    // 일반 게시글 렌더링
-    posts.forEach(post => {
-        let catName = ''; let catColor = ''; let catBg = '';
-        if (post.category === 'qna') { catName = '육아질문'; catColor = 'var(--brand-primary)'; catBg = 'var(--brand-light)'; }
-        else if (post.category === 'talk') { catName = '일상수다'; catColor = '#8B5CF6'; catBg = '#F3E8FF'; }
-        else if (post.category === 'market') { catName = '나눔/중고'; catColor = '#00B37A'; catBg = '#E6F7F2'; }
-        else if (post.category === 'hotdeal') { catName = '핫딜정보'; catColor = '#FF8A00'; catBg = '#FFF4E6'; }
-
-        const diffMins = Math.floor((new Date().getTime() - post.timestamp) / 60000);
-        let timeStr = '방금 전';
-        if (diffMins >= 1440) timeStr = `${Math.floor(diffMins/1440)}일 전`;
-        else if (diffMins >= 60) timeStr = `${Math.floor(diffMins/60)}시간 전`;
-        else if (diffMins > 0) timeStr = `${diffMins}분 전`;
-
-        let imageHtml = '';
-        if (post.images && post.images.length > 0) {
-            let swipeItems = post.images.map(img => `<div class="swipe-item" style="width: 100%; flex-shrink: 0; scroll-snap-align: start;"><img src="${img}" onclick="event.stopPropagation(); window.openImageViewer('${img}')" style="width: 100%; height: 200px; object-fit: cover; border-radius: 12px; border: 1px solid rgba(0,0,0,0.04);"></div>`).join('');
-            imageHtml = `<div class="image-swipe-wrapper" onclick="event.stopPropagation()" style="display: flex; overflow-x: auto; scroll-snap-type: x mandatory; gap: 8px; margin-top: 14px; border-radius: 12px; scrollbar-width: none;">${swipeItems}</div>`;
-        }
-
-        html += `
-        <div class="feed-card" onclick="window.openPostDetail('${post.id}')" style="background: var(--bg-card); border-radius: 20px; padding: 20px; margin-bottom: 16px; border: 1px solid rgba(0,0,0,0.03); box-shadow: 0 4px 16px rgba(0,0,0,0.03); cursor: pointer; transition: transform 0.2s ease;">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
-                <span style="font-size: 11.5px; font-weight: 800; color: ${catColor}; background: ${catBg}; padding: 4px 10px; border-radius: 8px;">${catName}</span>
-                <span style="font-size: 12px; color: var(--text-s); font-weight: 600;">${timeStr}</span>
-            </div>
-            
-            <div style="font-size: 16.5px; font-weight: 900; color: var(--text-title); margin-bottom: 8px; line-height: 1.4; word-break: keep-all; letter-spacing: -0.5px;">
-                ${post.title}
-            </div>
-            
-            <div style="font-size: 14px; color: var(--text-body); line-height: 1.5; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; word-break: keep-all; font-weight: 500;">
-                ${post.content.replace(/\n/g, ' ')}
-            </div>
-            
-            ${imageHtml}
-            
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 16px; padding-top: 14px; border-top: 1px dashed rgba(0,0,0,0.05);">
-                <div style="display: flex; align-items: center; gap: 6px;">
-                    <div style="width: 24px; height: 24px; background: #F2F4F6; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px;">${post.authorIcon}</div>
-                    <span style="font-size: 12.5px; font-weight: 700; color: var(--text-body);">${post.authorName}</span>
-                </div>
-                <div style="display: flex; gap: 12px; font-size: 13px; font-weight: 700; color: var(--text-sub);">
-                    <div class="like-btn" onclick="window.toggleRealLike('${post.id}', this, event)" style="display: flex; align-items: center; gap: 4px; cursor: pointer; background: #F8F9FA; padding: 4px 8px; border-radius: 10px;">
-                        <span class="heart-icon" style="color: ${post.liked ? '#FF5A5F' : '#CBD5E1'}; font-size: 13px; display:inline-block; transition: 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);">${post.liked ? '❤️' : '🤍'}</span>
-                        <span class="like-count" style="color: ${post.liked ? '#FF5A5F' : '#8B95A1'};">${post.likes || 0}</span>
-                    </div>
-                    <div style="display: flex; align-items: center; gap: 4px; background: #F8F9FA; padding: 4px 8px; border-radius: 10px;">
-                        <span style="color: var(--brand-primary); font-size: 13px;">💬</span> <span>${post.comments || 0}</span>
-                    </div>
-                </div>
-            </div>
-        </div>
-        `;
-    });
     container.innerHTML = html;
 };
 
@@ -10461,6 +10451,17 @@ window.closeNotiAndOpenPost = function(postId) {
     setTimeout(() => { if(typeof window.openPostDetail === 'function') window.openPostDetail(postId); }, 150);
 };
 
+// PWA 앱 아이콘 배지 조작 함수 (서버비 0원 푸시 대체재)
+window.updateAppIconBadge = function(unreadCount) {
+    if ('setAppBadge' in navigator) {
+        if (unreadCount > 0) {
+            navigator.setAppBadge(unreadCount).catch((e) => console.warn(e));
+        } else {
+            navigator.clearAppBadge().catch((e) => console.warn(e));
+        }
+    }
+};
+
 // 종 모양 배지(빨간 점) 끄고 켜는 함수
 window.updateNotiBadge = function() {
     let notis = JSON.parse(localStorage.getItem('tosil_notifications')) || [];
@@ -10469,6 +10470,8 @@ window.updateNotiBadge = function() {
     if (badge) {
         badge.style.display = unreadCount > 0 ? 'block' : 'none';
     }
+    // 앱 아이콘(바탕화면)에도 빨간 숫자 띄워주기!
+    window.updateAppIconBadge(unreadCount);
 };
 
 // 앱 켜질 때 빨간 점 세팅
@@ -11145,8 +11148,8 @@ window.handleSwipeMove = function(e) {
     const diffX = currentX - window.swipeState.startX;
     const diffY = currentY - window.swipeState.startY;
 
-    // 위아래로 움직이는 각도가 더 크면 화면 스크롤로 간주! (핵심 방어 로직)
-    if (Math.abs(diffY) > Math.abs(diffX) && Math.abs(diffY) > 10) {
+    // 위아래로 움직이는 각도가 더 크면 화면 스크롤로 간주! (오터치 철통 방어)
+    if (Math.abs(diffY) > Math.abs(diffX) * 0.8 || Math.abs(diffY) > 5) {
         window.swipeState.isScrolling = true;
         return;
     }
