@@ -5101,11 +5101,14 @@ window.saveTrackerToFirebase = async function(records) {
     }
 };
 
-// 📡 인터넷 연결 상태 실시간 레이더망
-// 📡 인터넷 연결 상태 실시간 레이더망 (트래커 + 성장기록 통합 복구)
+/// 🛠️ [패치 3-1] 무적 락(Lock) 변수 생성 및 오프라인 큐 발사 로직
+window.isFlushingOfflineData = false; // 👈 락 변수 추가!
+
 window.flushOfflineQueue = async function() {
     if (!navigator.onLine) return; // 여전히 오프라인이면 패스
     
+    // 🚨 무적 모드 ON: 내가 업로드하는 동안 서버에서 내려오는 옛날 데이터 씹기!
+    window.isFlushingOfflineData = true;
     let isRecovered = false;
 
     // 1. 트래커 복구
@@ -5117,7 +5120,7 @@ window.flushOfflineQueue = async function() {
         }
     }
 
-    // 2. 🚨 성장 기록 복구 (새로 추가된 완벽 방어막!)
+    // 2. 성장 기록 복구
     if (localStorage.getItem('tosil_offline_queue_growth') === 'true') {
         const growthRecords = JSON.parse(localStorage.getItem('tosil_growth_records')) || [];
         if (typeof db !== 'undefined' && typeof setDoc === 'function' && typeof doc === 'function') {
@@ -5135,6 +5138,11 @@ window.flushOfflineQueue = async function() {
     if (isRecovered && typeof window.showToast === 'function') {
         window.showToast("☁️ 오프라인 때 기록한 데이터가 클라우드에 안전하게 백업되었습니다!");
     }
+
+    // 🚨 업로드가 완전히 끝나고 2초 뒤에 무적 모드 해제! (레이스 컨디션 완벽 차단)
+    setTimeout(() => {
+        window.isFlushingOfflineData = false;
+    }, 2000);
 };
 
 // 폰이 와이파이나 LTE를 다시 잡는 순간(online) 숨겨진 백업을 쏴줍니다!
@@ -5418,6 +5426,9 @@ window.startTrackerRealtimeSync = function() {
     if(typeof window.onSnapshot !== 'function') return;
 
     trackerUnsubscribe = window.onSnapshot(docRef, (docSnap) => {
+        // 🚨 락 걸려있으면(오프라인 큐가 발사 중이면) 서버 데이터 덮어쓰기 무시!
+        if (window.isFlushingOfflineData) return; 
+
         if (docSnap.exists()) {
             const serverData = docSnap.data().records || [];
             const localData = JSON.parse(localStorage.getItem('tosil_tracker_records')) || [];
@@ -5854,14 +5865,14 @@ window.resetTrackerRecords = function() {
     }, "⚠️", "전체 삭제", "#F04452", "삭제"); // 👈 끝에 "삭제" 추가!
 };
 
-// (설정 탭) 데이터 관리 전체 삭제
+// ⚙️ (설정 탭) 기록 데이터 초기화 버튼
 window.clearAllData = function() {
-    showConfirm("정말 모든 데이터를 초기화할까요?<br>이 작업은 되돌릴 수 없습니다!", function() {
-        localStorage.removeItem('baby_trackers');
-        localStorage.removeItem('tosil_tracker_records');
+    showConfirm("정말 모든 기록 데이터를 초기화할까요?<br>이 작업은 되돌릴 수 없습니다!", function() {
+        window.wipeAllRecordsSafely(); // 🚨 무식한 clear() 대신 정밀 타격 엔진 가동!
         window.updateTrackerDashboard(); 
-        showToast("🗑️ 데이터가 모두 초기화되었습니다.");
-    }, "🚨", "초기화", "#F04452", "삭제"); // 👈 끝에 "삭제" 추가!
+        showToast("🗑️ 데이터가 안전하게 모두 초기화되었습니다.");
+        setTimeout(() => location.reload(), 1000);
+    }, "🚨", "초기화", "#F04452");
 };
 
 // ❌ 알람 끄기 함수
@@ -8439,6 +8450,7 @@ window.submitPost = function(btnElement) {
             posts[postIdx].authorIcon = authorIcon;
         }
         window.showToast('📝 게시글이 성공적으로 수정되었습니다!');
+    // 🛠️ [패치 2-1] submitPost 함수 안쪽 (새로운 글 등록 부분)
     } else {
         // 👉 [새로운 글 등록]
         const timestamp = new Date().getTime();
@@ -8455,6 +8467,12 @@ window.submitPost = function(btnElement) {
             comments: 0
         };
         posts.unshift(newPost);
+        
+        // 🚨 [핵심 방어막] 최신 글 50개만 남기고 옛날 글은 날려서 로컬 용량 확보!
+        if (posts.length > 50) {
+            posts = posts.slice(0, 50);
+        }
+        
         window.showToast('🎉 게시글이 성공적으로 등록되었습니다!');
     }
     
@@ -9581,21 +9599,26 @@ window.logoutKakao = function() {
     }, "👋", "로그아웃", "#8B95A1");
 };
 
+// 💔 카카오 회원 탈퇴
 window.unlinkKakao = function() {
     window.showConfirm("정말 회원 탈퇴를 진행하시겠습니까?<br><span style='font-size:12px; color:#8B95A1;'>모든 데이터가 삭제되며 복구할 수 없습니다.</span>", function() {
         const answer = prompt("탈퇴하시려면 아래 입력창에 '탈퇴'라고 정확히 적어주세요.");
         if (answer === '탈퇴') {
-            // 🚨 1. 카카오 서버에 '앱 연결 끊기' 강제 요청!
+            // 카카오 연결 끊기 요청
             if (typeof Kakao !== 'undefined' && Kakao.Auth.getAccessToken()) {
                 Kakao.API.request({
                     url: '/v1/user/unlink',
-                    success: function(res) { console.log('카카오 연결 끊기 성공', res); },
-                    fail: function(err) { console.error('카카오 연결 끊기 실패', err); }
+                    success: function(res) { console.log('카카오 연결 끊기 성공'); },
+                    fail: function(err) { console.error('카카오 연결 끊기 실패'); }
                 });
             }
 
-            // 2. 내 폰에 있는 모든 데이터 싹 날리기
-            localStorage.clear(); 
+            // 🚨 앱 데이터 및 계정 정보 완전 초기화
+            window.wipeAllRecordsSafely();
+            localStorage.removeItem('kakao_nickname');
+            localStorage.removeItem('kakao_id');
+            localStorage.removeItem('family_sync_code');
+            
             window.showToast("💔 회원 탈퇴가 완료되었습니다. 그동안 감사했습니다!");
             setTimeout(() => location.reload(), 1500);
         } else if (answer !== null) {
@@ -10215,8 +10238,15 @@ window.addComment = function() {
         liked: false
     };
 
+    // 🛠️ [패치 2-2] addComment 함수 안쪽 (배열 push 부분)
     let comments = JSON.parse(localStorage.getItem('tosil_community_comments')) || [];
     comments.push(newComment);
+
+    // 🚨 [핵심 방어막] 댓글은 최신 100개까지만 로컬에 유지!
+    if (comments.length > 100) {
+        comments = comments.slice(comments.length - 100);
+    }
+
     localStorage.setItem('tosil_community_comments', JSON.stringify(comments));
 
     let posts = JSON.parse(localStorage.getItem('tosil_community_posts')) || [];
