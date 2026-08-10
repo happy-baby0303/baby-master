@@ -107,79 +107,79 @@ body.mode-senior .hide-on-senior { display: none !important; }
 </head>
 
 <body>
-<!-- 🚀 온보딩 오버레이 (모바일 키보드 레이아웃 붕괴 완벽 방어 패치) -->
-<div id="onboarding-overlay" style="display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: #F2F4F6; z-index: 9999999; justify-content: center; align-items: center; overflow: hidden;">
+<!-- 🚀 온보딩 오버레이 (모바일 키보드 & 브라우저 하단 바 완벽 방어 패치) -->
+<div id="onboarding-overlay" style="display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; height: 100dvh; background: #F2F4F6; z-index: 9999999; justify-content: center; align-items: center; overflow: hidden; box-sizing: border-box;">
     
-    <div style="width: 100%; max-width: 480px; height: 100%; background: var(--bg-card, #FFFFFF); box-sizing: border-box; display: flex; flex-direction: column; box-shadow: 0 0 20px rgba(0,0,0,0.05); position: relative;">
+    <div style="width: 100%; max-width: 480px; height: 100%; height: 100dvh; background: var(--bg-card, #FFFFFF); box-sizing: border-box; display: flex; flex-direction: column; box-shadow: 0 0 20px rgba(0,0,0,0.05); position: relative;">
         
         <!-- 💡 스텝 1: 이름 입력 -->
-        <div id="onboarding-step-1" style="display: flex; flex-direction: column; height: 100%;">
-            <!-- 🚨 핵심: 스크롤 영역과 하단 고정 버튼 영역을 분리! -->
-            <div style="flex: 1; padding: 24px; padding-top: 80px; overflow-y: auto;">
-                <div style="font-size: 44px; margin-bottom: 20px;">👋</div>
-                <h1 style="font-size: 26px; font-weight: 900; color: var(--text-m, #191F28); line-height: 1.4; margin: 0 0 16px 0;">
+        <div id="onboarding-step-1" style="display: flex; flex-direction: column; height: 100%; overflow: hidden;">
+            <!-- 🚨 핵심: 스크롤 영역 (하단 바에 가리지 않도록 하단 패딩 넉넉히 부여) -->
+            <div style="flex: 1; padding: 24px; padding-top: 60px; overflow-y: auto; box-sizing: border-box;">
+                <div style="font-size: 40px; margin-bottom: 16px;">👋</div>
+                <h1 style="font-size: 24px; font-weight: 900; color: var(--text-m, #191F28); line-height: 1.4; margin: 0 0 16px 0;">
                     반가워요!<br>우리 아기의 이름(태명)을<br>알려주세요.
                 </h1>
-                <input type="text" id="ob-name" placeholder="예) 튼튼이" style="width: 100%; padding: 16px 0; border: none; border-bottom: 3px solid #3182F6; font-size: 26px; font-weight: 900; color: var(--text-m, #191F28); outline: none; background: transparent; transition: 0.2s;" autocomplete="off">
+                <input type="text" id="ob-name" placeholder="예) 튼튼이" style="width: 100%; padding: 14px 0; border: none; border-bottom: 3px solid #3182F6; font-size: 24px; font-weight: 900; color: var(--text-m, #191F28); outline: none; background: transparent; transition: 0.2s;" autocomplete="off">
             </div>
-            <!-- 버튼은 항상 하단에 고정 -->
-            <div style="padding: 16px 24px 24px 24px; background: var(--bg-card, #FFFFFF);">
-                <button onclick="nextOnboardingStep(2)" style="width: 100%; padding: 18px; border-radius: 16px; background: #191F28; color: #FFFFFF; font-weight: 800; font-size: 16.5px; border: none; cursor: pointer; box-shadow: 0 4px 12px rgba(0,0,0,0.15);">
+            <!-- 버튼은 항상 하단에 고정 (아이폰 하단 홈 바 영역까지 고려한 안전 패딩 적용) -->
+            <div style="padding: 16px 24px; padding-bottom: max(24px, env(safe-area-inset-bottom)); background: var(--bg-card, #FFFFFF); box-sizing: border-box;">
+                <button onclick="nextOnboardingStep(2)" style="width: 100%; padding: 16px; border-radius: 16px; background: #191F28; color: #FFFFFF; font-weight: 800; font-size: 16px; border: none; cursor: pointer; box-shadow: 0 4px 12px rgba(0,0,0,0.15);">
                     다음으로
                 </button>
             </div>
         </div>
 
         <!-- 💡 스텝 2: 날짜 입력 -->
-        <div id="onboarding-step-2" style="display: none; flex-direction: column; height: 100%;">
-            <div style="flex: 1; padding: 24px; padding-top: 80px; overflow-y: auto;">
-                <div style="font-size: 44px; margin-bottom: 20px;">🎂</div>
-                <h1 id="ob-greeting-name" style="font-size: 26px; font-weight: 900; color: var(--text-m, #191F28); line-height: 1.4; margin: 0 0 12px 0;">
+        <div id="onboarding-step-2" style="display: none; flex-direction: column; height: 100%; overflow: hidden;">
+            <div style="flex: 1; padding: 24px; padding-top: 60px; overflow-y: auto; box-sizing: border-box;">
+                <div style="font-size: 40px; margin-bottom: 16px;">🎂</div>
+                <h1 id="ob-greeting-name" style="font-size: 24px; font-weight: 900; color: var(--text-m, #191F28); line-height: 1.4; margin: 0 0 12px 0;">
                     튼튼이의 생일은<br>언제인가요?
                 </h1>
-                <p style="color: var(--text-s, #8B95A1); font-size: 14.5px; font-weight: 600; margin-bottom: 30px;">
+                <p style="color: var(--text-s, #8B95A1); font-size: 14px; font-weight: 600; margin-bottom: 24px;">
                     출산 전이시라면 예정일을 선택해주세요.
                 </p>
-                <input type="date" id="ob-date" style="width: 100%; padding: 18px; border: 1px solid var(--border, #E5E8EB); border-radius: 14px; font-size: 20px; font-weight: 800; color: var(--text-m, #191F28); outline: none; box-sizing: border-box; background: var(--bg-sub, #F8F9FA);">
+                <input type="date" id="ob-date" style="width: 100%; padding: 16px; border: 1px solid var(--border, #E5E8EB); border-radius: 14px; font-size: 18px; font-weight: 800; color: var(--text-m, #191F28); outline: none; box-sizing: border-box; background: var(--bg-sub, #F8F9FA);">
             </div>
-            <div style="padding: 16px 24px 24px 24px; background: var(--bg-card, #FFFFFF); display: flex; gap: 12px;">
-                <button onclick="nextOnboardingStep(1)" style="flex: 1; padding: 18px; border-radius: 16px; background: var(--bg-sub, #F2F4F6); color: var(--text-s, #4E5968); font-weight: 800; font-size: 16px; border: none; cursor: pointer;">
+            <div style="padding: 16px 24px; padding-bottom: max(24px, env(safe-area-inset-bottom)); background: var(--bg-card, #FFFFFF); display: flex; gap: 12px; box-sizing: border-box;">
+                <button onclick="nextOnboardingStep(1)" style="flex: 1; padding: 16px; border-radius: 16px; background: var(--bg-sub, #F2F4F6); color: var(--text-s, #4E5968); font-weight: 800; font-size: 15px; border: none; cursor: pointer;">
                     이전
                 </button>
-                <button onclick="nextOnboardingStep(3)" style="flex: 2; padding: 18px; border-radius: 16px; background: #191F28; color: #FFFFFF; font-weight: 800; font-size: 16.5px; border: none; cursor: pointer; box-shadow: 0 4px 12px rgba(0,0,0,0.15);">
+                <button onclick="nextOnboardingStep(3)" style="flex: 2; padding: 16px; border-radius: 16px; background: #191F28; color: #FFFFFF; font-weight: 800; font-size: 16px; border: none; cursor: pointer; box-shadow: 0 4px 12px rgba(0,0,0,0.15);">
                     다음으로
                 </button>
             </div>
         </div>
 
         <!-- 💡 스텝 3: 이유식 단계 입력 -->
-        <div id="onboarding-step-3" style="display: none; flex-direction: column; height: 100%;">
-            <div style="flex: 1; padding: 24px; padding-top: 80px; overflow-y: auto;">
-                <div style="font-size: 44px; margin-bottom: 20px;">🥄</div>
-                <h1 style="font-size: 26px; font-weight: 900; color: var(--text-m, #191F28); line-height: 1.4; margin: 0 0 12px 0;">
+        <div id="onboarding-step-3" style="display: none; flex-direction: column; height: 100%; overflow: hidden;">
+            <div style="flex: 1; padding: 24px; padding-top: 60px; overflow-y: auto; box-sizing: border-box;">
+                <div style="font-size: 40px; margin-bottom: 16px;">🥄</div>
+                <h1 style="font-size: 24px; font-weight: 900; color: var(--text-m, #191F28); line-height: 1.4; margin: 0 0 8px 0;">
                     현재 <span id="ob-stage-name" style="color:#3182F6;">아기</span>의<br>수유/이유식 단계는요?
                 </h1>
-                <p style="color: var(--text-s, #8B95A1); font-size: 14.5px; font-weight: 600; margin-bottom: 30px;">
+                <p style="color: var(--text-s, #8B95A1); font-size: 14px; font-weight: 600; margin-bottom: 20px;">
                     딱 맞는 정보와 식단을 추천해 드릴게요.
                 </p>
 
-                <div style="display: flex; flex-direction: column; gap: 12px;">
-                    <button onclick="finishOnboarding('모유/분유')" style="width: 100%; padding: 20px; border-radius: 16px; background: var(--bg-sub, #F8F9FA); border: 1px solid var(--border, #E5E8EB); text-align: left; font-size: 16px; font-weight: 800; color: var(--text-m, #191F28); cursor: pointer; transition: 0.2s;">
+                <div style="display: flex; flex-direction: column; gap: 10px; padding-bottom: 20px;">
+                    <button onclick="finishOnboarding('모유/분유')" style="width: 100%; padding: 16px; border-radius: 14px; background: var(--bg-sub, #F8F9FA); border: 1px solid var(--border, #E5E8EB); text-align: left; font-size: 15px; font-weight: 800; color: var(--text-m, #191F28); cursor: pointer; transition: 0.2s;">
                         아직 모유/분유만 먹어요
                     </button>
-                    <button onclick="finishOnboarding('초기 이유식')" style="width: 100%; padding: 20px; border-radius: 16px; background: var(--bg-sub, #F8F9FA); border: 1px solid var(--border, #E5E8EB); text-align: left; font-size: 16px; font-weight: 800; color: var(--text-m, #191F28); cursor: pointer; transition: 0.2s;">
+                    <button onclick="finishOnboarding('초기 이유식')" style="width: 100%; padding: 16px; border-radius: 14px; background: var(--bg-sub, #F8F9FA); border: 1px solid var(--border, #E5E8EB); text-align: left; font-size: 15px; font-weight: 800; color: var(--text-m, #191F28); cursor: pointer; transition: 0.2s;">
                         초기 이유식 시작했어요
                     </button>
-                    <button onclick="finishOnboarding('중후기 이유식')" style="width: 100%; padding: 20px; border-radius: 16px; background: var(--bg-sub, #F8F9FA); border: 1px solid var(--border, #E5E8EB); text-align: left; font-size: 16px; font-weight: 800; color: var(--text-m, #191F28); cursor: pointer; transition: 0.2s;">
+                    <button onclick="finishOnboarding('중후기 이유식')" style="width: 100%; padding: 16px; border-radius: 14px; background: var(--bg-sub, #F8F9FA); border: 1px solid var(--border, #E5E8EB); text-align: left; font-size: 15px; font-weight: 800; color: var(--text-m, #191F28); cursor: pointer; transition: 0.2s;">
                         중/후기 이유식 진행 중이에요
                     </button>
-                    <button onclick="finishOnboarding('유아식/일반식')" style="width: 100%; padding: 20px; border-radius: 16px; background: var(--bg-sub, #F8F9FA); border: 1px solid var(--border, #E5E8EB); text-align: left; font-size: 16px; font-weight: 800; color: var(--text-m, #191F28); cursor: pointer; transition: 0.2s;">
+                    <button onclick="finishOnboarding('유아식/일반식')" style="width: 100%; padding: 16px; border-radius: 14px; background: var(--bg-sub, #F8F9FA); border: 1px solid var(--border, #E5E8EB); text-align: left; font-size: 15px; font-weight: 800; color: var(--text-m, #191F28); cursor: pointer; transition: 0.2s;">
                         이제 어른처럼 유아식/일반식 먹어요 🍚
                     </button>
                 </div>
             </div>
-            <div style="padding: 16px 24px 24px 24px; background: var(--bg-card, #FFFFFF);">
-                <button onclick="nextOnboardingStep(2)" style="width: 100%; padding: 18px; border-radius: 16px; background: var(--bg-sub, #F2F4F6); color: var(--text-s, #4E5968); font-weight: 800; font-size: 16px; border: none; cursor: pointer;">
+            <div style="padding: 16px 24px; padding-bottom: max(24px, env(safe-area-inset-bottom)); background: var(--bg-card, #FFFFFF); box-sizing: border-box;">
+                <button onclick="nextOnboardingStep(2)" style="width: 100%; padding: 16px; border-radius: 16px; background: var(--bg-sub, #F2F4F6); color: var(--text-s, #4E5968); font-weight: 800; font-size: 15px; border: none; cursor: pointer;">
                     이전
                 </button>
             </div>
