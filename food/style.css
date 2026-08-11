@@ -343,3 +343,15 @@ body.dark-mode button[style*="FEE500"] *,
 body.dark-mode a[style*="FEE500"] * {
     color: #191919 !important;
 }
+
+/* ⚠️ 반드시 파일 맨 마지막 (카카오 노란 버튼 보호) */
+body.dark-mode .container button[style*="FEE500"],
+body.dark-mode .container a[style*="FEE500"],
+body.dark-mode #food-result-area button[style*="FEE500"] {
+    background-color: #FEE500 !important;
+    color: #191919 !important;
+}
+body.dark-mode .container button[style*="FEE500"] *,
+body.dark-mode #food-result-area button[style*="FEE500"] * {
+    color: #191919 !important;
+}
