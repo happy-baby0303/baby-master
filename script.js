@@ -8738,11 +8738,6 @@ window.showPostOptions = async function() {
         }
     } catch (e) { console.warn("관리자 권한 확인 에러", e); }
     if (localStorage.getItem('tosil_is_master') === 'true') isMasterAdmin = true;
-                }
-            }
-        }
-    } catch (e) { console.warn("관리자 권한 확인 에러", e); }
-    if (localStorage.getItem('tosil_is_master') === 'true') isMasterAdmin = true;
 
     let existing = document.getElementById('post-action-sheet');
     if(existing) existing.remove();
@@ -8770,12 +8765,12 @@ window.showPostOptions = async function() {
             <div onclick="window.editPost('${postId}')" style="padding: 16px 0; font-size: 16px; font-weight: 700; color: #333D4B; border-bottom: 1px solid #F2F4F6; cursor: pointer; display: flex; align-items: center; gap: 12px;">
                 <span style="font-size: 20px;">✏️</span> 글 수정하기
             </div>
-            <div onclick="window.deletePost('${postId}'); document.getElementById('post-action-sheet').remove();" style="padding: 16px 0; font-size: 16px; font-weight: 700; color: #F04452; cursor: pointer; display: flex; align-items: center; gap: 12px;">
+            <div onclick="window.deletePost('${postId}'); document.getElementById('post-action-sheet').remove();" style="padding: 16px 0; font-size: 16px; font-weight: 700; color: #F04452; border-bottom: 1px solid #F2F4F6; cursor: pointer; display: flex; align-items: center; gap: 12px;">
                 <span style="font-size: 20px;">🗑️</span> 글 삭제하기
             </div>
         `;
     } 
-   // 🧍‍♂️ 3. 남의 글
+    // 🧍‍♂️ 3. 남의 글
     else {
         menuHtml = `
             <div onclick="window.reportContent('post', '${postId}', '${post.authorId}'); document.getElementById('post-action-sheet').remove();" style="padding: 16px 0; font-size: 16px; font-weight: 700; color: #F04452; border-bottom: 1px solid #F2F4F6; cursor: pointer; display: flex; align-items: center; gap: 12px;">
