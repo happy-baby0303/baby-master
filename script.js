@@ -12150,10 +12150,10 @@ window.saveParentNoticeToFirebase = async function(text) {
         const syncCode = window.getSyncCode(); if (!syncCode) return;
         try {
             // 🚨 [다둥이 패치] 조부모 전달사항 경로 분리
-            await setDoc(doc(db, "parent_notice_" + syncCode + window.currentBabySuffix, "status"), { 
-                notice: text,
-                updatedAt: new Date().getTime() 
-            }, { merge: true });
+            await setDoc(doc(db, "parentNotice_" + syncCode + window.currentBabySuffix, "status"), {  
+    notice: text, 
+    updatedAt: new Date().getTime()  
+}, { merge: true });
         } catch (e) {
             console.warn("전달사항 서버 전송 실패:", e);
         }
@@ -12165,7 +12165,7 @@ let parentNoticeUnsubscribe = null;
 window.startParentNoticeRealtimeSync = function() {
     const syncCode = window.getSyncCode(); if (!syncCode) return;
     // 🚨 [다둥이 패치] 조부모 전달사항 수신 경로 분리
-    const docRef = typeof doc !== 'undefined' && typeof window.db !== 'undefined' ? doc(window.db, "parent_notice_" + syncCode + window.currentBabySuffix, "status") : null;
+   const docRef = typeof doc !== 'undefined' && typeof window.db !== 'undefined' ? doc(window.db, "parentNotice_" + syncCode + window.currentBabySuffix, "status") : null;
     
     if (!docRef) return; 
     if (parentNoticeUnsubscribe) parentNoticeUnsubscribe();
