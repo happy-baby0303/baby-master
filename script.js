@@ -7329,17 +7329,28 @@ window.openPoopAI = function(type) {
         showPoopAI(); 
     }
 };
+
 // ==========================================
-// 🔗 부부 연동 해지 기능
+// 🔗 부부 연동 해지 기능 (좀비 코드 완벽 파기 패치)
 // ==========================================
 window.unlinkFamilySync = function() {
-    showConfirm(
-        "정말 가족 연동을 해지하시겠습니까?<br><span style='font-size:12px; color:#8B95A1; font-weight:600;'>해지해도 내 폰의 기록은 지워지지 않지만, 더 이상 가족간 실시간으로 공유되지 않습니다.</span>",
-        function() {
-            // 1. 로컬 스토리지에서 가족 동기화 코드 삭제 (연결 고리 끊기)
+    window.showConfirm(
+        "정말 가족 연동을 해지하시겠습니까?<br><span style='font-size:12px; color:#8B95A1; font-weight:600;'>해지하면 옛날 코드는 영구 폐기되며 새 코드로 시작합니다.</span>",
+        async function() {
+            // 1. 내 폰에서 삭제
             localStorage.removeItem("family_sync_code");
             
-            // 2. 알림 띄우기
+            // 2. 🚨 카카오 백업 서버에서도 삭제! (새로고침 시 좀비처럼 부활하는 현상 차단)
+            const kakaoId = localStorage.getItem('kakao_id');
+            if (kakaoId && typeof window.db !== 'undefined') {
+                try {
+                    // v8 호환 문법으로 카카오 백업 DB 초기화
+                    if (typeof window.db.collection === 'function') {
+                        await window.db.collection('kakao_users').doc(String(kakaoId)).set({ family_sync_code: null }, { merge: true });
+                    }
+                } catch(e) { console.warn("서버 백업 지우기 에러:", e); }
+            }
+            
             window.showToast("💔 가족 연동이 안전하게 해제되었습니다.");
             
             // 3. 1초 뒤에 앱을 새로고침해서 완전 초기화된 상태로 만듦
@@ -7347,12 +7358,9 @@ window.unlinkFamilySync = function() {
                 location.reload(); 
             }, 1000);
         },
-        "🔗", // 아이콘
-        "해지하기", // 버튼 이름
-        "#F04452" // 버튼 색상 (빨간색)
+        "🔗", "해지하기", "#F04452" 
     );
 };
-
 // ==========================================
 // 🛡️ [가족 연동 해제 안전장치] 실수 방지용 3중 자물쇠
 // ==========================================
@@ -9564,6 +9572,9 @@ window.handleProfileImageSelection = function(event) {
     event.target.value = ''; 
 };
 
+// ==========================================
+// 👤 마이페이지 프로필 & 관리자 권한 연동 엔진 (파이어베이스 UID 기반)
+// ==========================================
 window.updateMyPageProfile = async function() {
     let myNickname = localStorage.getItem('community_nickname');
     if (!myNickname) {
@@ -9573,7 +9584,7 @@ window.updateMyPageProfile = async function() {
     const nicknameInput = document.getElementById('comm-nickname-input');
     if (nicknameInput) nicknameInput.value = myNickname;
 
-    // 🔒 파이어베이스 로그인된 유저의 진짜 UID 가져오기
+    // 🔒 카카오 ID가 아니라, 파이어베이스 로그인된 유저의 진짜 UID 가져오기
     const user = window.auth ? window.auth.currentUser : null;
     const myUid = user ? user.uid : localStorage.getItem('firebase_uid');
 
@@ -9582,8 +9593,8 @@ window.updateMyPageProfile = async function() {
         localStorage.removeItem('tosil_is_master');
         localStorage.removeItem('tosil_is_subadmin');
     } else {
-        // 👑 [1순위 직통 방어] 대표님 파이어베이스 UID 등록
-        const MASTER_UIDS = ["7Xj1jGZcV4OdWsyQrtUkuGq0HqJ3", "대표님다른기기UID"]; 
+        // 👑 [1순위 직통 방어] 대표님 파이어베이스 UID 등록!
+        const MASTER_UIDS = ["7Xj1jGZcV4OdWsyQrtUkuGq0HqJ3"]; 
         
         const isHardcodedMaster = MASTER_UIDS.some(id => String(id).trim() === String(myUid).trim());
 
