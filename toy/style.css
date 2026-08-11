@@ -591,3 +591,28 @@ body.dark-mode .theme-card.active { border: 2px solid #60A5FA !important; }
 body.dark-mode .sos-theme-panel::after {
     background: linear-gradient(to right, rgba(0,0,0,0), rgba(0,0,0,1));
 }
+
+/* ========================================== */
+/* 🌙 건전지 안내 박스 */
+/* ========================================== */
+body.dark-mode [style*="background:#FFFBEB"],
+body.dark-mode [style*="background: #FFFBEB"] {
+    background-color: #2D2513 !important;
+    border-color: #5C4300 !important;
+}
+body.dark-mode [style*="background:#FFFBEB"] b,
+body.dark-mode [style*="background: #FFFBEB"] b,
+body.dark-mode [style*="background:#FFFBEB"] strong,
+body.dark-mode [style*="background: #FFFBEB"] strong {
+    color: #FDE68A !important;
+}
+body.dark-mode [style*="background:#FFFBEB"],
+body.dark-mode [style*="background: #FFFBEB"],
+body.dark-mode [style*="background:#FFFBEB"] div,
+body.dark-mode [style*="background: #FFFBEB"] div {
+    color: #FCD34D !important;
+}
+body.dark-mode [style*="background:#FFFBEB"] a,
+body.dark-mode [style*="background: #FFFBEB"] a {
+    color: #FBBF24 !important;
+}
