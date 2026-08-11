@@ -518,29 +518,35 @@ body.dark-mode .result-title,
 body.dark-mode #result-top-title,
 body.dark-mode .filter-label { color: #F9FAFB !important; }
 
-/* 공식 출고가 등 카드 안 흐린 글씨 전부 */
-body.dark-mode .stroller-card [style*="color: #8B95A1"],
-body.dark-mode .stroller-card [style*="color:#8B95A1"],
-body.dark-mode .stroller-card [style*="color: #B0B8C1"],
-body.dark-mode .stroller-card [style*="color:#B0B8C1"],
-body.dark-mode .stroller-card [style*="color: #6B7684"],
-body.dark-mode .stroller-card [style*="color: #4E5968"],
-body.dark-mode .stroller-card [style*="color:#4E5968"] { color: #B0B8C1 !important; }
+/* ========================================== */
+/* 🌙 유모차 - 카드 조건 없이 전역 적용 */
+/* ========================================== */
 
-/* 그래프 박스 (흰 배경 유지 + 안쪽 글씨 검게) */
-body.dark-mode .stroller-card [style*="background: #FFFFFF"],
-body.dark-mode .stroller-card [style*="background:#FFFFFF"] {
-    background-color: #FFFFFF !important;
-    border-color: #E5E8EB !important;
-}
-body.dark-mode .stroller-card [style*="background: #FFFFFF"] *,
-body.dark-mode .stroller-card [style*="background:#FFFFFF"] * {
-    color: #191F28 !important;
-}
+/* 흐린 글씨 전부 밝게 */
+body.dark-mode [style*="color: #8B95A1"],
+body.dark-mode [style*="color:#8B95A1"],
+body.dark-mode [style*="color: #B0B8C1"],
+body.dark-mode [style*="color:#B0B8C1"],
+body.dark-mode [style*="color: #6B7684"],
+body.dark-mode [style*="color:#6B7684"],
+body.dark-mode [style*="color: #D1D6DB"],
+body.dark-mode [style*="color:#D1D6DB"] { color: #B0B8C1 !important; }
 
-/* 접기/펼치기 버튼 */
-body.dark-mode .show-more-btn {
-    background: #202632 !important;
-    color: #E5E8EB !important;
+/* 흰 배경 박스 → 어둡게 + 안쪽 글씨 밝게 (3자리 #FFF 포함) */
+body.dark-mode [style*="background: #FFF"],
+body.dark-mode [style*="background:#FFF"],
+body.dark-mode [style*="background: #fff"],
+body.dark-mode [style*="background:#fff"] {
+    background-color: #202632 !important;
     border-color: #333D4B !important;
 }
+body.dark-mode [style*="background: #FFF"] *,
+body.dark-mode [style*="background:#FFF"] *,
+body.dark-mode [style*="background: #fff"] *,
+body.dark-mode [style*="background:#fff"] * { color: #E5E8EB !important; }
+
+/* 결과 제목 */
+body.dark-mode .result-title,
+body.dark-mode #result-top-title,
+body.dark-mode .filter-label,
+body.dark-mode .vs-label-text { color: #F9FAFB !important; }
