@@ -2215,8 +2215,10 @@ body.mode-senior .hide-on-senior { display: none !important; }
     // 🤝 [로그인 감지 & 자동 연동]
     onAuthStateChanged(auth, async (user) => {
         if (!user) return;
+        console.log("✅ 현재 로그인된 유저 UID:", user.uid);
         localStorage.setItem('firebase_uid', user.uid); 
 
+        // 1. 초대 링크(딥링크)로 들어온 경우 우선 처리
         const pendingCode = localStorage.getItem('pending_invite_code');
         if (pendingCode && pendingCode !== localStorage.getItem('family_sync_code')) {
             const obOverlay = document.getElementById('onboarding-overlay');
@@ -2225,7 +2227,30 @@ body.mode-senior .hide-on-senior { display: none !important; }
             return;
         }
 
-        if (!localStorage.getItem('family_sync_code')) {
+        // 2. 이미 로컬에 가족 코드가 있는 경우 (기존 유저)
+        let currentCode = localStorage.getItem('family_sync_code');
+        
+        if (currentCode) {
+            try {
+                const ref = doc(window.db, "families", currentCode);
+                const snap = await getDoc(ref);
+                if (snap.exists()) {
+                    const data = snap.data();
+                    // 🛡️ 구형 방이라 members 필드가 없다면, 현재 접속한 유저의 UID를 즉시 등록하여 살려냄!
+                    if (!data.members) {
+                        await updateDoc(ref, {
+                            members: [user.uid]
+                        });
+                        console.log("🛠️ 구형 방 자동 마이그레이션 완료 (members 생성됨)");
+                    }
+                }
+            } catch (e) {
+                console.warn("⚠️ 자동 마이그레이션 중 예외 발생:", e);
+            }
+        }
+
+        // 3. 코드가 아예 없을 때만 신규 8자리 방 생성
+        if (!currentCode) {
             const rand = () => Math.random().toString(36).substr(2, 4).toUpperCase();
             const personalCode = "TS-" + rand() + rand(); 
             const ref = doc(window.db, "families", personalCode);
