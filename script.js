@@ -2873,9 +2873,9 @@ window.closeFamilySyncModalForce = closeFamilySyncModalForce;
 window.closeFamilySyncModal = closeFamilySyncModal;
 
 // ==========================================
-// 🔗 상단 연동 상태 배지 업데이트 (오터치 방지 적용!)
+// 🔗 상단 연동 상태 배지 업데이트 (감성 200% 패치 🤍)
 // ==========================================
-function updateSyncBadge() {
+window.updateSyncBadge = function() {
     const syncCode = localStorage.getItem('family_sync_code'); 
     const badgeBtn = document.getElementById('sync-badge-btn');
     const badgeText = document.getElementById('sync-status-text');
@@ -2884,28 +2884,23 @@ function updateSyncBadge() {
     if (!badgeBtn || !badgeText) return; 
 
     if (syncCode) {
-        // ✅ [연동 완료 상태]
+        // ✅ [클라우드 방 활성화 상태]
         badgeBtn.style.background = "#E8F0FE";
         badgeBtn.style.color = "#1A73E8";
-        badgeText.innerText = "연동완료";
-        if(badgeIcon) badgeIcon.innerText = "🔗";
+        badgeText.innerText = "안심 보관중"; 
+        if(badgeIcon) badgeIcon.innerText = "☁️"; 
         
-        // 💡 [핵심 해결책] 연동 완료 시에는 클릭(터치)을 무시하도록 설정!
-        // 이렇게 하면 톱니바퀴를 누를 때 겹치더라도 톱니바퀴가 정상적으로 눌립니다.
         badgeBtn.style.pointerEvents = "none"; 
-        
     } else {
-        // ❌ [연동 필요 상태]
-        badgeBtn.style.background = "#FFF3CD";
-        badgeBtn.style.color = "#856404";
-        badgeText.innerText = "연동 필요!";
-        if(badgeIcon) badgeIcon.innerText = "🚨";
+        // ❌ [방 없음 상태]
+        badgeBtn.style.background = "#FFF0F1";
+        badgeBtn.style.color = "#F04452";
+        badgeText.innerText = "가족 초대하기"; 
+        if(badgeIcon) badgeIcon.innerText = "💌"; 
         
-        // 연동 전에는 배지를 눌러서 설정창 등으로 이동해야 하므로 터치 활성화
         badgeBtn.style.pointerEvents = "auto"; 
     }
-}
-window.updateSyncBadge = updateSyncBadge;
+};
 
 // ==========================================
 // 💰 [가계부 리스너] 파이어베이스 연동 연결고리 - 오프라인 방어막 추가!
