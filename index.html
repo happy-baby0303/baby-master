@@ -2212,7 +2212,7 @@ body.mode-senior .hide-on-senior { display: none !important; }
             });
     };
 
-    // 🤝 [로그인 감지 & 자동 연동]
+// 🤝 [로그인 감지 & 안전한 연동]
     onAuthStateChanged(auth, async (user) => {
         if (!user) return;
         console.log("✅ 현재 로그인된 유저 UID:", user.uid);
@@ -2227,29 +2227,9 @@ body.mode-senior .hide-on-senior { display: none !important; }
             return;
         }
 
-        // 2. 이미 로컬에 가족 코드가 있는 경우 (기존 유저)
+        // 2. 코드가 아예 없거나 새로 시작하는 경우에만 8자리 신규 방 생성
         let currentCode = localStorage.getItem('family_sync_code');
         
-        if (currentCode) {
-            try {
-                const ref = doc(window.db, "families", currentCode);
-                const snap = await getDoc(ref);
-                if (snap.exists()) {
-                    const data = snap.data();
-                    // 🛡️ 구형 방이라 members 필드가 없다면, 현재 접속한 유저의 UID를 즉시 등록하여 살려냄!
-                    if (!data.members) {
-                        await updateDoc(ref, {
-                            members: [user.uid]
-                        });
-                        console.log("🛠️ 구형 방 자동 마이그레이션 완료 (members 생성됨)");
-                    }
-                }
-            } catch (e) {
-                console.warn("⚠️ 자동 마이그레이션 중 예외 발생:", e);
-            }
-        }
-
-        // 3. 코드가 아예 없을 때만 신규 8자리 방 생성
         if (!currentCode) {
             const rand = () => Math.random().toString(36).substr(2, 4).toUpperCase();
             const personalCode = "TS-" + rand() + rand(); 
@@ -2261,7 +2241,7 @@ body.mode-senior .hide-on-senior { display: none !important; }
                     babyName: localStorage.getItem("tosil_babyName") || "우리아기",
                     babyBirth: localStorage.getItem("tosil_startDate") || "",
                     plan: "free",
-                    members: [user.uid]
+                    members: [user.uid] // 최초 생성 시점에 내 UID를 안전하게 박음
                 });
             }
             localStorage.setItem('family_sync_code', personalCode);
@@ -2269,7 +2249,6 @@ body.mode-senior .hide-on-senior { display: none !important; }
 
         if (typeof window.initRealtimeSync === 'function') window.initRealtimeSync();
     });
-
     // 🔗 가족 코드 확인하기
     window.createSyncCode = async () => {
         const existing = localStorage.getItem('family_sync_code');
