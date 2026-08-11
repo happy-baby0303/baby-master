@@ -482,3 +482,54 @@ body.dark-mode .theme-card.active {
     border: 2px solid #60A5FA !important;
     background: #16243B !important;
 }
+
+/* 결과 제목은 박스 없이 텍스트만 */
+#toy-result-area > div:first-child,
+body.dark-mode #toy-result-area > div:first-child {
+    background: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
+    padding: 0 4px 12px 4px !important;
+    margin-bottom: 4px !important;
+}
+body.dark-mode #toy-result-area > div:first-child { color: #F9FAFB !important; }
+
+/* SOS 패널 - 박스 제거하고 카드만 */
+.sos-theme-panel {
+    background: transparent !important;
+    padding: 0 !important;
+    border: none !important;
+    margin-bottom: 28px !important;
+    box-shadow: none !important;
+}
+.theme-scroll-wrapper {
+    display: flex !important;
+    gap: 10px !important;
+    overflow-x: auto !important;
+    padding: 4px 4px 14px 4px !important;
+    scrollbar-width: none !important;
+}
+.theme-scroll-wrapper::-webkit-scrollbar { display: none; }
+
+.theme-card {
+    flex-shrink: 0 !important;
+    min-width: 145px !important;
+    padding: 18px 16px !important;
+    border-radius: 18px !important;
+    background: #FFFFFF !important;
+    border: 1px solid #E5E8EB !important;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.03) !important;
+    text-align: left !important;
+    cursor: pointer !important;
+    transition: 0.2s !important;
+}
+.theme-emoji { font-size: 26px !important; margin-bottom: 12px !important; display: block !important; }
+.theme-text { font-size: 12px !important; color: #8B95A1 !important; line-height: 1.45 !important; font-weight: 700 !important; }
+.theme-text b { display: block !important; margin-top: 5px !important; font-size: 13.5px !important; color: #191F28 !important; font-weight: 900 !important; }
+
+.theme-card.active { border: 2px solid #3182F6 !important; background: #F0F7FF !important; }
+
+body.dark-mode .theme-card { background: #191F28 !important; border-color: #333D4B !important; }
+body.dark-mode .theme-text { color: #8B95A1 !important; }
+body.dark-mode .theme-text b { color: #FFFFFF !important; }
+body.dark-mode .theme-card.active { background: #16243B !important; border-color: #60A5FA !important; }
