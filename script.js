@@ -690,7 +690,7 @@ window.closeSOS = function(e) { if(e.target.id === 'sos-modal') closeSOSForce();
 // ==========================================
 async function saveLedgerToFirebase(data) {
     if (typeof db !== 'undefined' && typeof setDoc === 'function') {
-        const syncCode = window.getSyncCode();
+        const syncCode = window.getSyncCode(); if (!syncCode) return;
         // 🚨 [다둥이 패치] 가계부 저장 경로 분리
         try { await setDoc(doc(db, "ledger_" + syncCode + window.currentBabySuffix, "status"), data); } catch (e) { console.error(e); }
     }
@@ -1450,7 +1450,7 @@ async function addFeverRecord() {
     records.unshift(record); if(records.length > 10) records.pop(); 
     
     if (typeof db !== 'undefined' && typeof setDoc === 'function') {
-        const syncCode = window.getSyncCode();
+        const syncCode = window.getSyncCode(); if (!syncCode) return;
         // 🚨 [다둥이 패치] 해열제 저장 경로 분리
         const docRef = doc(db, "fever_" + syncCode + window.currentBabySuffix, "status");
         try { await setDoc(docRef, { records: records }, { merge: true }); } catch (e) {}
@@ -1609,7 +1609,7 @@ async function clearFeverRecord() {
         localStorage.removeItem('tosil_fever_records'); 
         
         if (typeof db !== 'undefined' && typeof setDoc === 'function') {
-            const syncCode = window.getSyncCode();
+            const syncCode = window.getSyncCode(); if (!syncCode) return;
             // 🚨 [다둥이 패치] 해열제 삭제 경로 분리
             try { await setDoc(doc(db, "fever_" + syncCode + window.currentBabySuffix, "status"), { records: [] }); } catch (e) {}
         }
@@ -1668,7 +1668,7 @@ window.downloadFeverReport = downloadFeverReport;
 // ==========================================
 let feverUnsubscribe = null;
 function startFeverRealtimeSync() {
-    const syncCode = window.getSyncCode();
+    const syncCode = window.getSyncCode(); if (!syncCode) return;
     // 🚨 [다둥이 패치] 해열제 수신 경로 분리
     const docRef = typeof doc !== 'undefined' && typeof window.db !== 'undefined' ? doc(window.db, "fever_" + syncCode + window.currentBabySuffix, "status") : null;
     
@@ -2318,7 +2318,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     let pendingSync = localStorage.getItem('tosil_cube_pending_sync');
     if (pendingSync && typeof db !== 'undefined') {
         let records = JSON.parse(pendingSync);
-        const syncCode = window.getSyncCode();
+        const syncCode = window.getSyncCode(); if (!syncCode) return;
         try {
             // 🚨 [다둥이 패치] 큐브 차감 경로 분리
             await setDoc(doc(db, "cube_" + syncCode + window.currentBabySuffix, "status"), { records: records });
@@ -2370,7 +2370,7 @@ async function addCubeRecord() {
     records.push(newCube);
     
     if (typeof db !== 'undefined') {
-        const syncCode = window.getSyncCode();
+        const syncCode = window.getSyncCode(); if (!syncCode) return;
         // 🚨 [다둥이 패치] 큐브 추가 경로 분리
         try { await setDoc(doc(db, "cube_" + syncCode + window.currentBabySuffix, "status"), { records: records }); } catch (e) { console.error(e); }
     }
@@ -2394,7 +2394,7 @@ async function useCube(id) {
     }
 
     if (typeof db !== 'undefined') {
-        const syncCode = window.getSyncCode();
+        const syncCode = window.getSyncCode(); if (!syncCode) return;
         // 🚨 [다둥이 패치] 큐브 사용 경로 분리
         try { await setDoc(doc(db, "cube_" + syncCode + window.currentBabySuffix, "status"), { records: records }); } 
         catch (e) { console.error(e); }
@@ -2456,7 +2456,7 @@ window.useCube = useCube;
 // ==========================================
 let cubeUnsubscribe = null;
 function startCubeRealtimeSync() {
-    const syncCode = window.getSyncCode();
+    const syncCode = window.getSyncCode(); if (!syncCode) return;
     // 🚨 [다둥이 패치] 큐브 수신 경로 분리
     const docRef = typeof doc !== 'undefined' && typeof window.db !== 'undefined' ? doc(window.db, "cube_" + syncCode + window.currentBabySuffix, "status") : null;
     
@@ -2568,7 +2568,7 @@ document.addEventListener("DOMContentLoaded", () => {
 // ==========================================
 async function saveBatonToFirebase(records) {
     if (typeof db !== 'undefined' && typeof setDoc === 'function') {
-        const syncCode = window.getSyncCode();
+        const syncCode = window.getSyncCode(); if (!syncCode) return;
         try { await setDoc(doc(db, "baton_" + syncCode, "status"), { records }); } catch (e) {}
     }
     localStorage.setItem('tosil_baton_records', JSON.stringify(records));
@@ -2780,7 +2780,7 @@ function toggleFoodStatus(itemName) {
 // ==========================================
 let batonUnsubscribe = null;
 function startBatonRealtimeSync() {
-    const syncCode = window.getSyncCode();
+    const syncCode = window.getSyncCode(); if (!syncCode) return;
     const docRef = typeof doc !== 'undefined' && typeof window.db !== 'undefined' ? doc(window.db, "baton_" + syncCode, "status") : null;
     
     if(!docRef) return; 
@@ -2909,7 +2909,7 @@ window.updateSyncBadge = function() {
 // ==========================================
 let ledgerUnsubscribe = null;
 function startLedgerRealtimeSync() {
-    const syncCode = window.getSyncCode();
+    const syncCode = window.getSyncCode(); if (!syncCode) return;
     // 🚨 [다둥이 패치] 가계부 수신 경로 분리
     const docRef = typeof doc !== 'undefined' && typeof window.db !== 'undefined' ? doc(window.db, "ledger_" + syncCode + window.currentBabySuffix, "status") : null;
     if(!docRef) return; 
@@ -5043,7 +5043,7 @@ window.saveRoutineSettings = function() {
     
     let routineData = JSON.parse(localStorage.getItem('tosil_routine_data')) || {};
     if (typeof db !== 'undefined' && typeof setDoc === 'function') {
-        const syncCode = window.getSyncCode();
+        const syncCode = window.getSyncCode(); if (!syncCode) return;
         const todayStr = window.getSafeTodayStr();
         setDoc(doc(db, "routine_" + syncCode, "status"), { 
             data: routineData, 
@@ -5065,7 +5065,7 @@ window.toggleRoutine = async function(id) {
     if (typeof window.renderRoutineChecklist === 'function') window.renderRoutineChecklist();
 
     if (typeof db !== 'undefined' && typeof setDoc === 'function') {
-        const syncCode = window.getSyncCode();
+        const syncCode = window.getSyncCode(); if (!syncCode) return;
         const todayStr = window.getSafeTodayStr();
         try { 
             await setDoc(doc(db, "routine_" + syncCode + window.currentBabySuffix, "status"), { 
@@ -5081,32 +5081,40 @@ window.toggleRoutine = async function(id) {
 // 🚀 [CS 방어 1&4번] 불사조 오프라인 큐 & 1인 유저 자동 백업 엔진
 // ==========================================
 window.saveTrackerToFirebase = async function(records) {
-    // 1. 폰(로컬)에 먼저 저장해서 화면은 0.1초 만에 바뀌게 (체감속도 유지 & 데이터 절대 안 날아감)
+    // 1. 내 폰(로컬)에 먼저 저장해서 화면은 0.1초 만에 바뀌게 (체감속도 유지)
     localStorage.setItem('tosil_tracker_records', JSON.stringify(records));
     if(typeof window.updateTrackerDashboard === 'function') window.updateTrackerDashboard();
 
-    // 2. 🚨 [오프라인 방어막] 네트워크가 끊겨있으면 여기서 스무스하게 종료! (로컬에는 이미 저장됨)
+    // 🚨 [오프라인 방어막] 네트워크가 꺼져있으면 '오프라인 큐'에 깃발만 꽂아두고 스무스하게 종료!
     if (!navigator.onLine) {
         localStorage.setItem('tosil_offline_queue_tracker', 'true');
         console.warn("오프라인 상태입니다. 기기에만 임시 저장 후 통신 재개 시 동기화합니다.");
         return;
     }
 
-    // 3. 서버 전송은 가족 코드가 있을 때만 실행 (울타리 친 부분)
-    const syncCode = window.getSyncCode(); 
-    if (syncCode && typeof db !== 'undefined' && typeof setDoc === 'function') {
+    // 2. 서버로 전송
+    if (typeof db !== 'undefined' && typeof setDoc === 'function') {
+        let syncCode = localStorage.getItem("family_sync_code");
+        
+        // 🚨 [데이터 증발 방어막] 가족 연동을 안 한 유저라도 카카오 ID가 있으면 무조건 개인 백업 진행!
+        if (!syncCode) {
+            const kakaoId = localStorage.getItem("kakao_id");
+            if (kakaoId) {
+                syncCode = "personal_backup_" + kakaoId; 
+            } else {
+                return; // 로그인도 안 한 유저는 어쩔 수 없이 폰에만 저장
+            }
+        }
+        
         try { 
             await setDoc(doc(db, "tracker_" + syncCode, "status"), { records: records }); 
-            // 전송 성공 시 오프라인 큐 깃발 뽑기
+            // 전송에 성공하면 오프라인 큐 깃발 뽑기
             localStorage.removeItem('tosil_offline_queue_tracker'); 
         } catch (e) { 
             console.error("트래커 클라우드 저장 실패", e); 
-            // 에러 시 다음 기회를 위해 오프라인 큐 깃발 꽂아둠
+            // 에러 나면 다음 기회를 위해 오프라인 큐 깃발 꽂아둠
             localStorage.setItem('tosil_offline_queue_tracker', 'true');
         }
-    } else {
-        // 가족 코드가 없는 1인 유저는 오프라인 큐 불필요
-        localStorage.removeItem('tosil_offline_queue_tracker');
     }
 };
 
@@ -5133,7 +5141,7 @@ window.flushOfflineQueue = async function() {
     if (localStorage.getItem('tosil_offline_queue_growth') === 'true') {
         const growthRecords = JSON.parse(localStorage.getItem('tosil_growth_records')) || [];
         if (typeof db !== 'undefined' && typeof setDoc === 'function' && typeof doc === 'function') {
-            const syncCode = window.getSyncCode();
+            const syncCode = window.getSyncCode(); if (!syncCode) return;
             if (syncCode) {
                 try { 
                     await setDoc(doc(db, "growth_" + syncCode, "status"), { records: growthRecords }); 
@@ -5371,7 +5379,7 @@ window.saveTrackerRecord = async function() {
             originalSetItem.call(localStorage, otherKey, JSON.stringify(otherRecords));
             
             if (typeof db !== 'undefined' && typeof setDoc === 'function') {
-                const syncCode = window.getSyncCode();
+                const syncCode = window.getSyncCode(); if (!syncCode) return;
                 if (syncCode) setDoc(doc(db, "tracker_" + syncCode + baby.id, "status"), { records: otherRecords }).catch(e=>{});
             }
         });
@@ -5405,7 +5413,7 @@ window.toggleRoutine = async function(id) {
     routineData[id] = !routineData[id];
     
    if (typeof db !== 'undefined' && typeof setDoc === 'function') {
-        const syncCode = window.getSyncCode();
+        const syncCode = window.getSyncCode(); if (!syncCode) return;
         try { 
             // 🚨 [다둥이 패치] 루틴 토글 경로 분리
             await setDoc(doc(db, "routine_" + syncCode + window.currentBabySuffix, "status"), { 
@@ -5428,7 +5436,7 @@ let routineUnsubscribe = null;
 let settingsUnsubscribe = null; // 🌟 아기 설정값 연동 리스너 추가
 
 window.startTrackerRealtimeSync = function() {
-    const syncCode = window.getSyncCode();
+    const syncCode = window.getSyncCode(); if (!syncCode) return;
     const docRef = typeof doc !== 'undefined' && typeof window.db !== 'undefined' ? doc(window.db, "tracker_" + syncCode, "status") : null;
     if(!docRef) return; 
     if (trackerUnsubscribe) trackerUnsubscribe();
@@ -5466,7 +5474,7 @@ window.startTrackerRealtimeSync = function() {
 
 // 👇 기존 비타민 연동 코드 무사히 보존 완료! 👇
 window.startRoutineRealtimeSync = function() {
-    const syncCode = window.getSyncCode();
+    const syncCode = window.getSyncCode(); if (!syncCode) return;
     const docRef = typeof doc !== 'undefined' && typeof window.db !== 'undefined' ? doc(window.db, "routine_" + syncCode + window.currentBabySuffix, "status") : null;
     if(!docRef) return; 
     if (routineUnsubscribe) routineUnsubscribe();
@@ -8728,13 +8736,9 @@ window.showPostOptions = async function() {
     let isMasterAdmin = false;
     try {
         if (typeof window.db !== 'undefined' && typeof window.getDoc === 'function') {
-            const myUid = localStorage.getItem('firebase_uid');
-            if (myUid) {
-                const adminSnap = await window.getDoc(window.doc(window.db, "admins", myUid));
-                if (adminSnap.exists() && (adminSnap.data().allowed === true || adminSnap.data().role === 'master_admin')) {
-                    isMasterAdmin = true;
-                }
-            }
+            const myKakaoId = localStorage.getItem('kakao_id') || 'MasterAdminKey';
+            const adminSnap = await window.getDoc(window.doc(window.db, "admins", String(myKakaoId)));
+            if (adminSnap.exists() && adminSnap.data().allowed === true) isMasterAdmin = true;
         }
     } catch (e) { console.warn("관리자 권한 확인 에러", e); }
     if (localStorage.getItem('tosil_is_master') === 'true') isMasterAdmin = true;
@@ -8765,12 +8769,12 @@ window.showPostOptions = async function() {
             <div onclick="window.editPost('${postId}')" style="padding: 16px 0; font-size: 16px; font-weight: 700; color: #333D4B; border-bottom: 1px solid #F2F4F6; cursor: pointer; display: flex; align-items: center; gap: 12px;">
                 <span style="font-size: 20px;">✏️</span> 글 수정하기
             </div>
-            <div onclick="window.deletePost('${postId}'); document.getElementById('post-action-sheet').remove();" style="padding: 16px 0; font-size: 16px; font-weight: 700; color: #F04452; border-bottom: 1px solid #F2F4F6; cursor: pointer; display: flex; align-items: center; gap: 12px;">
+            <div onclick="window.deletePost('${postId}'); document.getElementById('post-action-sheet').remove();" style="padding: 16px 0; font-size: 16px; font-weight: 700; color: #F04452; cursor: pointer; display: flex; align-items: center; gap: 12px;">
                 <span style="font-size: 20px;">🗑️</span> 글 삭제하기
             </div>
         `;
     } 
-    // 🧍‍♂️ 3. 남의 글
+   // 🧍‍♂️ 3. 남의 글
     else {
         menuHtml = `
             <div onclick="window.reportContent('post', '${postId}', '${post.authorId}'); document.getElementById('post-action-sheet').remove();" style="padding: 16px 0; font-size: 16px; font-weight: 700; color: #F04452; border-bottom: 1px solid #F2F4F6; cursor: pointer; display: flex; align-items: center; gap: 12px;">
@@ -10084,19 +10088,21 @@ window.closeNoticeController = function() {
 };
 
 window.saveNoticeToDB = async function() {
-    // 1. 만약 window.db가 아직 로딩되지 않았다면 1번 더 확인
-    if (!window.db) {
-        window.showToast("⏳ DB 연결 중입니다. 잠시만 기다려주세요!");
-        // 강제로 0.5초 기다려보기
+    window.showToast("⏳ DB 연결 확인 중...");
+
+    // 🌟 window.db가 생성될 때까지 0.5초 간격으로 최대 10번(5초) 대기합니다!
+    let retries = 0;
+    while (!window.db && retries < 10) {
         await new Promise(resolve => setTimeout(resolve, 500));
-        
-        // 그래도 없으면 진짜 에러
-        if (!window.db) {
-            return window.showToast("❌ DB 연결 실패! 인터넷 상태를 확인해주세요.");
-        }
+        retries++;
     }
 
-    // 2. 입력값 검증
+    // 그래도 없으면 에러 표출
+    if (!window.db) {
+        return window.showToast("❌ DB 연결 실패! 새로고침 후 3초 뒤에 다시 시도해주세요.");
+    }
+
+    // 입력값 검증
     const mainText = document.getElementById('admin-input-main-notice')?.value.trim() || "";
     const mainActive = document.getElementById('btn-toggle-main')?.getAttribute('data-active') === 'true';
     const commText = document.getElementById('admin-input-comm-notice')?.value.trim() || "";
@@ -10112,12 +10118,10 @@ window.saveNoticeToDB = async function() {
     };
 
     try {
-        // v9 방식 사용 (window.doc, window.setDoc 활용)
         if (typeof window.setDoc === 'function' && typeof window.doc === 'function') {
             const docRef = window.doc(window.db, "app_settings", "global_notice");
             await window.setDoc(docRef, noticePayload, { merge: true });
         } else if (typeof window.db.collection === 'function') {
-            // v8 방식 호환 방어막
             await window.db.collection('app_settings').doc('global_notice').set(noticePayload, { merge: true });
         } else {
             throw new Error("Firestore 저장 함수를 찾을 수 없습니다.");
@@ -11741,7 +11745,7 @@ window.toggleSeniorRoutine = async function() {
     localStorage.setItem('tosil_routine_data', JSON.stringify(routineData));
 
     if (typeof window.db !== 'undefined' && typeof window.setDoc === 'function') {
-        const syncCode = window.getSyncCode();
+        const syncCode = window.getSyncCode(); if (!syncCode) return;
         // 🚨 [다둥이 패치] 시니어 루틴 경로 분리
         try { await window.setDoc(window.doc(window.db, "routine_" + syncCode + window.currentBabySuffix, "status"), { data: routineData, date: new Date().toLocaleDateString() }, { merge: true }); } catch(e) {}
     }
@@ -12148,7 +12152,7 @@ window.toggleEditSeniorMemo = function() {
 // 3. 파이어베이스 클라우드 전송 함수
 window.saveParentNoticeToFirebase = async function(text) {
     if (typeof db !== 'undefined' && typeof setDoc === 'function' && typeof doc === 'function') {
-        const syncCode = window.getSyncCode();
+        const syncCode = window.getSyncCode(); if (!syncCode) return;
         try {
             // 🚨 [다둥이 패치] 조부모 전달사항 경로 분리
             await setDoc(doc(db, "parent_notice_" + syncCode + window.currentBabySuffix, "status"), { 
@@ -12164,7 +12168,7 @@ window.saveParentNoticeToFirebase = async function(text) {
 // 4. 파이어베이스 실시간 수신 리스너 (상대방이 수정하면 내 폰 카드 내용도 실시간 변경!)
 let parentNoticeUnsubscribe = null;
 window.startParentNoticeRealtimeSync = function() {
-    const syncCode = window.getSyncCode();
+    const syncCode = window.getSyncCode(); if (!syncCode) return;
     // 🚨 [다둥이 패치] 조부모 전달사항 수신 경로 분리
     const docRef = typeof doc !== 'undefined' && typeof window.db !== 'undefined' ? doc(window.db, "parent_notice_" + syncCode + window.currentBabySuffix, "status") : null;
     
