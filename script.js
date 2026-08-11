@@ -6057,7 +6057,7 @@ window.nextOnboardingStep = function(step) {
     }
 };
 
-// 🎉 온보딩 완료 및 로딩 마술 발동!
+// 🎉 온보딩 완료 및 로딩 마술 발동! (서버 동기화 패치 완료)
 window.finishOnboarding = function(feedingStage) {
     const name = document.getElementById('ob-name').value.trim();
     const date = document.getElementById('ob-date').value;
@@ -6081,21 +6081,33 @@ window.finishOnboarding = function(feedingStage) {
         loadingText.innerHTML = `[${feedingStage}]에 딱 맞는<br>육아메이트 세팅 완료! 🎉`;
     }, 2400);
 
-    // ⏱️ 3.5초 뒤: 마술이 끝나면 그제야 데이터를 저장하고 새로고침!
-    setTimeout(() => {
+    // ⏱️ 3.5초 뒤: 마술이 끝나면 데이터 저장 및 서버 동기화 후 새로고침!
+    setTimeout(async () => {
         localStorage.setItem('tosil_babyName', name);
         localStorage.setItem('tosil_startDate', date);
         localStorage.setItem('tosil_feedingStage', feedingStage);
         localStorage.setItem('tosil_baby', JSON.stringify({name: name, birth: date, stage: feedingStage}));
 
+        // 🚨 [필수 패치] 서버(families 문서)에 아기 이름/생일 실시간 반영!
+        const code = localStorage.getItem('family_sync_code');
+        if (code && window.db && window.updateDoc) {
+            try {
+                await window.updateDoc(window.doc(window.db, "families", code), {
+                    babyName: name,
+                    babyBirth: date
+                });
+                console.log("✅ 서버에 아기 정보 반영 성공!");
+            } catch (e) {
+                console.warn("⚠️ 서버 반영 실패(오프라인일 수 있음):", e);
+            }
+        }
+
         document.getElementById('onboarding-overlay').style.display = 'none';
-        
-        // 🚀 마지막으로 앱을 리로드해서 메인 화면(대시보드)으로 완벽하게 진입시킵니다!
         location.reload(); 
     }, 3500); 
 };
 
-// ✏️ 메인화면에서 연필 눌러서 수정할 때 (정보 수정 팝업)
+// ✏️ 메인화면에서 연필 눌러서 수정할 때 (기존 기능 그대로 유지)
 window.promptBabyInfo = function() {
     document.getElementById('ob-name').value = localStorage.getItem('tosil_babyName') || '';
     document.getElementById('ob-date').value = localStorage.getItem('tosil_startDate') || '';
@@ -6147,52 +6159,54 @@ window.closeInviteSheet = function() {
     if(sheet) sheet.style.display = 'none';
 };
 
-// 🌟 카톡 초대 버튼 (완벽 연동)
+// 🌟 카톡 초대 버튼 (자동 딥링크 연동 적용!)
 window.sendKakaoInvite = function() {
     // 초대 버튼을 눌렀으니 다시는 안 뜨게 도장 쾅!
     localStorage.setItem('tosil_has_seen_invite', 'true');
     const sheet = document.getElementById('invite-bottom-sheet');
     if(sheet) sheet.style.display = 'none';
     
+    // 🚨 내 가족 코드를 불러옴!
+    const syncCode = localStorage.getItem('family_sync_code');
+    if (!syncCode) {
+        alert("🚨 가족 코드가 없습니다! 먼저 설정 탭에서 '내 코드 생성'을 완료해주세요.");
+        return;
+    }
+
+    // 🚨 핵심 마법: 깃허브 주소 뒤에 몰래 코드를 달아줍니다!
+    const inviteUrl = `https://happy-baby0303.github.io/?code=${syncCode}`;
+    
     // 카카오톡 공유 API (진짜 예쁜 카톡 템플릿 보내기)
     if (typeof Kakao !== 'undefined' && Kakao.isInitialized()) {
         Kakao.Share.sendDefault({
             objectType: 'feed',
             content: {
-                title: '💌 짝꿍의 육아메이트 초대장!',
-                description: "여보! 우리 아기 맞춤형 육아 비서 [육아메이트]로 나랑 같이 육아 기록 공유하자 🤍 지금 바로 접속해 봐!",
+                title: '💌 육아메이트 가족 초대장!',
+                description: `여보! 우리 아기 맞춤형 육아 비서 [육아메이트]로 나랑 같이 육아 기록 공유하자 🤍\n(아래 버튼을 누르면 자동으로 연동돼!)`,
                 imageUrl: 'https://cdn-icons-png.flaticon.com/512/3135/3135715.png', // 앱 로고 이미지
                 link: {
-                    mobileWebUrl: 'https://happy-baby0303.github.io/',
-                    webUrl: 'https://happy-baby0303.github.io/',
+                    mobileWebUrl: inviteUrl,
+                    webUrl: inviteUrl,
                 },
             },
             buttons: [
                 {
-                    title: '앱 열고 연동하기 👉',
+                    title: '초대 수락하고 앱 열기 👉',
                     link: {
-                        mobileWebUrl: 'https://happy-baby0303.github.io/',
-                        webUrl: 'https://happy-baby0303.github.io/',
+                        mobileWebUrl: inviteUrl,
+                        webUrl: inviteUrl,
                     },
                 },
             ],
         });
-        
-        // 카톡 보내고 난 뒤에 연동 모달창 자동으로 띄워주기
-        if(typeof openFamilySyncModal === 'function') openFamilySyncModal();
-        
     } else {
         // 카카오 실패 시 보험
-        const text = "여보! 우리 아기 맞춤형 육아 비서 [육아메이트]로 나랑 같이 육아 기록 공유하자 🤍 지금 바로 접속해 봐!";
-        const url = "https://happy-baby0303.github.io/"; 
-        
+        const text = `여보! 우리 아기 육아 기록 같이 공유하자 🤍 (초대코드: ${syncCode})`;
         if (navigator.share) {
-            navigator.share({ title: '육아메이트 초대장', text: text, url: url })
-            .then(() => { if(typeof openFamilySyncModal === 'function') openFamilySyncModal(); })
+            navigator.share({ title: '육아메이트 초대장', text: text, url: inviteUrl })
             .catch(console.error);
         } else {
-            prompt("아래 초대장을 복사해서 카톡으로 보내주세요!", text + " " + url);
-            if(typeof openFamilySyncModal === 'function') openFamilySyncModal();
+            prompt("아래 초대장을 복사해서 카톡으로 보내주세요!", text + " " + inviteUrl);
         }
     }
 };
@@ -7088,12 +7102,11 @@ window.renderSettingsTab = function() {
             : `👤`;
             
         profileHtml = `
-            <div style="display: flex; align-items: center; gap: 16px; background: var(--bg-card); padding: 20px; border-radius: 16px; border: 1px solid var(--border); margin-bottom: 32px; box-shadow: 0 2px 8px rgba(0,0,0,0.02); box-sizing: border-box; width: 100%;">
+            <div style="display: flex; align-items: center; gap: 16px; background: var(--bg-card); padding: 20px; border-radius: 16px; border: 1px solid var(--border); margin-bottom: 24px; box-shadow: 0 2px 8px rgba(0,0,0,0.02); box-sizing: border-box; width: 100%;">
                 <div style="width: 56px; height: 56px; border-radius: 50%; background: #F2F5F8; display: flex; align-items: center; justify-content: center; font-size: 24px; overflow: hidden; border: 1px solid #E5E8EB; flex-shrink: 0;">
                     ${imgTag}
                 </div>
                 <div style="flex: 1; min-width: 0;">
-                    <!-- 🚨 글씨 길이 다이어트 및 줄바꿈 차단 (카카오 로그인 완료) -->
                     <div style="font-size: 11.5px; font-weight: 800; color: #3182F6; margin-bottom: 4px; white-space: nowrap; letter-spacing: -0.5px;">카카오 로그인 완료</div>
                     <div style="font-size: 16px; font-weight: 900; color: var(--text-m); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${savedNickname} <span style="font-size: 13.5px; font-weight: 600; color: var(--text-s);">님</span></div>
                 </div>
@@ -7104,7 +7117,7 @@ window.renderSettingsTab = function() {
         `;
     } else {
         profileHtml = `
-            <div style="background: var(--bg-card); padding: 24px 20px; border-radius: 16px; border: 1px solid var(--border); margin-bottom: 32px; box-shadow: 0 2px 8px rgba(0,0,0,0.02); text-align: center; box-sizing: border-box; width: 100%;">
+            <div style="background: var(--bg-card); padding: 24px 20px; border-radius: 16px; border: 1px solid var(--border); margin-bottom: 24px; box-shadow: 0 2px 8px rgba(0,0,0,0.02); text-align: center; box-sizing: border-box; width: 100%;">
                 <div style="width: 56px; height: 56px; border-radius: 50%; background: #F2F5F8; display: flex; align-items: center; justify-content: center; font-size: 24px; margin: 0 auto 12px auto;">👤</div>
                 <div style="font-size: 12px; font-weight: 800; color: #8B95A1; margin-bottom: 4px;">내 정보 안전하게 보관하기</div>
                 <div style="font-size: 15.5px; font-weight: 900; color: var(--text-m); margin-bottom: 16px;">로그인이 필요합니다</div>
@@ -7167,6 +7180,17 @@ window.renderSettingsTab = function() {
             <!-- 계정 및 프로필 -->
             ${profileHtml}
 
+            <!-- 💎 VIP 프리미엄 업그레이드 배너 (🚨 신규 추가!) -->
+          <div onclick="document.getElementById('vip-modal-overlay').style.display='flex'" style="background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%); border-radius: 16px; padding: 20px; margin-bottom: 32px; display: flex; align-items: center; justify-content: space-between; cursor: pointer; box-shadow: 0 4px 12px rgba(0,0,0,0.15); box-sizing: border-box; width: 100%; transition: 0.2s;">
+    <div>
+                    <div style="font-size: 13px; font-weight: 900; color: #38bdf8; margin-bottom: 6px; letter-spacing: -0.5px;">육아메이트 VIP 👑</div>
+                    <div style="font-size: 16px; font-weight: 900; color: #FFFFFF; line-height: 1.4; letter-spacing: -0.5px;">육아의 질이 달라집니다.<br>더 강력한 기능 알아보기</div>
+                </div>
+                <div style="width: 44px; height: 44px; background: rgba(255,255,255,0.1); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: #FFFFFF; font-size: 20px;">
+                    ✨
+                </div>
+            </div>
+
             <!-- 가족 연동 섹션 -->
             ${syncHtml}
 
@@ -7174,10 +7198,9 @@ window.renderSettingsTab = function() {
             <div style="font-size: 13.5px; font-weight: 900; color: var(--text-s); margin-bottom: 12px;">앱 설정</div>
             <div style="background: var(--bg-card); border: 1px solid var(--border); border-radius: 16px; overflow: hidden; margin-bottom: 32px; box-shadow: 0 2px 8px rgba(0,0,0,0.02); box-sizing: border-box; width: 100%;">
                 
-                <!-- 🚨 역할 설정: 한 줄 유지하되, 우측 여백을 지우고 캡슐을 오른쪽 끝으로 바짝 밀착! -->
+                <!-- 역할 설정 -->
                 <div style="display: flex; justify-content: space-between; align-items: center; padding: 16px 12px 16px 20px; border-bottom: 1px solid var(--border);">
                     <div style="font-size: 14.5px; font-weight: 800; color: var(--text-m); margin-right: auto;">내 역할 설정</div>
-                    
                     <div style="display: flex; background: var(--bg-sub); border-radius: 10px; padding: 3px; border: 1px solid var(--border); flex-shrink: 0;">
                         <button onclick="window.changeUserRole('mom')" style="padding: 6px 10px; border: none; border-radius: 8px; font-size: 13px; font-weight: 900; cursor: pointer; transition: 0.2s; white-space: nowrap; ${currentRole === 'mom' ? 'background:var(--bg-card); color:#F04452; box-shadow:0 2px 6px rgba(0,0,0,0.05);' : 'background:transparent; color:#8B95A1;'}">엄마</button>
                         <button onclick="window.changeUserRole('dad')" style="padding: 6px 10px; border: none; border-radius: 8px; font-size: 13px; font-weight: 900; cursor: pointer; transition: 0.2s; white-space: nowrap; ${currentRole === 'dad' ? 'background:var(--bg-card); color:#3182F6; box-shadow:0 2px 6px rgba(0,0,0,0.05);' : 'background:transparent; color:#8B95A1;'}">아빠</button>
@@ -7198,21 +7221,18 @@ window.renderSettingsTab = function() {
                 </div>
             </div>
 
-            <!-- 데이터 관리 -->
-            <div style="font-size: 13.5px; font-weight: 900; color: var(--text-s); margin-bottom: 12px; display:flex; align-items:center; gap:6px;">
-                데이터 관리 
-                <span style="font-size:10px; font-weight:700; color:#F04452; background:#FFF0F1; padding:2px 6px; border-radius:6px;">주의</span>
-            </div>
-            <div style="font-size: 11.5px; color: #8B95A1; line-height: 1.4; margin-bottom: 12px; padding: 0 4px; word-break: keep-all;">
-                가족 연동(또는 로그인)을 안 하셨다면 모든 기록은 이 스마트폰에만 임시 저장됩니다.<br>
-                인터넷 사용기록을 지우면 <strong style="color:#D32F2F;">데이터가 영구 삭제</strong>되므로 주기적으로 엑셀 백업을 권장합니다.
+            <!-- 데이터 관리 (🚨 경고 문구 삭제 및 깔끔하게 정돈) -->
+            <div style="font-size: 13.5px; font-weight: 900; color: var(--text-s); margin-bottom: 12px;">
+                데이터 및 기록 관리
             </div>
             <div style="background: var(--bg-card); border: 1px solid var(--border); border-radius: 16px; overflow: hidden; margin-bottom: 32px; box-shadow: 0 2px 8px rgba(0,0,0,0.02); box-sizing: border-box; width: 100%;">
                 <div onclick="window.exportToExcel()" style="display: flex; justify-content: space-between; align-items: center; padding: 18px 20px; border-bottom: 1px solid var(--border); cursor: pointer;">
                     <div style="font-size: 14.5px; font-weight: 800; color: var(--text-m);">기록 데이터 엑셀 내보내기</div>
+                    <div style="color: #8B95A1; font-size: 12px;">〉</div>
                 </div>
                 <div onclick="window.clearAllData()" style="display: flex; justify-content: space-between; align-items: center; padding: 18px 20px; cursor: pointer;">
                     <div style="font-size: 14.5px; font-weight: 800; color: #F04452;">기록 데이터 초기화</div>
+                    <div style="color: #F04452; font-size: 12px;">〉</div>
                 </div>
             </div>
 
