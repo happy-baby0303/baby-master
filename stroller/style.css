@@ -550,3 +550,35 @@ body.dark-mode .result-title,
 body.dark-mode #result-top-title,
 body.dark-mode .filter-label,
 body.dark-mode .vs-label-text { color: #F9FAFB !important; }
+
+/* ========================================== */
+/* 🌙 유모차 클래스 기반 요소 (개발자도구로 확인) */
+/* ========================================== */
+
+/* 영수증 박스 (공식 출고가) */
+body.dark-mode .receipt-box { background: #202632 !important; border-color: #333D4B !important; }
+body.dark-mode .receipt-row,
+body.dark-mode .receipt-desc { color: #B0B8C1 !important; }
+body.dark-mode .receipt-total { color: #F9FAFB !important; }
+
+/* 게이트 알림 배너 */
+body.dark-mode .gate-alert { border-color: #333D4B !important; }
+body.dark-mode .gate-alert.pass { background: #16243B !important; color: #93C5FD !important; border-color: #1E3A5F !important; }
+body.dark-mode .gate-alert.fail,
+body.dark-mode .gate-alert.warn { background: #3F1D1D !important; color: #FCA5A5 !important; border-color: #7F2A2A !important; }
+
+/* 카드 탭 (기본스펙 / 실전팩트 / 시뮬레이트) */
+body.dark-mode .card-tabs { background: #202632 !important; }
+body.dark-mode .tab-btn { color: #8B95A1 !important; }
+body.dark-mode .tab-btn.active { background: #3182F6 !important; color: #FFFFFF !important; box-shadow: none !important; }
+
+/* 크기 비교 그래프 박스 */
+body.dark-mode .size-visual-box { background: #202632 !important; border-color: #333D4B !important; }
+body.dark-mode .size-visual-title { color: #F9FAFB !important; }
+body.dark-mode .size-visual-desc { color: #B0B8C1 !important; }
+body.dark-mode .size-visual-desc.warn { color: #FCA5A5 !important; }
+body.dark-mode .visual-chart div { color: #E5E8EB !important; }
+
+/* 스펙 행 구분선 */
+body.dark-mode .spec-row,
+body.dark-mode .spec-list { border-color: #333D4B !important; }
