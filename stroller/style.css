@@ -582,3 +582,29 @@ body.dark-mode .visual-chart div { color: #E5E8EB !important; }
 /* 스펙 행 구분선 */
 body.dark-mode .spec-row,
 body.dark-mode .spec-list { border-color: #333D4B !important; }
+
+/* ========================================== */
+/* 🌙 유모차 캐리어 체감 크기 박스 다크모드 패치 */
+/* ========================================== */
+
+/* 1. 크다! (경고 상태 - 붉은 톤) */
+body.dark-mode .size-visual-desc.warn {
+    background: #3F1D1D !important; /* 어두운 버건디 배경 */
+    border: 1px solid #5C2B2B !important; /* 테두리도 어둡게 */
+    color: #FCA5A5 !important;
+}
+
+/* 2. 작다/똑같다! (안전 상태 - 초록 톤) -> 혹시 몰라 미리 방어! */
+body.dark-mode .size-visual-desc.pass,
+body.dark-mode .size-visual-desc.safe {
+    background: #1A3025 !important; /* 어두운 초록 배경 */
+    border: 1px solid #244635 !important;
+    color: #6EE7B7 !important;
+}
+
+/* 3. 기본 상태 (색상이 없을 때 대비) */
+body.dark-mode .size-visual-desc {
+    background: #202632 !important; /* 다크그레이 배경 */
+    border: 1px solid #333D4B !important;
+    color: #E5E8EB !important;
+}
