@@ -508,3 +508,39 @@ body.dark-mode .stroller-card canvas,
 body.dark-mode .chart-box,
 body.dark-mode [style*="height: 200px"] { background: #FFFFFF !important; border-radius: 12px !important; }
 body.dark-mode .chart-box * { color: #191F28 !important; }
+
+/* ========================================== */
+/* 🌙 유모차 남은 부분 보완 */
+/* ========================================== */
+
+/* 결과 제목 (🏆 최적합 AI 픽 Top 3) */
+body.dark-mode .result-title,
+body.dark-mode #result-top-title,
+body.dark-mode .filter-label { color: #F9FAFB !important; }
+
+/* 공식 출고가 등 카드 안 흐린 글씨 전부 */
+body.dark-mode .stroller-card [style*="color: #8B95A1"],
+body.dark-mode .stroller-card [style*="color:#8B95A1"],
+body.dark-mode .stroller-card [style*="color: #B0B8C1"],
+body.dark-mode .stroller-card [style*="color:#B0B8C1"],
+body.dark-mode .stroller-card [style*="color: #6B7684"],
+body.dark-mode .stroller-card [style*="color: #4E5968"],
+body.dark-mode .stroller-card [style*="color:#4E5968"] { color: #B0B8C1 !important; }
+
+/* 그래프 박스 (흰 배경 유지 + 안쪽 글씨 검게) */
+body.dark-mode .stroller-card [style*="background: #FFFFFF"],
+body.dark-mode .stroller-card [style*="background:#FFFFFF"] {
+    background-color: #FFFFFF !important;
+    border-color: #E5E8EB !important;
+}
+body.dark-mode .stroller-card [style*="background: #FFFFFF"] *,
+body.dark-mode .stroller-card [style*="background:#FFFFFF"] * {
+    color: #191F28 !important;
+}
+
+/* 접기/펼치기 버튼 */
+body.dark-mode .show-more-btn {
+    background: #202632 !important;
+    color: #E5E8EB !important;
+    border-color: #333D4B !important;
+}
