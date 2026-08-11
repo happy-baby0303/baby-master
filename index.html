@@ -2241,13 +2241,17 @@ body.mode-senior .hide-on-senior { display: none !important; }
                     localStorage.removeItem('family_sync_code'); // 쓸모없는 유령 코드 삭제
                     currentCode = null; // 코드를 비워서 아래 3번 로직(신규 생성)을 타게 만듦
                 }
+           // 👇 [변경 후] 이렇게 덮어쓰세요!
             } catch (error) {
-                // 보안 규칙에 의해 튕겨난 경우(권한 없음)도 유령 코드로 간주하고 삭제
-                console.warn("🚨 보안 규칙에 의해 접근이 차단되었습니다. 코드를 리셋합니다.");
-                localStorage.removeItem('family_sync_code');
-                currentCode = null;
+                if (error.code === 'permission-denied') {
+                    console.warn("🚨 권한 거부로 유령 코드 삭제");
+                    localStorage.removeItem('family_sync_code');
+                    currentCode = null;
+                } else {
+                    console.warn("🌐 네트워크 문제로 검증 보류 — 기존 코드 유지", error);
+                    // 네트워크 에러일 때는 코드를 지우지 않고 무조건 살려둡니다!
+                }
             }
-        }
 
         // 3. 코드가 아예 없거나 (위에서 유령 코드가 파기된 경우 포함) 신규 방 생성
         if (!currentCode) {
@@ -2270,8 +2274,7 @@ body.mode-senior .hide-on-senior { display: none !important; }
         if (typeof window.initRealtimeSync === 'function') window.initRealtimeSync();
     });    
 
-
-   // 🔗 가족 코드 확인하기
+// 🔗 가족 코드 확인하기
     window.createSyncCode = async () => {
         const existing = localStorage.getItem('family_sync_code');
         if (existing) {

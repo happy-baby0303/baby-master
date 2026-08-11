@@ -7,8 +7,6 @@ window.escapeHTML = function(text) {
     });
 };
 
-
-
 // ==========================================
 // 🧬 [다둥이 코어 엔진] Storage Proxy (데이터 완벽 분리 마법)
 // ==========================================
@@ -123,6 +121,10 @@ let selectedPillType = '';
 let feverChartObj = null; 
 let feverTimerInterval = null; 
 let currentDonutChart = null;
+
+window.getSyncCode = function() {
+    return localStorage.getItem("family_sync_code") || null;
+};
 
 // ==========================================
 // 🚀 [초고속 패치] 렉 없는 즉각 반응형 화면 내비게이션 엔진
@@ -6987,77 +6989,6 @@ window.initWeeklyReport = function() {
 document.addEventListener("DOMContentLoaded", () => {
     setTimeout(window.initWeeklyReport, 100); 
 });
-
-// ==========================================
-// 🔐 카카오 로그인 & 로그아웃 엔진 (에러 복구 완료)
-// ==========================================
-window.loginWithKakao = function() {
-    if (typeof Kakao === 'undefined' || !Kakao.isInitialized()) {
-        alert("카카오 통신망이 아직 연결되지 않았습니다. 잠시 후 다시 시도해주세요.");
-        return;
-    }
-
-    Kakao.Auth.login({
-        // 🚨 핵심: 브라우저 충돌을 막기 위해 false로 원상복구! 
-        throughTalk: false, 
-        success: function(authObj) {
-            Kakao.API.request({
-                url: '/v2/user/me',
-                success: function(res) {
-                    const nickname = res.properties.nickname;
-                    const profileImage = res.properties.profile_image;
-                    const kakaoId = res.id;
-
-                    localStorage.setItem('kakao_nickname', nickname);
-                    localStorage.setItem('kakao_id', kakaoId); 
-                    if (profileImage) {
-                        localStorage.setItem('kakao_profile_image', profileImage);
-                    }
-
-                    const db = window.db || (typeof firebase !== 'undefined' ? firebase.firestore() : null); 
-                    if (!db) {
-                        window.showToast(`🎉 ${nickname}님 환영합니다!`);
-                        window.renderSettingsTab();
-                        return;
-                    }
-
-                    const userRef = db.collection('kakao_users').doc(String(kakaoId));
-
-                    userRef.get().then((doc) => {
-                        const currentLocalSyncCode = localStorage.getItem('family_sync_code');
-
-                        if (doc.exists && doc.data().family_sync_code) {
-                            const restoredCode = doc.data().family_sync_code;
-                            localStorage.setItem('family_sync_code', restoredCode);
-                            window.showToast(`🎉 ${nickname}님 환영합니다! 데이터를 100% 복구하는 중입니다...✨`);
-                            setTimeout(() => { location.reload(); }, 1500);
-                        } else if (currentLocalSyncCode) {
-                            userRef.set({
-                                family_sync_code: currentLocalSyncCode,
-                                nickname: nickname
-                            }, { merge: true });
-                            window.showToast(`🎉 ${nickname}님 환영합니다! (클라우드 백업 완료☁️)`);
-                            window.renderSettingsTab(); 
-                        } else {
-                            window.showToast(`🎉 ${nickname}님 환영합니다!`);
-                            window.renderSettingsTab(); 
-                        }
-                    }).catch((error) => {
-                        console.error("자동 복구 에러:", error);
-                        window.showToast(`🎉 ${nickname}님 환영합니다!`);
-                        window.renderSettingsTab();
-                    });
-                },
-                fail: function(error) {
-                    alert('프로필 정보를 가져오는데 실패했습니다: ' + JSON.stringify(error));
-                }
-            });
-        },
-        fail: function(err) {
-            alert('로그인에 실패했습니다. 다시 시도해주세요.');
-        }
-    });
-};
 
 // ==========================================
 // ⚙️ [설정 탭] 전체 UI 렌더링 엔진 (육아 감성 200% 충전 완료 🤍)
