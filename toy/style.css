@@ -5,8 +5,9 @@
     -webkit-tap-highlight-color: transparent; 
     margin: 0; 
     padding: 0; 
-    font-family: -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo", "Pretendard", Roboto, "Helvetica Neue", Arial, sans-serif; 
 }
+
+* { font-family: 'Pretendard Variable', Pretendard, -apple-system, BlinkMacSystemFont, sans-serif; }
 
 body { 
     margin: 0; 
@@ -32,7 +33,13 @@ a { text-decoration: none; color: inherit; }
 /* 🛒 메인 타이틀 영역 */
 .hero-title { padding: 32px 0 24px; text-align: center; }
 .hero-title h2 { margin: 0; font-size: 26px; font-weight: 800; line-height: 1.35; color: #191F28; letter-spacing: -0.5px; }
-.gradient-text { background: linear-gradient(135deg, #3182F6, #6B31F6); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+.gradient-text {
+    color: #3182F6;
+    background: linear-gradient(135deg, #3182F6, #1B64DA);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
 .hero-title p { margin: 8px 0 0; color: #8B95A1; font-weight: 600; font-size: 14px; }
 
 /* ✨ 매트릭스 패널 (하얀색 고급 카드 공통) */
@@ -117,7 +124,7 @@ a { text-decoration: none; color: inherit; }
 .buy-btn { display: flex; justify-content: center; align-items: center; gap: 8px; font-weight: 900; padding: 18px; border-radius: 14px; text-decoration: none; font-size: 15px; margin-top: 24px; transition: 0.2s; width: 100%; box-sizing: border-box; }
 .buy-btn:active { transform: scale(0.97); }
 .buy-btn.coupang { background: #191F28; color: #FFFFFF; box-shadow: 0 4px 14px rgba(0,0,0,0.1); } 
-.buy-btn.official { background: #191F28; color: #FFF; border: 1px solid #000; } 
+.buy-btn.official { background: #FFFFFF; color: #191F28; border: 1.5px solid #191F28; }
 .buy-btn.naver { background: #F2F5F8; color: #4E5968; border: 1px solid #E5E8EB; } 
 .coupang-safety-guard { font-size: 11.5px; color: #8B95A1; font-weight: 600; text-align: center; margin-top: 12px; line-height: 1.5; word-break: keep-all; }
 .coupang-safety-guard b { color: #3182F6; font-weight: 800; }
@@ -127,8 +134,8 @@ a { text-decoration: none; color: inherit; }
 
 /* 🛡️ 법적 고지 푸터 */
 .legal-footer { margin-top: 40px; padding: 24px 20px; background: #F9FAFB; border-top: 1px solid #E5E8EB; border-radius: 16px; text-align: left; }
-.legal-footer p, .legal-footer { font-size: 11px; color: #8B95A1; line-height: 1.6; margin: 0 0 8px 0; word-break: keep-all; }
-.legal-footer strong { color: #4E5968; font-weight: 700; }
+.legal-footer p, .legal-footer { font-size: 12.5px; color: #4E5968; line-height: 1.6; margin: 0 0 8px 0; word-break: keep-all; }
+.legal-footer strong { color: #191F28; font-weight: 800; }
 
 /* 모바일 호환성 */
 @media (max-width: 500px) {
@@ -136,11 +143,23 @@ a { text-decoration: none; color: inherit; }
     .hero-title p { font-size: 13px !important; }
 }
 
+@media (max-width: 380px) {
+    .matrix-grid { grid-template-columns: 1fr !important; }
+}
+
 /* ✨ 매트릭스(필터) 제목과 발달상태(마일스톤) 제목의 간격을 분리했습니다! */
 .matrix-header { font-size: 16px; font-weight: 900; color: #191F28; margin-bottom: 24px; display: flex; align-items: center; gap: 8px; }
 
 /* 1. 발달 상태 제목: 밑 여백을 24px -> 10px로 대폭 줄여서 버튼을 위로 당깁니다 */
-.panel-header-dark { font-size: 16px; font-weight: 900; color: #191F28; margin-bottom: 10px; display: flex; align-items: center; gap: 8px; }
+.panel-header-dark {
+    font-size: 15px;
+    font-weight: 900;
+    color: #191F28;
+    background: transparent;
+    border: none;
+    padding: 0 4px 12px 4px;
+    margin-top: 24px;
+}
 
 /* 2. 칩 그룹(버튼): 위 여백(margin-top)을 0으로 없애서 제목에 착 붙게 만듭니다 */
 .chip-group { 
@@ -211,3 +230,255 @@ a { text-decoration: none; color: inherit; }
             background-color: #191F28 !important; border: 1px solid #333D4B !important; box-shadow: none !important; color: #F9FAFB !important;
         }
         body.dark-mode .toy-card-title, body.dark-mode .theme-text { color: #F9FAFB !important; }
+
+/* ========================================== */
+/* 🌙 다크모드 (인라인 스타일까지 강제 반전) */
+/* ========================================== */
+body.dark-mode { background-color: #000000 !important; color: #F9FAFB !important; }
+
+/* 1. 흰색 배경 계열 → 다크 카드로 */
+body.dark-mode .app-header,
+body.dark-mode .gnb-menu,
+body.dark-mode .matrix-panel,
+body.dark-mode .stroller-card,
+body.dark-mode .report-card,
+body.dark-mode .search-box,
+body.dark-mode [style*="background: #FFFFFF"],
+body.dark-mode [style*="background:#FFFFFF"],
+body.dark-mode [style*="background: #FFF;"],
+body.dark-mode [style*="background:#FFF;"],
+body.dark-mode [style*="background: white"] {
+    background-color: #191F28 !important;
+    border-color: #333D4B !important;
+    box-shadow: none !important;
+}
+
+/* 2. 연회색 배경 → 더 어둡게 */
+body.dark-mode .insight-box,
+body.dark-mode .premium-empty-state,
+body.dark-mode .legal-footer,
+body.dark-mode .cook-step,
+body.dark-mode [style*="background: #F9FAFB"],
+body.dark-mode [style*="background:#F9FAFB"],
+body.dark-mode [style*="background: #F8F9FA"],
+body.dark-mode [style*="background:#F8F9FA"],
+body.dark-mode [style*="background: #F2F4F6"],
+body.dark-mode [style*="background:#F2F4F6"],
+body.dark-mode [style*="background: #F2F5F8"],
+body.dark-mode [style*="background:#F2F5F8"] {
+    background-color: #202632 !important;
+    border-color: #333D4B !important;
+}
+
+/* 3. 검은 글씨 → 흰 글씨 (인라인 포함) */
+body.dark-mode h1, body.dark-mode h2, body.dark-mode h3,
+body.dark-mode .matrix-header,
+body.dark-mode .matrix-item label,
+body.dark-mode .empty-text b,
+body.dark-mode .insight-box .title,
+body.dark-mode [style*="color: #191F28"],
+body.dark-mode [style*="color:#191F28"] {
+    color: #F9FAFB !important;
+}
+
+/* 4. 중간 회색 글씨 → 밝게 */
+body.dark-mode [style*="color: #4E5968"],
+body.dark-mode [style*="color:#4E5968"],
+body.dark-mode .insight-box .text,
+body.dark-mode .legal-footer p,
+body.dark-mode .legal-footer strong { color: #B0B8C1 !important; }
+
+/* 5. 입력창 / 선택박스 */
+body.dark-mode select,
+body.dark-mode input,
+body.dark-mode textarea {
+    background-color: #202632 !important;
+    color: #F9FAFB !important;
+    border-color: #333D4B !important;
+}
+
+/* 6. 연한 파랑/노랑 배너 → 어두운 톤 */
+body.dark-mode [style*="background: #E8F3FF"],
+body.dark-mode [style*="background:#E8F3FF"],
+body.dark-mode [style*="background: #F0F7FF"],
+body.dark-mode [style*="background:#F0F7FF"],
+body.dark-mode [style*="background: #F4F8FF"],
+body.dark-mode [style*="background:#F4F8FF"] {
+    background-color: #16243B !important;
+    border-color: #1E3A5F !important;
+}
+body.dark-mode [style*="background: #FFF9E6"],
+body.dark-mode [style*="background:#FFF9E6"],
+body.dark-mode [style*="background: #FFFBEB"] {
+    background-color: #2D2513 !important;
+    border-color: #5C4300 !important;
+}
+body.dark-mode [style*="background: #FFF2F2"],
+body.dark-mode [style*="background:#FFF2F2"] {
+    background-color: #3F1D1D !important;
+    border-color: #7F2A2A !important;
+}
+
+/* 7. 버튼류 */
+body.dark-mode .btn-reset,
+body.dark-mode .buy-btn.coupang,
+body.dark-mode .buy-btn.naver,
+body.dark-mode [style*="background: #191F28"],
+body.dark-mode [style*="background:#191F28"] {
+    background-color: #333D4B !important;
+    color: #FFFFFF !important;
+    border-color: #4E5968 !important;
+}
+body.dark-mode #scrollToTopBtn {
+    background-color: #191F28 !important;
+    color: #E5E8EB !important;
+    border-color: #333D4B !important;
+}
+
+/* 8. 그라데이션 텍스트 (다크에서 안 보이는 것 방지) */
+body.dark-mode .gradient-text {
+    background: none !important;
+    -webkit-text-fill-color: #60A5FA !important;
+    color: #60A5FA !important;
+}
+
+/* ========================================== */
+/* 🌙 다크모드 보완 패치 */
+/* ========================================== */
+
+/* 1. GNB 현재 탭 이름 보이게 */
+body.dark-mode .gnb-item { color: #8B95A1 !important; }
+body.dark-mode .gnb-item.active { color: #FFFFFF !important; }
+body.dark-mode .gnb-item.active::after { background: #60A5FA !important; }
+body.dark-mode .app-header h1 { color: #FFFFFF !important; }
+body.dark-mode .app-header a { color: #B0B8C1 !important; }
+
+/* 2. 흰색 구분선 전부 어둡게 (찜 목록 흰 줄 해결) */
+body.dark-mode table,
+body.dark-mode th,
+body.dark-mode td,
+body.dark-mode hr,
+body.dark-mode [style*="border-bottom: 1px solid #E5E8EB"],
+body.dark-mode [style*="border-bottom:1px solid #E5E8EB"],
+body.dark-mode [style*="border-top: 1px solid #E5E8EB"],
+body.dark-mode [style*="border: 1px solid #E5E8EB"],
+body.dark-mode [style*="border:1px solid #E5E8EB"],
+body.dark-mode [style*="border: 1px solid #F2F4F6"],
+body.dark-mode [style*="border: 1px solid #F2F5F8"] {
+    border-color: #333D4B !important;
+}
+body.dark-mode table { background: transparent !important; }
+body.dark-mode th { background: #202632 !important; color: #F9FAFB !important; }
+body.dark-mode td { color: #E5E8EB !important; }
+
+/* 3. 남은 검은 글씨 전부 반전 */
+body.dark-mode b, body.dark-mode strong,
+body.dark-mode [style*="color: #333D4B"],
+body.dark-mode [style*="color:#333D4B"],
+body.dark-mode [style*="color: #000"],
+body.dark-mode [style*="color:#000"] { color: #F9FAFB !important; }
+
+/* 4. 이유식 달력 */
+body.dark-mode .cal-day { color: #E5E8EB !important; }
+body.dark-mode .cal-day.today { background: #16243B !important; color: #60A5FA !important; }
+body.dark-mode .cal-day.selected { background: #3182F6 !important; color: #FFFFFF !important; }
+body.dark-mode .cook-step { background: #202632 !important; color: #E5E8EB !important; border-color: #333D4B !important; }
+body.dark-mode .cook-step.checked { background: #191F28 !important; color: #6B7684 !important; }
+
+/* 5. 장난감 '시간 확보 추천 라인업' 헤더 박스 */
+body.dark-mode .theme-card { background: #191F28 !important; border-color: #333D4B !important; color: #E5E8EB !important; }
+body.dark-mode .theme-text b { color: #FFFFFF !important; }
+body.dark-mode .ms-chip { background: #202632 !important; color: #B0B8C1 !important; border-color: #333D4B !important; }
+body.dark-mode .ms-chip.active,
+body.dark-mode .play-filter-btn.active { background: #3182F6 !important; color: #FFFFFF !important; border: none !important; }
+body.dark-mode .play-filter-btn { background: #202632 !important; color: #B0B8C1 !important; border-color: #333D4B !important; }
+
+/* 소제목: 박스 없애고 텍스트만 */
+.panel-header-dark {
+    font-size: 15px !important;
+    font-weight: 900 !important;
+    color: #191F28 !important;
+    background: transparent !important;
+    border: none !important;
+    padding: 0 4px 12px 4px !important;
+    margin-top: 24px !important;
+    display: block !important;
+}
+body.dark-mode .panel-header-dark { color: #F9FAFB !important; background: transparent !important; }
+
+.ms-chip, .play-filter-btn {
+    padding: 10px 16px !important;
+    border-radius: 20px !important;
+    font-size: 13.5px !important;
+    font-weight: 700 !important;
+}
+#milestone-filters, #theme-filters { gap: 8px !important; padding-bottom: 12px !important; }
+.sos-theme-panel { background: transparent !important; padding: 0 !important; border: none !important; }
+.theme-card {
+    border-radius: 16px !important;
+    padding: 16px 12px !important;
+    min-width: 130px !important;
+}
+body.dark-mode .theme-card { background: #191F28 !important; border: 1px solid #333D4B !important; }
+
+/* SOS 패널 제목 */
+.sos-theme-panel .panel-header {
+    color: #191F28 !important;
+    background: transparent !important;
+    font-size: 15px !important;
+    font-weight: 900 !important;
+    padding: 0 4px 12px 4px !important;
+    margin: 0 !important;
+}
+body.dark-mode .sos-theme-panel .panel-header { color: #F9FAFB !important; }
+
+/* ========================================== */
+/* 탭 활성화 표시 */
+/* ========================================== */
+.segment-control button {
+    transition: all 0.2s !important;
+    position: relative !important;
+}
+.segment-control button.tab-on {
+    background: #3182F6 !important;
+    color: #FFFFFF !important;
+    box-shadow: 0 4px 12px rgba(49,130,246,0.3) !important;
+    font-weight: 900 !important;
+}
+.segment-control button.tab-off {
+    background: transparent !important;
+    color: #8B95A1 !important;
+    box-shadow: none !important;
+    font-weight: 800 !important;
+}
+body.dark-mode .segment-control { background: #202632 !important; }
+body.dark-mode .segment-control button.tab-off { color: #8B95A1 !important; }
+
+/* 누를 때 눌리는 느낌 */
+.segment-control button:active,
+.ms-chip:active,
+.play-filter-btn:active,
+.theme-card:active { transform: scale(0.96) !important; }
+
+/* 칩 선택 표시 */
+.ms-chip.active, .play-filter-btn.active {
+    background: #3182F6 !important;
+    color: #FFFFFF !important;
+    border: none !important;
+    font-weight: 900 !important;
+}
+body.dark-mode .ms-chip.active,
+body.dark-mode .play-filter-btn.active {
+    background: #3182F6 !important;
+    color: #FFFFFF !important;
+}
+
+/* 테마 카드 선택 표시 */
+.theme-card.active {
+    border: 2px solid #3182F6 !important;
+    background: #EBF4FF !important;
+}
+body.dark-mode .theme-card.active {
+    border: 2px solid #60A5FA !important;
+    background: #16243B !important;
+}

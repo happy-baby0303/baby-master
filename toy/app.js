@@ -99,19 +99,21 @@ function updateToyView() {
 // 🔀 투 트랙 UI 스위치 로직
 // ==========================================
 function switchToyMainTab(tabId) {
+    if (navigator.vibrate) navigator.vibrate(10);
+
     const btnPlay = document.getElementById('tab-btn-play');
     const btnGear = document.getElementById('tab-btn-gear');
     const viewPlay = document.getElementById('view-toy-play');
     const viewGear = document.getElementById('view-toy-gear');
 
     if (tabId === 'play') {
-        btnPlay.style.background = '#FFFFFF'; btnPlay.style.color = '#191F28'; btnPlay.style.boxShadow = '0 2px 4px rgba(0,0,0,0.05)';
-        btnGear.style.background = 'transparent'; btnGear.style.color = '#8B95A1'; btnGear.style.boxShadow = 'none';
+        btnPlay.classList.add('tab-on');    btnPlay.classList.remove('tab-off');
+        btnGear.classList.add('tab-off');   btnGear.classList.remove('tab-on');
         viewPlay.style.display = 'block';
         viewGear.style.display = 'none';
     } else {
-        btnGear.style.background = '#FFFFFF'; btnGear.style.color = '#191F28'; btnGear.style.boxShadow = '0 2px 4px rgba(0,0,0,0.05)';
-        btnPlay.style.background = 'transparent'; btnPlay.style.color = '#8B95A1'; btnPlay.style.boxShadow = 'none';
+        btnGear.classList.add('tab-on');    btnGear.classList.remove('tab-off');
+        btnPlay.classList.add('tab-off');   btnPlay.classList.remove('tab-on');
         viewPlay.style.display = 'none';
         viewGear.style.display = 'block';
     }
@@ -123,10 +125,10 @@ function switchToyMainTab(tabId) {
 let currentPlayCategory = 'all';
 
 function filterPlays(category, btnEl) {
-    document.querySelectorAll('.play-filter-btn').forEach(btn => {
-        btn.style.background = '#FFFFFF'; btn.style.color = '#4E5968'; btn.style.border = '1px solid #E5E8EB';
+   document.querySelectorAll('.play-filter-btn').forEach(btn => {
+        btn.classList.remove('active');
     });
-    btnEl.style.background = '#191F28'; btnEl.style.color = '#FFFFFF'; btnEl.style.border = 'none';
+    btnEl.classList.add('active');
     currentPlayCategory = category;
     renderPlays();
     
@@ -468,3 +470,11 @@ function shareToHusbandToy(id) {
         buttons: [{ title: `💳 여보 찬스로 바로 결제하기`, link: { mobileWebUrl: finalLink, webUrl: finalLink } }]
     });
 }
+
+// 페이지 열릴 때 탭 기본 상태
+document.addEventListener('DOMContentLoaded', () => {
+    const btnPlay = document.getElementById('tab-btn-play');
+    const btnGear = document.getElementById('tab-btn-gear');
+    if (btnPlay) btnPlay.classList.add('tab-on');
+    if (btnGear) btnGear.classList.add('tab-off');
+});
