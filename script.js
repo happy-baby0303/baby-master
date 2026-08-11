@@ -10088,23 +10088,21 @@ window.closeNoticeController = function() {
 };
 
 window.saveNoticeToDB = async function() {
-    window.showToast("⏳ DB 연결 확인 중...");
-
-    // 🌟 window.db가 생성될 때까지 0.5초 간격으로 최대 10번(5초) 대기합니다!
+    // 1. DB가 준비될 때까지 안전하게 대기
     let retries = 0;
     while (!window.db && retries < 10) {
-        await new Promise(resolve => setTimeout(resolve, 500));
+        await new Promise(resolve => setTimeout(resolve, 300));
         retries++;
     }
 
-    // 그래도 없으면 에러 표출
     if (!window.db) {
-        return window.showToast("❌ DB 연결 실패! 새로고침 후 3초 뒤에 다시 시도해주세요.");
+        return window.showToast("❌ DB 연결 실패! 인터넷 상태를 확인해주세요.");
     }
 
-    // 입력값 검증
+    // 2. 입력값 가져오기
     const mainText = document.getElementById('admin-input-main-notice')?.value.trim() || "";
     const mainActive = document.getElementById('btn-toggle-main')?.getAttribute('data-active') === 'true';
+    
     const commText = document.getElementById('admin-input-comm-notice')?.value.trim() || "";
     const commActive = document.getElementById('btn-toggle-comm')?.getAttribute('data-active') === 'true';
 
@@ -10117,21 +10115,18 @@ window.saveNoticeToDB = async function() {
         updatedAt: new Date().toISOString()
     };
 
+    // 3. 가장 확실한 파이어베이스 v9 표준 저장 방식 실행
     try {
-        if (typeof window.setDoc === 'function' && typeof window.doc === 'function') {
-            const docRef = window.doc(window.db, "app_settings", "global_notice");
-            await window.setDoc(docRef, noticePayload, { merge: true });
-        } else if (typeof window.db.collection === 'function') {
-            await window.db.collection('app_settings').doc('global_notice').set(noticePayload, { merge: true });
-        } else {
-            throw new Error("Firestore 저장 함수를 찾을 수 없습니다.");
-        }
+        const docRef = window.doc(window.db, "app_settings", "global_notice");
+        await window.setDoc(docRef, noticePayload, { merge: true });
         
-        if(typeof window.closeNoticeController === 'function') window.closeNoticeController();
+        if (typeof window.closeNoticeController === 'function') {
+            window.closeNoticeController();
+        }
         window.showToast("✅ 공지사항 라이브 적용 완료!");
     } catch (error) {
         console.error("공지 업데이트 에러:", error);
-        window.showToast("❌ 공지 등록 중 오류가 발생했습니다.");
+        window.showToast("❌ 공지 등록 중 오류 발생 (콘솔 확인)");
     }
 };
 

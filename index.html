@@ -2140,10 +2140,6 @@ body.mode-senior .hide-on-senior { display: none !important; }
     </div>
 </div>
 
-<script src="script.js?v=20260728"></script>
-<script src="playdata.js"></script>
-<script src="receiptData.js"></script>
-
 <!-- Firebase 로직 (온보딩 서버 반영 및 짝꿍 정보 싱크 패치 완료) -->
 <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
@@ -2235,13 +2231,11 @@ body.mode-senior .hide-on-senior { display: none !important; }
                 const roomRef = doc(window.db, "families", currentCode);
                 const roomSnap = await getDoc(roomRef);
                 
-                // 만약 서버에 방이 없거나, 방은 있는데 members 명단에 내 UID가 없다면?
                 if (!roomSnap.exists() || !roomSnap.data().members || !roomSnap.data().members.includes(user.uid)) {
                     console.warn("🚨 권한이 없는 옛날 유령 코드입니다. 코드를 폐기합니다.");
-                    localStorage.removeItem('family_sync_code'); // 쓸모없는 유령 코드 삭제
-                    currentCode = null; // 코드를 비워서 아래 3번 로직(신규 생성)을 타게 만듦
+                    localStorage.removeItem('family_sync_code');
+                    currentCode = null;
                 }
-           // 👇 [변경 후] 이렇게 덮어쓰세요!
             } catch (error) {
                 if (error.code === 'permission-denied') {
                     console.warn("🚨 권한 거부로 유령 코드 삭제");
@@ -2249,11 +2243,11 @@ body.mode-senior .hide-on-senior { display: none !important; }
                     currentCode = null;
                 } else {
                     console.warn("🌐 네트워크 문제로 검증 보류 — 기존 코드 유지", error);
-                    // 네트워크 에러일 때는 코드를 지우지 않고 무조건 살려둡니다!
                 }
             }
+        }
 
-        // 3. 코드가 아예 없거나 (위에서 유령 코드가 파기된 경우 포함) 신규 방 생성
+        // 3. 신규 방 생성
         if (!currentCode) {
             const rand = () => Math.random().toString(36).substr(2, 4).toUpperCase();
             const personalCode = "TS-" + rand() + rand(); 
@@ -2264,7 +2258,7 @@ body.mode-senior .hide-on-senior { display: none !important; }
                 babyName: localStorage.getItem("tosil_babyName") || "우리아기",
                 babyBirth: localStorage.getItem("tosil_startDate") || "",
                 plan: "free",
-                members: [user.uid] // 최초 생성 시점에 내 UID를 안전하게 박음
+                members: [user.uid]
             });
             
             localStorage.setItem('family_sync_code', personalCode);
@@ -2272,9 +2266,12 @@ body.mode-senior .hide-on-senior { display: none !important; }
         }
 
         if (typeof window.initRealtimeSync === 'function') window.initRealtimeSync();
-    });    
+    });   
 
-// 🔗 가족 코드 확인하기
+// ==========================================
+    // 🔗 아래 함수들은 onAuthStateChanged 바깥쪽(독립된 공간)에 있어야 합니다!
+    // ==========================================
+
     window.createSyncCode = async () => {
         const existing = localStorage.getItem('family_sync_code');
         if (existing) {
@@ -2287,7 +2284,6 @@ body.mode-senior .hide-on-senior { display: none !important; }
         }
     };
 
-    // 🔗 연동 엔진 (🚨 2번 패치: 짝꿍 폰에 아기 이름/생일 세팅 복구 완료!)
     window.connectSyncCode = async (autoCode) => {
         const inputCode = (typeof autoCode === 'string') ? autoCode : document.getElementById('partner-sync-code').value.trim().toUpperCase();
         if (!inputCode || inputCode.length < 5 || !inputCode.startsWith("TS-")) return alert("🚨 올바른 가족 코드를 입력해주세요.");
@@ -2303,7 +2299,6 @@ body.mode-senior .hide-on-senior { display: none !important; }
                     await window.updateDoc(doc(window.db, "families", inputCode), { members: window.arrayUnion(myUid) });
                 }
                 
-                // 🚨 짝꿍이 연동했을 때 서버의 아기 정보를 로컬에 완벽히 이식!
                 localStorage.setItem("family_sync_code", inputCode);
                 if (data.babyName) localStorage.setItem("tosil_babyName", data.babyName);
                 if (data.babyBirth) localStorage.setItem("tosil_startDate", data.babyBirth);
@@ -2314,7 +2309,7 @@ body.mode-senior .hide-on-senior { display: none !important; }
                 if (data.babyPhoto) localStorage.setItem("tosil_baby_photo", data.babyPhoto);
                 
                 localStorage.removeItem('pending_invite_code');
-                alert(`🎉 [${data.babyName || '우리아기'}]네 가족 연동 완료!\n\n💡 안내: 기존에 이 폰에 혼자 기록하던 내용은 새 가족방으로 자동 이전되지 않고 이 기기에 남아있습니다.`);
+                alert(`🎉 [${data.babyName || '우리아기'}]네 가족 연동 완료!`);
                 location.reload(); 
             } else {
                 alert("❌ 서버에 등록되지 않은 코드입니다.");
@@ -2325,7 +2320,6 @@ body.mode-senior .hide-on-senior { display: none !important; }
         }
     };
 
-    // 💎 VIP 신청
     window.upgradeToEarlyBirdVIP = async () => {
         const syncCode = localStorage.getItem('family_sync_code');
         const myUid = localStorage.getItem('firebase_uid');
@@ -2344,6 +2338,11 @@ body.mode-senior .hide-on-senior { display: none !important; }
         }
     };
 </script>
+
+<script src="script.js?v=20260728"></script>
+<script src="playdata.js"></script>
+<script src="receiptData.js"></script>
+
 
 <!-- 💩 기저귀 바텀시트 모달 -->
 <div id="diaper-bottom-sheet" style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.6); z-index: 9999; flex-direction: column; justify-content: flex-end;">
