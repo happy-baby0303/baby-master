@@ -329,15 +329,17 @@ body.dark-mode .container [style*="background: #F"] {
 }
 body.dark-mode .container [style*="background: #F"] * { color: #B0B8C1 !important; }
 
-/* 카카오 노란 버튼은 항상 검은 글씨 */
-body.dark-mode [style*="background: #FEE500"],
-body.dark-mode [style*="background:#FEE500"],
-body.dark-mode button[style*="#FEE500"] {
+/* ⚠️ 반드시 파일 맨 마지막에! */
+body.dark-mode [style*="FEE500"],
+body.dark-mode [style*="fee500"],
+body.dark-mode button[style*="FEE500"],
+body.dark-mode a[style*="FEE500"] {
     background-color: #FEE500 !important;
     color: #191919 !important;
 }
-body.dark-mode [style*="background: #FEE500"] *,
-body.dark-mode [style*="background:#FEE500"] *,
-body.dark-mode button[style*="#FEE500"] * {
+body.dark-mode [style*="FEE500"] *,
+body.dark-mode [style*="fee500"] *,
+body.dark-mode button[style*="FEE500"] *,
+body.dark-mode a[style*="FEE500"] * {
     color: #191919 !important;
 }
