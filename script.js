@@ -10083,17 +10083,27 @@ window.closeNoticeController = function() {
     }
 };
 
-window.saveNoticeToDB = function() {
-    const mainText = document.getElementById('admin-input-main-notice').value.trim();
-    const mainActive = document.getElementById('btn-toggle-main').getAttribute('data-active') === 'true';
-    
-    const commText = document.getElementById('admin-input-comm-notice').value.trim();
-    const commActive = document.getElementById('btn-toggle-comm').getAttribute('data-active') === 'true';
-    
+window.saveNoticeToDB = async function() {
+    // 1. 만약 window.db가 아직 로딩되지 않았다면 1번 더 확인
+    if (!window.db) {
+        window.showToast("⏳ DB 연결 중입니다. 잠시만 기다려주세요!");
+        // 강제로 0.5초 기다려보기
+        await new Promise(resolve => setTimeout(resolve, 500));
+        
+        // 그래도 없으면 진짜 에러
+        if (!window.db) {
+            return window.showToast("❌ DB 연결 실패! 인터넷 상태를 확인해주세요.");
+        }
+    }
+
+    // 2. 입력값 검증
+    const mainText = document.getElementById('admin-input-main-notice')?.value.trim() || "";
+    const mainActive = document.getElementById('btn-toggle-main')?.getAttribute('data-active') === 'true';
+    const commText = document.getElementById('admin-input-comm-notice')?.value.trim() || "";
+    const commActive = document.getElementById('btn-toggle-comm')?.getAttribute('data-active') === 'true';
+
     if (mainActive && !mainText) return window.showToast("⚠️ 홈 배너에 띄울 내용이 비어있습니다.");
     if (commActive && !commText) return window.showToast("⚠️ 맘수다 공지에 띄울 내용이 비어있습니다.");
-    
-    if(!window.db) return window.showToast("❌ DB 연결이 되지 않았습니다.");
 
     const noticePayload = {
         main: { text: mainText, isActive: mainActive },
@@ -10101,29 +10111,23 @@ window.saveNoticeToDB = function() {
         updatedAt: new Date().toISOString()
     };
 
-    if (typeof window.db.collection === 'function') {
-        window.db.collection('app_settings').doc('global_notice').set(noticePayload, { merge: true })
-        .then(() => {
-            window.closeNoticeController();
-            window.showToast("✅ 공지사항 라이브 적용 완료!");
-        })
-        .catch((error) => {
-            console.error("공지 업데이트 에러:", error);
-            window.showToast("❌ 공지 등록 실패.");
-        });
-    } else if (typeof window.setDoc === 'function' && typeof window.doc === 'function') {
-        const docRef = window.doc(window.db, "app_settings", "global_notice");
-        window.setDoc(docRef, noticePayload, { merge: true })
-        .then(() => {
-            window.closeNoticeController();
-            window.showToast("✅ 공지사항 라이브 적용 완료!");
-        })
-        .catch((error) => {
-            console.error("공지 업데이트 에러:", error);
-            window.showToast("❌ 공지 등록 실패.");
-        });
-    } else {
-        window.showToast("❌ Firestore 저장 방식을 찾을 수 없습니다.");
+    try {
+        // v9 방식 사용 (window.doc, window.setDoc 활용)
+        if (typeof window.setDoc === 'function' && typeof window.doc === 'function') {
+            const docRef = window.doc(window.db, "app_settings", "global_notice");
+            await window.setDoc(docRef, noticePayload, { merge: true });
+        } else if (typeof window.db.collection === 'function') {
+            // v8 방식 호환 방어막
+            await window.db.collection('app_settings').doc('global_notice').set(noticePayload, { merge: true });
+        } else {
+            throw new Error("Firestore 저장 함수를 찾을 수 없습니다.");
+        }
+        
+        if(typeof window.closeNoticeController === 'function') window.closeNoticeController();
+        window.showToast("✅ 공지사항 라이브 적용 완료!");
+    } catch (error) {
+        console.error("공지 업데이트 에러:", error);
+        window.showToast("❌ 공지 등록 중 오류가 발생했습니다.");
     }
 };
 
