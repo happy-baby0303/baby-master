@@ -533,3 +533,61 @@ body.dark-mode .theme-card { background: #191F28 !important; border-color: #333D
 body.dark-mode .theme-text { color: #8B95A1 !important; }
 body.dark-mode .theme-text b { color: #FFFFFF !important; }
 body.dark-mode .theme-card.active { background: #16243B !important; border-color: #60A5FA !important; }
+
+/* ========================================== */
+/* 🎨 SOS 카드 마감 */
+/* ========================================== */
+
+/* 1. 바깥 박스 완전 제거 */
+.sos-theme-panel,
+body.dark-mode .sos-theme-panel {
+    background: none !important;
+    background-color: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
+    padding: 0 !important;
+}
+
+/* 2. 화면 끝까지 스크롤되게 (좌우 여백 밖으로 빼기) */
+.theme-scroll-wrapper {
+    margin: 0 -20px !important;
+    padding: 4px 20px 16px 20px !important;
+}
+
+/* 3. 카드 높이 통일 + 세로 정렬 */
+.theme-card {
+    height: 118px !important;
+    display: flex !important;
+    flex-direction: column !important;
+    justify-content: space-between !important;
+    align-items: flex-start !important;
+    box-sizing: border-box !important;
+    /* 선택 시 크기 안 변하게 미리 2px 확보 */
+    border: 2px solid #E5E8EB !important;
+}
+.theme-card.active { border: 2px solid #3182F6 !important; }
+body.dark-mode .theme-card { border: 2px solid #333D4B !important; }
+body.dark-mode .theme-card.active { border: 2px solid #60A5FA !important; }
+
+/* 4. 이모지 크기 살짝 줄이고 여백 정리 */
+.theme-emoji { font-size: 24px !important; margin-bottom: 0 !important; line-height: 1 !important; }
+
+/* 5. 텍스트 두 줄 고정 */
+.theme-text { font-size: 11.5px !important; line-height: 1.4 !important; }
+.theme-text b { font-size: 13px !important; margin-top: 4px !important; }
+
+/* 6. 누를 때 반응 */
+.theme-card:active { transform: scale(0.96) !important; }
+
+.sos-theme-panel { position: relative !important; }
+.sos-theme-panel::after {
+    content: '';
+    position: absolute;
+    right: -20px; top: 0; bottom: 16px;
+    width: 40px;
+    background: linear-gradient(to right, rgba(242,244,246,0), rgba(242,244,246,1));
+    pointer-events: none;
+}
+body.dark-mode .sos-theme-panel::after {
+    background: linear-gradient(to right, rgba(0,0,0,0), rgba(0,0,0,1));
+}
