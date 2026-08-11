@@ -2803,7 +2803,7 @@ function startBatonRealtimeSync() {
 window.startBatonRealtimeSync = startBatonRealtimeSync;
 
 // ==========================================
-// 🚀 런타임 구동 및 실시간 동기화 마스터 마운트 (완벽 통합본)
+// 🚀 런타임 구동 및 실시간 동기화 마스터 마운트
 // ==========================================
 window.addEventListener('load', () => {    
     // 1. 기본 데이터 및 UI 로드
@@ -2839,28 +2839,10 @@ window.addEventListener('load', () => {
             }, 10);
         });
     });
-        
-    // 4. 실시간 동기화 리스너 통합 가동 (일괄 스위치 + 개별 방어막)
-    if (typeof initRealtimeSync === 'function') {
-        initRealtimeSync();
-    } else {
-        renderFeverTimeline();
-        updateHomeDashboard();
-    }
 
-    // 개별 실시간 동기화 함수 안전 호출 (두 번째 블록 내용 병합 완료)
-    if (typeof startFeverRealtimeSync === 'function') { startFeverRealtimeSync(); } 
-    else { renderFeverTimeline(); updateHomeDashboard(); }
-
-    if (typeof startCubeRealtimeSync === 'function') { startCubeRealtimeSync(); } 
-    else { renderCubes(); }
-
-    if (typeof startBatonRealtimeSync === 'function') { startBatonRealtimeSync(); } 
-    else { renderBatonTasks(); }
-
-    if (typeof startLedgerRealtimeSync === 'function') { startLedgerRealtimeSync(); } 
-    else { updateLedgerUI(); }
-
+    // 🚨 4. 여기서 무차별적으로 실행되던 실시간 동기화(startFeverRealtimeSync 등)를 싹 다 지웠습니다!
+    // -> 이제 방이 완전히 생성되고 안전해진 뒤에만 자동으로 켜집니다.
+    
     // 5. 상단 연동 배지 최신화
     if (typeof updateSyncBadge === 'function') {
         updateSyncBadge();    
@@ -5555,9 +5537,14 @@ window.syncBabySettingsToFirebase = function() {
 };
 
 // ==========================================
-// 🚀 [최종 통합] 모든 실시간 감시 엔진 일괄 가동 스위치
+// 🚀 [최종 통합] 모든 실시간 감시 엔진 일괄 가동 스위치 (에러 폭격 차단 패치)
 // ==========================================
 window.initRealtimeSync = () => {
+    const code = localStorage.getItem("family_sync_code");
+    
+    // 🚨 [방어막] 코드가 없거나, 연동이 끊겨서 unlinked 상태면 감시 기능을 아예 안 켭니다! (에러 차단)
+    if (!code || code.includes("unlinked")) return; 
+
     if (typeof startFeverRealtimeSync === 'function') startFeverRealtimeSync();
     if (typeof startCubeRealtimeSync === 'function') startCubeRealtimeSync();
     if (typeof startBatonRealtimeSync === 'function') startBatonRealtimeSync();
@@ -5569,13 +5556,6 @@ window.initRealtimeSync = () => {
     if (typeof startCommentRealtimeSync === 'function') startCommentRealtimeSync();
     if (typeof startSettingsRealtimeSync === 'function') startSettingsRealtimeSync();
 };
-
-// 앱 로딩 시 리스너 수동 실행 방어 코드
-document.addEventListener("DOMContentLoaded", () => {
-    if (localStorage.getItem("family_sync_code")) {
-        window.initRealtimeSync();
-    }
-});
 
 // ==========================================
 // 🚨 영유아 응급처치(열경련/CPR/기도폐쇄) 모달 제어
@@ -7085,7 +7065,7 @@ window.loginWithKakao = function() {
 };
 
 // ==========================================
-// ⚙️ [설정 탭] 전체 UI 렌더링 엔진 (엄마/아빠/조부모님 역할 스위치 & 디자인 최적화)
+// ⚙️ [설정 탭] 전체 UI 렌더링 엔진 (육아 감성 200% 충전 완료 🤍)
 // ==========================================
 window.renderSettingsTab = function() {
     const container = document.getElementById('tab-settings');
@@ -7128,7 +7108,7 @@ window.renderSettingsTab = function() {
         `;
     }
 
-    // 🌟 2. 가족 연동 섹션 
+    // 🌟 2. 가족 연동 섹션 (딱딱한 IT 감성 -> 다정한 육아 감성으로 전면 교체 🤍)
     const syncCode = localStorage.getItem('family_sync_code');
     let syncHtml = '';
 
@@ -7136,17 +7116,17 @@ window.renderSettingsTab = function() {
         syncHtml = `
             <div style="background: var(--bg-card); border: 1px solid var(--border); border-radius: 16px; padding: 20px; margin-bottom: 32px; box-shadow: 0 2px 8px rgba(0,0,0,0.02); box-sizing: border-box; width: 100%;">
                 <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px;">
-                    <div style="font-size: 14.5px; font-weight: 900; color: var(--text-m);">👨‍👩‍👧 가족 연동 완료</div>
-                    <span style="background: #EBF4FF; color: #3182F6; font-size: 11px; font-weight: 900; padding: 4px 8px; border-radius: 8px;">상태: ON</span>
+                    <div style="font-size: 14.5px; font-weight: 900; color: var(--text-m);">☁️ 우리 가족 안심 클라우드</div>
+                    <span style="background: #EBF4FF; color: #3182F6; font-size: 11px; font-weight: 900; padding: 4px 8px; border-radius: 8px;">기록 보호중 ✨</span>
                 </div>
-                <div style="font-size: 12.5px; color: var(--text-s); font-weight: 600; margin-bottom: 16px; line-height: 1.4;">현재 가족과 육아 데이터를 실시간 공유 중입니다.</div>
+                <div style="font-size: 12.5px; color: var(--text-s); font-weight: 600; margin-bottom: 16px; line-height: 1.5;">소중한 육아 기록이 서버에 안전하게 보관되고 있어요.<br>초대장을 보내 짝꿍과 함께 육아의 기쁨을 나눠볼까요? 🤍</div>
                 
                 <div style="display: flex; gap: 8px;">
-                    <button onclick="window.showSyncCode()" style="flex: 1; padding: 12px; border-radius: 12px; background: #F2F5F8; color: #4E5968; font-size: 13.5px; font-weight: 800; border: none; cursor: pointer;">
-                        🎟️ 내 코드 확인
+                    <button onclick="window.showSyncCode()" style="flex: 1; padding: 12px; border-radius: 12px; background: #3182F6; color: #FFF; font-size: 13.5px; font-weight: 800; border: none; cursor: pointer; box-shadow: 0 4px 10px rgba(49,130,246,0.2);">
+                        💌 가족 초대장 열기
                     </button>
                     <button onclick="window.safeUnlinkFamilySync()" style="flex: 1; padding: 12px; border-radius: 12px; background: #FFF0F1; color: #F04452; font-size: 13.5px; font-weight: 900; border: 1px solid #FFE5E8; cursor: pointer;">
-                        🚨 연동 해제
+                        🚪 방 나가기 (초기화)
                     </button>
                 </div>
             </div>
@@ -7155,7 +7135,7 @@ window.renderSettingsTab = function() {
         syncHtml = `
             <div style="background: var(--bg-card); border: 1px solid var(--border); border-radius: 16px; padding: 20px; margin-bottom: 32px; box-shadow: 0 2px 8px rgba(0,0,0,0.02); box-sizing: border-box; width: 100%;">
                 <div style="font-size: 14.5px; font-weight: 900; color: var(--text-m); margin-bottom: 8px;">👨‍👩‍👧 우리 아기 함께 키우기</div>
-                <div style="font-size: 12.5px; color: var(--text-s); font-weight: 600; margin-bottom: 16px; line-height: 1.4;">혼자 하는 육아는 너무 힘들어요.<br>아빠, 할머니, 이모님을 초대해서 기록을 공유하세요!</div>
+                <div style="font-size: 12.5px; color: var(--text-s); font-weight: 600; margin-bottom: 16px; line-height: 1.5;">혼자 하는 육아는 너무 힘들어요.<br>아빠, 할머니, 이모님을 초대해서 기록을 공유하세요!</div>
                 
                 <div style="display: flex; flex-direction: column; gap: 8px;">
                     <button onclick="window.sendKakaoInvite()" style="width: 100%; padding: 14px; border-radius: 12px; background: #FEE500; color: #191F28; font-size: 14.5px; font-weight: 900; border: none; cursor: pointer; display: flex; justify-content: center; align-items: center; gap: 8px;">
@@ -7180,9 +7160,9 @@ window.renderSettingsTab = function() {
             <!-- 계정 및 프로필 -->
             ${profileHtml}
 
-            <!-- 💎 VIP 프리미엄 업그레이드 배너 (🚨 신규 추가!) -->
-          <div onclick="document.getElementById('vip-modal-overlay').style.display='flex'" style="background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%); border-radius: 16px; padding: 20px; margin-bottom: 32px; display: flex; align-items: center; justify-content: space-between; cursor: pointer; box-shadow: 0 4px 12px rgba(0,0,0,0.15); box-sizing: border-box; width: 100%; transition: 0.2s;">
-    <div>
+            <!-- 💎 VIP 프리미엄 업그레이드 배너 -->
+            <div onclick="document.getElementById('vip-modal-overlay').style.display='flex'" style="background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%); border-radius: 16px; padding: 20px; margin-bottom: 32px; display: flex; align-items: center; justify-content: space-between; cursor: pointer; box-shadow: 0 4px 12px rgba(0,0,0,0.15); box-sizing: border-box; width: 100%; transition: 0.2s;">
+                <div>
                     <div style="font-size: 13px; font-weight: 900; color: #38bdf8; margin-bottom: 6px; letter-spacing: -0.5px;">육아메이트 VIP 👑</div>
                     <div style="font-size: 16px; font-weight: 900; color: #FFFFFF; line-height: 1.4; letter-spacing: -0.5px;">육아의 질이 달라집니다.<br>더 강력한 기능 알아보기</div>
                 </div>
@@ -7194,7 +7174,7 @@ window.renderSettingsTab = function() {
             <!-- 가족 연동 섹션 -->
             ${syncHtml}
 
-          <!-- 앱 설정 -->
+            <!-- 앱 설정 -->
             <div style="font-size: 13.5px; font-weight: 900; color: var(--text-s); margin-bottom: 12px;">앱 설정</div>
             <div style="background: var(--bg-card); border: 1px solid var(--border); border-radius: 16px; overflow: hidden; margin-bottom: 32px; box-shadow: 0 2px 8px rgba(0,0,0,0.02); box-sizing: border-box; width: 100%;">
                 
@@ -7221,7 +7201,7 @@ window.renderSettingsTab = function() {
                 </div>
             </div>
 
-            <!-- 데이터 관리 (🚨 경고 문구 삭제 및 깔끔하게 정돈) -->
+            <!-- 데이터 관리 -->
             <div style="font-size: 13.5px; font-weight: 900; color: var(--text-s); margin-bottom: 12px;">
                 데이터 및 기록 관리
             </div>
@@ -7252,7 +7232,7 @@ window.renderSettingsTab = function() {
                     <div style="color: #8B95A1; font-size: 12px;">〉</div>
                 </div>
                 <div onclick="window.handleSecretAdminClick()" style="display: flex; justify-content: space-between; align-items: center; padding: 18px 20px; cursor: pointer; -webkit-tap-highlight-color: transparent;">
-                    <div style="font-size: 14.5px; font-weight: 800; color: var(--text-m);">현재 버전</div>
+                    <div style="font-size: 14.5px; font-weight: 800; color: var(--text-m);">현재 버전 (터치)</div>
                     <div style="font-size: 13.5px; font-weight: 800; color: #3182F6;">v1.0.0 최신</div>
                 </div>
             </div>
@@ -7271,6 +7251,11 @@ window.renderSettingsTab = function() {
             </div>
         </div>
     `;
+
+    // 🚨 코드 맨 아래에 있는 [VIP 황금 배지 렌더링 엔진]을 위해 원래 함수 꼬리물기 호출 유지!
+    if (typeof window.originalRenderSettingsTab === 'function') {
+        window.originalRenderSettingsTab();
+    }
 };
 
 // ==========================================
@@ -9573,7 +9558,7 @@ window.handleProfileImageSelection = function(event) {
 };
 
 // ==========================================
-// 👤 마이페이지 프로필 & 관리자 권한 연동 엔진 (파이어베이스 UID 기반)
+// 👤 마이페이지 프로필 & 관리자 권한 연동 엔진 (파이어베이스 UID 기반 패치 완료)
 // ==========================================
 window.updateMyPageProfile = async function() {
     let myNickname = localStorage.getItem('community_nickname');
@@ -9584,18 +9569,16 @@ window.updateMyPageProfile = async function() {
     const nicknameInput = document.getElementById('comm-nickname-input');
     if (nicknameInput) nicknameInput.value = myNickname;
 
-    // 🔒 카카오 ID가 아니라, 파이어베이스 로그인된 유저의 진짜 UID 가져오기
+    // 🔒 [보안 패치] 카카오 ID가 아니라, 파이어베이스 로그인된 유저의 진짜 UID 가져오기
     const user = window.auth ? window.auth.currentUser : null;
     const myUid = user ? user.uid : localStorage.getItem('firebase_uid');
 
-    // 🛡️ [보안 패치] 로그인 상태가 아니면 관리자 권한 즉시 박탈!
     if (!myUid) {
         localStorage.removeItem('tosil_is_master');
         localStorage.removeItem('tosil_is_subadmin');
     } else {
-        // 👑 [1순위 직통 방어] 대표님 파이어베이스 UID 등록!
+        // 👑 [1순위 직통 방어] 대표님의 진짜 파이어베이스 UID 하드코딩
         const MASTER_UIDS = ["7Xj1jGZcV4OdWsyQrtUkuGq0HqJ3"]; 
-        
         const isHardcodedMaster = MASTER_UIDS.some(id => String(id).trim() === String(myUid).trim());
 
         if (isHardcodedMaster) {
@@ -9645,13 +9628,9 @@ window.updateMyPageProfile = async function() {
     let myCommentCount = comments.filter(c => c.authorName === myNickname).length;
     let myScrapCount = posts.filter(p => p.isScrapped === true).length;
 
-    const postEl = document.getElementById('mypage-post-count');
-    const commentEl = document.getElementById('mypage-comment-count');
-    const scrapEl = document.getElementById('mypage-scrap-count');
-
-    if (postEl) postEl.innerText = myPostCount;
-    if (commentEl) commentEl.innerText = myCommentCount;
-    if (scrapEl) scrapEl.innerText = myScrapCount;
+    if (document.getElementById('mypage-post-count')) document.getElementById('mypage-post-count').innerText = myPostCount;
+    if (document.getElementById('mypage-comment-count')) document.getElementById('mypage-comment-count').innerText = myCommentCount;
+    if (document.getElementById('mypage-scrap-count')) document.getElementById('mypage-scrap-count').innerText = myScrapCount;
 
     // 4. 프사 업데이트
     const profileCircle = document.getElementById('mypage-profile-icon');
