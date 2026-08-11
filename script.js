@@ -9564,10 +9564,6 @@ window.handleProfileImageSelection = function(event) {
     event.target.value = ''; 
 };
 
-// ==========================================
-// 👤 마이페이지 프로필 & 실시간 활동 데이터 연동 엔진 (타입 완벽 방어 패치)
-// ==========================================
-
 window.updateMyPageProfile = async function() {
     let myNickname = localStorage.getItem('community_nickname');
     if (!myNickname) {
@@ -9577,28 +9573,28 @@ window.updateMyPageProfile = async function() {
     const nicknameInput = document.getElementById('comm-nickname-input');
     if (nicknameInput) nicknameInput.value = myNickname;
 
-    const rawKakaoId = localStorage.getItem('kakao_id');
-    const myKakaoId = rawKakaoId ? String(rawKakaoId).trim() : null;
+    // 🔒 파이어베이스 로그인된 유저의 진짜 UID 가져오기
+    const user = window.auth ? window.auth.currentUser : null;
+    const myUid = user ? user.uid : localStorage.getItem('firebase_uid');
 
-    // 🛡️ [보안 패치] 카카오 로그아웃 상태면 무조건 관리자 권한 즉시 박탈!
-    if (!myKakaoId) {
+    // 🛡️ [보안 패치] 로그인 상태가 아니면 관리자 권한 즉시 박탈!
+    if (!myUid) {
         localStorage.removeItem('tosil_is_master');
         localStorage.removeItem('tosil_is_subadmin');
     } else {
-        // 👑 [1순위 직통 방어] 대표님과 사모님 카카오 ID (숫자/문자열 무엇이든 통과하도록 String 변환 후 비교)
-        const MASTER_IDS = ["4995493811", "대표님카카오ID숫자"]; 
+        // 👑 [1순위 직통 방어] 대표님 파이어베이스 UID 등록
+        const MASTER_UIDS = ["7Xj1jGZcV4OdWsyQrtUkuGq0HqJ3", "대표님다른기기UID"]; 
         
-        // 대소문자 및 타입 완벽 일치 검사
-        const isHardcodedMaster = MASTER_IDS.some(id => String(id).trim() === myKakaoId);
+        const isHardcodedMaster = MASTER_UIDS.some(id => String(id).trim() === String(myUid).trim());
 
         if (isHardcodedMaster) {
             localStorage.setItem('tosil_is_master', 'true');
             localStorage.removeItem('tosil_is_subadmin');
         } else {
-            // 🔥 [2순위 파이어베이스 검증 로직] 🔥
+            // 🔥 [2순위 파이어베이스 admins 컬렉션 검증 로직] 🔥
             if (typeof window.db !== 'undefined' && typeof window.getDoc === 'function') {
                 try {
-                    const adminSnap = await window.getDoc(window.doc(window.db, "admins", myKakaoId));
+                    const adminSnap = await window.getDoc(window.doc(window.db, "admins", myUid));
                     if (adminSnap.exists()) {
                         const role = adminSnap.data().role;
                         if (role === 'master_admin') {
