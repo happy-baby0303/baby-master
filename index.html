@@ -102,6 +102,11 @@ body.mode-senior .hide-on-senior { display: none !important; }
             background-color: #000000 !important;
             box-shadow: none !important;
         }
+
+         /* 🚨 하단 탭 5개 균등 분할 강제 적용 (맘수다 쭈구리 방지 패치) */
+        body:not(.mode-senior) .bottom-nav {
+            grid-template-columns: repeat(5, 1fr) !important;
+        }
 </style>
 
 </head>
@@ -1014,8 +1019,15 @@ body.mode-senior .hide-on-senior { display: none !important; }
                         <div id="growth-insight" style="margin-bottom:20px; background: transparent; padding: 0;"></div>
                         
                         <!-- ✨ [수정] 배경을 var(--text-m)에서 예쁜 초록색(#00B37A)으로 바꿨습니다! -->
+<!-- 기존에 있던 성장 차트 저장 버튼 -->
 <button class="btn-main" onclick="saveGrowthRecord()" style="background: #00B37A !important; color: white !important; width:100%; padding:16px; border-radius: 14px; font-size:15px; font-weight: 800; border: none; cursor: pointer; box-shadow: 0 4px 12px rgba(0, 179, 122, 0.25);">
     💾 이 기록 성장 차트에 저장하기
+</button>
+
+<!-- ✨👇 여기에 새로 추가! (성장 탭 전용 리포트 버튼) 👇✨ -->
+<button class="btn-main" style="background: linear-gradient(135deg, #3182F6 0%, #7C3AED 100%) !important; color: #FFF !important; border:none !important; box-shadow:0 6px 16px rgba(124, 58, 237, 0.25) !important; padding:16px; font-size:15px; font-weight:900; border-radius:14px; width:100%; display:flex; justify-content:center; align-items:center; gap:8px; margin-top: 12px; cursor: pointer; transition: 0.2s;" onclick="window.openPediatricianReport()">
+    <span style="font-size:18px;">📄</span> 영유아 검진/소아과 종합 리포트 
+    <span style="background: #FEE500; color: #191F28; padding: 2px 6px; border-radius: 6px; font-size: 10px; margin-left: 4px;">PREMIUM</span>
 </button>
             
                         <!-- 🗓️ 원더윅스 & 예방접종 브리핑 -->
@@ -1959,16 +1971,13 @@ body.mode-senior .hide-on-senior { display: none !important; }
     ✏️ 글쓰기
 </button>
 
-<nav class="bottom-nav">
+<!-- 🚨 4등분 제한을 부수고 강제로 5등분으로 넓히는 인라인 스타일 주입! -->
+<nav class="bottom-nav" style="display: grid !important; grid-template-columns: repeat(5, 1fr) !important;">
     <div id="nav-home" class="nav-item active" onclick="switchTab('home', this)"><span class="icon">🏠</span><span class="label">홈</span></div>
     <div id="nav-toolbox" class="nav-item" onclick="switchTab('toolbox', this)"><span class="icon">🧰</span><span class="label">툴박스</span></div>
     <div id="nav-hotplace" class="nav-item" onclick="switchTab('hotplace', this)"><span class="icon">🗺️</span><span class="label">나들이</span></div>
     <div id="nav-info" class="nav-item" onclick="switchTab('info', this)"><span class="icon">📚</span><span class="label">육아정보</span></div>
-    
-    <div id="nav-community" class="nav-item" onclick="switchTab('community', this)">
-        <span class="icon" style="position: relative;">💬</span>
-        <span class="label">맘수다</span>
-    </div>
+    <div id="nav-community" class="nav-item" onclick="switchTab('community', this)" style="display: flex; flex-direction: column; align-items: center; justify-content: center;"><span class="icon">💬</span><span class="label">맘수다</span></div>
 </nav>
 
 <!-- 🎒 외출 준비물 체크리스트 모달 -->
