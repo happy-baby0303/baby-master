@@ -311,7 +311,7 @@ body.mode-senior .hide-on-senior { display: none !important; }
         <div style="padding: 16px 24px; padding-bottom: max(24px, env(safe-area-inset-bottom)); border-top: 1px solid var(--border, #E5E8EB); background: var(--bg-card, #FFFFFF);">
             <!-- 🚨 onclick 부분을 우리가 만든 업그레이드 함수로 교체! 문구도 선착순 혜택으로 변경! -->
             <button onclick="window.upgradeToEarlyBirdVIP()" style="width: 100%; padding: 18px; border-radius: 16px; background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%); color: #FFFFFF; font-weight: 900; font-size: 16.5px; border: none; cursor: pointer; display: flex; justify-content: center; align-items: center; gap: 8px; box-shadow: 0 4px 12px rgba(15,23,42,0.3);">
-                🎁 선착순 평생 무료 혜택 받기
+                🎁  선착순 500명 · 1년 무료 혜택 받기
             </button>
         </div>
         
@@ -446,6 +446,7 @@ body.mode-senior .hide-on-senior { display: none !important; }
         <div id="health-smart-banner" style="display:none; margin: 20px 20px 0 20px;"></div>
         <input type="file" id="baby-photo-input" accept="image/*" style="display:none;" onchange="uploadPhoto(this)">
         
+        <div id="night-duty-container" style="display:none;"></div>
         <div id="smart-banner-container"></div> 
  
          <!-- 👵 조부모/시터 전용 하이엔드 대시보드 시작 -->
@@ -2348,7 +2349,7 @@ body.mode-senior .hide-on-senior { display: none !important; }
                 nickname: localStorage.getItem('kakao_nickname') || '육아동지',
                 requestedAt: new Date().toISOString()
             });
-            alert("🎉 VIP 평생 무료 혜택 신청이 접수되었습니다!");
+            alert("🎉얼리버드 신청 완료!\n\n승인되면 1년간 프리미엄 전 기능을 무료로 이용하실 수 있습니다");
             const modal = document.getElementById('vip-modal-overlay');
             if(modal) modal.style.display = 'none';
         } catch (error) {

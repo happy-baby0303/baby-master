@@ -5620,6 +5620,7 @@ window.initRealtimeSync = () => {
     if (typeof startCommunityRealtimeSync === 'function') startCommunityRealtimeSync();
     if (typeof startCommentRealtimeSync === 'function') startCommentRealtimeSync();
     if (typeof startSettingsRealtimeSync === 'function') startSettingsRealtimeSync();
+    if (typeof startNightDutyRealtimeSync === 'function') startNightDutyRealtimeSync();
 };
 
 // ==========================================
@@ -9686,16 +9687,23 @@ window.saveUserInfoToFirebase = async function() {
                     if (sData && sData.founder_event_closed === true) isEventClosed = true;
                 }
 
-                // 👑 이벤트가 안 끝났으면 평생 무료(founder) 권한 부여!
-                const isFounder = !isEventClosed;
+                // 👑 이벤트가 안 끝났으면 1년 무료(founder) 권한 부여!
+const isFounder = !isEventClosed;
+let founderUntil = null;
+if (isFounder) {
+    const until = new Date();
+    until.setFullYear(until.getFullYear() + 1);
+    founderUntil = until.toISOString().split('T')[0];
+}
 
                 const newUserData = {
-                    kakao_id: myKakaoId,
-                    nickname: myNickname,
-                    joinedAt: new Date().toISOString(), // 👈 가입 시간 초단위로 정확히 기록! (나중에 엑셀로 뽑아볼 수 있음)
-                    is_founder: isFounder,
-                    last_login: new Date().toISOString()
-                };
+    kakao_id: myKakaoId,
+    nickname: myNickname,
+    joinedAt: new Date().toISOString(),
+    is_founder: isFounder,
+    founder_until: founderUntil,          // ← 이 줄 추가
+    last_login: new Date().toISOString()
+};
 
                 if (typeof window.setDoc === 'function') {
                     await window.setDoc(userRef, newUserData, { merge: true });
@@ -9708,7 +9716,7 @@ window.saveUserInfoToFirebase = async function() {
                     localStorage.setItem('tosil_is_founder', 'true');
                     // 유저 기분 좋게 1.5초 뒤에 팝업 띄워주기
                     setTimeout(() => {
-                        window.showToast("🎉 축하합니다! 선착순 얼리버드(프리미엄 평생 무료) 혜택에 당첨되셨습니다! 💎");
+                        window.showToast(`🎉 축하합니다! 선착순 얼리버드 당첨!<br>${founderUntil}까지 프리미엄 전 기능 무료 💎`);
                         if(typeof window.renderSettingsTab === 'function') window.renderSettingsTab();
                     }, 1500);
                 }
@@ -9720,10 +9728,19 @@ window.saveUserInfoToFirebase = async function() {
                 
                 // DB에 저장된 내 신분이 VIP면 폰에도 똑같이 복구해줌 (폰 바꿨을 때 혜택 유지)
                 if (userData.is_founder) {
-                    localStorage.setItem('tosil_is_founder', 'true');
-                } else {
-                    localStorage.removeItem('tosil_is_founder');
-                }
+    const until = userData.founder_until;
+    const stillValid = !until || new Date(until) >= new Date();
+    if (stillValid) {
+        localStorage.setItem('tosil_is_founder', 'true');
+        if (until) localStorage.setItem('tosil_founder_until', until);
+    } else {
+        localStorage.removeItem('tosil_is_founder');
+        localStorage.removeItem('tosil_founder_until');
+    }
+} else {
+    localStorage.removeItem('tosil_is_founder');
+    localStorage.removeItem('tosil_founder_until');
+}
 
                 // 최근 접속 시간만 업데이트
                 if (typeof window.setDoc === 'function') {
@@ -12579,8 +12596,11 @@ window.syncPremiumStatus = async function() {
     if (!code || typeof window.db === 'undefined' || typeof window.getDoc === 'undefined') return;
     try {
         const snap = await window.getDoc(window.doc(window.db, "families", code));
-        const plan = snap.exists() ? (snap.data().plan || 'free') : 'free';
-        localStorage.setItem('tosil_plan_cache', plan);
+        const data = snap.exists() ? snap.data() : {};
+const until = data.planUntil;
+const valid = !until || new Date(until) >= new Date();
+localStorage.setItem('tosil_plan_cache', valid ? (data.plan || 'free') : 'free');
+if (until) localStorage.setItem('tosil_plan_until', until);
     } catch(e) { 
         console.warn("프리미엄 상태 서버 동기화 실패 (오프라인일 수 있음)"); 
     }
@@ -12653,7 +12673,7 @@ window.showPaywall = function() {
                         <div style="width: 44px; height: 44px; background: rgba(56,189,248,0.15); border-radius: 14px; display: flex; align-items: center; justify-content: center; font-size: 22px; flex-shrink: 0; border: 1px solid rgba(56,189,248,0.3);">📊</div>
                         <div>
                             <div style="font-size: 15px; font-weight: 900; color: #FDFDFD; margin-bottom: 4px; letter-spacing: -0.3px;">의료용 데이터 추출 & 백업</div>
-                            <div style="font-size: 12.5px; font-weight: 600; color: #94A3B8; line-height: 1.4; word-break: keep-all;">소아과 제출용 엑셀(CSV) 원터치 추출 및<br>우리 아기 데이터 평생 영구 보존</div>
+                            <div style="font-size: 12.5px; font-weight: 600; color: #94A3B8; line-height: 1.4; word-break: keep-all;">소아과 제출용 A4 리포트 발급 및<br>우리 아기 기록 전체 보관</div>
                         </div>
                     </div>
 
@@ -12662,11 +12682,11 @@ window.showPaywall = function() {
                 <!-- 🚀 하단 액션 (선착순 심리 자극) -->
                 <div style="text-align: center;">
                     <div style="font-size: 12px; font-weight: 800; color: #FBBF24; background: rgba(251,191,36,0.1); padding: 8px 16px; border-radius: 12px; display: inline-block; margin-bottom: 12px; border: 1px solid rgba(251,191,36,0.2);">
-                        ✨ 런칭 기념, 선착순 500명 평생 무료!
+                        ✨ 런칭 기념, 선착순 500명 1년 무료!
                     </div>
                     
                     <button onclick="window.applyPremiumWaitlist(this)" style="width: 100%; padding: 18px; background: linear-gradient(135deg, #FDE047 0%, #F59E0B 100%); color: #451A03; border: none; border-radius: 16px; font-size: 16px; font-weight: 900; cursor: pointer; box-shadow: 0 8px 20px rgba(245,158,11,0.3); transition: transform 0.2s;" onmousedown="this.style.transform='scale(0.96)'" onmouseup="this.style.transform='scale(1)'">
-                        얼리버드 평생 무료 탑승하기
+                        얼리버드 1년 무료 신청하기
                     </button>
                 </div>
 
@@ -12714,7 +12734,7 @@ window.applyPremiumWaitlist = function(btn) {
             appliedAt: new Date().toISOString()
         }, {merge: true}).then(() => {
             localStorage.setItem('tosil_premium_applied', 'true');
-            btn.innerText = "✅ 평생 무료 탑승 완료!";
+            btn.innerText = "✅ 신청 완료!";
             btn.style.background = "#10B981"; 
             btn.style.color = "#FFFFFF";
             btn.style.boxShadow = "none";
@@ -12729,7 +12749,7 @@ window.applyPremiumWaitlist = function(btn) {
 
         }).catch((e) => {
             console.error("얼리버드 저장 실패:", e);
-            btn.innerText = "얼리버드 평생 무료 탑승하기";
+            btn.innerText = "얼리버드 1년 무료 신청하기";
             btn.disabled = false;
             window.showToast("앗, 통신 지연이 발생했어요. 다시 시도해주세요.");
         });
@@ -12812,7 +12832,7 @@ window.renderSettingsTab = function() {
                         <div style="font-size: 28px;">💎</div>
                         <div>
                             <div style="font-size: 11px; font-weight: 800; color: #FBBF24; margin-bottom: 2px;">FOUNDER MEMBER</div>
-                            <div style="font-size: 14.5px; font-weight: 900; color: #FFF; letter-spacing: -0.5px;">얼리버드 평생 무료 패스 적용중</div>
+                            <div style="font-size: 14.5px; font-weight: 900; color: #FFF; letter-spacing: -0.5px;">얼리버드 패스 · ${localStorage.getItem('tosil_founder_until') || ''}까지</div>
                         </div>
                     </div>
                 </div>
@@ -13304,3 +13324,220 @@ window.downloadPediatricianPDF = function() {
         }).catch(e => { console.error(e); box.remove(); window.showToast("리포트 생성 실패"); });
     }, 300);
 };
+
+// ==========================================
+// 🌙 [아빠 전용] 야간 당번 시스템
+// ==========================================
+window.NIGHT_DUTY_KEY = 'tosil_night_duty';
+
+// 1. 당번 시작 (아빠가 누름)
+window.startNightDuty = async function() {
+    const now = new Date();
+    const duty = {
+        startedAt: now.getTime(),
+        by: localStorage.getItem('firebase_uid') || '',
+        byName: localStorage.getItem('kakao_nickname') || '아빠',
+        active: true
+    };
+
+    localStorage.setItem(window.NIGHT_DUTY_KEY, JSON.stringify(duty));
+
+    const code = window.getSyncCode ? window.getSyncCode() : localStorage.getItem('family_sync_code');
+    if (code && window.db && window.setDoc) {
+        try {
+            await window.setDoc(window.doc(window.db, "nightduty_" + code, "status"), duty);
+        } catch(e) { console.warn(e); }
+    }
+
+    if (navigator.vibrate) navigator.vibrate([50, 100, 50]);
+    window.renderNightDuty();
+    window.updateTrackerDashboard && window.updateTrackerDashboard();
+
+    window.showToast("🌙 야간 당번 시작!<br>오늘 밤은 엄마를 푹 재워주세요 🤍");
+
+    // 아내에게 카톡으로 알리기
+    if (typeof Kakao !== 'undefined' && Kakao.isInitialized()) {
+        setTimeout(() => {
+            window.showConfirm(
+                "아내분께 '오늘 밤은 내가 볼게'라고<br>알려드릴까요?",
+                function() {
+                    Kakao.Share.sendDefault({
+                        objectType: 'text',
+                        text: `🌙 오늘 밤은 내가 볼게.\n\n푹 자. 새벽에 깨지 마 🤍\n\n- 야간 당번 ${duty.byName}`,
+                        link: { mobileWebUrl: 'https://happy-baby0303.github.io/', webUrl: 'https://happy-baby0303.github.io/' }
+                    });
+                }, "💌", "알리기", "#3182F6"
+            );
+        }, 800);
+    }
+};
+
+// 2. 당번 종료 + 리포트
+window.endNightDuty = async function() {
+    const raw = localStorage.getItem(window.NIGHT_DUTY_KEY);
+    if (!raw) return;
+    const duty = JSON.parse(raw);
+
+    const mins = Math.floor((Date.now() - duty.startedAt) / 60000);
+    const h = Math.floor(mins / 60), m = mins % 60;
+
+    // 당번 시간 동안의 기록 집계
+    const records = JSON.parse(localStorage.getItem('tosil_tracker_records')) || [];
+    let feedCnt = 0, diaperCnt = 0, feedMl = 0;
+    records.forEach(r => {
+        if (r.timestamp < duty.startedAt) return;
+        if (r.type === 'feed') { feedCnt++; feedMl += parseInt(r.amount) || 0; }
+        if (r.type === 'diaper') diaperCnt++;
+    });
+
+    localStorage.removeItem(window.NIGHT_DUTY_KEY);
+
+    const code = window.getSyncCode ? window.getSyncCode() : localStorage.getItem('family_sync_code');
+    if (code && window.db && window.setDoc) {
+        try {
+            await window.setDoc(window.doc(window.db, "nightduty_" + code, "status"), { active: false });
+        } catch(e) {}
+    }
+
+    // 경험치: 시간당 20 + 수유당 15 + 기저귀당 10
+    const exp = Math.floor(mins / 60) * 20 + feedCnt * 15 + diaperCnt * 10;
+    if (typeof window.updateMateExp === 'function') window.updateMateExp(exp);
+
+    window.renderNightDuty();
+    window.updateTrackerDashboard && window.updateTrackerDashboard();
+
+    // 새벽 근무 리포트 모달
+    const body = document.getElementById('modal-dynamic-body');
+    if (body) {
+        body.innerHTML = `
+            <div style="text-align:center; padding:8px 4px;">
+                <div style="font-size:44px; margin-bottom:12px;">🌅</div>
+                <div style="font-size:13px; font-weight:800; color:#3182F6; margin-bottom:6px;">야간 당번 종료</div>
+                <div style="font-size:22px; font-weight:900; color:var(--text-m); margin-bottom:24px;">
+                    ${h}시간 ${m}분<br>수고하셨습니다
+                </div>
+
+                <div style="display:flex; gap:8px; margin-bottom:20px;">
+                    <div style="flex:1; background:var(--bg-sub); border-radius:14px; padding:16px 8px;">
+                        <div style="font-size:20px; margin-bottom:6px;">🍼</div>
+                        <div style="font-size:11px; font-weight:800; color:var(--text-s); margin-bottom:4px;">수유</div>
+                        <div style="font-size:16px; font-weight:900; color:#3182F6;">${feedCnt}회</div>
+                    </div>
+                    <div style="flex:1; background:var(--bg-sub); border-radius:14px; padding:16px 8px;">
+                        <div style="font-size:20px; margin-bottom:6px;">💩</div>
+                        <div style="font-size:11px; font-weight:800; color:var(--text-s); margin-bottom:4px;">기저귀</div>
+                        <div style="font-size:16px; font-weight:900; color:#F04452;">${diaperCnt}회</div>
+                    </div>
+                    <div style="flex:1; background:var(--bg-sub); border-radius:14px; padding:16px 8px;">
+                        <div style="font-size:20px; margin-bottom:6px;">⭐</div>
+                        <div style="font-size:11px; font-weight:800; color:var(--text-s); margin-bottom:4px;">획득 EXP</div>
+                        <div style="font-size:16px; font-weight:900; color:#F59E0B;">+${exp}</div>
+                    </div>
+                </div>
+
+                <div style="background:#EBF4FF; border-radius:14px; padding:16px; margin-bottom:20px; font-size:13.5px; font-weight:700; color:#1B64DA; line-height:1.5; word-break:keep-all;">
+                    ${mins >= 240
+                        ? '아내분이 오랜만에 통잠을 주무셨을 거예요.<br>오늘 하루도 화이팅입니다 🤍'
+                        : '짧지만 확실한 교대였습니다.<br>이런 밤이 쌓여서 부부가 됩니다 🤍'}
+                </div>
+
+                <button onclick="window.shareNightDuty(${h},${m},${feedCnt},${diaperCnt})" style="width:100%; padding:16px; border-radius:14px; background:#FEE500; color:#191919; font-weight:900; font-size:15px; border:none; cursor:pointer; margin-bottom:8px;">
+                    💬 아내에게 새벽 근무 보고하기
+                </button>
+                <button onclick="closeFestivalModalForce()" style="width:100%; padding:14px; border-radius:14px; background:var(--bg-sub); color:var(--text-s); font-weight:800; font-size:14px; border:none; cursor:pointer;">닫기</button>
+            </div>`;
+        const modal = document.getElementById('premium-modal');
+        if (modal) modal.style.display = 'flex';
+    }
+
+    if (typeof window.shootConfetti === 'function') window.shootConfetti();
+};
+
+// 3. 아내에게 보고
+window.shareNightDuty = function(h, m, feed, diaper) {
+    if (typeof Kakao === 'undefined' || !Kakao.isInitialized()) return;
+    Kakao.Share.sendDefault({
+        objectType: 'text',
+        text: `🌅 새벽 근무 보고\n\n근무 시간: ${h}시간 ${m}분\n수유 ${feed}회 / 기저귀 ${diaper}회\n\n잘 잤어? 오늘도 화이팅 🤍`,
+        link: { mobileWebUrl: 'https://happy-baby0303.github.io/', webUrl: 'https://happy-baby0303.github.io/' }
+    });
+};
+
+// 4. 홈 화면 렌더링
+window.renderNightDuty = function() {
+    const box = document.getElementById('night-duty-container');
+    if (!box) return;
+
+    const role = localStorage.getItem('user_role');
+    const raw = localStorage.getItem(window.NIGHT_DUTY_KEY);
+    const hour = new Date().getHours();
+    const isNightTime = hour >= 19 || hour < 7;
+
+    // 당번 중이면 역할 상관없이 모두에게 표시 (엄마도 봐야 안심)
+    if (raw) {
+        const duty = JSON.parse(raw);
+        const mins = Math.floor((Date.now() - duty.startedAt) / 60000);
+        const h = Math.floor(mins / 60), m = mins % 60;
+        const isMine = duty.by === localStorage.getItem('firebase_uid');
+
+        box.style.display = 'block';
+        box.innerHTML = `
+            <div style="background:linear-gradient(135deg,#1E293B,#0F172A); border-radius:20px; padding:20px; margin-bottom:20px; box-shadow:0 8px 20px rgba(15,23,42,0.2);">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px;">
+                    <div style="display:flex; align-items:center; gap:10px;">
+                        <span style="font-size:24px;">🌙</span>
+                        <div>
+                            <div style="font-size:11.5px; font-weight:800; color:#60A5FA; margin-bottom:3px;">야간 당번 진행 중</div>
+                            <div style="font-size:16px; font-weight:900; color:#FFF;">${duty.byName} · ${h}시간 ${m}분째</div>
+                        </div>
+                    </div>
+                    <span style="background:rgba(96,165,250,0.15); color:#60A5FA; font-size:11px; font-weight:900; padding:6px 10px; border-radius:10px;">ON</span>
+                </div>
+                ${isMine
+                    ? `<button onclick="window.endNightDuty()" style="width:100%; padding:14px; border-radius:14px; background:#3182F6; color:#FFF; font-weight:900; font-size:14.5px; border:none; cursor:pointer;">☀️ 당번 종료 (근무 보고서 받기)</button>`
+                    : `<div style="text-align:center; padding:12px; background:rgba(255,255,255,0.06); border-radius:12px; font-size:13px; font-weight:700; color:#94A3B8;">오늘 밤은 걱정 말고 푹 주무세요 🤍</div>`}
+            </div>`;
+        return;
+    }
+
+    // 아빠 + 저녁 시간대에만 시작 버튼 노출
+    if (role === 'dad' && isNightTime) {
+        box.style.display = 'block';
+        box.innerHTML = `
+            <div onclick="window.startNightDuty()" style="background:linear-gradient(135deg,#1E293B,#0F172A); border-radius:20px; padding:20px; margin-bottom:20px; cursor:pointer; box-shadow:0 8px 20px rgba(15,23,42,0.2); display:flex; justify-content:space-between; align-items:center;">
+                <div style="display:flex; align-items:center; gap:14px;">
+                    <span style="font-size:28px;">🌙</span>
+                    <div>
+                        <div style="font-size:11.5px; font-weight:800; color:#60A5FA; margin-bottom:4px;">오늘 밤, 아빠 차례</div>
+                        <div style="font-size:16.5px; font-weight:900; color:#FFF; letter-spacing:-0.5px;">야간 당번 시작하기</div>
+                        <div style="font-size:11.5px; font-weight:600; color:#94A3B8; margin-top:4px;">아내를 통잠 재워주세요</div>
+                    </div>
+                </div>
+                <span style="background:#3182F6; color:#FFF; font-size:13px; font-weight:900; padding:10px 14px; border-radius:12px; white-space:nowrap;">시작</span>
+            </div>`;
+        return;
+    }
+
+    box.style.display = 'none';
+};
+
+// 5. 실시간 동기화 (부부 폰 연동)
+let nightDutyUnsub = null;
+window.startNightDutyRealtimeSync = function() {
+    const code = window.getSyncCode ? window.getSyncCode() : localStorage.getItem('family_sync_code');
+    if (!code || !window.db || typeof window.onSnapshot !== 'function') return;
+    if (nightDutyUnsub) nightDutyUnsub();
+
+    nightDutyUnsub = window.onSnapshot(window.doc(window.db, "nightduty_" + code, "status"), (snap) => {
+        if (snap.exists()) {
+            const d = snap.data();
+            if (d.active) localStorage.setItem(window.NIGHT_DUTY_KEY, JSON.stringify(d));
+            else localStorage.removeItem(window.NIGHT_DUTY_KEY);
+        }
+        window.renderNightDuty();
+    }, () => {});
+};
+
+// 6. 1분마다 시간 갱신
+setInterval(() => { if (localStorage.getItem(window.NIGHT_DUTY_KEY)) window.renderNightDuty(); }, 60000);
+document.addEventListener('DOMContentLoaded', () => setTimeout(window.renderNightDuty, 300));
