@@ -11611,7 +11611,7 @@ window.downloadSyncTicket = function() {
                 navigator.share({
                     files: [file],
                     title: '육아메이트 가족 티켓',
-                    text: '우리아기 육아메이트에 초대합니다! ✈️'
+                    text: '우리 아기 육아 기록 같이 공유하자 🤍 아래 링크를 눌러줘!'
                 }).then(() => {
                     window.showToast("🎉 티켓 전송 완료! 짝꿍에게 보내보세요 ✈️");
                 }).catch((error) => {
@@ -13276,20 +13276,31 @@ window.downloadPediatricianPDF = function() {
     setTimeout(() => {
         html2canvas(box, { scale: 3, backgroundColor: '#FFFFFF' }).then(canvas => {
             canvas.toBlob(blob => {
-                const file = new File([blob], `${babyName}_소아과리포트.png`, { type: 'image/png' });
-                if (navigator.canShare && navigator.canShare({ files: [file] })) {
-                    navigator.share({ files: [file], title: '소아과 진료 참고 자료' })
-                        .then(() => window.showToast("📄 리포트가 준비되었습니다!"))
-                        .catch(() => {});
-                } else {
-                    const a = document.createElement('a');
-                    a.download = file.name;
-                    a.href = canvas.toDataURL('image/png');
-                    document.body.appendChild(a); a.click(); document.body.removeChild(a);
-                    window.showToast("📄 리포트가 저장되었습니다!");
-                }
-                box.remove();
-            });
+    const fileName = `${babyName}_소아과리포트.png`;
+    const dataUrl = canvas.toDataURL('image/png');
+
+    // 1. 먼저 다운로드 (안드로이드 갤러리 저장)
+    const a = document.createElement('a');
+    a.download = fileName;
+    a.href = dataUrl;
+    document.body.appendChild(a); a.click(); document.body.removeChild(a);
+
+    // 2. 공유는 별도 버튼으로 제공
+    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+    const file = new File([blob], fileName, { type: 'image/png' });
+    const canShare = navigator.canShare && navigator.canShare({ files: [file] });
+
+    window.showConfirm(
+        isIOS
+          ? "리포트가 만들어졌어요!<br><span style='font-size:12px;color:#8B95A1;'>아이폰은 공유창에서 '이미지 저장'을 눌러주세요.</span>"
+          : "📄 갤러리에 저장되었습니다!<br><span style='font-size:12px;color:#8B95A1;'>카톡으로 바로 보내시겠어요?</span>",
+        function() {
+            if (canShare) navigator.share({ files: [file], title: '소아과 진료 참고 자료' }).catch(()=>{});
+        },
+        "📄", "공유하기", "#3182F6"
+    );
+    box.remove();
+});
         }).catch(e => { console.error(e); box.remove(); window.showToast("리포트 생성 실패"); });
     }, 300);
 };
