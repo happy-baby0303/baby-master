@@ -2035,7 +2035,7 @@ document.getElementById('growth-insight').innerHTML = insightMsg;
     
     // 글로벌 윈도우 스코프에 결과값 임시 저장 (저장하기 버튼을 위해)
     window.tempGrowthData = {
-        date: new Date().toISOString().split('T')[0],
+        date: window.getSafeTodayStr(),
         month: month,
         height: h || 0,
         weight: w || 0,
@@ -2131,7 +2131,7 @@ async function saveGrowthRecord() {
             
             if (syncCode) {
                 try { 
-                    await setDoc(doc(db, "growth_" + syncCode, "status"), { records: records }); 
+                    await setDoc(doc(db, "growth_" + syncCode + window.currentBabySuffix, "status"), { records: records }); 
                     localStorage.removeItem('tosil_offline_queue_growth'); // 성공하면 큐 비우기
                 } catch (e) { 
                     console.warn("파이어베이스 연동 실패 (하지만 기기에는 저장됩니다):", e); 
@@ -3791,7 +3791,7 @@ window.openTrackerSheet = function(type, editId = null, preSelect = null) {
             let r = records.find(x => x.id === window.editingTrackerId);
             if (r) {
                 const sDate = new Date(r.timestamp);
-                sleepStartD = sDate.toISOString().split('T')[0];
+                sleepStartD = window.getSafeDateStr(sDate.getTime());
                 sleepStartT = r.time;
                 activeSubType = r.subType || ''; 
                 
@@ -3799,7 +3799,7 @@ window.openTrackerSheet = function(type, editId = null, preSelect = null) {
                     window.trackerState.isSleeping = true;
                 } else {
                     const eDate = new Date(r.timestamp + (r.amount * 60000));
-                    sleepEndD = eDate.toISOString().split('T')[0];
+                    sleepEndD = window.getSafeDateStr(sDate.getTime());
                     sleepEndT = `${String(eDate.getHours()).padStart(2,'0')}:${String(eDate.getMinutes()).padStart(2,'0')}`;
                 }
             }
@@ -5065,8 +5065,9 @@ setInterval(() => {
 // ==========================================
 
 // 🚨 1. 기종/국가에 상관없이 무조건 폰의 로컬(한국) 날짜를 뽑아주는 전용 함수!
-window.getSafeTodayStr = function() {
-    const d = new Date();
+// 특정 시각(timestamp)을 한국 로컬 날짜 문자열로 변환
+window.getSafeDateStr = function(ts) {
+    const d = ts ? new Date(ts) : new Date();
     return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
 };
 
@@ -5145,7 +5146,7 @@ window.saveRoutineSettings = function() {
     if (typeof db !== 'undefined' && typeof setDoc === 'function') {
         const syncCode = window.getSyncCode(); if (!syncCode) return;
         const todayStr = window.getSafeTodayStr();
-        setDoc(doc(db, "routine_" + syncCode, "status"), { 
+        setDoc(doc(db, "routine_" + syncCode + window.currentBabySuffix, "status"), { 
             data: routineData, 
             date: todayStr,
             names: newNames 
@@ -6646,7 +6647,7 @@ window.deleteOpenRecord = function(id) {
 window.renewOpenRecord = function(id) {
     showConfirm("이 제품을 오늘 날짜로 새로 뜯으셨나요?", function() {
         let records = JSON.parse(localStorage.getItem('tosil_open_records')) || [];
-        const todayStr = new Date().toISOString().split('T')[0];
+        window.getSafeTodayStr()
 
         records = records.map(record => {
             if (record.id === id) {
@@ -6695,7 +6696,7 @@ window.renderOpenRecords = function() {
     
     const dateInput = document.getElementById('open-item-date');
     if (dateInput && !dateInput.value) {
-        dateInput.value = new Date().toISOString().split('T')[0];
+        window.getSafeTodayStr()
     }
 
     if (records.length === 0) {
@@ -10877,7 +10878,7 @@ document.addEventListener("DOMContentLoaded", () => {
 // 🍼 수유량 폭발 성장(뱃골 확장 / 정체기 탈출) 축하 엔진 (현실 버전)
 // ==========================================
 window.checkFeedPlateauBreakthrough = function() {
-    const todayStr = new Date().toISOString().split('T')[0];
+    const todayStr = window.getSafeTodayStr();
     
     const lastCelebratedDate = localStorage.getItem('tosil_plateau_celebrated_date');
     if (lastCelebratedDate === todayStr) return;
@@ -10886,7 +10887,7 @@ window.checkFeedPlateauBreakthrough = function() {
     
     const yesterday = new Date();
     yesterday.setDate(yesterday.getDate() - 1);
-    const yesterdayStr = yesterday.toISOString().split('T')[0];
+    const yesterdayStr = window.getSafeTodayStr();
 
     let todayFeedTotal = 0;
     let yesterdayFeedTotal = 0;
@@ -10898,7 +10899,7 @@ window.checkFeedPlateauBreakthrough = function() {
     records.forEach(r => {
         if (r.type === 'feed' && r.amount) {
             const rDate = new Date(r.timestamp);
-            const rDateStr = rDate.toISOString().split('T')[0];
+            const rDateStr = window.getSafeTodayStr();
             const rMinutes = rDate.getHours() * 60 + rDate.getMinutes();
 
             if (rDateStr === todayStr) {
@@ -12657,11 +12658,28 @@ document.addEventListener("DOMContentLoaded", () => {
 });
 
 // ==========================================
-// 💎 하이엔드 페이월 (3단 앵커링 프라이싱 + 럭셔리 다크 테마)
+// 💎 하이엔드 페이월 (상실 회피 + 3단 앵커링 프라이싱)
 // ==========================================
 window.showPaywall = function() {
     let existing = document.getElementById('premium-paywall-modal');
     if (existing) existing.remove();
+
+    // 🚨 [상실 회피 자극 엔진] 지금까지 쌓은 기록 개수 연산
+    const lossAversionHtml = (() => {
+        const t = (JSON.parse(localStorage.getItem('tosil_tracker_records'))||[]).length;
+        const f = (JSON.parse(localStorage.getItem('tosil_fever_records'))||[]).length;
+        const g = (JSON.parse(localStorage.getItem('tosil_growth_records'))||[]).length;
+        const total = t + f + g;
+        if (total < 10) return '';
+        return `
+            <div style="background:rgba(251,191,36,0.1); border:1px solid rgba(251,191,36,0.25); border-radius:16px; padding:18px; margin-bottom:24px; text-align:center;">
+                <div style="font-size:11.5px; font-weight:800; color:#FBBF24; margin-bottom:8px;">지금까지 쌓아온 소중한 기록</div>
+                <div style="font-size:32px; font-weight:900; color:#FFF; margin-bottom:8px;">${total}건</div>
+                <div style="font-size:12.5px; font-weight:700; color:#94A3B8; line-height:1.5; word-break:keep-all;">
+                    무료 플랜은 최근 3개월 기록만 보관됩니다.<br>PLUS로 우리 아이의 모든 순간을 평생 지켜주세요.
+                </div>
+            </div>`;
+    })();
 
     const paywallHtml = `
         <div id="premium-paywall-modal" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 999999; display: flex; justify-content: center; align-items: center; padding: 20px; backdrop-filter: blur(10px); opacity: 0; transition: opacity 0.3s;">
@@ -12671,15 +12689,16 @@ window.showPaywall = function() {
                 <button onclick="document.getElementById('premium-paywall-modal').style.opacity='0'; setTimeout(()=>document.getElementById('premium-paywall-modal').remove(),300);" style="position: absolute; top: 20px; right: 20px; background: rgba(255,255,255,0.1); border: none; width: 32px; height: 32px; border-radius: 50%; font-size: 14px; font-weight: 900; color: #94A3B8; cursor: pointer; backdrop-filter: blur(4px); transition: 0.2s;">✕</button>
 
                 <!-- 👑 타이틀 영역 -->
-<div style="text-align: center; margin-bottom: 36px;">
-    <div style="display: inline-flex; align-items: center; justify-content: center; width: 64px; height: 64px; background: linear-gradient(135deg, #FDE047 0%, #F59E0B 100%); border-radius: 20px; font-size: 32px; margin-bottom: 16px; box-shadow: 0 10px 25px rgba(245,158,11,0.3);">
-        💎
-    </div>
-    <div style="font-family: 'Georgia', serif; font-size: 11px; font-weight: 800; color: #FBBF24; letter-spacing: 3px; margin-bottom: 6px;">TOSIL PLUS</div>
-    <div style="font-size: 24px; font-weight: 900; color: #FFFFFF; line-height: 1.4; letter-spacing: -0.5px;">
-        우리 가족을 위한 완벽한<br>프라이빗 육아 기록실
-    </div>
-</div>
+                <div style="text-align: center; margin-bottom: 24px;">
+                    <div style="display: inline-flex; align-items: center; justify-content: center; width: 64px; height: 64px; background: linear-gradient(135deg, #FDE047 0%, #F59E0B 100%); border-radius: 20px; font-size: 32px; margin-bottom: 16px; box-shadow: 0 10px 25px rgba(245,158,11,0.3);">💎</div>
+                    <div style="font-family: 'Georgia', serif; font-size: 12px; font-weight: 800; color: #FBBF24; letter-spacing: 4px; margin-bottom: 8px;">TOSIL PLUS</div>
+                    <div style="font-size: 24px; font-weight: 900; color: #FFFFFF; line-height: 1.4; letter-spacing: -0.5px;">
+                        우리 가족을 위한 완벽한<br>프라이빗 육아 기록실
+                    </div>
+                </div>
+
+                <!-- 🚨 상실 회피 자극 박스 삽입 -->
+                ${lossAversionHtml}
 
                 <!-- 🌟 프리미엄 핵심 기능 요약 -->
                 <div style="display: flex; flex-direction: column; gap: 12px; margin-bottom: 32px;">
@@ -12704,7 +12723,6 @@ window.showPaywall = function() {
                 <!-- 💰 3단 프라이싱 앵커링 (연간 유도) -->
                 <div style="display: flex; flex-direction: column; gap: 10px; margin-bottom: 24px;">
                     
-                    <!-- 1. 월간 결제 (미끼 1) -->
                     <div id="plan-month" class="plan-card" onclick="window.selectPlan('month')" style="background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.1); border-radius: 16px; padding: 16px; display: flex; justify-content: space-between; align-items: center; cursor: pointer; transition: 0.2s;">
                         <div>
                             <div style="font-size: 14px; font-weight: 800; color: #E2E8F0; margin-bottom: 2px;">1개월 플랜</div>
@@ -12716,11 +12734,8 @@ window.showPaywall = function() {
                         </div>
                     </div>
 
-                    <!-- 2. 연간 결제 (타겟 유도 목표 ⭐️) -->
                     <div id="plan-year" class="plan-card" onclick="window.selectPlan('year')" style="background: rgba(56,189,248,0.1); border: 2px solid #38BDF8; border-radius: 16px; padding: 16px; display: flex; justify-content: space-between; align-items: center; cursor: pointer; transition: 0.2s; position: relative;">
-                        <!-- BEST 뱃지 -->
                         <div style="position: absolute; top: -10px; left: 16px; background: #38BDF8; color: #0F172A; font-size: 10px; font-weight: 900; padding: 4px 8px; border-radius: 6px; letter-spacing: 0.5px;">BEST VALUE (20% 할인)</div>
-                        
                         <div>
                             <div style="font-size: 14px; font-weight: 800; color: #38BDF8; margin-bottom: 2px;">1년 플랜</div>
                             <div style="font-size: 12px; color: #94A3B8;">연 ₩46,800 일시불</div>
@@ -12734,7 +12749,6 @@ window.showPaywall = function() {
                         </div>
                     </div>
 
-                    <!-- 3. 평생 결제 (미끼 2 - 앵커링용) -->
                     <div id="plan-life" class="plan-card" onclick="window.selectPlan('life')" style="background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.1); border-radius: 16px; padding: 16px; display: flex; justify-content: space-between; align-items: center; cursor: pointer; transition: 0.2s;">
                         <div>
                             <div style="font-size: 14px; font-weight: 800; color: #E2E8F0; margin-bottom: 2px;">평생 소장 플랜</div>
@@ -13183,10 +13197,14 @@ window.downloadPediatricianReport = function() {
 // 📸 [프리미엄] 월간 성장 카드 생성기 (인스타 공유 마케팅용)
 // ==========================================
 window.downloadMonthlyGrowthCard = function() {
-    if (!window.isPremiumUser()) {
+    // 🚨 1회 무료 체험 방어막!
+    const used = localStorage.getItem('tosil_trial_card') === 'used';
+    if (!window.isPremiumUser() && used) {
         if(navigator.vibrate) navigator.vibrate([20, 50, 20]);
         return window.showPaywall();
     }
+    // 체험 도장 쾅!
+    if (!window.isPremiumUser()) localStorage.setItem('tosil_trial_card', 'used');
 
     window.showToast("🎨 인스타 감성 월간 성장 카드를 굽고 있어요...");
 
@@ -13245,7 +13263,12 @@ window.downloadMonthlyGrowthCard = function() {
             </div>
         </div>
 
-        <div style="display:flex; justify-content:space-between; align-items:center; border-top:2px solid rgba(0,0,0,0.05); pt-24px; margin-top:20px;">
+       ${window.isPremiumUser() ? '' : `
+        <div style="text-align:center; padding:14px; background:rgba(255,255,255,0.6); border:1px dashed #B1D6FF; border-radius:16px; margin-bottom:16px; font-size:13px; font-weight:800; color:#3182F6;">
+            🔒 체험판으로 생성된 카드입니다 · TOSIL PLUS
+        </div>`}
+
+        <div style="display:flex; justify-content:space-between; align-items:center; border-top:2px solid rgba(0,0,0,0.05); padding-top:24px; margin-top:20px;">
             <div style="font-size:18px; font-weight:800; color:#8B95A1;">우리 가족 프라이빗 육아 기록실</div>
             <div style="font-size:24px; font-weight:900; color:#191F28;">육아메이트 플러스</div>
         </div>
@@ -13275,7 +13298,15 @@ window.downloadMonthlyGrowthCard = function() {
 // 👨‍⚕️ [프리미엄] 소아과 제출용 A4 리포트
 // ==========================================
 window.downloadPediatricianPDF = function() {
-    if (!window.isPremiumUser()) { window.showPaywall(); return; }
+    // 🚨 1회 무료 체험 방어막!
+    const used = localStorage.getItem('tosil_trial_report') === 'used';
+    if (!window.isPremiumUser() && used) {
+        if(navigator.vibrate) navigator.vibrate([20, 50, 20]);
+        return window.showPaywall();
+    }
+    // 체험 도장 쾅!
+    if (!window.isPremiumUser()) localStorage.setItem('tosil_trial_report', 'used');
+
     if (typeof html2canvas === 'undefined') return window.showToast("이미지 라이브러리 로딩 중입니다.");
 
     const babyName = localStorage.getItem('tosil_babyName') || '우리아기';
@@ -13378,6 +13409,11 @@ window.downloadPediatricianPDF = function() {
                     <div style="font-size:17px;font-weight:900;color:${c};">${v}</div>
                 </div>`).join('')}
         </div>
+
+       ${window.isPremiumUser() ? '' : `
+        <div style="text-align:center; padding:14px; background:#FFF9E6; border:1px dashed #F59E0B; border-radius:12px; margin-bottom:16px; font-size:12px; font-weight:800; color:#B45309;">
+            🔒 체험판으로 생성된 리포트입니다 · TOSIL PLUS
+        </div>`}
 
         <div style="border-top:1px solid #E5E8EB;padding-top:16px;font-size:10.5px;color:#8B95A1;line-height:1.6;">
             본 자료는 보호자가 육아메이트 앱에 직접 기록한 내용을 정리한 참고용 문서이며, 의학적 진단을 대신하지 않습니다.
@@ -13714,3 +13750,41 @@ document.addEventListener('DOMContentLoaded', () => {
     setTimeout(() => { if (window.renderDadCommute) window.renderDadCommute(); }, 400);
 });
 setInterval(() => { if (window.renderDadCommute) window.renderDadCommute(); }, 300000);
+
+// ==========================================
+// 📸 [월초 한정 노출] 지난달 성장 카드 홈 배너 엔진
+// ==========================================
+window.renderMonthlyCardBanner = function() {
+    const box = document.getElementById('monthly-card-banner');
+    if (!box) return;
+    
+    const day = new Date().getDate();
+    const lastMonth = new Date(); lastMonth.setMonth(lastMonth.getMonth() - 1);
+    const key = 'tosil_monthcard_' + lastMonth.getFullYear() + (lastMonth.getMonth() + 1);
+    
+    // 매월 1일~5일에만 노출 & 사용자가 이미 클릭했다면 숨김
+    if (day > 5 || localStorage.getItem(key) === 'done') { 
+        box.style.display = 'none'; 
+        return; 
+    }
+
+    box.style.display = 'block';
+    box.innerHTML = `
+        <div onclick="localStorage.setItem('${key}','done'); window.downloadMonthlyGrowthCard(); this.parentElement.style.display='none';" style="background:linear-gradient(135deg,#1E293B,#0F172A); border-radius:20px; padding:20px; margin-bottom:20px; cursor:pointer; display:flex; justify-content:space-between; align-items:center; box-shadow:0 8px 20px rgba(15,23,42,0.2);">
+            <div>
+                <div style="font-size:11.5px; font-weight:800; color:#FBBF24; margin-bottom:5px;">${lastMonth.getMonth() + 1}월이 끝났어요</div>
+                <div style="font-size:16.5px; font-weight:900; color:#FFF; letter-spacing:-0.5px;">지난달 성장 카드가 준비됐어요</div>
+                <div style="font-size:11.5px; color:#94A3B8; margin-top:4px;">한 장으로 보는 우리 아이의 한 달</div>
+            </div>
+            <span style="font-size:28px;">📸</span>
+        </div>
+    `;
+};
+
+// 🚨 렌더링 훅에 월간 배너 함수 끼워넣기 (기존 퇴근 브리핑 훅과 병합)
+document.addEventListener('DOMContentLoaded', () => {
+    setTimeout(() => { 
+        if (window.renderDadCommute) window.renderDadCommute(); 
+        if (window.renderMonthlyCardBanner) window.renderMonthlyCardBanner(); // 👈 새롭게 추가됨!
+    }, 400);
+});
