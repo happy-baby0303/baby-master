@@ -7596,7 +7596,7 @@ window.updateMateExp = function(amount) {
     if(typeof window.updateDadBriefing === 'function') window.updateDadBriefing();
 };
 
-// 3. 아빠 모드: 메인 대시보드 렌더링 (아기 상태 + 아내 HP + 히어로 모드)
+// 3. 아빠 모드: 메인 대시보드 렌더링 (비상사태 DEFCON 패치 + 모바일 1줄 UI 완벽 대응)
 window.renderDadQuests = function() {
     const role = localStorage.getItem('user_role');
     const container = document.getElementById('dad-quest-container');
@@ -7611,14 +7611,16 @@ window.renderDadQuests = function() {
     let isCollapsed = localStorage.getItem('tosil_dad_dashboard_collapsed') === 'true';
     const levelInfo = window.getMateLevelInfo();
 
-   // 트래커 데이터 분석
     let records = JSON.parse(localStorage.getItem('tosil_tracker_records')) || [];
+    let feverRecords = JSON.parse(localStorage.getItem('tosil_fever_records')) || [];
+    
     const now = new Date().getTime();
     const startOfToday = new Date().setHours(0,0,0,0);
     let todayEvents = 0; 
     let lastFeed = null; let lastDiaper = null; let lastSleep = null;
+
+    const todayFever = feverRecords.find(r => r.timestamp >= startOfToday && r.temp >= 37.5);
     
-    // 🍼 [월령 맞춤형] 아빠 모드 생후 일수 계산
     const savedDateForDad = localStorage.getItem('tosil_startDate');
     let dadBabyDays = 100;
     if (savedDateForDad) dadBabyDays = Math.floor((now - new Date(savedDateForDad).getTime()) / (1000 * 60 * 60 * 24));
@@ -7628,7 +7630,6 @@ window.renderDadQuests = function() {
     records.forEach(r => {
         if(r.timestamp >= startOfToday) todayEvents++;
         
-        // 🚨 [아빠 모드 동기화 1] 상황판 월령 맞춤형 간식 필터!
         if(!lastFeed && r.type === 'feed') {
             if (r.subType === '이유식') lastFeed = r;
             else {
@@ -7637,7 +7638,6 @@ window.renderDadQuests = function() {
                 else if (r.subType !== '모유' && amt >= minFormulaDad) lastFeed = r;
             }
         }
-        
         if(!lastDiaper && r.type === 'diaper') lastDiaper = r;
         if(!lastSleep && r.type === 'sleep') lastSleep = r;
     });
@@ -7647,46 +7647,53 @@ window.renderDadQuests = function() {
     let diaperDiff = lastDiaper ? Math.floor((now - lastDiaper.timestamp) / 60000) : 0;
     const feedInterval = parseInt(localStorage.getItem('tosil_feed_interval')) || 180;
     
+    // 🚨 맘마/기저귀 텍스트 1줄 최적화 (자간 축소 및 워딩 다이어트)
     if (feedDiff >= feedInterval - 30) {
-        babyStatusHtml += `<div style="display:flex; align-items:center; gap:8px; margin-bottom:8px;"><div style="font-size:20px;">🚨</div><div style="font-size:13.5px; color:#F87171; font-weight:800;">맘마 먹은지 ${Math.floor(feedDiff/60)}시간 ${feedDiff%60}분째!<br><span style="font-size:11.5px; color:#94A3B8;">집에 가자마자 분유를 타주세요!</span></div></div>`;
+        babyStatusHtml += `<div style="display:flex; align-items:center; gap:8px; margin-bottom:8px;"><div style="font-size:20px;">🚨</div><div style="font-size:13px; color:#F87171; font-weight:800; letter-spacing:-0.5px;">맘마 먹은지 ${Math.floor(feedDiff/60)}시간 ${feedDiff%60}분째!<br><span style="font-size:11.5px; color:#94A3B8;">집에 가자마자 분유를 타주세요!</span></div></div>`;
     } else {
-        babyStatusHtml += `<div style="display:flex; align-items:center; gap:8px; margin-bottom:8px;"><div style="font-size:20px;">🍼</div><div style="font-size:13.5px; color:#E2E8F0; font-weight:800;">마지막 수유: ${feedDiff >= 60 ? Math.floor(feedDiff/60)+'시간 ' : ''}${feedDiff%60}분 전<br><span style="font-size:11.5px; color:#94A3B8;">아직 배고플 시간은 아니에요.</span></div></div>`;
+        babyStatusHtml += `<div style="display:flex; align-items:center; gap:8px; margin-bottom:8px;"><div style="font-size:20px;">🍼</div><div style="font-size:13px; color:#E2E8F0; font-weight:800; letter-spacing:-0.5px; white-space:nowrap;">마지막 수유: ${feedDiff >= 60 ? Math.floor(feedDiff/60)+'시간 ' : ''}${feedDiff%60}분 전</div></div>`;
     }
 
     if (diaperDiff >= 180) {
-        babyStatusHtml += `<div style="display:flex; align-items:center; gap:8px;"><div style="font-size:20px;">💩</div><div style="font-size:13.5px; color:#F87171; font-weight:800;">기저귀 안 간지 ${Math.floor(diaperDiff/60)}시간 넘음!<br><span style="font-size:11.5px; color:#94A3B8;">엉덩이 발진 주의! 확인해 보세요.</span></div></div>`;
+        babyStatusHtml += `<div style="display:flex; align-items:center; gap:8px;"><div style="font-size:20px;">💩</div><div style="font-size:13px; color:#F87171; font-weight:800; letter-spacing:-0.5px;">기저귀 안 간지 ${Math.floor(diaperDiff/60)}시간 경과!<br><span style="font-size:11.5px; color:#94A3B8;">엉덩이 발진 주의! 확인 요망</span></div></div>`;
     } else {
-        babyStatusHtml += `<div style="display:flex; align-items:center; gap:8px;"><div style="font-size:20px;">✨</div><div style="font-size:13.5px; color:#E2E8F0; font-weight:800;">엉덩이 뽀송뽀송 (마지막 교체: ${diaperDiff}분 전)</div></div>`;
+        babyStatusHtml += `<div style="display:flex; align-items:center; gap:8px;"><div style="font-size:20px;">✨</div><div style="font-size:13px; color:#E2E8F0; font-weight:800; letter-spacing:-0.5px; white-space:nowrap;">기저귀 뽀송 (마지막: ${diaperDiff}분 전)</div></div>`;
     }
 
     let momHpText = ""; let momHpColor = "";
-    if (todayEvents >= 15) { momHpText = "극도 피로 🥵 (디저트 포장 강력 추천!)"; momHpColor = "#F87171"; } 
-    else if (todayEvents >= 8) { momHpText = "지침 😮‍💨 (따뜻한 말 한마디 필수)"; momHpColor = "#FBBF24"; } 
-    else { momHpText = "보통 🙂 (퇴근 후 육아 교대는 필수!)"; momHpColor = "#34D399"; }
+    
+    if (todayFever) {
+        momHpText = "🚨 멘탈 붕괴 직전 (아기가 아파요! 칼퇴 요망)"; momHpColor = "#EF4444";
+    } else if (todayEvents >= 15) { 
+        momHpText = "극도 피로 🥵 (디저트 포장 강력 추천!)"; momHpColor = "#F87171"; 
+    } else if (todayEvents >= 8) { 
+        momHpText = "지침 😮‍💨 (따뜻한 말 한마디 필수)"; momHpColor = "#FBBF24"; 
+    } else { 
+        momHpText = "보통 🙂 (퇴근 후 육아 교대는 필수!)"; momHpColor = "#34D399"; 
+    }
 
     const isHeroToday = localStorage.getItem('tosil_hero_mode_date') === new Date().toDateString();
 
-  let html = `
-        <div style="background: linear-gradient(135deg, #1E293B, #0F172A); border-radius: 20px; padding: 20px; color: #fff; box-shadow: 0 10px 25px rgba(15,23,42,0.25); position: relative; margin-bottom: 24px;">
+    const boardBg = todayFever ? 'linear-gradient(135deg, #450a0a, #7f1d1d)' : 'linear-gradient(135deg, #1E293B, #0F172A)';
+    const boardShadow = todayFever ? '0 10px 25px rgba(239,68,68,0.3)' : '0 10px 25px rgba(15,23,42,0.25)';
+
+    let html = `
+        <div style="background: ${boardBg}; border-radius: 20px; padding: 20px; color: #fff; box-shadow: ${boardShadow}; position: relative; margin-bottom: 24px; transition: 0.3s;">
             
-            <!-- 🚨 [수정됨] 상단 헤더 영역: 찌그러짐 원천 차단 및 게임 UI 감성 적용 -->
             <div onclick="window.toggleDadDashboard()" style="display: flex; justify-content: space-between; align-items: center; gap: 12px; cursor: pointer; position: relative; z-index: 2;">
-                
-                <!-- 좌측 텍스트 (글씨가 길면 자동으로 ... 처리되게 방어) -->
                 <div style="flex: 1; min-width: 0; text-align: left;">
-                    <div style="font-size: 12px; color: #94A3B8; font-weight: 800; margin-bottom: 6px;">👨‍🍼 아빠 작전 상황판</div>
-                    <div style="font-size: 17px; font-weight: 900; color: #fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
-                        Lv.${levelInfo.level} <span style="color: ${levelInfo.color};">${levelInfo.title}</span>
+                    <div style="font-size: 12px; color: ${todayFever ? '#FCA5A5' : '#94A3B8'}; font-weight: 800; margin-bottom: 6px;">${todayFever ? '🚨 비상사태 발령' : '👨‍🍼 아빠 작전 상황판'}</div>
+                    <!-- 🚨 타이틀 잘림(...) 현상 원천 차단! (white-space: nowrap 제거, line-height 추가) -->
+                    <div style="font-size: 16px; font-weight: 900; color: #fff; line-height: 1.3; word-break: keep-all; letter-spacing: -0.5px;">
+                        Lv.${levelInfo.level} <span style="color: ${todayFever ? '#FFF' : levelInfo.color};">${levelInfo.title}</span>
                     </div>
                 </div>
                 
-                <!-- 우측 배지 및 버튼 (절대 찌그러지지 않게 크기 고정) -->
                 <div style="display: flex; align-items: center; gap: 8px; flex-shrink: 0;">
                     <div style="font-size: 12px; font-weight: 900; color: #38BDF8; background: rgba(56, 189, 248, 0.15); border: 1px solid rgba(56, 189, 248, 0.2); padding: 6px 10px; border-radius: 12px; white-space: nowrap;">
                         ${levelInfo.totalExp} EXP
                     </div>
-                    <!-- 화살표를 둥근 버튼 안에 넣어서 깔끔하게 정리 -->
-                    <div style="width: 28px; height: 28px; background: rgba(255,255,255,0.1); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 11px; color: #94A3B8; transform: rotate(${isCollapsed ? '180deg' : '0deg'}); transition: transform 0.3s;">
+                    <div style="width: 28px; height: 28px; background: rgba(255,255,255,0.1); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 11px; color: ${todayFever ? '#FCA5A5' : '#94A3B8'}; transform: rotate(${isCollapsed ? '180deg' : '0deg'}); transition: transform 0.3s;">
                         ▲
                     </div>
                 </div>
@@ -7697,16 +7704,23 @@ window.renderDadQuests = function() {
         html += `
             <div style="margin-top: 16px; margin-bottom: 24px;">
                 <div style="background: rgba(255,255,255,0.1); height: 10px; border-radius: 5px; overflow: hidden;">
-                    <div style="width: ${levelInfo.percent}%; height: 100%; background: ${levelInfo.color}; border-radius: 5px; transition: width 0.5s;"></div>
+                    <div style="width: ${levelInfo.percent}%; height: 100%; background: ${todayFever ? '#FCA5A5' : levelInfo.color}; border-radius: 5px; transition: width 0.5s;"></div>
                 </div>
-                <div style="text-align: right; font-size: 11px; color: #64748B; margin-top: 6px;">다음 승급까지 ${100 - levelInfo.currentLevelExp} EXP</div>
+                <div style="text-align: right; font-size: 11px; color: ${todayFever ? '#FECACA' : '#64748B'}; margin-top: 6px;">다음 승급까지 ${100 - levelInfo.currentLevelExp} EXP</div>
             </div>
+            
+            ${todayFever ? `
+                <div style="background: rgba(0,0,0,0.2); border: 1px solid rgba(255,255,255,0.15); border-radius: 12px; padding: 12px; margin-bottom: 16px; font-size: 13px; font-weight: 800; color: #FECACA; text-align: center; animation: pulseSOS 1.5s infinite;">
+                    현재 아기 체온 ${todayFever.temp}℃! 집에 갈 때 해열제 사갈지 꼭 물어보세요!
+                </div>
+            ` : ''}
+
             <div style="background: rgba(255,255,255,0.05); border-radius: 16px; padding: 16px; margin-bottom: 12px; border: 1px solid rgba(255,255,255,0.05);">
-                <div style="font-size: 12px; font-weight: 800; color: #94A3B8; margin-bottom: 12px;">📊 현재 아기 상태 요약</div>
+                <div style="font-size: 12px; font-weight: 800; color: ${todayFever ? '#FCA5A5' : '#94A3B8'}; margin-bottom: 12px;">📊 현재 아기 상태 요약</div>
                 ${babyStatusHtml}
             </div>
-        <div style="background: rgba(255,255,255,0.05); border-radius: 16px; padding: 16px; margin-bottom: 20px; border: 1px solid rgba(255,255,255,0.05);">
-                <div style="font-size: 12px; font-weight: 800; color: #94A3B8; margin-bottom: 6px;">💬 오늘 이것만 해도 충분해요</div>
+            <div style="background: rgba(255,255,255,0.05); border-radius: 16px; padding: 16px; margin-bottom: 20px; border: 1px solid rgba(255,255,255,0.05);">
+                <div style="font-size: 12px; font-weight: 800; color: ${todayFever ? '#FCA5A5' : '#94A3B8'}; margin-bottom: 6px;">💬 오늘 이것만 해도 충분해요</div>
                 <div style="font-size: 14px; font-weight: 800; color: ${momHpColor}; line-height:1.5; word-break:keep-all;">${momHpText}</div>
             </div>
             ${isHeroToday ? `
@@ -7715,8 +7729,9 @@ window.renderDadQuests = function() {
                     <div style="font-size:14px; font-weight:900; color:#34D399;">오늘의 메인 육아 참전 완료!</div>
                 </div>
             ` : `
-                <button onclick="window.activateHeroMode()" style="width:100%; padding:18px; border-radius:16px; background:#3182F6; color:#fff; font-size:15px; font-weight:900; border:none; cursor:pointer; box-shadow:0 4px 15px rgba(49,130,246,0.4); display:flex; align-items:center; justify-content:center; gap:8px;">
-                    <span>👨‍🍼</span> 퇴근 완료! 지금부턴 내가 전담할게
+                <!-- 🚨 퇴근 완료 버튼 1줄 고정 패치! (폰트 사이즈 조정, 자간 축소, nowrap 적용) -->
+                <button onclick="window.activateHeroMode()" style="width:100%; padding:16px 10px; border-radius:16px; background:${todayFever ? '#EF4444' : '#3182F6'}; color:#fff; font-size:14.5px; font-weight:900; border:none; cursor:pointer; box-shadow:0 4px 15px rgba(${todayFever ? '239,68,68' : '49,130,246'},0.4); display:flex; align-items:center; justify-content:center; gap:6px; letter-spacing:-0.5px; white-space:nowrap;">
+                    <span>👨‍🍼</span> ${todayFever ? '긴급 투입! 당장 퇴근하겠습니다' : '퇴근 완료! 이제 내가 전담할게'}
                 </button>
             `}
         `;
