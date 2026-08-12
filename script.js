@@ -71,11 +71,32 @@ window.getBabyProfiles = function() {
     return profiles;
 };
 
+// ==========================================
+// 👶 [프리미엄] 넷플릭스급 프로필 전환 애니메이션 엔진
+// ==========================================
 window.switchBabyProfile = function(suffixId) {
     localStorage.setItem('tosil_active_baby_suffix', suffixId);
     if(navigator.vibrate) navigator.vibrate(15);
-    // 프로필 전환 시 캐시 충돌 방지를 위해 페이지를 0.1초만에 스무스하게 새로고침 (넷플릭스 등 대기업 방식)
-    location.reload(); 
+    
+    const profiles = window.getBabyProfiles();
+    const targetName = profiles.find(p => p.id === suffixId)?.name || '우리아기';
+
+    // 🎬 화면을 스무스하게 덮는 암전 트랜지션
+    const overlay = document.createElement('div');
+    overlay.style.cssText = 'position:fixed; top:0; left:0; width:100vw; height:100vh; background:#191F28; z-index:9999999; display:flex; flex-direction:column; justify-content:center; align-items:center; opacity:0; transition:opacity 0.25s ease; color:#FFF;';
+    
+    overlay.innerHTML = `
+        <div style="font-size: 50px; margin-bottom: 16px; animation: bounce 1s infinite;">🧸</div>
+        <div style="font-size: 20px; font-weight: 900; letter-spacing: -0.5px;">${targetName}의 기록장으로 이동 중...</div>
+    `;
+    
+    document.body.appendChild(overlay);
+
+    // 0.01초 뒤에 opacity를 1로 만들어서 스르륵 나타나게 함
+    setTimeout(() => { overlay.style.opacity = '1'; }, 10);
+    
+    // 0.4초 뒤에 데이터를 물고 새로고침! (체감 속도 최적화)
+    setTimeout(() => { location.reload(); }, 400); 
 };
 
 // ==========================================
@@ -1964,12 +1985,41 @@ if (h && w) {
 
     // 💡 [입력 후 결과 멘트] 다크모드/라이트모드 완벽 대응 변수 적용
     insightMsg = `
-        <!-- ✨ [수정] 예쁜 테두리 박스(var(--bg-card)) 안에 멘트를 담았습니다! -->
         <div style="background: var(--bg-card); border: 1px solid var(--border); border-radius: 16px; padding: 16px; margin-bottom: 16px; text-align: left; box-shadow: 0 2px 8px rgba(0,0,0,0.02);">
             <div style="font-size:12px; font-weight:800; color:var(--text-s); margin-bottom:6px;">우리아기 체질량 지수(BMI): <span style="color:var(--text-m); font-size:14px;">${kaup.toFixed(1)}</span></div>
             <div style="font-size:14px; font-weight:800; color:var(--text-m); line-height:1.55; word-break:keep-all;">${kaupDesc}</div>
-        </div>
     `;
+
+    // 🌟 [프리미엄 킬러 기능] 형제 비교 성장 엔진 가동!
+    const profiles = window.getBabyProfiles();
+    if (profiles.length > 1 && w) {
+        const currentProfileId = window.currentBabySuffix;
+        
+        // 다른 형제들의 데이터만 긁어오기
+        profiles.filter(p => p.id !== currentProfileId).forEach(sibling => {
+            const sibKey = 'tosil_growth_records' + sibling.id;
+            // 프록시 뚫고 원본 데이터 가져오기
+            const sibRecords = JSON.parse(originalGetItem.call(localStorage, sibKey)) || [];
+            
+            // 🚨 핵심: 형제/자매가 '지금 내 월령(month)'과 정확히 똑같은 개월 수였을 때의 기록을 탐색!
+            const sibRecordAtSameAge = sibRecords.find(r => r.month === month);
+
+            if (sibRecordAtSameAge && sibRecordAtSameAge.weight) {
+                const diffW = (w - sibRecordAtSameAge.weight).toFixed(1);
+                
+                if (diffW > 0) {
+                    insightMsg += `<div style="margin-top:12px; padding:12px; background:rgba(168, 85, 247, 0.1); border-radius:12px; font-size:13px; font-weight:800; color:#9333EA; border:1px dashed #D8B4FE;">🧬 형제 비교: 같은 생후 ${month}개월 때의 <b>${sibling.name}</b>보다 <b>${diffW}kg 더 큽니다!</b> 폭풍 성장 중 🚀</div>`;
+                } else if (diffW < 0) {
+                    insightMsg += `<div style="margin-top:12px; padding:12px; background:var(--bg-sub); border-radius:12px; font-size:13px; font-weight:800; color:var(--text-s); border:1px dashed var(--border);">🧬 형제 비교: 같은 생후 ${month}개월 때의 <b>${sibling.name}</b>보다는 <b>${Math.abs(diffW)}kg 작고 아담해요!</b> 🐣</div>`;
+                } else {
+                    insightMsg += `<div style="margin-top:12px; padding:12px; background:#EBF4FF; border-radius:12px; font-size:13px; font-weight:800; color:#3182F6; border:1px dashed #B1D6FF;">🧬 형제 비교: 같은 생후 ${month}개월 때의 <b>${sibling.name}</b>와 몸무게가 똑같아요! 판박이네요 👯</div>`;
+                }
+            }
+        });
+    }
+    
+    // 박스 닫기
+    insightMsg += `</div>`;
 } else {
     kaupBadge.style.display = 'none';
     
@@ -1981,7 +2031,7 @@ if (h && w) {
     `;
 }
 
-    document.getElementById('growth-insight').innerHTML = insightMsg; 
+document.getElementById('growth-insight').innerHTML = insightMsg;
     
     // 글로벌 윈도우 스코프에 결과값 임시 저장 (저장하기 버튼을 위해)
     window.tempGrowthData = {
@@ -7108,7 +7158,7 @@ window.renderSettingsTab = function() {
                     <div style="display: flex; background: var(--bg-sub); border-radius: 10px; padding: 3px; border: 1px solid var(--border); flex-shrink: 0;">
                         <button onclick="window.changeUserRole('mom')" style="padding: 6px 10px; border: none; border-radius: 8px; font-size: 13px; font-weight: 900; cursor: pointer; transition: 0.2s; white-space: nowrap; ${currentRole === 'mom' ? 'background:var(--bg-card); color:#F04452; box-shadow:0 2px 6px rgba(0,0,0,0.05);' : 'background:transparent; color:#8B95A1;'}">엄마</button>
                         <button onclick="window.changeUserRole('dad')" style="padding: 6px 10px; border: none; border-radius: 8px; font-size: 13px; font-weight: 900; cursor: pointer; transition: 0.2s; white-space: nowrap; ${currentRole === 'dad' ? 'background:var(--bg-card); color:#3182F6; box-shadow:0 2px 6px rgba(0,0,0,0.05);' : 'background:transparent; color:#8B95A1;'}">아빠</button>
-                        <button onclick="window.changeUserRole('senior')" style="padding: 6px 10px; border: none; border-radius: 8px; font-size: 13px; font-weight: 900; cursor: pointer; transition: 0.2s; white-space: nowrap; ${currentRole === 'senior' ? 'background:var(--bg-card); color:#00B37A; box-shadow:0 2px 6px rgba(0,0,0,0.05);' : 'background:transparent; color:#8B95A1;'}">조부모</button>
+                        <button onclick="window.changeUserRole('senior')" style="padding: 6px 10px; border: none; border-radius: 8px; font-size: 13px; font-weight: 900; cursor: pointer; transition: 0.2s; white-space: nowrap; ${currentRole === 'senior' ? 'background:var(--bg-card); color:#00B37A; box-shadow:0 2px 6px rgba(0,0,0,0.05);' : 'background:transparent; color:#8B95A1;'}">돌봄 도우미</button>
                     </div>
                 </div>
 
@@ -7178,29 +7228,33 @@ window.renderSettingsTab = function() {
 };
 
 // ==========================================
-// 🌟 역할 변경 기능 함수 (설정 탭 스위치) - 조부모 모드 추가!
+// 🌟 역할 변경 기능 함수 (돌봄 도우미 모드)
 // ==========================================
 window.changeUserRole = function(role) {
+    if (role === 'senior' && !window.isPremiumUser()) {
+        if(navigator.vibrate) navigator.vibrate([20, 50, 20]);
+        return window.showPaywall();
+    }
+
     localStorage.setItem('user_role', role); 
     if(typeof window.renderSettingsTab === 'function') window.renderSettingsTab(); 
     
-    // 모드 싹 다 지우고 시작 (기존 클래스 초기화)
     document.body.classList.remove('mode-dad', 'mode-senior');
     
     if (role === 'dad') {
         document.body.classList.add('mode-dad');
-        if(typeof window.showToast === 'function') window.showToast("👨‍🍼 아빠 모드로 변경되었습니다.");
+        window.showToast("👨‍🍼 아빠 모드로 변경되었습니다.");
     } else if (role === 'senior') {
         document.body.classList.add('mode-senior');
-        if(typeof window.showToast === 'function') window.showToast("👵 조부모/시터 모드로 변경되었습니다.");
-        
-        // 시니어 모드로 바꾸면 쓸데없는 탭을 안 보시도록 강제로 홈 화면으로 튕겨냅니다!
+        // 🚨 워딩 교체: 조부모 -> 돌봄 도우미 안심 모드
+        window.showToast("👵 돌봄 도우미 안심 모드 ON. (가계부/문답 등 사생활 차단)");
         if(typeof window.switchTab === 'function') window.switchTab('home', document.getElementById('nav-home'));
     } else {
-        if(typeof window.showToast === 'function') window.showToast("👩‍🍼 엄마 모드로 변경되었습니다.");
+        window.showToast("👩‍🍼 엄마 모드로 변경되었습니다.");
     }
 
-    // 화면 새로고침
+    window.applyCaregiverRestrictions(); // 사생활 차단 엔진 가동!
+
     if(typeof window.updateTrackerDashboard === 'function') window.updateTrackerDashboard();
     if(typeof window.renderDadQuests === 'function') window.renderDadQuests();
     if(typeof window.updateDadBriefing === 'function') window.updateDadBriefing();
