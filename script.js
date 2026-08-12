@@ -5406,29 +5406,6 @@ window.saveTrackerRecord = async function() {
 };
 
 // ==========================================
-// 5️⃣    비타민 체크리스트  !!  '실시간 연동형'
-// ==========================================
-window.toggleRoutine = async function(id) {
-    let routineData = JSON.parse(localStorage.getItem('tosil_routine_data')) || {};
-    routineData[id] = !routineData[id];
-    
-   if (typeof db !== 'undefined' && typeof setDoc === 'function') {
-        const syncCode = window.getSyncCode(); if (!syncCode) return;
-        try { 
-            // 🚨 [다둥이 패치] 루틴 토글 경로 분리
-            await setDoc(doc(db, "routine_" + syncCode + window.currentBabySuffix, "status"), { 
-                data: routineData, 
-                date: new Date().toLocaleDateString(),
-                names: routineNames 
-            }); 
-        } catch(e) {}
-    }
-
-    localStorage.setItem('tosil_routine_data', JSON.stringify(routineData));
-    window.renderRoutineChecklist();
-};
-
-// ==========================================
 // 6️⃣ 파이어베이스 실시간 수신 리스너 (트래커 스마트 병합 & 설정 연동 & 비타민)
 // ==========================================
 let trackerUnsubscribe = null;
@@ -11266,8 +11243,8 @@ window.handleSwipeMove = function(e) {
     const diffX = currentX - window.swipeState.startX;
     const diffY = currentY - window.swipeState.startY;
 
-    // 위아래로 움직이는 각도가 더 크면 화면 스크롤로 간주! (오터치 철통 방어)
-    if (Math.abs(diffY) > Math.abs(diffX) * 0.8 || Math.abs(diffY) > 5) {
+    // 🚨 [긴급 픽스] 스와이프 튕김 방지! 세로 움직임이 가로보다 크면서 '10px 이상' 움직였을 때만 취소
+    if (Math.abs(diffY) > Math.abs(diffX) * 0.8 && Math.abs(diffY) > 10) {
         window.swipeState.isScrolling = true;
         return;
     }
@@ -11279,7 +11256,7 @@ window.handleSwipeMove = function(e) {
         if(translateX < -130) translateX = -130 + (diffX + 130) * 0.2; 
         e.currentTarget.style.transform = `translateX(${translateX}px)`;
         
-        // 가로로 밀 때는 브라우저 기본 스와이프(뒤로가기 등) 방지
+        // 가로로 밀 때는 브라우저 기본 스와이프 방지
         if(Math.abs(diffX) > 10 && e.cancelable) e.preventDefault(); 
     }
 };
