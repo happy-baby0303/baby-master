@@ -13422,26 +13422,29 @@ window.endNightDuty = async function() {
     window.renderNightDuty();
     window.updateTrackerDashboard && window.updateTrackerDashboard();
 
-    // 새벽 근무 리포트 모달
+    // 🚨 여기서부터 시작되는 모달 그리기 부분만 교체!
     const body = document.getElementById('modal-dynamic-body');
     if (body) {
         body.innerHTML = `
             <div style="text-align:center; padding:8px 4px;">
                 <div style="font-size:44px; margin-bottom:12px;">🌅</div>
-                <div style="font-size:13px; font-weight:800; color:#3182F6; margin-bottom:6px;">야간 당번 종료</div>
-                <div style="font-size:22px; font-weight:900; color:var(--text-m); margin-bottom:24px;">
-                    ${h}시간 ${m}분<br>수고하셨습니다
+                <div style="font-size:13px; font-weight:800; color:#3182F6; margin-bottom:6px;">야간 당번 무사 종료</div>
+                
+                <!-- ✨ 이 부분이 '수고하셨습니다'에서 '통잠 수호'로 바뀝니다! -->
+                <div style="font-size:24px; font-weight:900; color:var(--text-m); margin-bottom:6px; letter-spacing:-0.5px;">
+                    아내의 통잠<br><span style="color:#7C3AED;">${h}시간 ${m}분</span> 수호 🛡️
                 </div>
+                <div style="font-size:13px; color:var(--text-s); font-weight:600; margin-bottom:24px;">진정한 육아 영웅이십니다!</div>
 
                 <div style="display:flex; gap:8px; margin-bottom:20px;">
                     <div style="flex:1; background:var(--bg-sub); border-radius:14px; padding:16px 8px;">
                         <div style="font-size:20px; margin-bottom:6px;">🍼</div>
-                        <div style="font-size:11px; font-weight:800; color:var(--text-s); margin-bottom:4px;">수유</div>
+                        <div style="font-size:11px; font-weight:800; color:var(--text-s); margin-bottom:4px;">대리 수유</div>
                         <div style="font-size:16px; font-weight:900; color:#3182F6;">${feedCnt}회</div>
                     </div>
                     <div style="flex:1; background:var(--bg-sub); border-radius:14px; padding:16px 8px;">
                         <div style="font-size:20px; margin-bottom:6px;">💩</div>
-                        <div style="font-size:11px; font-weight:800; color:var(--text-s); margin-bottom:4px;">기저귀</div>
+                        <div style="font-size:11px; font-weight:800; color:var(--text-s); margin-bottom:4px;">코 보호</div>
                         <div style="font-size:16px; font-weight:900; color:#F04452;">${diaperCnt}회</div>
                     </div>
                     <div style="flex:1; background:var(--bg-sub); border-radius:14px; padding:16px 8px;">
@@ -13451,17 +13454,13 @@ window.endNightDuty = async function() {
                     </div>
                 </div>
 
-                <div style="background:#EBF4FF; border-radius:14px; padding:16px; margin-bottom:20px; font-size:13.5px; font-weight:700; color:#1B64DA; line-height:1.5; word-break:keep-all;">
-                    ${mins >= 240
-                        ? '아내분이 오랜만에 통잠을 주무셨을 거예요.<br>오늘 하루도 화이팅입니다 🤍'
-                        : '짧지만 확실한 교대였습니다.<br>이런 밤이 쌓여서 부부가 됩니다 🤍'}
-                </div>
-
-                <button onclick="window.shareNightDuty(${h},${m},${feedCnt},${diaperCnt})" style="width:100%; padding:16px; border-radius:14px; background:#FEE500; color:#191919; font-weight:900; font-size:15px; border:none; cursor:pointer; margin-bottom:8px;">
+                <!-- ✨ 오글거리는 멘트 삭제 & 카카오톡 노란색 버튼으로 직관성 100% 복구! -->
+                <button onclick="window.shareNightDuty(${h},${m},${feedCnt},${diaperCnt})" style="width:100%; padding:16px; border-radius:14px; background:#FEE500; color:#191F28; font-weight:900; font-size:15px; border:none; cursor:pointer; margin-bottom:8px; box-shadow:0 4px 12px rgba(254, 229, 0, 0.2);">
                     💬 아내에게 새벽 근무 보고하기
                 </button>
-                <button onclick="closeFestivalModalForce()" style="width:100%; padding:14px; border-radius:14px; background:var(--bg-sub); color:var(--text-s); font-weight:800; font-size:14px; border:none; cursor:pointer;">닫기</button>
+                <button onclick="closeFestivalModalForce()" style="width:100%; padding:14px; border-radius:14px; background:transparent; color:var(--text-s); font-weight:800; font-size:14px; border:none; cursor:pointer;">닫기</button>
             </div>`;
+        
         const modal = document.getElementById('premium-modal');
         if (modal) modal.style.display = 'flex';
     }
@@ -13577,10 +13576,13 @@ window.renderDadCommute = function() {
     
     let todayEvents = 0;
     let todaySleepMins = 0;
+    let poopCount = 0;
+    
     records.forEach(r => { 
         if (r.timestamp >= startOfToday) {
             todayEvents++; 
             if (r.type === 'sleep') todaySleepMins += (parseInt(r.amount) || 0);
+            if (r.type === 'diaper' && r.subType && r.subType.includes('대변')) poopCount++;
         }
     });
 
@@ -13592,17 +13594,23 @@ window.renderDadCommute = function() {
     if (hasFever) {
         items.push({ icon:'🚨', text:'오늘 아기가 열이 났어요!', sub:'집에 가는 길에 챔프/해열제가 충분한지 꼭 확인하세요.' });
     }
-    // 💤 2. 수면 부족 체크
-    else if (todaySleepMins > 0 && todaySleepMins < 90) {
-        items.push({ icon:'🥱', text:`오늘 낮잠을 ${todaySleepMins}분밖에 안 잤어요`, sub:'아내가 매우 예민할 수 있습니다. 눈치 챙기세요!' });
+    // 💩 2. 응가 폭탄 대기조
+    else if (poopCount === 0) {
+        items.push({ icon:'💣', text:'오늘 아직 아기 응가가 안 나왔어요', sub:'집에 가자마자 응가 폭탄을 맞을 확률 99% (마음의 준비)' });
     }
-    // 🍼 3. 일반적인 노동 강도 체크
-    else if (todayEvents >= 12) {
-        items.push({ icon:'🛋️', text:'오늘 아내가 많이 바빴어요', sub:'달달한 디저트 사 가면 사랑받는 남편 100% 보장' });
-    } else if (todayEvents >= 8) {
-        items.push({ icon:'☕', text:'평범하게 바쁜 하루였어요', sub:'집에 가서 "오늘 하루 어땠어?" 먼저 물어봐주세요' });
-    } else {
-        items.push({ icon:'🌿', text:'오늘은 평화로웠어요', sub:'가서 아기랑 30분만 놀아주기만 해도 충분해요' });
+    // 💤 3. 수면 부족 및 식사 불가 체크
+    if (todaySleepMins > 0 && todaySleepMins < 90) {
+        items.push({ icon:'👿', text:`낮잠을 ${todaySleepMins}분밖에 안 잤어요`, sub:'아내가 밥도 못 먹었을 수 있습니다. 맛있는 걸 꼭 사가세요!' });
+    }
+    // 🍼 4. 일반적인 노동 강도 체크 (위 조건에 안 걸렸을 때만)
+    else if (!hasFever && poopCount > 0) {
+        if (todayEvents >= 12) {
+            items.push({ icon:'🛋️', text:'오늘 하루 종일 쉴 틈이 없었어요', sub:'귀가 즉시 아기 안아들기 스킬 발동 요망' });
+        } else if (todayEvents >= 8) {
+            items.push({ icon:'☕', text:'육아 강도가 꽤 높은 날이었어요', sub:'현관문 열자마자 "오늘 하루 고생했어" 한마디 필수' });
+        } else {
+            items.push({ icon:'🌿', text:'오늘은 비교적 평화로웠어요', sub:'가서 아기랑 30분만 텐션 높여서 놀아주세요' });
+        }
     }
 
     box.style.display = 'block';
@@ -13610,7 +13618,7 @@ window.renderDadCommute = function() {
         <div style="background:var(--bg-card); border:1px solid var(--border); border-radius:20px; padding:20px; margin-bottom:20px; box-shadow:0 4px 12px rgba(0,0,0,0.02);">
             <div style="display:flex; align-items:center; gap:8px; margin-bottom:14px;">
                 <span style="font-size:20px;">🚇</span>
-                <div style="font-size:15px; font-weight:900; color:var(--text-m);">센스 있는 아빠의 퇴근길 브리핑</div>
+                <div style="font-size:15px; font-weight:900; color:var(--text-m);">퇴근길 생존 브리핑</div>
             </div>
             ${items.map(i => `
                 <div style="display:flex; align-items:center; gap:12px; padding:12px; background:var(--bg-sub); border-radius:14px; margin-bottom:8px;">
