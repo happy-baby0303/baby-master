@@ -55,11 +55,15 @@ Storage.prototype.removeItem = function(key) {
     originalRemoveItem.call(this, finalKey);
 };
 
-// 4. 프로필 매니저 함수
+// 4. 프로필 매니저 함수 (에러 완벽 방어 패치)
 window.getBabyProfiles = function() {
-    let profiles = JSON.parse(originalGetItem.call(localStorage, 'tosil_baby_profiles'));
-    if (!profiles) {
-        // 기존 130명 유저들을 위한 안전한 마이그레이션 (기존 데이터를 첫째로 자동 편입)
+    let profiles;
+    try {
+        profiles = JSON.parse(originalGetItem.call(localStorage, 'tosil_baby_profiles'));
+    } catch(e) { profiles = null; }
+    
+    // 배열이 아니거나 데이터가 깨져있으면 안전하게 초기화!
+    if (!Array.isArray(profiles) || profiles.length === 0) {
         const existingName = originalGetItem.call(localStorage, 'tosil_babyName') || '첫째';
         profiles = [{ id: '', name: existingName }];
         originalSetItem.call(localStorage, 'tosil_baby_profiles', JSON.stringify(profiles));
@@ -5096,14 +5100,8 @@ window.saveTrackerToFirebase = async function(records) {
     if (typeof db !== 'undefined' && typeof setDoc === 'function') {
         let syncCode = localStorage.getItem("family_sync_code");
         
-        if (!syncCode) {
-            const kakaoId = localStorage.getItem("kakao_id");
-            if (kakaoId) {
-                syncCode = "personal_backup_" + kakaoId; 
-            } else {
-                return; 
-            }
-        }
+     // 1인 유저는 로컬에만 저장하고 서버 전송은 패스합니다.
+        if (!syncCode) return;
         
         try { 
             // 🚨 [긴급 패치] 트래커에도 다둥이 꼬리표(currentBabySuffix) 부착 완료!
@@ -7008,7 +7006,7 @@ window.renderSettingsTab = function() {
         `;
     }
 
-    // 🌟 2. 가족 연동 섹션 (딱딱한 IT 감성 -> 다정한 육아 감성으로 전면 교체 🤍)
+  // 🌟 2. 가족 연동 섹션 (딱딱한 IT 감성 -> 다정한 육아 감성으로 전면 교체 🤍)
     const syncCode = localStorage.getItem('family_sync_code');
     let syncHtml = '';
 
@@ -7019,13 +7017,15 @@ window.renderSettingsTab = function() {
                     <div style="font-size: 14.5px; font-weight: 900; color: var(--text-m);">☁️ 우리 가족 안심 클라우드</div>
                     <span style="background: #EBF4FF; color: #3182F6; font-size: 11px; font-weight: 900; padding: 4px 8px; border-radius: 8px;">기록 보호중 ✨</span>
                 </div>
-                <div style="font-size: 12.5px; color: var(--text-s); font-weight: 600; margin-bottom: 16px; line-height: 1.5;">소중한 육아 기록이 서버에 안전하게 보관되고 있어요.<br>초대장을 보내 짝꿍과 함께 육아의 기쁨을 나눠볼까요? 🤍</div>
+                <!-- 🚨 안내 문구: 폰트 축소(11.5px), 자간 축소, 단어 쪼개짐 방지 패치 -->
+                <div style="font-size: 11.5px; color: var(--text-s); font-weight: 600; margin-bottom: 16px; line-height: 1.5; letter-spacing: -0.3px; word-break: keep-all;">소중한 육아 기록이 서버에 안전하게 보관되고 있어요.<br>초대장을 보내 짝꿍과 함께 육아의 기쁨을 나눠볼까요? 🤍</div>
                 
                 <div style="display: flex; gap: 8px;">
-                    <button onclick="window.showSyncCode()" style="flex: 1; padding: 12px; border-radius: 12px; background: #3182F6; color: #FFF; font-size: 13.5px; font-weight: 800; border: none; cursor: pointer; box-shadow: 0 4px 10px rgba(49,130,246,0.2);">
+                    <!-- 🚨 버튼: 폰트 축소(13px), 자간 축소, 강제 한 줄 고정(nowrap) 패치 -->
+                    <button onclick="window.showSyncCode()" style="flex: 1; padding: 12px 0; border-radius: 12px; background: #3182F6; color: #FFF; font-size: 13px; font-weight: 800; border: none; cursor: pointer; box-shadow: 0 4px 10px rgba(49,130,246,0.2); white-space: nowrap; letter-spacing: -0.5px;">
                         💌 가족 초대장 열기
                     </button>
-                    <button onclick="window.safeUnlinkFamilySync()" style="flex: 1; padding: 12px; border-radius: 12px; background: #FFF0F1; color: #F04452; font-size: 13.5px; font-weight: 900; border: 1px solid #FFE5E8; cursor: pointer;">
+                    <button onclick="window.safeUnlinkFamilySync()" style="flex: 1; padding: 12px 0; border-radius: 12px; background: #FFF0F1; color: #F04452; font-size: 13px; font-weight: 900; border: 1px solid #FFE5E8; cursor: pointer; white-space: nowrap; letter-spacing: -0.5px;">
                         🚪 방 나가기 (초기화)
                     </button>
                 </div>
@@ -7035,13 +7035,15 @@ window.renderSettingsTab = function() {
         syncHtml = `
             <div style="background: var(--bg-card); border: 1px solid var(--border); border-radius: 16px; padding: 20px; margin-bottom: 32px; box-shadow: 0 2px 8px rgba(0,0,0,0.02); box-sizing: border-box; width: 100%;">
                 <div style="font-size: 14.5px; font-weight: 900; color: var(--text-m); margin-bottom: 8px;">👨‍👩‍👧 우리 아기 함께 키우기</div>
-                <div style="font-size: 12.5px; color: var(--text-s); font-weight: 600; margin-bottom: 16px; line-height: 1.5;">혼자 하는 육아는 너무 힘들어요.<br>아빠, 할머니, 이모님을 초대해서 기록을 공유하세요!</div>
+                <!-- 🚨 안내 문구 패치 -->
+                <div style="font-size: 11.5px; color: var(--text-s); font-weight: 600; margin-bottom: 16px; line-height: 1.5; letter-spacing: -0.3px; word-break: keep-all;">혼자 하는 육아는 너무 힘들어요.<br>아빠, 할머니, 이모님을 초대해서 기록을 공유하세요!</div>
                 
                 <div style="display: flex; flex-direction: column; gap: 8px;">
-                    <button onclick="window.sendKakaoInvite()" style="width: 100%; padding: 14px; border-radius: 12px; background: #FEE500; color: #191F28; font-size: 14.5px; font-weight: 900; border: none; cursor: pointer; display: flex; justify-content: center; align-items: center; gap: 8px;">
+                    <!-- 🚨 버튼 패치 -->
+                    <button onclick="window.sendKakaoInvite()" style="width: 100%; padding: 14px; border-radius: 12px; background: #FEE500; color: #191F28; font-size: 13.5px; font-weight: 900; border: none; cursor: pointer; display: flex; justify-content: center; align-items: center; gap: 8px; letter-spacing: -0.5px; white-space: nowrap;">
                         💬 카카오톡으로 초대장 보내기
                     </button>
-                    <button onclick="window.openFamilySyncModal()" style="width: 100%; padding: 14px; border-radius: 12px; background: #FFFFFF; color: #4E5968; font-size: 14px; font-weight: 800; border: 1px solid #E5E8EB; cursor: pointer; display: flex; justify-content: center; align-items: center; gap: 8px;">
+                    <button onclick="window.openFamilySyncModal()" style="width: 100%; padding: 14px; border-radius: 12px; background: #FFFFFF; color: #4E5968; font-size: 13px; font-weight: 800; border: 1px solid #E5E8EB; cursor: pointer; display: flex; justify-content: center; align-items: center; gap: 8px; letter-spacing: -0.5px; white-space: nowrap;">
                         🎟️ 초대 코드 직접 입력 / 생성
                     </button>
                 </div>
@@ -7151,11 +7153,6 @@ window.renderSettingsTab = function() {
             </div>
         </div>
     `;
-
-    // 🚨 코드 맨 아래에 있는 [VIP 황금 배지 렌더링 엔진]을 위해 원래 함수 꼬리물기 호출 유지!
-    if (typeof window.originalRenderSettingsTab === 'function') {
-        window.originalRenderSettingsTab();
-    }
 };
 
 // ==========================================
@@ -8710,8 +8707,8 @@ window.showPostOptions = async function() {
     let isMasterAdmin = false;
     try {
         if (typeof window.db !== 'undefined' && typeof window.getDoc === 'function') {
-            const myKakaoId = localStorage.getItem('kakao_id') || 'MasterAdminKey';
-            const adminSnap = await window.getDoc(window.doc(window.db, "admins", String(myKakaoId)));
+            const myUid = localStorage.getItem('firebase_uid') || 'MasterAdminKey';
+            const adminSnap = await window.getDoc(window.doc(window.db, "admins", String(myUid)));
             if (adminSnap.exists() && adminSnap.data().allowed === true) isMasterAdmin = true;
         }
     } catch (e) { console.warn("관리자 권한 확인 에러", e); }

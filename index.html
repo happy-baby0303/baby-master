@@ -594,7 +594,7 @@ body.mode-senior .hide-on-senior { display: none !important; }
             </div>
 
         <!-- 공통: 놀이 탭 배너 -->
-        <div id="play-banner-card" onclick="location.href='./toy/index.html'" style="background: linear-gradient(135deg, #FFFBEB 0%, #FEF3C7 100%); border: 1px solid #FDE68A; border-radius: 20px; padding: 24px 20px; box-shadow: 0 4px 12px rgba(217, 119, 6, 0.05); cursor: pointer; display: flex; align-items: center; justify-content: space-between; transition: transform 0.2s; margin-bottom: 24px;" onmousedown="this.style.transform='scale(0.98)'" onmouseup="this.style.transform='scale(1)'">
+        <div id="play-banner-card" onclick="location.href='./toy/index.html'" style="background: linear-gradient(135deg, #FAFAFA 0%, #F3F4F6 100%); border: 1px solid #E5E8EB; border: 1px solid #FDE68A; border-radius: 20px; padding: 24px 20px; box-shadow: 0 4px 12px rgba(217, 119, 6, 0.05); cursor: pointer; display: flex; align-items: center; justify-content: space-between; transition: transform 0.2s; margin-bottom: 24px;" onmousedown="this.style.transform='scale(0.98)'" onmouseup="this.style.transform='scale(1)'">
             <div>
                 <div style="font-size: 0.8rem; color: #D97706; font-weight: 800; margin-bottom: 6px;">
                     D+<span id="play-dday-badge">0</span> 맞춤 놀이 처방
@@ -1825,25 +1825,24 @@ body.mode-senior .hide-on-senior { display: none !important; }
 
       <div id="tab-settings" class="tab-content"></div>
 
-  <!-- ==========================================
+ <!-- ==========================================
      💬 맘수다 탭 (당근마켓 + 블라인드 감성 UI 껍데기)
      ========================================== -->
 <div id="tab-community" class="tab-content" style="background: var(--bg-sub); min-height: 100vh; padding-bottom: 100px;">
     
-    <!-- 1. 🌐 맘수다 감성 헤더 (대기업 앱 스타일) -->
+    <!-- 🚨 오픈 전까지 상단 헤더 및 필터 숨김 처리 (주석 시작) 🚨 -->
+    <!-- 
     <div style="position: sticky; top: 0; z-index: 50; background: var(--bg-main); padding: 16px 20px 4px 20px; display: flex; justify-content: space-between; align-items: flex-start;">
         <div>
             <h2 class="app-title" style="font-size: 24px; font-weight: 900; color: #191F28; margin: 0 0 6px 0; letter-spacing: -0.5px;">💬 맘수다</h2>     
-            </div>
+        </div>
         
         <div style="display: flex; gap: 16px; align-items: center; margin-top: 4px;">
-            <!-- 세련된 검색 SVG 아이콘 -->
             <svg onclick="document.getElementById('commSearchOverlay').classList.add('active')" style="cursor: pointer; transition: 0.2s;" width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#191F28" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
                 <circle cx="11" cy="11" r="8"></circle>
                 <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
             </svg>
             
-            <!-- 세련된 알림(종) SVG 아이콘 -->
             <div onclick="document.getElementById('commNotiOverlay').classList.add('active')" style="cursor: pointer; position: relative; display: flex; align-items: center;">
                 <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#191F28" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
                     <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
@@ -1852,7 +1851,6 @@ body.mode-senior .hide-on-senior { display: none !important; }
                 <span style="position: absolute; top: 0px; right: 2px; width: 6px; height: 6px; background: #FF5A5F; border-radius: 50%; box-shadow: 0 0 0 2px var(--bg-main);"></span>
             </div>
 
-            <!-- 👤 마이페이지 아이콘이 일로 이사왔습니다! -->
             <button onclick="openMyPage()" style="background:#F2F5F8; border:1px solid #E5E8EB; width:36px; height:36px; border-radius:50%; cursor:pointer; display:flex; align-items:center; justify-content:center; padding:0; transition:0.2s;">
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#4E5968" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
                     <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
@@ -1862,7 +1860,6 @@ body.mode-senior .hide-on-senior { display: none !important; }
         </div>
     </div>
 
-  <!-- 2. 🗂️ 카테고리 필터 영역 (가로 스크롤) -->
     <div class="category-scroll-container">
         <div class="category-chip active" onclick="window.switchCommTab(this, 'all')">전체</div>
         <div class="category-chip" onclick="window.switchCommTab(this, 'qna')">💡 육아질문</div>
@@ -1870,6 +1867,8 @@ body.mode-senior .hide-on-senior { display: none !important; }
         <div class="category-chip" onclick="window.switchCommTab(this, 'market')">🥕 나눔/중고</div>
         <div class="category-chip" onclick="window.switchCommTab(this, 'hotdeal')">🛒 핫딜정보</div>
     </div>
+    -->
+    <!-- 🚨 오픈 전 주석 끝 🚨 -->
 
    <!-- 📢 [수정] 맘수다 상단 실시간 공지사항 (평소엔 숨김) -->
     <div id="community-notice-wrapper" style="display: none; background: rgba(49, 130, 246, 0.08); padding: 12px 20px; border-bottom: 1px solid rgba(49, 130, 246, 0.15); align-items: center; gap: 10px;">
