@@ -7181,8 +7181,8 @@ window.renderSettingsTab = function() {
             <!-- 💎 VIP 프리미엄 업그레이드 배너 -->
             <div onclick="document.getElementById('vip-modal-overlay').style.display='flex'" style="background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%); border-radius: 16px; padding: 20px; margin-bottom: 32px; display: flex; align-items: center; justify-content: space-between; cursor: pointer; box-shadow: 0 4px 12px rgba(0,0,0,0.15); box-sizing: border-box; width: 100%; transition: 0.2s;">
                 <div>
-                    <div style="font-size: 13px; font-weight: 900; color: #38bdf8; margin-bottom: 6px; letter-spacing: -0.5px;">육아메이트 VIP 👑</div>
-                    <div style="font-size: 16px; font-weight: 900; color: #FFFFFF; line-height: 1.4; letter-spacing: -0.5px;">육아의 질이 달라집니다.<br>더 강력한 기능 알아보기</div>
+                    <div style="font-size: 13px; font-weight: 900; color: #38bdf8; margin-bottom: 6px; letter-spacing: 1px;">TOSIL PLUS ✨</div>
+<div style="font-size: 16px; font-weight: 900; color: #FFFFFF; line-height: 1.4; letter-spacing: -0.5px;">단 한 번의 결제로<br>우리 가족 평생 육아 기록실</div>
                 </div>
                 <div style="width: 44px; height: 44px; background: rgba(255,255,255,0.1); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: #FFFFFF; font-size: 20px;">
                     ✨
@@ -12641,7 +12641,9 @@ document.addEventListener("DOMContentLoaded", () => {
     }, 2000);
 });
 
-// 4. 하이엔드 페이월(결제 유도창) 렌더링 - 💎 럭셔리 다크 테마 적용 완료!
+// ==========================================
+// 💎 하이엔드 페이월 (3단 앵커링 프라이싱 + 럭셔리 다크 테마)
+// ==========================================
 window.showPaywall = function() {
     let existing = document.getElementById('premium-paywall-modal');
     if (existing) existing.remove();
@@ -12649,61 +12651,94 @@ window.showPaywall = function() {
     const paywallHtml = `
         <div id="premium-paywall-modal" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 999999; display: flex; justify-content: center; align-items: center; padding: 20px; backdrop-filter: blur(10px); opacity: 0; transition: opacity 0.3s;">
             
-            <!-- 럭셔리 미드나잇 블루 배경 카드 -->
-            <div style="background: linear-gradient(145deg, #0F172A 0%, #1E293B 100%); width: 100%; max-width: 360px; border-radius: 28px; padding: 36px 24px 28px 24px; box-shadow: 0 24px 50px rgba(0,0,0,0.5); position: relative; transform: translateY(30px); transition: transform 0.4s cubic-bezier(0.2, 0.8, 0.2, 1); border: 1px solid rgba(255,255,255,0.1);">
+            <div style="background: linear-gradient(145deg, #0F172A 0%, #1E293B 100%); width: 100%; max-width: 380px; border-radius: 28px; padding: 36px 24px 28px 24px; box-shadow: 0 24px 50px rgba(0,0,0,0.5); position: relative; transform: translateY(30px); transition: transform 0.4s cubic-bezier(0.2, 0.8, 0.2, 1); border: 1px solid rgba(255,255,255,0.1); max-height: 90vh; overflow-y: auto;">
                 
-                <!-- 닫기 버튼 (세련된 반투명) -->
                 <button onclick="document.getElementById('premium-paywall-modal').style.opacity='0'; setTimeout(()=>document.getElementById('premium-paywall-modal').remove(),300);" style="position: absolute; top: 20px; right: 20px; background: rgba(255,255,255,0.1); border: none; width: 32px; height: 32px; border-radius: 50%; font-size: 14px; font-weight: 900; color: #94A3B8; cursor: pointer; backdrop-filter: blur(4px); transition: 0.2s;">✕</button>
 
                 <!-- 👑 타이틀 영역 -->
-                <div style="text-align: center; margin-bottom: 36px;">
-                    <div style="display: inline-flex; align-items: center; justify-content: center; width: 64px; height: 64px; background: linear-gradient(135deg, #FDE047 0%, #F59E0B 100%); border-radius: 20px; font-size: 32px; margin-bottom: 16px; box-shadow: 0 10px 25px rgba(245,158,11,0.3);">
-                        💎
+<div style="text-align: center; margin-bottom: 36px;">
+    <div style="display: inline-flex; align-items: center; justify-content: center; width: 64px; height: 64px; background: linear-gradient(135deg, #FDE047 0%, #F59E0B 100%); border-radius: 20px; font-size: 32px; margin-bottom: 16px; box-shadow: 0 10px 25px rgba(245,158,11,0.3);">
+        💎
+    </div>
+    <div style="font-family: 'Georgia', serif; font-size: 11px; font-weight: 800; color: #FBBF24; letter-spacing: 3px; margin-bottom: 6px;">TOSIL PLUS</div>
+    <div style="font-size: 24px; font-weight: 900; color: #FFFFFF; line-height: 1.4; letter-spacing: -0.5px;">
+        우리 가족을 위한 완벽한<br>프라이빗 육아 기록실
+    </div>
+</div>
+
+                <!-- 🌟 프리미엄 핵심 기능 요약 -->
+                <div style="display: flex; flex-direction: column; gap: 12px; margin-bottom: 32px;">
+                    <div style="display: flex; align-items: center; gap: 12px;">
+                        <span style="color:#38BDF8; font-size:16px;">✓</span>
+                        <span style="color:#E2E8F0; font-size:14px; font-weight:700;">소아과 제출용 A4 종합 리포트 발급</span>
                     </div>
-                    <div style="font-family: 'Georgia', serif; font-size: 11px; font-weight: 800; color: #FBBF24; letter-spacing: 3px; margin-bottom: 6px;">TOSIL PLUS</div>
-                    <div style="font-size: 24px; font-weight: 900; color: #FFFFFF; line-height: 1.4; letter-spacing: -0.5px;">
-                        우리 가족을 위한 완벽한 육아 기록실<br>
+                    <div style="display: flex; align-items: center; gap: 12px;">
+                        <span style="color:#38BDF8; font-size:16px;">✓</span>
+                        <span style="color:#E2E8F0; font-size:14px; font-weight:700;">인스타용 월간 성장 카드 AI 생성</span>
+                    </div>
+                    <div style="display: flex; align-items: center; gap: 12px;">
+                        <span style="color:#38BDF8; font-size:16px;">✓</span>
+                        <span style="color:#E2E8F0; font-size:14px; font-weight:700;">둘째, 셋째 다둥이 프로필 무제한 추가</span>
+                    </div>
+                    <div style="display: flex; align-items: center; gap: 12px;">
+                        <span style="color:#38BDF8; font-size:16px;">✓</span>
+                        <span style="color:#E2E8F0; font-size:14px; font-weight:700;">사생활 완벽 보호! 시니어 안심 케어 모드</span>
                     </div>
                 </div>
 
-                <!-- 🌟 프리미엄 기능 3가지 리스트 -->
-                <div style="display: flex; flex-direction: column; gap: 14px; margin-bottom: 36px;">
+                <!-- 💰 3단 프라이싱 앵커링 (연간 유도) -->
+                <div style="display: flex; flex-direction: column; gap: 10px; margin-bottom: 24px;">
                     
-                    <div style="display: flex; align-items: center; gap: 16px; background: rgba(255,255,255,0.04); padding: 18px; border-radius: 20px; border: 1px solid rgba(255,255,255,0.08);">
-                        <div style="width: 44px; height: 44px; background: rgba(236,72,153,0.15); border-radius: 14px; display: flex; align-items: center; justify-content: center; font-size: 22px; flex-shrink: 0; border: 1px solid rgba(236,72,153,0.3);">👩‍👧‍👦</div>
+                    <!-- 1. 월간 결제 (미끼 1) -->
+                    <div id="plan-month" class="plan-card" onclick="window.selectPlan('month')" style="background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.1); border-radius: 16px; padding: 16px; display: flex; justify-content: space-between; align-items: center; cursor: pointer; transition: 0.2s;">
                         <div>
-                            <div style="font-size: 15px; font-weight: 900; color: #FDFDFD; margin-bottom: 4px; letter-spacing: -0.3px;">멀티버스 프로필 무제한</div>
-                            <div style="font-size: 12.5px; font-weight: 600; color: #94A3B8; line-height: 1.4; word-break: keep-all;">스와이프 한 번으로 완벽하게 분리되는<br>둘째, 셋째 독립 성장 기록망</div>
+                            <div style="font-size: 14px; font-weight: 800; color: #E2E8F0; margin-bottom: 2px;">1개월 플랜</div>
+                            <div style="font-size: 12px; color: #94A3B8;">언제든 해지 가능</div>
+                        </div>
+                        <div style="display: flex; align-items: center; gap: 12px;">
+                            <div style="font-size: 16px; font-weight: 900; color: #FFF;">₩4,900<span style="font-size: 12px; color: #94A3B8; font-weight: 600;"> /월</span></div>
+                            <div class="check-circle" style="width: 20px; height: 20px; border-radius: 50%; border: 2px solid #64748B; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 900; color: #FFF; transition: 0.2s;"></div>
                         </div>
                     </div>
 
-                    <div style="display: flex; align-items: center; gap: 16px; background: rgba(255,255,255,0.04); padding: 18px; border-radius: 20px; border: 1px solid rgba(255,255,255,0.08);">
-                        <div style="width: 44px; height: 44px; background: rgba(16,185,129,0.15); border-radius: 14px; display: flex; align-items: center; justify-content: center; font-size: 22px; flex-shrink: 0; border: 1px solid rgba(16,185,129,0.3);">👵</div>
+                    <!-- 2. 연간 결제 (타겟 유도 목표 ⭐️) -->
+                    <div id="plan-year" class="plan-card" onclick="window.selectPlan('year')" style="background: rgba(56,189,248,0.1); border: 2px solid #38BDF8; border-radius: 16px; padding: 16px; display: flex; justify-content: space-between; align-items: center; cursor: pointer; transition: 0.2s; position: relative;">
+                        <!-- BEST 뱃지 -->
+                        <div style="position: absolute; top: -10px; left: 16px; background: #38BDF8; color: #0F172A; font-size: 10px; font-weight: 900; padding: 4px 8px; border-radius: 6px; letter-spacing: 0.5px;">BEST VALUE (20% 할인)</div>
+                        
                         <div>
-                            <div style="font-size: 15px; font-weight: 900; color: #FDFDFD; margin-bottom: 4px; letter-spacing: -0.3px;">시니어 안심 케어 모드</div>
-                            <div style="font-size: 12.5px; font-weight: 600; color: #94A3B8; line-height: 1.4; word-break: keep-all;">돋보기가 필요 없는 직관적 UI와<br>사생활 탭 원천 차단 보안 시스템</div>
+                            <div style="font-size: 14px; font-weight: 800; color: #38BDF8; margin-bottom: 2px;">1년 플랜</div>
+                            <div style="font-size: 12px; color: #94A3B8;">연 ₩46,800 일시불</div>
+                        </div>
+                        <div style="display: flex; align-items: center; gap: 12px;">
+                            <div style="text-align: right;">
+                                <div style="font-size: 11px; color: #94A3B8; text-decoration: line-through;">₩58,800</div>
+                                <div style="font-size: 16px; font-weight: 900; color: #FFF;">₩3,900<span style="font-size: 12px; color: #38BDF8; font-weight: 600;"> /월</span></div>
+                            </div>
+                            <div class="check-circle" style="width: 20px; height: 20px; border-radius: 50%; border: 2px solid #38BDF8; background: #38BDF8; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 900; color: #FFF; transition: 0.2s;">✓</div>
                         </div>
                     </div>
 
-                    <div style="display: flex; align-items: center; gap: 16px; background: rgba(255,255,255,0.04); padding: 18px; border-radius: 20px; border: 1px solid rgba(255,255,255,0.08);">
-                        <div style="width: 44px; height: 44px; background: rgba(56,189,248,0.15); border-radius: 14px; display: flex; align-items: center; justify-content: center; font-size: 22px; flex-shrink: 0; border: 1px solid rgba(56,189,248,0.3);">📊</div>
+                    <!-- 3. 평생 결제 (미끼 2 - 앵커링용) -->
+                    <div id="plan-life" class="plan-card" onclick="window.selectPlan('life')" style="background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.1); border-radius: 16px; padding: 16px; display: flex; justify-content: space-between; align-items: center; cursor: pointer; transition: 0.2s;">
                         <div>
-                            <div style="font-size: 15px; font-weight: 900; color: #FDFDFD; margin-bottom: 4px; letter-spacing: -0.3px;">의료용 데이터 추출 & 백업</div>
-                            <div style="font-size: 12.5px; font-weight: 600; color: #94A3B8; line-height: 1.4; word-break: keep-all;">소아과 제출용 A4 리포트 발급 및<br>우리 아기 기록 전체 보관</div>
+                            <div style="font-size: 14px; font-weight: 800; color: #E2E8F0; margin-bottom: 2px;">평생 소장 플랜</div>
+                            <div style="font-size: 12px; color: #94A3B8;">단 한 번 결제로 둘째, 셋째까지</div>
+                        </div>
+                        <div style="display: flex; align-items: center; gap: 12px;">
+                            <div style="font-size: 16px; font-weight: 900; color: #FFF;">₩89,000</div>
+                            <div class="check-circle" style="width: 20px; height: 20px; border-radius: 50%; border: 2px solid #64748B; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 900; color: #FFF; transition: 0.2s;"></div>
                         </div>
                     </div>
 
                 </div>
 
-                <!-- 🚀 하단 액션 (선착순 심리 자극) -->
+                <!-- 🚀 최종 액션 버튼 -->
                 <div style="text-align: center;">
-                    <div style="font-size: 12px; font-weight: 800; color: #FBBF24; background: rgba(251,191,36,0.1); padding: 8px 16px; border-radius: 12px; display: inline-block; margin-bottom: 12px; border: 1px solid rgba(251,191,36,0.2);">
-                        ✨ 런칭 기념, 선착순 500명 1년 무료!
-                    </div>
-                    
-                    <button onclick="window.applyPremiumWaitlist(this)" style="width: 100%; padding: 18px; background: linear-gradient(135deg, #FDE047 0%, #F59E0B 100%); color: #451A03; border: none; border-radius: 16px; font-size: 16px; font-weight: 900; cursor: pointer; box-shadow: 0 8px 20px rgba(245,158,11,0.3); transition: transform 0.2s;" onmousedown="this.style.transform='scale(0.96)'" onmouseup="this.style.transform='scale(1)'">
-                        얼리버드 1년 무료 신청하기
+                    <button onclick="window.applyPremiumWaitlist(this)" style="width: 100%; padding: 18px; background: linear-gradient(135deg, #38BDF8 0%, #2563EB 100%); color: #FFF; border: none; border-radius: 16px; font-size: 16px; font-weight: 900; cursor: pointer; box-shadow: 0 8px 20px rgba(37, 99, 235, 0.3); transition: transform 0.2s;" onmousedown="this.style.transform='scale(0.96)'" onmouseup="this.style.transform='scale(1)'">
+                        첫 1개월 무료 체험 시작하기
                     </button>
+                    <div style="font-size: 11px; color: #64748B; margin-top: 14px;">무료 체험 기간(30일) 종료 전까지 결제되지 않습니다.</div>
                 </div>
 
             </div>
@@ -12713,9 +12748,37 @@ window.showPaywall = function() {
     document.body.insertAdjacentHTML('beforeend', paywallHtml);
     setTimeout(() => {
         const modal = document.getElementById('premium-paywall-modal');
-        modal.style.opacity = '1';
-        modal.firstElementChild.style.transform = 'translateY(0)';
+        if(modal) {
+            modal.style.opacity = '1';
+            modal.firstElementChild.style.transform = 'translateY(0)';
+        }
     }, 10);
+};
+
+// 💡 3단 요금제 클릭 시 토글되는 애니메이션 엔진
+window.selectPlan = function(planId) {
+    if (navigator.vibrate) navigator.vibrate(10);
+    
+    // 1. 모든 카드 초기화
+    document.querySelectorAll('.plan-card').forEach(c => {
+        c.style.borderColor = 'rgba(255,255,255,0.1)';
+        c.style.background = 'rgba(255,255,255,0.04)';
+        c.style.borderWidth = '1px';
+        const circle = c.querySelector('.check-circle');
+        circle.innerHTML = '';
+        circle.style.background = 'transparent';
+        circle.style.borderColor = '#64748B';
+    });
+    
+    // 2. 선택된 카드에 파란색 형광펜 칠하기
+    const target = document.getElementById('plan-' + planId);
+    target.style.borderColor = '#38BDF8';
+    target.style.background = 'rgba(56,189,248,0.1)';
+    target.style.borderWidth = '2px';
+    const circle = target.querySelector('.check-circle');
+    circle.innerHTML = '✓';
+    circle.style.background = '#38BDF8';
+    circle.style.borderColor = '#38BDF8';
 };
 
 // 5. 프리미엄 웨이트리스트(대기자 명단) 신청 함수
