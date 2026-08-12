@@ -55,16 +55,25 @@
 
 <style>
     body { margin: 0 !important; padding: 0 !important; }
-   /* ========================================== */
-/* 👵 조부모 / 시터 모드 전용 (초간단 UI) */
+/* ========================================== */
+/* 👵 조부모 / 시터 모드 전용 (하단 홈 버튼 중앙 완벽 정렬) */
 /* ========================================== */
 body.mode-senior #nav-toolbox,
 body.mode-senior #nav-hotplace,
 body.mode-senior #nav-community,
 body.mode-senior #nav-info { display: none !important; }
 
-/* 하단 탭에 '홈' 하나만 남으므로 1칸으로 꽉 채움 */
-body.mode-senior .bottom-nav { grid-template-columns: 1fr; } 
+/* 🌟 하단 네비게이션을 플렉스로 바꿔서 '홈' 버튼 하나를 완벽한 정중앙에 안착시킴 */
+body.mode-senior .bottom-nav { 
+    display: flex !important; 
+    justify-content: center !important; 
+    align-items: center !important; 
+} 
+
+body.mode-senior .bottom-nav .nav-item {
+    flex: 0 0 auto !important;
+    width: 80px !important;
+}
 
 body.mode-senior .show-on-mom-block,
 body.mode-senior .show-on-dad-block,
@@ -1973,7 +1982,7 @@ body.mode-senior .hide-on-senior { display: none !important; }
 -->
 
 <!-- 🚨 4등분 제한을 부수고 강제로 5등분으로 넓히는 인라인 스타일 주입! -->
-<nav class="bottom-nav" style="display: grid !important; grid-template-columns: repeat(5, 1fr) !important;">
+<nav class="bottom-nav">
     <div id="nav-home" class="nav-item active" onclick="switchTab('home', this)"><span class="icon">🏠</span><span class="label">홈</span></div>
     <div id="nav-toolbox" class="nav-item" onclick="switchTab('toolbox', this)"><span class="icon">🧰</span><span class="label">툴박스</span></div>
     <div id="nav-hotplace" class="nav-item" onclick="switchTab('hotplace', this)"><span class="icon">🗺️</span><span class="label">나들이</span></div>
