@@ -7666,16 +7666,29 @@ window.renderDadQuests = function() {
 
     const isHeroToday = localStorage.getItem('tosil_hero_mode_date') === new Date().toDateString();
 
-    let html = `
+  let html = `
         <div style="background: linear-gradient(135deg, #1E293B, #0F172A); border-radius: 20px; padding: 20px; color: #fff; box-shadow: 0 10px 25px rgba(15,23,42,0.25); position: relative; margin-bottom: 24px;">
-            <div onclick="window.toggleDadDashboard()" style="display: flex; justify-content: space-between; align-items: center; cursor: pointer; position: relative; z-index: 2;">
-                <div>
-                    <div style="font-size: 13px; color: #94A3B8; font-weight: 800; margin-bottom: 4px;">👨‍🍼 아빠 작전 상황판</div>
-                    <div style="font-size: 20px; font-weight: 900; color: #fff;">Lv.${levelInfo.level} <span style="color: ${levelInfo.color};">${levelInfo.title}</span></div>
+            
+            <!-- 🚨 [수정됨] 상단 헤더 영역: 찌그러짐 원천 차단 및 게임 UI 감성 적용 -->
+            <div onclick="window.toggleDadDashboard()" style="display: flex; justify-content: space-between; align-items: center; gap: 12px; cursor: pointer; position: relative; z-index: 2;">
+                
+                <!-- 좌측 텍스트 (글씨가 길면 자동으로 ... 처리되게 방어) -->
+                <div style="flex: 1; min-width: 0; text-align: left;">
+                    <div style="font-size: 12px; color: #94A3B8; font-weight: 800; margin-bottom: 6px;">👨‍🍼 아빠 작전 상황판</div>
+                    <div style="font-size: 17px; font-weight: 900; color: #fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+                        Lv.${levelInfo.level} <span style="color: ${levelInfo.color};">${levelInfo.title}</span>
+                    </div>
                 </div>
-                <div style="display:flex; align-items:center; gap:12px;">
-                    <div style="font-size: 13px; font-weight: 900; color: #E2E8F0; background: rgba(255,255,255,0.15); padding: 6px 12px; border-radius: 20px;">${levelInfo.totalExp} EXP</div>
-                    <div style="font-size: 20px; color: #94A3B8; transform: rotate(${isCollapsed ? '180deg' : '0deg'}); transition: transform 0.3s;">▲</div>
+                
+                <!-- 우측 배지 및 버튼 (절대 찌그러지지 않게 크기 고정) -->
+                <div style="display: flex; align-items: center; gap: 8px; flex-shrink: 0;">
+                    <div style="font-size: 12px; font-weight: 900; color: #38BDF8; background: rgba(56, 189, 248, 0.15); border: 1px solid rgba(56, 189, 248, 0.2); padding: 6px 10px; border-radius: 12px; white-space: nowrap;">
+                        ${levelInfo.totalExp} EXP
+                    </div>
+                    <!-- 화살표를 둥근 버튼 안에 넣어서 깔끔하게 정리 -->
+                    <div style="width: 28px; height: 28px; background: rgba(255,255,255,0.1); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 11px; color: #94A3B8; transform: rotate(${isCollapsed ? '180deg' : '0deg'}); transition: transform 0.3s;">
+                        ▲
+                    </div>
                 </div>
             </div>
     `;
@@ -13558,22 +13571,38 @@ window.renderDadCommute = function() {
         box.style.display = 'none'; return;
     }
 
-    const now = Date.now();
-    const records = JSON.parse(localStorage.getItem('tosil_tracker_records')) || [];
-    const cubes = JSON.parse(localStorage.getItem('tosil_cube_records')) || [];
-    const opens = JSON.parse(localStorage.getItem('tosil_open_records')) || [];
-
-    let todayEvents = 0;
     const startOfToday = new Date().setHours(0,0,0,0);
-    records.forEach(r => { if (r.timestamp >= startOfToday) todayEvents++; });
+    const records = JSON.parse(localStorage.getItem('tosil_tracker_records')) || [];
+    const fevers = JSON.parse(localStorage.getItem('tosil_fever_records')) || [];
+    
+    let todayEvents = 0;
+    let todaySleepMins = 0;
+    records.forEach(r => { 
+        if (r.timestamp >= startOfToday) {
+            todayEvents++; 
+            if (r.type === 'sleep') todaySleepMins += (parseInt(r.amount) || 0);
+        }
+    });
 
-   let items = [];
-    if (todayEvents >= 12) {
-        items.push({ icon:'🛋️', text:'오늘 아내가 많이 바빴어요', sub:'집 가면 1시간만 아기 봐주면 충분해요' });
+    const hasFever = fevers.some(r => r.timestamp >= startOfToday && r.temp >= 37.5);
+
+    let items = [];
+
+    // 🚨 1. 고열 체크 (가장 시급함)
+    if (hasFever) {
+        items.push({ icon:'🚨', text:'오늘 아기가 열이 났어요!', sub:'집에 가는 길에 챔프/해열제가 충분한지 꼭 확인하세요.' });
+    }
+    // 💤 2. 수면 부족 체크
+    else if (todaySleepMins > 0 && todaySleepMins < 90) {
+        items.push({ icon:'🥱', text:`오늘 낮잠을 ${todaySleepMins}분밖에 안 잤어요`, sub:'아내가 매우 예민할 수 있습니다. 눈치 챙기세요!' });
+    }
+    // 🍼 3. 일반적인 노동 강도 체크
+    else if (todayEvents >= 12) {
+        items.push({ icon:'🛋️', text:'오늘 아내가 많이 바빴어요', sub:'달달한 디저트 사 가면 사랑받는 남편 100% 보장' });
     } else if (todayEvents >= 8) {
-        items.push({ icon:'☕', text:'평범하게 바쁜 하루였어요', sub:'같이 커피 한 잔 어때요' });
+        items.push({ icon:'☕', text:'평범하게 바쁜 하루였어요', sub:'집에 가서 "오늘 하루 어땠어?" 먼저 물어봐주세요' });
     } else {
-        items.push({ icon:'🌿', text:'오늘은 평화로웠어요', sub:'가서 아기랑 놀아주기만 해도 충분해요' });
+        items.push({ icon:'🌿', text:'오늘은 평화로웠어요', sub:'가서 아기랑 30분만 놀아주기만 해도 충분해요' });
     }
 
     box.style.display = 'block';
@@ -13581,86 +13610,17 @@ window.renderDadCommute = function() {
         <div style="background:var(--bg-card); border:1px solid var(--border); border-radius:20px; padding:20px; margin-bottom:20px; box-shadow:0 4px 12px rgba(0,0,0,0.02);">
             <div style="display:flex; align-items:center; gap:8px; margin-bottom:14px;">
                 <span style="font-size:20px;">🚇</span>
-                <div style="font-size:15px; font-weight:900; color:var(--text-m);">퇴근길 브리핑</div>
+                <div style="font-size:15px; font-weight:900; color:var(--text-m);">센스 있는 아빠의 퇴근길 브리핑</div>
             </div>
             ${items.map(i => `
                 <div style="display:flex; align-items:center; gap:12px; padding:12px; background:var(--bg-sub); border-radius:14px; margin-bottom:8px;">
                     <span style="font-size:22px; flex-shrink:0;">${i.icon}</span>
                     <div style="min-width:0;">
                         <div style="font-size:13.5px; font-weight:900; color:var(--text-m); margin-bottom:3px;">${i.text}</div>
-                        <div style="font-size:11.5px; font-weight:700; color:var(--text-s);">${i.sub}</div>
+                        <div style="font-size:11.5px; font-weight:700; color:var(--text-s); word-break:keep-all; line-height:1.4;">${i.sub}</div>
                     </div>
                 </div>`).join('')}
         </div>`;
-};
-
-// ② 아빠 랭킹 — 익명 상대평가
-window.getDadRank = function() {
-    const exp = parseInt(localStorage.getItem('tosil_mate_exp') || '0');
-    const records = JSON.parse(localStorage.getItem('tosil_tracker_records')) || [];
-    const weekAgo = Date.now() - 7*86400000;
-    let weekCount = 0;
-    records.forEach(r => { if (r.timestamp >= weekAgo) weekCount++; });
-
-    const score = exp * 0.3 + weekCount * 5;
-    let pct = 90;
-    if (score >= 300) pct = 3;
-    else if (score >= 200) pct = 8;
-    else if (score >= 120) pct = 15;
-    else if (score >= 70) pct = 28;
-    else if (score >= 40) pct = 45;
-    else if (score >= 15) pct = 65;
-
-    let title = '이제 시작하는 아빠';
-    if (pct <= 3) title = '전설의 육아 아빠';
-    else if (pct <= 8) title = '상위권 육아 아빠';
-    else if (pct <= 15) title = '든든한 육아 파트너';
-    else if (pct <= 28) title = '성장 중인 아빠';
-    else if (pct <= 45) title = '노력하는 아빠';
-
-    return { pct, title, weekCount, exp };
-};
-
-window.showDadRankCard = function() {
-    const r = window.getDadRank();
-    const babyName = localStorage.getItem('tosil_babyName') || '우리아기';
-    const body = document.getElementById('modal-dynamic-body');
-    if (!body) return;
-
-    body.innerHTML = `
-        <div id="dad-rank-capture" style="background:linear-gradient(135deg,#1E293B,#0F172A); border-radius:24px; padding:32px 24px; text-align:center; margin-bottom:16px;">
-            <div style="font-size:12px; font-weight:800; color:#60A5FA; letter-spacing:2px; margin-bottom:16px;">THIS WEEK</div>
-            <div style="font-size:48px; margin-bottom:12px;">👨‍🍼</div>
-            <div style="font-size:14px; font-weight:700; color:#94A3B8; margin-bottom:8px;">전국 아빠 중</div>
-            <div style="font-size:42px; font-weight:900; color:#FFF; letter-spacing:-1px; margin-bottom:8px;">상위 ${r.pct}%</div>
-            <div style="display:inline-block; background:rgba(96,165,250,0.15); color:#60A5FA; font-size:14px; font-weight:900; padding:8px 18px; border-radius:20px; margin-bottom:24px;">${r.title}</div>
-            <div style="display:flex; gap:8px;">
-                <div style="flex:1; background:rgba(255,255,255,0.06); border-radius:14px; padding:14px 8px;">
-                    <div style="font-size:11px; font-weight:800; color:#94A3B8; margin-bottom:5px;">이번 주 기록</div>
-                    <div style="font-size:18px; font-weight:900; color:#FFF;">${r.weekCount}회</div>
-                </div>
-                <div style="flex:1; background:rgba(255,255,255,0.06); border-radius:14px; padding:14px 8px;">
-                    <div style="font-size:11px; font-weight:800; color:#94A3B8; margin-bottom:5px;">누적 EXP</div>
-                    <div style="font-size:18px; font-weight:900; color:#FBBF24;">${r.exp}</div>
-                </div>
-            </div>
-            <div style="margin-top:20px; font-size:11px; font-weight:700; color:#64748B;">${babyName}의 아빠 · 육아메이트</div>
-        </div>
-        <button onclick="window.shareDadRank()" style="width:100%; padding:16px; border-radius:14px; background:#FEE500; color:#191919; font-weight:900; font-size:15px; border:none; cursor:pointer; margin-bottom:8px;">💬 아내에게 자랑하기</button>
-        <button onclick="closeFestivalModalForce()" style="width:100%; padding:14px; border-radius:14px; background:var(--bg-sub); color:var(--text-s); font-weight:800; font-size:14px; border:none; cursor:pointer;">닫기</button>`;
-
-    const modal = document.getElementById('premium-modal');
-    if (modal) modal.style.display = 'flex';
-};
-
-window.shareDadRank = function() {
-    const r = window.getDadRank();
-    if (typeof Kakao === 'undefined' || !Kakao.isInitialized()) return;
-    Kakao.Share.sendDefault({
-        objectType: 'text',
-        text: `👨‍🍼 이번 주 나는 전국 아빠 중 상위 ${r.pct}%\n"${r.title}"\n\n이번 주 육아 기록 ${r.weekCount}회 🔥`,
-        link: { mobileWebUrl: 'https://happy-baby0303.github.io/', webUrl: 'https://happy-baby0303.github.io/' }
-    });
 };
 
 // ③ 렌더링 훅
