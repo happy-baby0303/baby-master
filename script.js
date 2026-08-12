@@ -12776,16 +12776,34 @@ window.addNewBabyProfile = function() {
 };
 
 // ==========================================
-// ✨ [마이페이지 설정] VIP 얼리버드 전용 황금 배지 렌더링
+// ✨ [마이페이지 설정] VIP 얼리버드 전용 황금 배지 렌더링 (대표님 화면 숨김 처리 완료)
 // ==========================================
 const originalRenderSettingsTab = window.renderSettingsTab;
 window.renderSettingsTab = function() {
     originalRenderSettingsTab(); // 원래 화면 먼저 그리고
     
-    // 내가 프리미엄(얼리버드) 유저라면 프로필 상단에 황금 배지 달아주기!
+    // 👑 [핵심] 대표님(최고 관리자)이시라면 이 황금 배지와 VIP 배너를 아예 안 보이게 숨깁니다!
+    const isMaster = localStorage.getItem('tosil_is_master') === 'true';
+    const isSubAdmin = localStorage.getItem('tosil_is_subadmin') === 'true';
+
+    if (isMaster || isSubAdmin) {
+        // 혹시 생성되어 있을 수 있는 얼리버드 배지 제거
+        const existingRibbon = document.getElementById('vip-badge-ribbon');
+        if (existingRibbon) existingRibbon.remove();
+
+        // 설정 탭 안에 있는 '육아메이트 VIP' 광고 배너도 대표님 눈에 안 보이게 숨김 처리!
+        const container = document.getElementById('tab-settings');
+        if (container) {
+            const vipBanner = container.querySelector('div[style*="linear-gradient(135deg, #1e293b"]');
+            if (vipBanner) vipBanner.style.display = 'none';
+        }
+        return; // 대표님은 여기서 끝!
+    }
+    
+    // 일반 유저 중 프리미엄(얼리버드) 유저라면 프로필 상단에 황금 배지 달아주기!
     if (window.isPremiumUser()) {
         const container = document.getElementById('tab-settings');
-        const profileBox = container.querySelector('div[style*="padding: 24px 20px 40px"]');
+        const profileBox = container ? container.querySelector('div[style*="padding: 24px 20px 40px"]') : null;
         
         if (profileBox && !document.getElementById('vip-badge-ribbon')) {
             const badgeHtml = `
@@ -12799,7 +12817,6 @@ window.renderSettingsTab = function() {
                     </div>
                 </div>
             `;
-            // 타이틀 "설정" 바로 아래에 삽입
             const titleEl = profileBox.querySelector('div[style*="font-size: 24px"]');
             if (titleEl) titleEl.insertAdjacentHTML('afterend', badgeHtml);
         }
