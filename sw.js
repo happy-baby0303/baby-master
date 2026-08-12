@@ -1,10 +1,34 @@
-// [4] PWA 설치를 위한 서비스 워커 코드 (기존 로직 유지)
+const CACHE = 'yukamate-v1';
+const ASSETS = [
+    './index.html', 
+    './style.css', 
+    './script.js', 
+    './playdata.js', 
+    './receiptData.js', 
+    './icon-512.png',
+    './icon-192x192.png'
+];
+
 self.addEventListener('install', (e) => {
-    console.log('[Service Worker] 설치 완료!');
+    e.waitUntil(caches.open(CACHE).then(c => c.addAll(ASSETS)));
     self.skipWaiting();
 });
 
+self.addEventListener('activate', (e) => {
+    e.waitUntil(caches.keys().then(keys =>
+        Promise.all(keys.filter(k => k !== CACHE).map(k => caches.delete(k)))
+    ));
+    self.clients.claim();
+});
+
 self.addEventListener('fetch', (e) => {
-    // 네트워크 통신은 건드리지 않고 그대로 통과
-    return;
+    if (e.request.method !== 'GET') return;
+    if (e.request.url.includes('firestore') || e.request.url.includes('googleapis')) return;
+    e.respondWith(
+        fetch(e.request).then(res => {
+            const clone = res.clone();
+            caches.open(CACHE).then(c => c.put(e.request, clone));
+            return res;
+        }).catch(() => caches.match(e.request))
+    );
 });

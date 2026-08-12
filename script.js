@@ -2079,12 +2079,6 @@ async function saveGrowthRecord() {
         if (typeof db !== 'undefined' && typeof setDoc === 'function' && typeof doc === 'function') {
             let syncCode = localStorage.getItem("family_sync_code");
             
-            // 1인 가구(미연동) 유저를 위한 개인 백업 분기 처리
-            if (!syncCode) {
-                const kakaoId = localStorage.getItem("kakao_id");
-                if (kakaoId) syncCode = "personal_backup_" + kakaoId; 
-            }
-
             if (syncCode) {
                 try { 
                     await setDoc(doc(db, "growth_" + syncCode, "status"), { records: records }); 
@@ -3099,26 +3093,22 @@ function updateSmartBanner() {
 window.updateSmartBanner = updateSmartBanner; // 명시적 등록
 
 // ==========================================
-// 👨‍⚕️ 소아과 진료 브리핑 리포트 엔진 (복사 기능 탑재 완료!)
+// 👨‍⚕️ 소아과 진료 브리핑 리포트 엔진 (무료 텍스트 복사 vs 프리미엄 A4 발급)
 // ==========================================
 window.openPediatricianReport = function() {
     let records = JSON.parse(localStorage.getItem('tosil_fever_records')) || [];
     if(records.length === 0) {
-        return alert("아직 기록된 체온/투약 데이터가 없습니다. 건강한 상태네요! 🌿");
+        return window.showToast("아직 기록된 체온/투약 데이터가 없습니다. 건강한 상태네요! 🌿");
     }
     
     let weight = localStorage.getItem('tosil_latest_weight') || '미입력';
-    let recordHtml = '<div class="box-sub" style="max-height: 350px; overflow-y: auto; padding:16px; border-radius:12px; border:1px solid var(--border); display:flex; flex-direction:column; gap:12px;">';
+    let recordHtml = '<div class="box-sub" style="max-height: 250px; overflow-y: auto; padding:16px; border-radius:12px; border:1px solid var(--border); display:flex; flex-direction:column; gap:12px;">';
     
-    records.forEach(r => {
+    records.slice(0, 10).forEach(r => {
         let pillText = '<span style="color:#8B95A1; font-weight:700;">약 미복용</span>';
-        if (r.type === 'red') {
-            pillText = '<span style="color:#FF4B2B; font-weight:900;">🔴 아세트아미노펜 (빨강)</span>';
-        } else if (r.type === 'blue') {
-            pillText = '<span style="color:#3182F6; font-weight:900;">🔵 이부/덱시부프로펜 (파랑)</span>';
-        }
+        if (r.type === 'red') pillText = '<span style="color:#FF4B2B; font-weight:900;">🔴 아세트 (빨강)</span>';
+        else if (r.type === 'blue') pillText = '<span style="color:#3182F6; font-weight:900;">🔵 이부/덱시 (파랑)</span>';
         
-        let symText = (r.symptoms && r.symptoms.length > 0) ? `<div style="margin-top:6px; font-size:11.5px; color:#6B7684; background:rgba(0,0,0,0.05); padding:4px 8px; border-radius:6px; display:inline-block;">🚨 증상: ${r.symptoms.join(', ')}</div>` : '';
         let tempStyle = r.temp >= 38.0 ? 'color:#E32636; font-weight:900; font-size:16px;' : 'color:var(--text-m); font-weight:800; font-size:15px;';
         
         recordHtml += `
@@ -3128,7 +3118,6 @@ window.openPediatricianReport = function() {
                     <span style="${tempStyle}">${r.temp}℃</span>
                 </div>
                 <div style="font-size:13px;">${pillText}</div>
-                ${symText}
             </div>
         `;
     });
@@ -3137,40 +3126,48 @@ window.openPediatricianReport = function() {
     const body = document.getElementById('modal-dynamic-body');
     if(!body) return;
 
-    // 모달 내부 HTML (복사 버튼 추가 및 하단 여백 보정 완료)
+    // 🌟 무료(텍스트 복사)와 프리미엄(A4 종합차트)의 명확한 가치 차이 보여주기!
     body.innerHTML = `
         <div style="text-align: center; margin-bottom: 24px;">
             <div style="font-size: 36px; margin-bottom: 8px;">👨‍⚕️</div>
             <h3 style="margin: 0 0 8px 0; font-size: 18px; font-weight: 900; color: var(--text-m);">소아과 진료 브리핑</h3>
             <p style="margin: 0; font-size: 13px; font-weight: 600; color: var(--text-s); line-height: 1.5;">
-                의사 선생님께 스마트폰을 이대로 보여주세요.<br>최근 체중과 투약 기록이 요약되어 있습니다.
+                의사 선생님께 보여드릴 자료를 선택하세요.
             </p>
         </div>
         
-        <div class="box-sub" style="display: flex; justify-content: space-between; align-items: center; padding: 18px 20px; border-radius: 16px; margin-bottom: 16px; border: 1px solid var(--border);">
-            <span style="color: var(--text-s); font-weight: 800; font-size: 14px;"> 최근 계측 체중</span>
-            <span style="color: var(--text-m); font-weight: 900; font-size: 20px;">${weight}${weight !== '미입력' ? ' <span style="font-size:14px; color:var(--text-s);">kg</span>' : ''}</span>
-        </div>
-
         <div class="box-main" style="border: 1px solid var(--border); border-radius: 16px; padding: 18px 20px; margin-bottom: 24px; box-shadow: 0 2px 8px rgba(0,0,0,0.02);">
-            <div style="font-size: 13px; font-weight: 800; color: var(--text-s); margin-bottom: 12px; border-bottom: 1px dashed var(--border); padding-bottom: 12px;">
-                📊 최근 타임라인 요약
+            
+            <!-- 🚨 체중 표시 영역 분리 및 가이드 문구 추가 -->
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+                <span style="font-size: 13px; font-weight: 800; color: var(--text-s);">📊 최근 타임라인 요약</span>
+                <div style="background: var(--bg-sub); padding: 4px 10px; border-radius: 8px; font-size: 12px; font-weight: 800; color: var(--text-s); border: 1px solid var(--border);">
+                    ⚖️ 체중: <span style="color:#3182F6;">${weight !== '미입력' ? weight + 'kg' : '미입력'}</span>
+                </div>
             </div>
-            <div style="max-height: 250px; overflow-y: auto;">
-                ${recordHtml}
+            
+            <div style="font-size: 11px; font-weight: 600; color: #8B95A1; text-align: right; margin-bottom: 12px; border-bottom: 1px dashed var(--border); padding-bottom: 12px;">
+                * 체중은 [스마트 해열]이나 [성장] 탭에서 입력하면 자동 반영돼요!
             </div>
+
+            ${recordHtml}
         </div>
 
-        <!-- 수정된 하단 액션 버튼 영역 -->
-        <div style="display: flex; gap: 10px;">
-            <button style="flex: 1.5; padding: 16px; border-radius: 16px; background: #E8F3FF; color: #3182F6; font-weight: 900; font-size: 15px; border: none; cursor: pointer; transition: 0.2s; white-space: nowrap;" onclick="window.copySymptomMemo()">
-                📋 병원 예약용 증상 복사
+        <div style="display: flex; flex-direction: column; gap: 10px;">
+            <!-- 💎 프리미엄 버튼 (블랙 ➔ 럭셔리 블루/퍼플 그라데이션으로 변경!) -->
+            <button onclick="window.downloadPediatricianReport()" style="width: 100%; padding: 16px; border-radius: 16px; background: linear-gradient(135deg, #3182F6 0%, #7C3AED 100%); color: #FFF; font-weight: 900; font-size: 15px; border: none; cursor: pointer; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 6px 16px rgba(124, 58, 237, 0.25);">
+                <div style="display:flex; align-items:center; gap:8px;">
+                    <span style="font-size:18px;">📄</span> A4 종합 건강 리포트 발급
+                </div>
+                <span style="background: #FEE500; color: #191F28; padding: 4px 8px; border-radius: 6px; font-size: 10px;">PREMIUM</span>
             </button>
-            <button style="flex: 1; padding: 16px; border-radius: 16px; background: #F2F5F8; color: #4E5968; font-weight: 800; font-size: 15px; border: none; cursor: pointer; transition: 0.2s;" onclick="closeFestivalModalForce()">
-                닫기
+            
+            <!-- 🆓 무료 버튼 (텍스트 복사) -->
+            <button onclick="window.copySymptomMemo()" style="width: 100%; padding: 16px; border-radius: 16px; background: var(--bg-sub); color: #4E5968; font-weight: 800; font-size: 14.5px; border: 1px solid var(--border); cursor: pointer;">
+                📋 텍스트로 요약만 복사하기
             </button>
         </div>
-        <!-- 📱 모바일 하단 잘림 방지용 투명 여백 -->
+        <!-- 모바일 하단 여백 -->
         <div style="height: 20px; width: 100%;"></div>
     `;
 
@@ -3178,26 +3175,21 @@ window.openPediatricianReport = function() {
     if(modalWrap) modalWrap.style.display = 'flex';
 };
 
-// 🏥 병원 예약용 증상 복사 함수 (이것도 같이 넣어주세요!)
+// 무료용 텍스트 복사 (기존 유지)
 window.copySymptomMemo = function() {
     let records = JSON.parse(localStorage.getItem('tosil_fever_records')) || [];
     let weight = localStorage.getItem('tosil_latest_weight') || '미입력';
-    
     if(records.length === 0) return window.showToast('⚠️ 복사할 진료 기록이 없습니다.');
     
     let latest = records[0];
-    let pillName = latest.type === 'red' ? '아세트아미노펜(빨강)' : '이부프로펜(파랑)';
+    let pillName = latest.type === 'red' ? '아세트아미노펜' : '이부프로펜';
     let symp = (latest.symptoms && latest.symptoms.length > 0) ? latest.symptoms.join(', ') : '특이증상 없음';
-    
-    let text = `[증상요약]\n- 최근 체온: ${latest.temp}도\n- 복용 약: ${pillName}\n- 몸무게: ${weight}kg\n- 동반 증상: ${symp}`;
+    let text = `[증상요약]\n- 체온: ${latest.temp}도\n- 복용: ${pillName}\n- 체중: ${weight}kg\n- 증상: ${symp}`;
     
     navigator.clipboard.writeText(text).then(() => {
-        window.showToast("📋 진료 접수용 메모가 복사되었어요!<br>예약 앱이나 문자에 바로 붙여넣기 하세요.");
+        window.showToast("📋 텍스트가 복사되었어요! 똑똑한 A4 리포트는 프리미엄에서 지원해요 🤍");
     });
 };
-
-window.openPediatricianReport = openPediatricianReport;
-
 
 // ==========================================
 // 📱 원터치 육아 트래커 엔진 (바텀시트 + 대시보드 완벽 통합본)
@@ -4864,11 +4856,14 @@ window.updateTrackerDashboard = function() {
 };
 
 // ==========================================
-// 💌 부부 소통: 육아문답 작성 상태 감지 엔진 (감성 100% 복구 버전)
+// 💌 부부 소통: 육아문답 작성 상태 감지 엔진 (버튼 찌그러짐 완벽 해결본)
 // ==========================================
 window.updateDiaryCard = function() {
     const card = document.getElementById('home-diary-card');
     if(!card) return;
+
+    // 🚨 외부 CSS 방해를 막기 위해 카드 자체를 위아래로 쌓이는 블록 형태로 강제 초기화!
+    card.style.display = 'block';
 
     const todayStr = new Date().toISOString().split('T')[0];
     const lastWrittenDate = localStorage.getItem('diary_last_written');
@@ -4876,32 +4871,37 @@ window.updateDiaryCard = function() {
 
     if (isWrittenToday) {
         card.innerHTML = `
-            <div style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;" onclick="window.location.href='diary.html'">
-                <div>
+            <!-- 상단: 제목 & 내 답변 보기 -->
+            <div style="display: flex; justify-content: space-between; align-items: center; width: 100%; gap: 12px; cursor: pointer;" onclick="window.location.href='diary.html'">
+                <div style="flex: 1; min-width: 0; text-align: left;">
                     <h3 class="diary-card-title" style="margin: 0 0 6px 0;"><span style="font-size: 1.3rem;">💌</span> 육아 문답</h3>
                     <p class="diary-card-desc" style="margin: 0; color: #F04452; font-weight: 800;">오늘 문답 작성 완료! 🤍</p>
                 </div>
-                <div class="diary-card-btn" style="margin: 0; background: #FFF0F1; color: #F04452; box-shadow: none;">내 답변 보기 ❯</div>
+                <!-- 🚨 flex-shrink: 0 와 white-space: nowrap 으로 버튼 구출! -->
+                <div class="diary-card-btn" style="flex-shrink: 0; white-space: nowrap; margin: 0; background: #FFF0F1; color: #F04452; border: none;">내 답변 보기 〉</div>
             </div>
             
-            <!-- 👇 딱 이 부분만 예쁘게 다듬었습니다! (gap 추가, 텍스트 줄바꿈, 버튼 찌그러짐 방지) -->
-            <div style="margin-top: 16px; padding-top: 14px; border-top: 1px dashed rgba(240, 68, 82, 0.2); display: flex; justify-content: space-between; align-items: center; gap: 10px;">
-                <div style="font-size: 12.5px; font-weight: 800; color: #D32F2F; opacity: 0.85; line-height: 1.4; word-break: keep-all;">
-                    오늘 하루 어땠어?<br>대답 기다릴게 💌"
+            <!-- 하단: 찌르기 영역 -->
+            <div style="margin-top: 16px; padding-top: 14px; border-top: 1px dashed rgba(240, 68, 82, 0.2); display: flex; justify-content: space-between; align-items: center; width: 100%; gap: 10px;">
+                <div style="font-size: 12.5px; font-weight: 800; color: #D32F2F; opacity: 0.85; line-height: 1.4; word-break: keep-all; text-align: left;">
+                    오늘 하루 어땠어?<br>대답 기다릴게 💌
                 </div>
-                <button onclick="window.pokePartner(); event.stopPropagation();" style="background: #FEE500; color: #191F28; border: none; padding: 10px 14px; border-radius: 10px; font-size: 12px; font-weight: 900; cursor: pointer; box-shadow: 0 2px 8px rgba(254, 229, 0, 0.2); transition: 0.2s; white-space: nowrap; flex-shrink: 0;">
+                <!-- 🚨 여기도 버튼 찌그러짐 방지! -->
+                <button onclick="window.pokePartner(); event.stopPropagation();" style="flex-shrink: 0; white-space: nowrap; background: #FEE500; color: #191F28; border: none; padding: 10px 14px; border-radius: 10px; font-size: 12px; font-weight: 900; cursor: pointer; box-shadow: 0 2px 8px rgba(254, 229, 0, 0.2);">
                     👉 찌르기
                 </button>
             </div>
         `;
     } else {
         card.innerHTML = `
-            <div style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;" onclick="window.location.href='diary.html'">
-                <div>
+            <!-- 미작성 상태 -->
+            <div style="display: flex; justify-content: space-between; align-items: center; width: 100%; gap: 12px; cursor: pointer;" onclick="window.location.href='diary.html'">
+                <div style="flex: 1; min-width: 0; text-align: left;">
                     <h3 class="diary-card-title" style="margin: 0 0 6px 0;"><span style="font-size: 1.3rem;">💌</span> 육아 문답</h3>
                     <p class="diary-card-desc" style="margin: 0;">하루 한 줄, 오늘 우리 아기와의 기억</p>
                 </div>
-                <div class="diary-card-btn" style="margin: 0;">기록하기 ❯</div>
+                <!-- 🚨 flex-shrink: 0 와 white-space: nowrap 으로 버튼 구출! -->
+                <div class="diary-card-btn" style="flex-shrink: 0; white-space: nowrap; margin: 0; border: 1px solid #FFE4E1; box-shadow: 0 2px 6px rgba(216, 112, 147, 0.1);">기록하기 〉</div>
             </div>
         `;
     }
@@ -7130,9 +7130,9 @@ window.renderSettingsTab = function() {
                 데이터 및 기록 관리
             </div>
             <div style="background: var(--bg-card); border: 1px solid var(--border); border-radius: 16px; overflow: hidden; margin-bottom: 32px; box-shadow: 0 2px 8px rgba(0,0,0,0.02); box-sizing: border-box; width: 100%;">
-                <div onclick="window.exportToExcel()" style="display: flex; justify-content: space-between; align-items: center; padding: 18px 20px; border-bottom: 1px solid var(--border); cursor: pointer;">
-                    <div style="font-size: 14.5px; font-weight: 800; color: var(--text-m);">기록 데이터 엑셀 내보내기</div>
-                    <div style="color: #8B95A1; font-size: 12px;">〉</div>
+                <div onclick="window.downloadPediatricianReport()" style="display: flex; justify-content: space-between; align-items: center; padding: 18px 20px; border-bottom: 1px solid var(--border); cursor: pointer;">
+                    <div style="font-size: 14.5px; font-weight: 800; color: var(--text-m);">🏥 소아과 제출용 A4 리포트 발급</div>
+                    <div style="background: #FEE500; color: #191F28; padding: 2px 6px; border-radius: 4px; font-size: 10px; font-weight: 900;">PREMIUM</div>
                 </div>
                 <div onclick="window.clearAllData()" style="display: flex; justify-content: space-between; align-items: center; padding: 18px 20px; cursor: pointer;">
                     <div style="font-size: 14.5px; font-weight: 800; color: #F04452;">기록 데이터 초기화</div>
@@ -12177,7 +12177,7 @@ document.addEventListener("DOMContentLoaded", () => {
 });
 
 // ==========================================
-// 👶 아기 프로필 관리 모달 (UI 완벽 일치 + 추가버튼 통제)
+// 👶 아기 프로필 관리 모달 (프리미엄 페이월 연동 패치)
 // ==========================================
 window.openBabyManagementModal = function() {
     const profiles = window.getBabyProfiles();
@@ -12190,7 +12190,6 @@ window.openBabyManagementModal = function() {
         const isCurrent = window.currentBabySuffix === p.id;
         const babyName = localStorage.getItem('tosil_babyName' + p.id) || p.name;
 
-        // 대표님 캡처 이미지와 똑같은 깔끔한 디자인 적용!
         listHtml += `
             <div style="background: #FFFFFF; border: 1px solid #E5E8EB; border-radius: 12px; padding: 16px; margin-bottom: 12px;">
                 <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 12px;">
@@ -12214,8 +12213,8 @@ window.openBabyManagementModal = function() {
                 </div>
                 <div style="max-height: 300px; overflow-y: auto; margin-bottom: 16px;">${listHtml}</div>
                 
-                <!-- 🚨 파란색 디자인 유지 + 기능만 팝업으로 차단 -->
-                <button onclick="window.showToast('쌍둥이/다둥이 맘을 위한 [프로필 추가] 기능이 프리미엄 버전으로 곧 찾아옵니다!');" style="width: 100%; padding: 16px; background: #3182F6; color: #FFF; border: none; border-radius: 12px; font-size: 14px; font-weight: 800; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px; box-shadow: 0 4px 12px rgba(49,130,246,0.2);">
+                <!-- 🚨 이 부분이 변경되었습니다! 버튼을 누르면 모달이 닫히고 VIP 검사 로직(addNewBabyProfile)으로 곧바로 연결됩니다 -->
+                <button onclick="document.getElementById('baby-mgmt-modal').remove(); window.addNewBabyProfile();" style="width: 100%; padding: 16px; background: #3182F6; color: #FFF; border: none; border-radius: 12px; font-size: 14px; font-weight: 800; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px; box-shadow: 0 4px 12px rgba(49,130,246,0.2);">
                     <span style="font-size:16px;">➕</span> 새 아기 추가하기
                 </button>
             </div>
@@ -12478,66 +12477,104 @@ window.cancelBreastTimer = function() {
 };
 
 // ==========================================
-// 👑 [육아메이트 플러스] 프리미엄 및 얼리버드 통제 엔진
+// 👑 [육아메이트 플러스] 프리미엄 판독 및 동기화 엔진
 // ==========================================
 
-// 1. 유저가 프리미엄(또는 500명 얼리버드)인지 확인하는 판독기
+// 1. 로그인/동기화 시 families 문서에서 plan(요금제) 읽어와서 캐시 저장
+window.syncPremiumStatus = async function() {
+    const code = localStorage.getItem("family_sync_code");
+    if (!code || typeof window.db === 'undefined' || typeof window.getDoc === 'undefined') return;
+    try {
+        const snap = await window.getDoc(window.doc(window.db, "families", code));
+        const plan = snap.exists() ? (snap.data().plan || 'free') : 'free';
+        localStorage.setItem('tosil_plan_cache', plan);
+    } catch(e) { 
+        console.warn("프리미엄 상태 서버 동기화 실패 (오프라인일 수 있음)"); 
+    }
+};
+
+// 2. 유저가 프리미엄인지 확인하는 판독기 (수익 방어막 + 최고관리자 프리패스)
 window.isPremiumUser = function() {
-    // 💡 나중에 서버에서 이 값을 true로 쏴주면 영구 무료가 됩니다!
-    // (테스트하실 땐 브라우저 콘솔에 localStorage.setItem('tosil_is_founder', 'true') 를 치시면 바로 VIP가 됩니다)
+    // 👑 최고관리자(대표님)와 일반 관리자는 무조건 프리패스!
+    if (localStorage.getItem('tosil_is_master') === 'true') return true;
+    if (localStorage.getItem('tosil_is_subadmin') === 'true') return true;
+    
     const isFounder = localStorage.getItem('tosil_is_founder') === 'true';
-    const isPremium = localStorage.getItem('tosil_premium') === 'true';
+    const isPremium = localStorage.getItem('tosil_plan_cache') === 'premium';
+    
     return isFounder || isPremium;
 };
 
-// 2. 하이엔드 페이월(결제 유도창) 렌더링
+// 3. 앱이 켜질 때 백그라운드에서 프리미엄 상태를 서버와 조용히 동기화
+document.addEventListener("DOMContentLoaded", () => {
+    setTimeout(() => {
+        if(typeof window.syncPremiumStatus === 'function') window.syncPremiumStatus();
+    }, 2000);
+});
+
+// 4. 하이엔드 페이월(결제 유도창) 렌더링 - 💎 럭셔리 다크 테마 적용 완료!
 window.showPaywall = function() {
     let existing = document.getElementById('premium-paywall-modal');
     if (existing) existing.remove();
 
     const paywallHtml = `
-        <div id="premium-paywall-modal" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: 999999; display: flex; justify-content: center; align-items: center; padding: 20px; backdrop-filter: blur(8px); opacity: 0; transition: opacity 0.3s;">
-            <div style="background: #FFFFFF; width: 100%; max-width: 340px; border-radius: 24px; padding: 32px 24px 24px 24px; box-shadow: 0 20px 40px rgba(0,0,0,0.2); position: relative; transform: translateY(20px); transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);">
+        <div id="premium-paywall-modal" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 999999; display: flex; justify-content: center; align-items: center; padding: 20px; backdrop-filter: blur(10px); opacity: 0; transition: opacity 0.3s;">
+            
+            <!-- 럭셔리 미드나잇 블루 배경 카드 -->
+            <div style="background: linear-gradient(145deg, #0F172A 0%, #1E293B 100%); width: 100%; max-width: 360px; border-radius: 28px; padding: 36px 24px 28px 24px; box-shadow: 0 24px 50px rgba(0,0,0,0.5); position: relative; transform: translateY(30px); transition: transform 0.4s cubic-bezier(0.2, 0.8, 0.2, 1); border: 1px solid rgba(255,255,255,0.1);">
                 
-                <button onclick="document.getElementById('premium-paywall-modal').style.opacity='0'; setTimeout(()=>document.getElementById('premium-paywall-modal').remove(),300);" style="position: absolute; top: 16px; right: 16px; background: #F2F5F8; border: none; width: 32px; height: 32px; border-radius: 50%; font-size: 14px; font-weight: 900; color: #8B95A1; cursor: pointer;">✕</button>
+                <!-- 닫기 버튼 (세련된 반투명) -->
+                <button onclick="document.getElementById('premium-paywall-modal').style.opacity='0'; setTimeout(()=>document.getElementById('premium-paywall-modal').remove(),300);" style="position: absolute; top: 20px; right: 20px; background: rgba(255,255,255,0.1); border: none; width: 32px; height: 32px; border-radius: 50%; font-size: 14px; font-weight: 900; color: #94A3B8; cursor: pointer; backdrop-filter: blur(4px); transition: 0.2s;">✕</button>
 
-                <div style="text-align: center; margin-bottom: 24px;">
-                    <div style="font-size: 48px; margin-bottom: 12px; animation: bounce 2s infinite;">👑</div>
-                    <div style="font-size: 13px; font-weight: 800; color: #8B5CF6; letter-spacing: 2px; margin-bottom: 4px;">육아메이트 플러스</div>
-                    <div style="font-size: 22px; font-weight: 900; color: #191F28; line-height: 1.4; letter-spacing: -0.5px;">더 편안한 육아를 위한<br>프리미엄 기능입니다</div>
-                </div>
-
-                <div style="display: flex; flex-direction: column; gap: 12px; margin-bottom: 32px;">
-                    <div style="display: flex; align-items: center; gap: 12px; background: #F8FAFC; padding: 14px; border-radius: 16px; border: 1px solid #E2E8F0;">
-                        <div style="font-size: 24px;">👶👶</div>
-                        <div>
-                            <div style="font-size: 14px; font-weight: 900; color: #333D4B; margin-bottom: 2px;">다둥이 무제한 추가</div>
-                            <div style="font-size: 12px; font-weight: 600; color: #8B95A1;">둘째, 셋째도 완벽하게 분리 기록</div>
-                        </div>
+                <!-- 👑 타이틀 영역 -->
+                <div style="text-align: center; margin-bottom: 36px;">
+                    <div style="display: inline-flex; align-items: center; justify-content: center; width: 64px; height: 64px; background: linear-gradient(135deg, #FDE047 0%, #F59E0B 100%); border-radius: 20px; font-size: 32px; margin-bottom: 16px; box-shadow: 0 10px 25px rgba(245,158,11,0.3);">
+                        💎
                     </div>
-                    <div style="display: flex; align-items: center; gap: 12px; background: #F8FAFC; padding: 14px; border-radius: 16px; border: 1px solid #E2E8F0;">
-                        <div style="font-size: 24px;">👵</div>
-                        <div>
-                            <div style="font-size: 14px; font-weight: 900; color: #333D4B; margin-bottom: 2px;">조부모 / 시터 케어 모드</div>
-                            <div style="font-size: 12px; font-weight: 600; color: #8B95A1;">큰 글씨와 초간편 원터치 기록창</div>
-                        </div>
-                    </div>
-                    <div style="display: flex; align-items: center; gap: 12px; background: #F8FAFC; padding: 14px; border-radius: 16px; border: 1px solid #E2E8F0;">
-                        <div style="font-size: 24px;">💾</div>
-                        <div>
-                            <div style="font-size: 14px; font-weight: 900; color: #333D4B; margin-bottom: 2px;">데이터 영구 보관 & 추출</div>
-                            <div style="font-size: 12px; font-weight: 600; color: #8B95A1;">소아과 제출용 엑셀(CSV) 내보내기</div>
-                        </div>
+                    <div style="font-family: 'Georgia', serif; font-size: 11px; font-weight: 800; color: #FBBF24; letter-spacing: 3px; margin-bottom: 6px;">TOSIL PREMIUM</div>
+                    <div style="font-size: 24px; font-weight: 900; color: #FFFFFF; line-height: 1.4; letter-spacing: -0.5px;">
+                        육아의 차원이 달라지는<br>완벽한 하이엔드 솔루션
                     </div>
                 </div>
 
+                <!-- 🌟 프리미엄 기능 3가지 리스트 -->
+                <div style="display: flex; flex-direction: column; gap: 14px; margin-bottom: 36px;">
+                    
+                    <div style="display: flex; align-items: center; gap: 16px; background: rgba(255,255,255,0.04); padding: 18px; border-radius: 20px; border: 1px solid rgba(255,255,255,0.08);">
+                        <div style="width: 44px; height: 44px; background: rgba(236,72,153,0.15); border-radius: 14px; display: flex; align-items: center; justify-content: center; font-size: 22px; flex-shrink: 0; border: 1px solid rgba(236,72,153,0.3);">👩‍👧‍👦</div>
+                        <div>
+                            <div style="font-size: 15px; font-weight: 900; color: #FDFDFD; margin-bottom: 4px; letter-spacing: -0.3px;">멀티버스 프로필 무제한</div>
+                            <div style="font-size: 12.5px; font-weight: 600; color: #94A3B8; line-height: 1.4; word-break: keep-all;">스와이프 한 번으로 완벽하게 분리되는<br>둘째, 셋째 독립 성장 기록망</div>
+                        </div>
+                    </div>
+
+                    <div style="display: flex; align-items: center; gap: 16px; background: rgba(255,255,255,0.04); padding: 18px; border-radius: 20px; border: 1px solid rgba(255,255,255,0.08);">
+                        <div style="width: 44px; height: 44px; background: rgba(16,185,129,0.15); border-radius: 14px; display: flex; align-items: center; justify-content: center; font-size: 22px; flex-shrink: 0; border: 1px solid rgba(16,185,129,0.3);">👵</div>
+                        <div>
+                            <div style="font-size: 15px; font-weight: 900; color: #FDFDFD; margin-bottom: 4px; letter-spacing: -0.3px;">시니어 안심 케어 모드</div>
+                            <div style="font-size: 12.5px; font-weight: 600; color: #94A3B8; line-height: 1.4; word-break: keep-all;">돋보기가 필요 없는 직관적 UI와<br>사생활 탭 원천 차단 보안 시스템</div>
+                        </div>
+                    </div>
+
+                    <div style="display: flex; align-items: center; gap: 16px; background: rgba(255,255,255,0.04); padding: 18px; border-radius: 20px; border: 1px solid rgba(255,255,255,0.08);">
+                        <div style="width: 44px; height: 44px; background: rgba(56,189,248,0.15); border-radius: 14px; display: flex; align-items: center; justify-content: center; font-size: 22px; flex-shrink: 0; border: 1px solid rgba(56,189,248,0.3);">📊</div>
+                        <div>
+                            <div style="font-size: 15px; font-weight: 900; color: #FDFDFD; margin-bottom: 4px; letter-spacing: -0.3px;">의료용 데이터 추출 & 백업</div>
+                            <div style="font-size: 12.5px; font-weight: 600; color: #94A3B8; line-height: 1.4; word-break: keep-all;">소아과 제출용 엑셀(CSV) 원터치 추출 및<br>우리 아기 데이터 평생 영구 보존</div>
+                        </div>
+                    </div>
+
+                </div>
+
+                <!-- 🚀 하단 액션 (선착순 심리 자극) -->
                 <div style="text-align: center;">
-                    <button disabled style="width: 100%; padding: 18px; background: #191F28; color: #FFF; border: none; border-radius: 16px; font-size: 15px; font-weight: 900; cursor: not-allowed; margin-bottom: 12px;">
-                        결제 시스템 오픈 준비 중 🛠️
-                    </button>
-                    <div style="font-size: 12px; font-weight: 700; color: #F04452; background: #FFF0F1; padding: 8px; border-radius: 8px; display: inline-block;">
-                        💡 선착순 500명은 런칭 시 평생 무료!
+                    <div style="font-size: 12px; font-weight: 800; color: #FBBF24; background: rgba(251,191,36,0.1); padding: 8px 16px; border-radius: 12px; display: inline-block; margin-bottom: 12px; border: 1px solid rgba(251,191,36,0.2);">
+                        ✨ 런칭 기념, 선착순 500명 평생 무료!
                     </div>
+                    
+                    <button onclick="window.applyPremiumWaitlist(this)" style="width: 100%; padding: 18px; background: linear-gradient(135deg, #FDE047 0%, #F59E0B 100%); color: #451A03; border: none; border-radius: 16px; font-size: 16px; font-weight: 900; cursor: pointer; box-shadow: 0 8px 20px rgba(245,158,11,0.3); transition: transform 0.2s;" onmousedown="this.style.transform='scale(0.96)'" onmouseup="this.style.transform='scale(1)'">
+                        얼리버드 평생 무료 탑승하기
+                    </button>
                 </div>
 
             </div>
@@ -12550,6 +12587,62 @@ window.showPaywall = function() {
         modal.style.opacity = '1';
         modal.firstElementChild.style.transform = 'translateY(0)';
     }, 10);
+};
+
+// 5. 프리미엄 웨이트리스트(대기자 명단) 신청 함수
+window.applyPremiumWaitlist = function(btn) {
+    if(localStorage.getItem('tosil_premium_applied')) {
+        return window.showToast('이미 얼리버드 탑승을 완료하셨어요! 🤍');
+    }
+
+    // 🚨 카카오 ID 대신 안전한 파이어베이스 UID 사용!
+    const myUid = localStorage.getItem('firebase_uid');
+    const myNickname = localStorage.getItem('community_nickname') || localStorage.getItem('kakao_nickname') || '익명엄빠';
+    
+    if(!myUid) {
+        // 로그인 알림창이 뒤로 숨는 걸 막기 위해, 페이월을 먼저 닫아버립니다!
+        const paywall = document.getElementById('premium-paywall-modal');
+        if(paywall) paywall.remove();
+
+        return window.showConfirm("혜택을 받으시려면 먼저 로그인해주세요!", function() {
+            if(typeof window.switchTab === 'function') window.switchTab('settings');
+        }, "💬", "로그인 하러가기", "#3182F6");
+    }
+
+    // 서버로 혜택 신청 기록 보내기
+    if (typeof db !== 'undefined' && typeof setDoc === 'function' && typeof doc === 'function') {
+        btn.innerText = "탑승 처리 중... ⏳";
+        btn.disabled = true;
+
+        // UID 기반으로 저장하여 Firestore 규칙 통과!
+        setDoc(doc(db, "waitlist_premium", String(myUid)), {
+            uid: myUid,
+            nickname: myNickname,
+            appliedAt: new Date().toISOString()
+        }, {merge: true}).then(() => {
+            localStorage.setItem('tosil_premium_applied', 'true');
+            btn.innerText = "✅ 평생 무료 탑승 완료!";
+            btn.style.background = "#10B981"; 
+            btn.style.color = "#FFFFFF";
+            btn.style.boxShadow = "none";
+            
+            if (navigator.vibrate) navigator.vibrate([30, 50, 30]);
+            window.showToast('🎉 얼리버드 명단에 등록되었습니다! 정식 오픈 시 혜택이 자동 적용됩니다.');
+            
+            setTimeout(() => {
+                const paywall = document.getElementById('premium-paywall-modal');
+                if(paywall) paywall.remove();
+            }, 1500);
+
+        }).catch((e) => {
+            console.error("얼리버드 저장 실패:", e);
+            btn.innerText = "얼리버드 평생 무료 탑승하기";
+            btn.disabled = false;
+            window.showToast("앗, 통신 지연이 발생했어요. 다시 시도해주세요.");
+        });
+    } else {
+        window.showToast("오프라인 상태입니다. 나중에 다시 시도해주세요.");
+    }
 };
 
 // ==========================================
@@ -12623,4 +12716,228 @@ window.renderSettingsTab = function() {
             if (titleEl) titleEl.insertAdjacentHTML('afterend', badgeHtml);
         }
     }
+};
+
+// ==========================================
+// 🛡️ [프리미엄] 돌봄 도우미 사생활 차단 보안 엔진
+// ==========================================
+window.applyCaregiverRestrictions = function() {
+    const role = localStorage.getItem('user_role');
+    
+    // 차단할 프라이빗 요소들
+    const navComm = document.getElementById('nav-community'); // 하단 맘수다 탭
+    const diaryCard = document.getElementById('home-diary-card'); // 홈 화면 부부문답 카드
+    const ledgerTool = document.getElementById('btn-tool-ledger'); // 툴박스 가계부 칩
+    const ledgerPanel = document.getElementById('panel-ledger'); // 가계부 패널 본체
+
+    if (role === 'senior') {
+        // 도우미 모드: 프라이빗 영역 완벽 증발
+        if(navComm) navComm.style.display = 'none';
+        if(diaryCard) diaryCard.style.display = 'none';
+        if(ledgerTool) ledgerTool.style.display = 'none';
+        if(ledgerPanel) ledgerPanel.style.display = 'none';
+    } else {
+        // 부모 모드: 모든 기능 정상 오픈
+        if(navComm) navComm.style.display = 'flex';
+        if(diaryCard) diaryCard.style.display = 'flex';
+        if(ledgerTool) ledgerTool.style.display = 'flex';
+    }
+};
+
+// 앱 켜질 때 & 역할 바꿀 때 무조건 보안 검사 실행!
+document.addEventListener("DOMContentLoaded", () => {
+    setTimeout(window.applyCaregiverRestrictions, 300);
+});
+
+// 기존 changeUserRole 함수를 덮어써서 텍스트와 보안 엔진을 동시 적용합니다.
+window.changeUserRole = function(role) {
+    if (role === 'senior' && !window.isPremiumUser()) {
+        if(navigator.vibrate) navigator.vibrate([20, 50, 20]);
+        return window.showPaywall();
+    }
+
+    localStorage.setItem('user_role', role); 
+    if(typeof window.renderSettingsTab === 'function') window.renderSettingsTab(); 
+    
+    document.body.classList.remove('mode-dad', 'mode-senior');
+    
+    if (role === 'dad') {
+        document.body.classList.add('mode-dad');
+        window.showToast("👨‍🍼 아빠 모드로 변경되었습니다.");
+    } else if (role === 'senior') {
+        document.body.classList.add('mode-senior');
+        // 텍스트를 돌봄 도우미로 전문성 있게 변경
+        window.showToast("👵 돌봄 도우미 안심 모드 ON. 사생활 보호가 적용됩니다.");
+        if(typeof window.switchTab === 'function') window.switchTab('home', document.getElementById('nav-home'));
+    } else {
+        window.showToast("👩‍🍼 엄마 모드로 변경되었습니다.");
+    }
+
+    window.applyCaregiverRestrictions(); // 🚨 보안 엔진 즉시 가동!
+
+    if(typeof window.updateTrackerDashboard === 'function') window.updateTrackerDashboard();
+    if(typeof window.renderDadQuests === 'function') window.renderDadQuests();
+    if(typeof window.updateDadBriefing === 'function') window.updateDadBriefing();
+    if(typeof window.renderHomeBatonList === 'function') window.renderHomeBatonList();
+};
+
+// ==========================================
+// 🏥 [프리미엄] 의사가 극찬하는 소아과 제출용 A4 종합 리포트 생성기
+// ==========================================
+window.downloadPediatricianReport = function() {
+    // 1. 프리미엄 검증
+    if (!window.isPremiumUser()) {
+        if(navigator.vibrate) navigator.vibrate([20, 50, 20]);
+        // 프리미엄이 아니면 결제창을 띄우고 종료!
+        return window.showPaywall();
+    }
+
+    let feverRecords = JSON.parse(localStorage.getItem('tosil_fever_records')) || [];
+    let trackerRecords = JSON.parse(localStorage.getItem('tosil_tracker_records')) || [];
+    
+    window.showToast("📄 의료진 제출용 종합 활력 징후 리포트를 생성 중입니다...");
+
+    // 2. 가상 A4 도화지 생성
+    const reportDiv = document.createElement('div');
+    reportDiv.style.cssText = 'position:fixed; top:-9999px; left:-9999px; width:800px; min-height:1131px; background:#FFFFFF; padding:50px; box-sizing:border-box; color:#191F28; font-family:"Pretendard", sans-serif; z-index:-1;';
+
+    const babyName = localStorage.getItem('tosil_babyName') || '우리아기';
+    const weight = localStorage.getItem('tosil_latest_weight') || '미입력';
+    const today = new Date();
+    const dateStr = `${today.getFullYear()}년 ${today.getMonth()+1}월 ${today.getDate()}일`;
+
+    // 🌟 생후 일수 계산
+    const savedDate = localStorage.getItem('tosil_startDate');
+    let ageText = '생년월일 미입력';
+    if(savedDate) {
+        const diffDays = Math.floor((today - new Date(savedDate)) / (1000 * 60 * 60 * 24));
+        const months = Math.floor(diffDays / 30);
+        ageText = `생후 ${diffDays}일 (${months}개월)`;
+    }
+
+    // 🌟 3. 최근 24시간 생활 징후(Vital Signs) 크롤링 (의사 선생님 핵심 질문 방어용!)
+    const oneDayAgo = today.getTime() - (24 * 60 * 60 * 1000);
+    let totalFeed = 0, pee = 0, poop = 0, sleepMins = 0;
+    
+    trackerRecords.forEach(r => {
+        if(r.timestamp >= oneDayAgo) {
+            if(r.type === 'feed' && r.subType !== '모유' && r.subType !== '이유식') totalFeed += (parseInt(r.amount)||0);
+            if(r.type === 'sleep') sleepMins += (parseInt(r.amount)||0);
+            if(r.type === 'diaper') {
+                if(r.subType === '소변') pee++;
+                else if(r.subType === '대변') poop++;
+                else { pee++; poop++; }
+            }
+        }
+    });
+    const sleepHours = Math.floor(sleepMins/60);
+    const sleepM = sleepMins%60;
+
+    // 4. 발열 및 투약 타임라인
+    let timelineHtml = '';
+    if (feverRecords.length === 0) {
+        timelineHtml = '<div style="padding:30px; text-align:center; color:#8B95A1; background:#F8F9FA; border-radius:16px; font-weight:800; font-size:16px;">최근 발열 및 특이 증상 기록이 없습니다.</div>';
+    } else {
+        feverRecords.slice(0, 15).forEach(r => {
+            const isFever = r.temp >= 38.0;
+            const tempColor = isFever ? '#E32636' : '#191F28';
+            
+            let pillTag = '';
+            if (r.type === 'red') pillTag = '<span style="background:#FFF0F1; color:#F04452; padding:6px 10px; border-radius:6px; font-size:13px; font-weight:800; margin-left:12px;">🔴 아세트아미노펜</span>';
+            if (r.type === 'blue') pillTag = '<span style="background:#EBF4FF; color:#3182F6; padding:6px 10px; border-radius:6px; font-size:13px; font-weight:800; margin-left:12px;">🔵 이부/덱시부프로펜</span>';
+            
+            const sympTag = r.symptoms && r.symptoms.length > 0 ? `<div style="color:#6B7684; font-size:14px; font-weight:700; margin-top:8px; background:#F2F4F6; display:inline-block; padding:4px 10px; border-radius:8px;">증상: ${r.symptoms.join(', ')}</div>` : '';
+
+            timelineHtml += `
+                <div style="border-left:4px solid #E5E8EB; padding:0 0 30px 24px; position:relative;">
+                    <div style="position:absolute; left:-10px; top:0; width:16px; height:16px; border-radius:50%; background:${isFever ? '#E32636' : '#3182F6'}; box-shadow:0 0 0 4px #FFF;"></div>
+                    <div style="display:flex; align-items:center; margin-bottom:6px;">
+                        <span style="font-size:16px; font-weight:800; color:#8B95A1; width:90px;">${r.time}</span>
+                        <span style="font-size:22px; font-weight:900; color:${tempColor};">${r.temp}℃</span>
+                        ${pillTag}
+                    </div>
+                    ${sympTag}
+                </div>
+            `;
+        });
+    }
+
+    // 5. 완벽한 A4 전문가용 폼 조립
+    reportDiv.innerHTML = `
+        <div style="border-bottom: 4px solid #191F28; padding-bottom: 24px; margin-bottom: 40px; display:flex; justify-content:space-between; align-items:flex-end;">
+            <div>
+                <div style="font-size:36px; font-weight:900; letter-spacing:-1.5px; color:#191F28;">소아과 진료 브리핑 차트</div>
+                <div style="font-size:16px; font-weight:700; color:#8B95A1; margin-top:8px;">육아메이트 프리미엄 의료 데이터 추출 시스템</div>
+            </div>
+            <div style="text-align:right;">
+                <div style="font-size:14px; font-weight:800; color:#4E5968; margin-bottom:4px;">발급일자</div>
+                <div style="font-size:18px; font-weight:900; color:#191F28;">${dateStr}</div>
+            </div>
+        </div>
+
+        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:20px; margin-bottom:40px;">
+            <div style="background:#F8F9FA; border:2px solid #E5E8EB; padding:24px; border-radius:20px;">
+                <div style="font-size:14px; color:#8B95A1; font-weight:800; margin-bottom:6px;">환아 정보</div>
+                <div style="font-size:24px; font-weight:900; color:#333D4B; margin-bottom:12px;">${babyName} <span style="font-size:15px; color:#3182F6; margin-left:8px;">${ageText}</span></div>
+                <div style="font-size:14px; color:#8B95A1; font-weight:800; margin-bottom:6px;">최근 체중</div>
+                <div style="font-size:24px; font-weight:900; color:#333D4B;">${weight} <span style="font-size:16px; font-weight:700;">kg</span></div>
+            </div>
+
+            <!-- 🚨 여기가 프리미엄의 진짜 가치! 의사용 생활 징후 요약 -->
+            <div style="background:#F0F7FF; border:2px solid #B1D6FF; padding:24px; border-radius:20px;">
+                <div style="font-size:14px; color:#3182F6; font-weight:900; margin-bottom:16px;">🩺 최근 24시간 생활 징후 (Vital Signs)</div>
+                <div style="display:flex; justify-content:space-between; margin-bottom:10px; font-size:16px; font-weight:800; color:#191F28;">
+                    <span>🍼 총 수유량 (분유/유축)</span>
+                    <span>${totalFeed} ml</span>
+                </div>
+                <div style="display:flex; justify-content:space-between; margin-bottom:10px; font-size:16px; font-weight:800; color:#191F28;">
+                    <span>💩 대소변 횟수</span>
+                    <span>총 ${pee+poop}회 (소${pee}/대${poop})</span>
+                </div>
+                <div style="display:flex; justify-content:space-between; font-size:16px; font-weight:800; color:#191F28;">
+                    <span>💤 총 수면시간</span>
+                    <span>${sleepHours}시간 ${sleepM}분</span>
+                </div>
+            </div>
+        </div>
+
+        <div style="font-size:22px; font-weight:900; color:#191F28; margin-bottom:30px;">🌡️ 타임라인 (최근 체온 및 투약 내역)</div>
+        <div style="padding-left:10px;">
+            ${timelineHtml}
+        </div>
+        
+        <div style="margin-top:60px; text-align:center; color:#B0B8C1; font-size:14px; font-weight:700; border-top:1px solid #F2F4F6; padding-top:20px;">
+            본 리포트는 보호자의 앱 기록을 바탕으로 자동 추출되었으며, 의료진의 빠르고 정확한 진료를 돕기 위한 참고 자료입니다.<br>
+            Powered by TOSIL PREMIUM
+        </div>
+    `;
+
+    document.body.appendChild(reportDiv);
+
+    // 6. 찰칵! 캡처해서 저장하기
+    setTimeout(() => {
+        if(typeof html2canvas === 'undefined') {
+            reportDiv.remove();
+            return alert("이미지 변환 엔진이 필요합니다.");
+        }
+        
+        html2canvas(reportDiv, { scale: 2, backgroundColor: '#FFFFFF' }).then(canvas => {
+            const dataUrl = canvas.toDataURL("image/png");
+            const link = document.createElement("a");
+            link.download = `${babyName}_소아과_종합리포트.png`;
+            link.href = dataUrl;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            reportDiv.remove();
+            
+            // 팝업 닫기
+            document.getElementById('premium-modal').style.display = 'none';
+            window.showToast("✅ 고화질 A4 종합 리포트가 앨범에 저장되었습니다!");
+        }).catch(e => {
+            console.error(e);
+            reportDiv.remove();
+            window.showToast("❌ 리포트 생성 중 오류가 발생했습니다.");
+        });
+    }, 800);
 };

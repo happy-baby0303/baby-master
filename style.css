@@ -1316,3 +1316,55 @@ body.dark-mode .category-chip:not(.active) {
     color: #B0B8C1 !important;
     border: 1px solid #333D4B !important;
 }
+
+/* =========================================================
+   🚑 CTO 긴급 구조: 육아문답 버튼 & 맘수다 탭 레이아웃 완벽 교정
+   ========================================================= */
+
+#home-diary-card button,
+#home-diary-card .diary-card-btn,
+#home-diary-card [class*="btn"] {
+    position: static !important;
+    transform: none !important;
+    white-space: nowrap !important; /* 🚨 글자 줄바꿈 강제 차단! */
+    flex-shrink: 0 !important;      /* 🚨 버튼 찌그러짐 강제 차단! */
+    word-break: keep-all !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    padding: 8px 16px !important;
+    border-radius: 12px !important;
+    font-size: 12.5px !important;
+    font-weight: 800 !important;
+}
+
+/* 2. 하단 네비게이션 5개 아이콘 완벽 수직 정렬 */
+.bottom-nav {
+    display: flex !important;
+    justify-content: space-around !important;
+    align-items: center !important;
+}
+
+.bottom-nav .nav-item {
+    flex: 1 !important;
+    display: flex !important;
+    flex-direction: column !important; /* 🚨 위아래 세로 배치 강제! */
+    align-items: center !important;
+    justify-content: center !important;
+    text-align: center !important;
+}
+
+.bottom-nav .nav-item .icon {
+    display: block !important;
+    margin-bottom: 4px !important;
+    font-size: 22px !important;
+    line-height: 1 !important;
+}
+
+.bottom-nav .nav-item .label {
+    display: block !important;
+    font-size: 11px !important;
+    font-weight: 800 !important;
+    line-height: 1.2 !important;
+    white-space: nowrap !important;
+}

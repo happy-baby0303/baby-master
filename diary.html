@@ -370,216 +370,239 @@
         };
     </script>
     
-    <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-        import { getFirestore, doc, setDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
-        import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+    <!-- Firebase 로직 (메인 프로젝트와 완벽 통합 & 익명 로그인 삭제 완료!) -->
+<script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+    import { getFirestore, doc, setDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
-        const firebaseConfig = {
-            apiKey: "AIzaSyCx-Jd-6S05a_xY0ZbT8SjpH0vPWIhSDd4",
-            authDomain: "diray-8c002.firebaseapp.com",
-            projectId: "diray-8c002",
-            storageBucket: "diray-8c002.firebasestorage.app",
-            messagingSenderId: "340346494414",
-            appId: "1:340346494414:web:aba027d55a34fcf01f9f9f"
-        };
+    // 🚨 1. 다이어리용이 아닌, '메인 앱(happybaby)'의 파이어베이스 주소로 통일!
+    const firebaseConfig = {
+        apiKey: "AIzaSyDyXVAf-uiqutmfCd5Bhh34bQmbnFynpas",
+        authDomain: "happybaby-6de42.firebaseapp.com",
+        projectId: "happybaby-6de42",
+        storageBucket: "happybaby-6de42.firebasestorage.app",
+        messagingSenderId: "1075311024495",
+        appId: "1:1075311024495:web:b9212eab58802dabf9709a"
+    };
 
-        const app = initializeApp(firebaseConfig);
-        const db = getFirestore(app); 
-        const auth = getAuth(app);
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app); 
+    
+    // 🚨 리뷰어 지적사항 해결: 보안 구멍이던 signInAnonymously(익명 로그인) 완전히 삭제!
+    // 이제 index.html에서 로그인한 카카오 인증 정보를 그대로 활용합니다.
+
+    let unsubscribe = null;
+
+    window.getCurrentDay = function() {
+        return parseInt(document.getElementById("diary-day").innerText.replace("DAY ", "")) || 1;
+    };
+
+    // 🚨 2. 리뷰어 지적사항 해결: unlinked_local_diary(데이터 섞임 현상) 완전 파기!
+    function getSafeSyncCode() {
+        let syncCode = localStorage.getItem("family_sync_code");
+        if (!syncCode) {
+            const kakaoId = localStorage.getItem("kakao_id");
+            if (kakaoId) {
+                syncCode = "personal_backup_" + kakaoId; // 1인 유저용 안전한 개인 방
+            } else {
+                return null; // 카카오 로그인조차 안 한 상태면 null 반환 (서버 전송 차단)
+            }
+        }
+        return syncCode;
+    }
+
+    window.startFamilyNameSync = function() {
+        const syncCode = getSafeSyncCode();
+        if (!syncCode) return; // 코드가 없으면 서버 통신 안 함
         
-        signInAnonymously(auth).catch(() => {});
-
-        let unsubscribe = null;
-
-        window.getCurrentDay = function() {
-            return parseInt(document.getElementById("diary-day").innerText.replace("DAY ", "")) || 1;
-        };
-
-        window.startFamilyNameSync = function() {
-            const syncCode = localStorage.getItem("family_sync_code");
-            const myKakaoName = localStorage.getItem("kakao_nickname");
-            const myRole = localStorage.getItem("tosil_userRole"); 
-            
-            if (!syncCode) return; 
-            
-            const nameDocRef = doc(db, "settings_" + syncCode, "family_names");
-            if (myKakaoName && myRole) {
-                setDoc(nameDocRef, { [myRole]: myKakaoName }, { merge: true }).catch(()=>{});
+        const myKakaoName = localStorage.getItem("kakao_nickname");
+        const myRole = localStorage.getItem("tosil_userRole"); 
+        
+        const nameDocRef = doc(db, "settings_" + syncCode, "family_names");
+        if (myKakaoName && myRole) {
+            setDoc(nameDocRef, { [myRole]: myKakaoName }, { merge: true }).catch(()=>{});
+        }
+        
+        onSnapshot(nameDocRef, (docSnap) => {
+            if (docSnap.exists()) {
+                const data = docSnap.data();
+                if (data.wife) localStorage.setItem('family_wife_name', data.wife);
+                if (data.husband) localStorage.setItem('family_husband_name', data.husband);
             }
-            
-            onSnapshot(nameDocRef, (docSnap) => {
-                if (docSnap.exists()) {
-                    const data = docSnap.data();
-                    if (data.wife) localStorage.setItem('family_wife_name', data.wife);
-                    if (data.husband) localStorage.setItem('family_husband_name', data.husband);
-                }
-            });
-        };
+        });
+    };
 
-        window.startSync = function() {
-            window.startFamilyNameSync();
-            
-            const currentDay = window.getCurrentDay();
-            const currentRole = localStorage.getItem("tosil_userRole") || "husband";
-            const syncCode = localStorage.getItem("family_sync_code") || "unlinked_local_diary";
-            
-            const noticeEl = document.getElementById("unlinked-notice");
-            if (noticeEl) noticeEl.style.display = (syncCode !== "unlinked_local_diary") ? "none" : "inline-flex"; 
+    window.startSync = function() {
+        window.startFamilyNameSync();
+        
+        const currentDay = window.getCurrentDay();
+        const currentRole = localStorage.getItem("tosil_userRole") || "husband";
+        const syncCode = getSafeSyncCode(); // 👈 안전한 코드로 불러오기
+        
+        // 연동을 안 한 유저라면 안내 문구 띄우기
+        const noticeEl = document.getElementById("unlinked-notice");
+        if (noticeEl) noticeEl.style.display = (!localStorage.getItem("family_sync_code")) ? "inline-flex" : "none"; 
 
-            const localDataStr = localStorage.getItem(`day_${currentDay}_data`);
-            let localData = localDataStr ? JSON.parse(localDataStr) : {};
+        const localDataStr = localStorage.getItem(`day_${currentDay}_data`);
+        let localData = localDataStr ? JSON.parse(localDataStr) : {};
 
-            window.renderCurrentCard(localData, currentRole);
+        window.renderCurrentCard(localData, currentRole);
 
-            const docRef = doc(db, "diary_" + syncCode, `day_${currentDay}`);
-            if (unsubscribe) unsubscribe();
+        // 코드가 없으면 서버에서 받아오는 리스너 작동 안 함 (로컬에서만 쾌적하게 작동)
+        if (!syncCode) return;
 
-            unsubscribe = onSnapshot(docRef, (docSnap) => {
-                if (docSnap.exists()) {
-                    const fireData = docSnap.data();
-                    localStorage.setItem(`day_${currentDay}_data`, JSON.stringify(fireData));
-                    window.renderCurrentCard(fireData, currentRole);
-                }
-            });
-        };
+        const docRef = doc(db, "diary_" + syncCode, `day_${currentDay}`);
+        if (unsubscribe) unsubscribe();
 
-        window.renderCurrentCard = function(data, currentRole) {
-            const hText = data.husbandAns || "";
-            const wText = data.wifeAns || "";
-            const myAns = (currentRole === "husband") ? hText : wText;
-            const isEditing = document.getElementById("btn-submit").innerText.includes("수정");
-
-            if (myAns && !isEditing) {
-                document.getElementById("input-mode").style.display = "none";
-                document.getElementById("view-mode").style.display = "block";
-
-                const hCard = document.getElementById("view-husband-card");
-                const hTextEl = document.getElementById("view-husband-text");
-                const hEditBtn = document.getElementById("edit-btn-husband");
-                
-                hCard.style.display = "block";
-                if (hText) {
-                    hTextEl.innerText = hText;
-                    hCard.style.opacity = "1";
-                    hEditBtn.style.display = (currentRole === "husband") ? "block" : "none";
-                } else {
-                    hTextEl.innerText = "아빠의 답변을 기다리는 중입니다...";
-                    hCard.style.opacity = "0.5";
-                    hEditBtn.style.display = "none";
-                }
-
-                const wCard = document.getElementById("view-wife-card");
-                const wTextEl = document.getElementById("view-wife-text");
-                const wEditBtn = document.getElementById("edit-btn-wife");
-
-                wCard.style.display = "block";
-                if (wText) {
-                    wTextEl.innerText = wText;
-                    wCard.style.opacity = "1";
-                    wEditBtn.style.display = (currentRole === "wife") ? "block" : "none";
-                } else {
-                    wTextEl.innerText = "엄마의 답변을 기다리는 중입니다...";
-                    wCard.style.opacity = "0.5";
-                    wEditBtn.style.display = "none";
-                }
-
-                if (hText && wText) {
-                    document.getElementById("next-btn").style.display = "block";
-                } else {
-                    document.getElementById("next-btn").style.display = "none";
-                }
-            } else if (!myAns && !isEditing) {
-                document.getElementById("input-mode").style.display = "block";
-                document.getElementById("view-mode").style.display = "none";
+        unsubscribe = onSnapshot(docRef, (docSnap) => {
+            if (docSnap.exists()) {
+                const fireData = docSnap.data();
+                localStorage.setItem(`day_${currentDay}_data`, JSON.stringify(fireData));
+                window.renderCurrentCard(fireData, currentRole);
             }
-        };
+        });
+    };
 
-        window.enableEditMode = function(roleToEdit) {
-            const currentRole = localStorage.getItem("tosil_userRole") || "husband";
-            if (currentRole !== roleToEdit) return; 
+    window.renderCurrentCard = function(data, currentRole) {
+        const hText = data.husbandAns || "";
+        const wText = data.wifeAns || "";
+        const myAns = (currentRole === "husband") ? hText : wText;
+        const isEditing = document.getElementById("btn-submit").innerText.includes("수정");
 
-            const currentDay = window.getCurrentDay();
-            const rawData = localStorage.getItem(`day_${currentDay}_data`);
-            let ans = "";
-            if (rawData) {
-                const data = JSON.parse(rawData);
-                ans = (currentRole === "husband") ? (data.husbandAns || "") : (data.wifeAns || "");
-            }
+        if (myAns && !isEditing) {
+            document.getElementById("input-mode").style.display = "none";
+            document.getElementById("view-mode").style.display = "block";
+
+            const hCard = document.getElementById("view-husband-card");
+            const hTextEl = document.getElementById("view-husband-text");
+            const hEditBtn = document.getElementById("edit-btn-husband");
             
-            document.getElementById("view-mode").style.display = "none";
+            hCard.style.display = "block";
+            if (hText) {
+                hTextEl.innerText = hText;
+                hCard.style.opacity = "1";
+                hEditBtn.style.display = (currentRole === "husband") ? "block" : "none";
+            } else {
+                hTextEl.innerText = "아빠의 답변을 기다리는 중입니다...";
+                hCard.style.opacity = "0.5";
+                hEditBtn.style.display = "none";
+            }
+
+            const wCard = document.getElementById("view-wife-card");
+            const wTextEl = document.getElementById("view-wife-text");
+            const wEditBtn = document.getElementById("edit-btn-wife");
+
+            wCard.style.display = "block";
+            if (wText) {
+                wTextEl.innerText = wText;
+                wCard.style.opacity = "1";
+                wEditBtn.style.display = (currentRole === "wife") ? "block" : "none";
+            } else {
+                wTextEl.innerText = "엄마의 답변을 기다리는 중입니다...";
+                wCard.style.opacity = "0.5";
+                wEditBtn.style.display = "none";
+            }
+
+            if (hText && wText) {
+                document.getElementById("next-btn").style.display = "block";
+            } else {
+                document.getElementById("next-btn").style.display = "none";
+            }
+        } else if (!myAns && !isEditing) {
             document.getElementById("input-mode").style.display = "block";
-            
-            const answerInput = document.getElementById("my-answer");
-            answerInput.value = ans;
-            answerInput.focus();
-            
-            document.getElementById("btn-submit").innerText = "수정 완료하기";
-        };
+            document.getElementById("view-mode").style.display = "none";
+        }
+    };
 
-        document.getElementById("btn-submit").addEventListener("click", async () => {
-            const ans = document.getElementById("my-answer").value.trim();
-            if(!ans) return window.showToast("마음을 한 줄이라도 남겨주세요! 🥺");
+    window.enableEditMode = function(roleToEdit) {
+        const currentRole = localStorage.getItem("tosil_userRole") || "husband";
+        if (currentRole !== roleToEdit) return; 
 
-            const btn = document.getElementById("btn-submit");
-            const isEditing = btn.innerText.includes("수정");
-            
-            btn.innerText = "저장 중... ⏳";
-            btn.disabled = true;
+        const currentDay = window.getCurrentDay();
+        const rawData = localStorage.getItem(`day_${currentDay}_data`);
+        let ans = "";
+        if (rawData) {
+            const data = JSON.parse(rawData);
+            ans = (currentRole === "husband") ? (data.husbandAns || "") : (data.wifeAns || "");
+        }
+        
+        document.getElementById("view-mode").style.display = "none";
+        document.getElementById("input-mode").style.display = "block";
+        
+        const answerInput = document.getElementById("my-answer");
+        answerInput.value = ans;
+        answerInput.focus();
+        
+        document.getElementById("btn-submit").innerText = "수정 완료하기";
+    };
 
-            const currentDay = window.getCurrentDay();
-            const currentRole = localStorage.getItem("tosil_userRole") || "husband";
-            const syncCode = localStorage.getItem("family_sync_code") || "unlinked_local_diary";
+    document.getElementById("btn-submit").addEventListener("click", async () => {
+        const ans = document.getElementById("my-answer").value.trim();
+        if(!ans) return window.showToast("마음을 한 줄이라도 남겨주세요! 🥺");
 
-            let localData = {};
-            const existing = localStorage.getItem(`day_${currentDay}_data`);
-            if (existing) {
-                try { localData = JSON.parse(existing); } catch(e) {}
-            }
-            if (currentRole === "husband") localData.husbandAns = ans;
-            else localData.wifeAns = ans;
-            localData.date = new Date().toISOString();
+        const btn = document.getElementById("btn-submit");
+        const isEditing = btn.innerText.includes("수정");
+        
+        btn.innerText = "저장 중... ⏳";
+        btn.disabled = true;
 
-            localStorage.setItem(`day_${currentDay}_data`, JSON.stringify(localData));
+        const currentDay = window.getCurrentDay();
+        const currentRole = localStorage.getItem("tosil_userRole") || "husband";
+        const syncCode = getSafeSyncCode(); // 👈 여기서도 안전한 코드로 불러오기
 
+        let localData = {};
+        const existing = localStorage.getItem(`day_${currentDay}_data`);
+        if (existing) {
+            try { localData = JSON.parse(existing); } catch(e) {}
+        }
+        if (currentRole === "husband") localData.husbandAns = ans;
+        else localData.wifeAns = ans;
+        localData.date = new Date().toISOString();
+
+        // 내 폰에 먼저 저장
+        localStorage.setItem(`day_${currentDay}_data`, JSON.stringify(localData));
+
+        // 서버 전송 로직 (코드가 있을 때만 작동)
+        if (syncCode) {
             try {
                 const docRef = doc(db, "diary_" + syncCode, `day_${currentDay}`);
                 const updateData = (currentRole === "husband") 
                     ? { husbandAns: ans, date: new Date().toISOString() } 
                     : { wifeAns: ans, date: new Date().toISOString() };
                 await setDoc(docRef, updateData, { merge: true });
-            } catch(e) { console.log(e); }
+            } catch(e) { console.log("서버 전송 중 에러 (오프라인 모드일 수 있음):", e); }
+        }
 
-            btn.innerText = "기록 남기기"; 
-            btn.disabled = false;
-            
-            window.renderCurrentCard(localData, currentRole);
-            
-            const claimedKey = `day_${currentDay}_coin_claimed_${currentRole}`;
-            if (!localStorage.getItem(claimedKey)) {
-                let coins = parseInt(localStorage.getItem('tosil_coins')) || 0;
-                coins += 100;
-                localStorage.setItem('tosil_coins', coins);
-                localStorage.setItem(claimedKey, 'true');
-                window.updateCoinUI();
-                window.showToast("🎉 기록 저장 완료! 보상으로 100 코인을 받았습니다! 🪙");
-            } else {
-                window.showToast("🎉 기록이 예쁘게 수정되었습니다!");
-            }
-        });
+        btn.innerText = "기록 남기기"; 
+        btn.disabled = false;
+        
+        window.renderCurrentCard(localData, currentRole);
+        
+        const claimedKey = `day_${currentDay}_coin_claimed_${currentRole}`;
+        if (!localStorage.getItem(claimedKey)) {
+            let coins = parseInt(localStorage.getItem('tosil_coins')) || 0;
+            coins += 100;
+            localStorage.setItem('tosil_coins', coins);
+            localStorage.setItem(claimedKey, 'true');
+            window.updateCoinUI();
+            window.showToast("🎉 기록 저장 완료! 보상으로 100 코인을 받았습니다! 🪙");
+        } else {
+            window.showToast("🎉 기록이 예쁘게 수정되었습니다!");
+        }
+    });
 
-        window.showToast = function(msg) {
-            const oldToast = document.getElementById('diary-toast');
-            if (oldToast) oldToast.remove();
-            const toast = document.createElement('div');
-            toast.id = 'diary-toast';
-            toast.innerHTML = msg;
-            toast.style.cssText = `position:fixed; bottom:80px; left:50%; transform:translateX(-50%); background:rgba(0,0,0,0.8); color:#fff; padding:12px 24px; border-radius:30px; font-size:14px; font-weight:800; z-index:999999; opacity:0; transition:0.3s; pointer-events:none; white-space:nowrap; box-shadow:var(--shadow-md);`;
-            document.body.appendChild(toast);
-            setTimeout(() => toast.style.opacity = '1', 10);
-            setTimeout(() => { toast.style.opacity = '0'; setTimeout(() => toast.remove(), 300); }, 2500);
-        };
-    </script>
+    window.showToast = function(msg) {
+        const oldToast = document.getElementById('diary-toast');
+        if (oldToast) oldToast.remove();
+        const toast = document.createElement('div');
+        toast.id = 'diary-toast';
+        toast.innerHTML = msg;
+        toast.style.cssText = `position:fixed; bottom:80px; left:50%; transform:translateX(-50%); background:rgba(0,0,0,0.8); color:#fff; padding:12px 24px; border-radius:30px; font-size:14px; font-weight:800; z-index:999999; opacity:0; transition:0.3s; pointer-events:none; white-space:nowrap; box-shadow:var(--shadow-md);`;
+        document.body.appendChild(toast);
+        setTimeout(() => toast.style.opacity = '1', 10);
+        setTimeout(() => { toast.style.opacity = '0'; setTimeout(() => toast.remove(), 300); }, 2500);
+    };
+</script>
 
     <script>
         window.babyName = localStorage.getItem('tosil_babyName') || '아기';
