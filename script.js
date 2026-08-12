@@ -3219,7 +3219,7 @@ window.openPediatricianReport = function() {
         </div>
 
         <div style="display: flex; flex-direction: column; gap: 10px;">
-            <button onclick="window.downloadPediatricianReport()" style="width: 100%; padding: 16px; border-radius: 16px; background: linear-gradient(135deg, #3182F6 0%, #7C3AED 100%); color: #FFF; font-weight: 900; font-size: 15px; border: none; cursor: pointer; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 6px 16px rgba(124, 58, 237, 0.25);">
+            <button onclick="window.downloadPediatricianPDF()" style="width: 100%; padding: 16px; border-radius: 16px; background: linear-gradient(135deg, #3182F6 0%, #7C3AED 100%); color: #FFF; font-weight: 900; font-size: 15px; border: none; cursor: pointer; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 6px 16px rgba(124, 58, 237, 0.25);">
                 <div style="display:flex; align-items:center; gap:8px;">
                     <span style="font-size:18px;">📄</span> A4 종합 건강 리포트 발급
                 </div>
@@ -12624,9 +12624,9 @@ window.showPaywall = function() {
                     <div style="display: inline-flex; align-items: center; justify-content: center; width: 64px; height: 64px; background: linear-gradient(135deg, #FDE047 0%, #F59E0B 100%); border-radius: 20px; font-size: 32px; margin-bottom: 16px; box-shadow: 0 10px 25px rgba(245,158,11,0.3);">
                         💎
                     </div>
-                    <div style="font-family: 'Georgia', serif; font-size: 11px; font-weight: 800; color: #FBBF24; letter-spacing: 3px; margin-bottom: 6px;">TOSIL PREMIUM</div>
+                    <div style="font-family: 'Georgia', serif; font-size: 11px; font-weight: 800; color: #FBBF24; letter-spacing: 3px; margin-bottom: 6px;">TOSIL PLUS</div>
                     <div style="font-size: 24px; font-weight: 900; color: #FFFFFF; line-height: 1.4; letter-spacing: -0.5px;">
-                        육아의 차원이 달라지는<br>완벽한 하이엔드 솔루션
+                        우리 가족을 위한 완벽한 육아 기록실<br>
                     </div>
                 </div>
 
@@ -13016,7 +13016,7 @@ window.downloadPediatricianReport = function() {
         
         <div style="margin-top:60px; text-align:center; color:#B0B8C1; font-size:14px; font-weight:700; border-top:1px solid #F2F4F6; padding-top:20px;">
             본 리포트는 보호자의 앱 기록을 바탕으로 자동 추출되었으며, 의료진의 빠르고 정확한 진료를 돕기 위한 참고 자료입니다.<br>
-            Powered by TOSIL PREMIUM
+            Powered by TOSIL PLUS
         </div>
     `;
 
@@ -13046,4 +13046,233 @@ window.downloadPediatricianReport = function() {
             window.showToast("❌ 리포트 생성 중 오류가 발생했습니다.");
         });
     }, 800);
+};
+
+// ==========================================
+// 📸 [프리미엄] 월간 성장 카드 생성기 (인스타 공유 마케팅용)
+// ==========================================
+window.downloadMonthlyGrowthCard = function() {
+    if (!window.isPremiumUser()) {
+        if(navigator.vibrate) navigator.vibrate([20, 50, 20]);
+        return window.showPaywall();
+    }
+
+    window.showToast("🎨 인스타 감성 월간 성장 카드를 굽고 있어요...");
+
+    const babyName = localStorage.getItem('tosil_babyName') || '우리아기';
+    const trackers = JSON.parse(localStorage.getItem('tosil_tracker_records')) || [];
+    const milestones = JSON.parse(localStorage.getItem('tosil_milestones')) || [];
+
+    // 이번 달 데이터 크롤링
+    const now = new Date();
+    const currentMonth = now.getMonth();
+    const currentYear = now.getFullYear();
+    const monthNames = ["1월", "2월", "3월", "4월", "5월", "6월", "7월", "8월", "9월", "10월", "11월", "12월"];
+
+    let totalFeedM = 0, totalSleepMins = 0;
+    trackers.forEach(r => {
+        const d = new Date(r.timestamp);
+        if(d.getMonth() === currentMonth && d.getFullYear() === currentYear) {
+            if(r.type === 'feed' && r.subType !== '모유' && r.subType !== '이유식') totalFeedM += (parseInt(r.amount)||0);
+            if(r.type === 'sleep') totalSleepMins += (parseInt(r.amount)||0);
+        }
+    });
+
+    const avgSleepHours = Math.round((totalSleepMins / 30) / 60);
+
+    // 인스타 정사각형 (1080x1080) 가상 도화지 제작
+    const cardDiv = document.createElement('div');
+    cardDiv.style.cssText = 'position:fixed; top:-9999px; left:-9999px; width:1080px; height:1080px; background:linear-gradient(135deg, #FFF5F5 0%, #EBF4FF 100%); padding:80px; box-sizing:border-box; font-family:"Pretendard", sans-serif; display:flex; flex-direction:column; justify-content:space-between; z-index:-1;';
+
+    cardDiv.innerHTML = `
+        <div style="display:flex; justify-content:space-between; align-items:center;">
+            <div>
+                <div style="font-size:20px; font-weight:800; color:#3182F6; letter-spacing:2px; margin-bottom:8px;">MONTHLY REPORT</div>
+                <div style="font-size:48px; font-weight:900; color:#191F28; letter-spacing:-1px;">우리 아기 ${monthNames[currentMonth]} 기록</div>
+            </div>
+            <div style="background:#FFF; padding:12px 24px; border-radius:20px; font-size:20px; font-weight:900; color:#191F28; box-shadow:0 8px 20px rgba(0,0,0,0.05);">
+                🧸 ${babyName}
+            </div>
+        </div>
+
+        <div style="display:grid; grid-template-columns: repeat(2, 1fr); gap:24px;">
+            <div style="background:#FFF; padding:36px; border-radius:28px; box-shadow:0 10px 30px rgba(0,0,0,0.04);">
+                <div style="font-size:16px; font-weight:800; color:#8B95A1; margin-bottom:8px;">🍼 총 수유량</div>
+                <div style="font-size:42px; font-weight:900; color:#3182F6;">${totalFeedM.toLocaleString()} <span style="font-size:22px;">ml</span></div>
+            </div>
+            <div style="background:#FFF; padding:36px; border-radius:28px; box-shadow:0 10px 30px rgba(0,0,0,0.04);">
+                <div style="font-size:16px; font-weight:800; color:#8B95A1; margin-bottom:8px;">💤 일 평균 수면</div>
+                <div style="font-size:42px; font-weight:900; color:#A855F7;">약 ${avgSleepHours} <span style="font-size:22px;">시간</span></div>
+            </div>
+            <div style="background:#FFF; padding:36px; border-radius:28px; box-shadow:0 10px 30px rgba(0,0,0,0.04);">
+                <div style="font-size:16px; font-weight:800; color:#8B95A1; margin-bottom:8px;">🏅 마일스톤 달성</div>
+                <div style="font-size:42px; font-weight:900; color:#00B37A;">${milestones.length} <span style="font-size:22px;">개 돌파</span></div>
+            </div>
+            <div style="background:#FFF; padding:36px; border-radius:28px; box-shadow:0 10px 30px rgba(0,0,0,0.04); display:flex; flex-direction:column; justify-content:center;">
+                <div style="font-size:16px; font-weight:800; color:#8B95A1; margin-bottom:4px;">함께 만든 추억</div>
+                <div style="font-size:24px; font-weight:900; color:#191F28;">매일이 감동인 순간들 🤍</div>
+            </div>
+        </div>
+
+        <div style="display:flex; justify-content:space-between; align-items:center; border-top:2px solid rgba(0,0,0,0.05); pt-24px; margin-top:20px;">
+            <div style="font-size:18px; font-weight:800; color:#8B95A1;">우리 가족 프라이빗 육아 기록실</div>
+            <div style="font-size:24px; font-weight:900; color:#191F28;">육아메이트 플러스</div>
+        </div>
+    `;
+
+    document.body.appendChild(cardDiv);
+
+    setTimeout(() => {
+        html2canvas(cardDiv, { scale: 2, backgroundColor: null }).then(canvas => {
+            const dataUrl = canvas.toDataURL("image/png");
+            const link = document.createElement("a");
+            link.download = `${babyName}_${monthNames[currentMonth]}_성장카드.png`;
+            link.href = dataUrl;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            cardDiv.remove();
+            window.showToast("🎉 인스타용 월간 성장 카드가 저장되었습니다!");
+        }).catch(e => {
+            cardDiv.remove();
+            window.showToast("❌ 카드 생성 실패");
+        });
+    }, 800);
+};
+
+// ==========================================
+// 👨‍⚕️ [프리미엄] 소아과 제출용 A4 리포트
+// ==========================================
+window.downloadPediatricianPDF = function() {
+    if (!window.isPremiumUser()) { window.showPaywall(); return; }
+    if (typeof html2canvas === 'undefined') return window.showToast("이미지 라이브러리 로딩 중입니다.");
+
+    const babyName = localStorage.getItem('tosil_babyName') || '우리아기';
+    const birth = localStorage.getItem('tosil_startDate');
+    const wInput = document.getElementById('report-weight-input');
+  const hInput = document.getElementById('report-height-input');
+  if (wInput && wInput.value) localStorage.setItem('tosil_latest_weight', wInput.value);
+  if (hInput && hInput.value) localStorage.setItem('tosil_latest_height', hInput.value);
+  const weight = (wInput && wInput.value) || localStorage.getItem('tosil_latest_weight') || '-';
+   const height = (hInput && hInput.value) || localStorage.getItem('tosil_latest_height') || '-';
+    const fevers = JSON.parse(localStorage.getItem('tosil_fever_records')) || [];
+    const growths = JSON.parse(localStorage.getItem('tosil_growth_records')) || [];
+    const trackers = JSON.parse(localStorage.getItem('tosil_tracker_records')) || [];
+
+    let ageText = '-';
+    if (birth) {
+        const d = Math.floor((Date.now() - new Date(birth)) / 86400000);
+        ageText = `생후 ${Math.floor(d / 30.44)}개월 (${d}일)`;
+    }
+
+    // 최근 7일 수유/수면 집계
+    const weekAgo = Date.now() - 7 * 86400000;
+    let feedMl = 0, sleepMin = 0, diaper = 0;
+    trackers.forEach(r => {
+        if (r.timestamp < weekAgo) return;
+        if (r.type === 'feed' && r.subType !== '모유') feedMl += parseInt(r.amount) || 0;
+        if (r.type === 'sleep') sleepMin += parseInt(r.amount) || 0;
+        if (r.type === 'diaper') diaper++;
+    });
+
+    // 발열 기록 행
+    let feverRows = fevers.length === 0
+        ? `<tr><td colspan="4" style="padding:14px;text-align:center;color:#8B95A1;">최근 발열·투약 기록 없음</td></tr>`
+        : fevers.slice(0, 12).map(r => {
+            const d = new Date(r.timestamp);
+            const pill = r.type === 'red' ? '아세트아미노펜' : (r.type === 'blue' ? '이부프로펜' : '-');
+            const sym = (r.symptoms && r.symptoms.length) ? r.symptoms.join(', ').replace(/[^가-힣, ]/g, '') : '-';
+            return `<tr>
+                <td style="padding:9px 8px;border-bottom:1px solid #E5E8EB;">${d.getMonth()+1}/${d.getDate()} ${r.time}</td>
+                <td style="padding:9px 8px;border-bottom:1px solid #E5E8EB;font-weight:800;${r.temp>=38?'color:#D32F2F;':''}">${r.temp}℃</td>
+                <td style="padding:9px 8px;border-bottom:1px solid #E5E8EB;">${pill}</td>
+                <td style="padding:9px 8px;border-bottom:1px solid #E5E8EB;color:#4E5968;">${sym}</td>
+            </tr>`;
+        }).join('');
+
+    // 성장 기록 행
+    let growthRows = growths.length === 0
+        ? `<tr><td colspan="4" style="padding:14px;text-align:center;color:#8B95A1;">성장 기록 없음</td></tr>`
+        : growths.slice(-6).reverse().map(g => `<tr>
+                <td style="padding:9px 8px;border-bottom:1px solid #E5E8EB;">${g.date}</td>
+                <td style="padding:9px 8px;border-bottom:1px solid #E5E8EB;">${g.month}개월</td>
+                <td style="padding:9px 8px;border-bottom:1px solid #E5E8EB;">${g.height || '-'}${g.height?'cm':''}</td>
+                <td style="padding:9px 8px;border-bottom:1px solid #E5E8EB;">${g.weight || '-'}${g.weight?'kg':''}</td>
+            </tr>`).join('');
+
+    const box = document.createElement('div');
+    box.style.cssText = `position:fixed;top:-9999px;left:-9999px;width:794px;background:#FFF;padding:48px 44px;box-sizing:border-box;font-family:'Pretendard',sans-serif;color:#191F28;`;
+    box.innerHTML = `
+        <div style="border-bottom:3px solid #191F28;padding-bottom:18px;margin-bottom:26px;display:flex;justify-content:space-between;align-items:flex-end;">
+            <div>
+                <div style="font-size:12px;font-weight:800;color:#8B95A1;letter-spacing:3px;margin-bottom:8px;">MEDICAL BRIEFING</div>
+                <div style="font-size:27px;font-weight:900;">소아과 진료 참고 자료</div>
+            </div>
+            <div style="text-align:right;font-size:11px;color:#8B95A1;font-weight:700;line-height:1.7;">
+                작성일 ${new Date().toISOString().split('T')[0]}<br>육아메이트
+            </div>
+        </div>
+
+        <div style="display:flex;gap:10px;margin-bottom:26px;">
+            ${[['이름',babyName],['월령',ageText],['체중',weight!=='-'?weight+'kg':'-'],['키',height!=='-'?height+'cm':'-']].map(([k,v])=>`
+                <div style="flex:1;background:#F9FAFB;border:1px solid #E5E8EB;border-radius:12px;padding:15px;">
+                    <div style="font-size:11px;font-weight:800;color:#8B95A1;margin-bottom:7px;">${k}</div>
+                    <div style="font-size:16px;font-weight:900;">${v}</div>
+                </div>`).join('')}
+        </div>
+
+        <div style="font-size:15px;font-weight:900;margin-bottom:11px;">🌡️ 발열 및 투약 이력</div>
+        <table style="width:100%;border-collapse:collapse;font-size:12.5px;margin-bottom:26px;">
+            <tr style="background:#F2F4F6;">
+                ${['일시','체온','투약','동반 증상'].map(h=>`<th style="padding:10px 8px;text-align:left;font-weight:800;">${h}</th>`).join('')}
+            </tr>
+            ${feverRows}
+        </table>
+
+        <div style="font-size:15px;font-weight:900;margin-bottom:11px;">📈 성장 계측 기록</div>
+        <table style="width:100%;border-collapse:collapse;font-size:12.5px;margin-bottom:26px;">
+            <tr style="background:#F2F4F6;">
+                ${['측정일','월령','키','몸무게'].map(h=>`<th style="padding:10px 8px;text-align:left;font-weight:800;">${h}</th>`).join('')}
+            </tr>
+            ${growthRows}
+        </table>
+
+        <div style="font-size:15px;font-weight:900;margin-bottom:11px;">🍼 최근 7일 생활 패턴</div>
+        <div style="display:flex;gap:10px;margin-bottom:30px;">
+            ${[['일평균 수유량',Math.round(feedMl/7)+'ml','#3182F6'],
+               ['일평균 수면',Math.floor(sleepMin/7/60)+'시간 '+Math.round(sleepMin/7%60)+'분','#A855F7'],
+               ['일평균 기저귀',(diaper/7).toFixed(1)+'회','#F04452']].map(([k,v,c])=>`
+                <div style="flex:1;background:#F9FAFB;border:1px solid #E5E8EB;border-radius:12px;padding:15px;text-align:center;">
+                    <div style="font-size:11px;font-weight:800;color:#8B95A1;margin-bottom:7px;">${k}</div>
+                    <div style="font-size:17px;font-weight:900;color:${c};">${v}</div>
+                </div>`).join('')}
+        </div>
+
+        <div style="border-top:1px solid #E5E8EB;padding-top:16px;font-size:10.5px;color:#8B95A1;line-height:1.6;">
+            본 자료는 보호자가 육아메이트 앱에 직접 기록한 내용을 정리한 참고용 문서이며, 의학적 진단을 대신하지 않습니다.
+            실제 진단과 처방은 반드시 전문의의 판단에 따라주시기 바랍니다.
+        </div>`;
+
+    document.body.appendChild(box);
+    window.showToast("📄 리포트를 만드는 중입니다...");
+
+    setTimeout(() => {
+        html2canvas(box, { scale: 3, backgroundColor: '#FFFFFF' }).then(canvas => {
+            canvas.toBlob(blob => {
+                const file = new File([blob], `${babyName}_소아과리포트.png`, { type: 'image/png' });
+                if (navigator.canShare && navigator.canShare({ files: [file] })) {
+                    navigator.share({ files: [file], title: '소아과 진료 참고 자료' })
+                        .then(() => window.showToast("📄 리포트가 준비되었습니다!"))
+                        .catch(() => {});
+                } else {
+                    const a = document.createElement('a');
+                    a.download = file.name;
+                    a.href = canvas.toDataURL('image/png');
+                    document.body.appendChild(a); a.click(); document.body.removeChild(a);
+                    window.showToast("📄 리포트가 저장되었습니다!");
+                }
+                box.remove();
+            });
+        }).catch(e => { console.error(e); box.remove(); window.showToast("리포트 생성 실패"); });
+    }, 300);
 };
