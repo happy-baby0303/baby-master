@@ -110,6 +110,28 @@ window.addNewBabyProfile = function() {
         location.reload();
     }
 };
+
+// ==========================================
+// 💎 [Phase 2] 숫자 롤링(Rolling) 애니메이션 엔진 (토스 감성)
+// ==========================================
+window.animateNumber = function(elementId, start, end, duration) {
+    const obj = document.getElementById(elementId);
+    if (!obj) return;
+    const endVal = parseInt(String(end).replace(/[^0-9]/g, '')) || 0;
+    const startVal = parseInt(String(start).replace(/[^0-9]/g, '')) || 0;
+    if (startVal === endVal) { obj.innerText = endVal.toLocaleString(); return; }
+    let startTimestamp = null;
+    const step = (timestamp) => {
+        if (!startTimestamp) startTimestamp = timestamp;
+        const progress = Math.min((timestamp - startTimestamp) / duration, 1);
+        const ease = 1 - Math.pow(1 - progress, 4);
+        obj.innerText = Math.floor(ease * (endVal - startVal) + startVal).toLocaleString();
+        if (progress < 1) window.requestAnimationFrame(step);
+        else obj.innerText = endVal.toLocaleString();
+    };
+    window.requestAnimationFrame(step);
+};
+
 // ==========================================
 // 1. 전역 상태 변수 및 통합 데이터 베이스
 // ==========================================
@@ -10530,8 +10552,11 @@ window.renderNotifications = function() {
 };
 
 // 종 모양 알림창 열 때 데이터 그리기
-document.querySelector('[onclick*="commNotiOverlay"]').addEventListener('click', () => {
-    window.renderNotifications();
+document.addEventListener('DOMContentLoaded', () => {
+    const notiBtn = document.querySelector('[onclick*="commNotiOverlay"]');
+    if (notiBtn) {
+        notiBtn.addEventListener('click', () => { window.renderNotifications(); });
+    }
 });
 
 // 알림창에서 클릭하면 해당 글로 이동
@@ -10567,42 +10592,6 @@ window.updateNotiBadge = function() {
 document.addEventListener("DOMContentLoaded", () => {
     setTimeout(window.updateNotiBadge, 500);
 });
-
-// ==========================================
-// 💎 [Phase 2] 숫자 롤링(Rolling) 애니메이션 엔진 (토스 감성)
-// ==========================================
-window.animateNumber = function(elementId, start, end, duration) {
-    const obj = document.getElementById(elementId);
-    if (!obj) return;
-    
-    // 문자열에서 숫자만 추출 (콤마 제거)
-    const endVal = parseInt(String(end).replace(/[^0-9]/g, '')) || 0;
-    const startVal = parseInt(String(start).replace(/[^0-9]/g, '')) || 0;
-    
-    if (startVal === endVal) {
-        obj.innerText = endVal.toLocaleString();
-        return;
-    }
-    
-    let startTimestamp = null;
-    const step = (timestamp) => {
-        if (!startTimestamp) startTimestamp = timestamp;
-        const progress = Math.min((timestamp - startTimestamp) / duration, 1);
-        
-        // easeOutQuart 에이징 (처음엔 빠르고 끝에서 스르륵 멈춤)
-        const easeProgress = 1 - Math.pow(1 - progress, 4);
-        const currentVal = Math.floor(easeProgress * (endVal - startVal) + startVal);
-        
-        obj.innerText = currentVal.toLocaleString();
-        
-        if (progress < 1) {
-            window.requestAnimationFrame(step);
-        } else {
-            obj.innerText = endVal.toLocaleString(); // 마지막엔 정확한 값 꽂아주기
-        }
-    };
-    window.requestAnimationFrame(step);
-};
 
 // ==========================================
 // 🚗 [Phase 2] 아빠 카톡으로 카카오내비 직행 쏘기 (에러 완벽 해결본)
@@ -12226,7 +12215,7 @@ window.openBabyManagementModal = function() {
                 <div style="max-height: 300px; overflow-y: auto; margin-bottom: 16px;">${listHtml}</div>
                 
                 <!-- 🚨 파란색 디자인 유지 + 기능만 팝업으로 차단 -->
-                <button onclick="window.showToast('👑 쌍둥이/다둥이 맘을 위한 [프로필 추가] 기능이 프리미엄 버전으로 곧 찾아옵니다! 🤍');" style="width: 100%; padding: 16px; background: #3182F6; color: #FFF; border: none; border-radius: 12px; font-size: 14px; font-weight: 800; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px; box-shadow: 0 4px 12px rgba(49,130,246,0.2);">
+                <button onclick="window.showToast('쌍둥이/다둥이 맘을 위한 [프로필 추가] 기능이 프리미엄 버전으로 곧 찾아옵니다!');" style="width: 100%; padding: 16px; background: #3182F6; color: #FFF; border: none; border-radius: 12px; font-size: 14px; font-weight: 800; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px; box-shadow: 0 4px 12px rgba(49,130,246,0.2);">
                     <span style="font-size:16px;">➕</span> 새 아기 추가하기
                 </button>
             </div>
