@@ -5096,23 +5096,21 @@ window.saveTrackerToFirebase = async function(records) {
     if (typeof db !== 'undefined' && typeof setDoc === 'function') {
         let syncCode = localStorage.getItem("family_sync_code");
         
-        // 🚨 [데이터 증발 방어막] 가족 연동을 안 한 유저라도 카카오 ID가 있으면 무조건 개인 백업 진행!
         if (!syncCode) {
             const kakaoId = localStorage.getItem("kakao_id");
             if (kakaoId) {
                 syncCode = "personal_backup_" + kakaoId; 
             } else {
-                return; // 로그인도 안 한 유저는 어쩔 수 없이 폰에만 저장
+                return; 
             }
         }
         
         try { 
-            await setDoc(doc(db, "tracker_" + syncCode, "status"), { records: records }); 
-            // 전송에 성공하면 오프라인 큐 깃발 뽑기
+            // 🚨 [긴급 패치] 트래커에도 다둥이 꼬리표(currentBabySuffix) 부착 완료!
+            await setDoc(doc(db, "tracker_" + syncCode + window.currentBabySuffix, "status"), { records: records }); 
             localStorage.removeItem('tosil_offline_queue_tracker'); 
         } catch (e) { 
             console.error("트래커 클라우드 저장 실패", e); 
-            // 에러 나면 다음 기회를 위해 오프라인 큐 깃발 꽂아둠
             localStorage.setItem('tosil_offline_queue_tracker', 'true');
         }
     }
@@ -5167,7 +5165,8 @@ window.addEventListener('online', window.flushOfflineQueue);
 
 // 앱을 처음 켤 때도 오프라인에 묶여있던 짐이 있는지 한 번 검사
 document.addEventListener("DOMContentLoaded", () => {
-    setTimeout(window.flushOfflineQueue, 2000);
+    // 🚨 [긴급 픽스] 내 폰의 과거 데이터가 서버 최신 데이터를 덮어씌우는 참사 방지 (2초 -> 8초 대기)
+    setTimeout(window.flushOfflineQueue, 8000);
 });
 
 // ==========================================
@@ -5414,34 +5413,32 @@ let settingsUnsubscribe = null; // 🌟 아기 설정값 연동 리스너 추가
 
 window.startTrackerRealtimeSync = function() {
     const syncCode = window.getSyncCode(); if (!syncCode) return;
-    const docRef = typeof doc !== 'undefined' && typeof window.db !== 'undefined' ? doc(window.db, "tracker_" + syncCode, "status") : null;
+    
+    // 🚨 [긴급 패치] 수신할 때도 다둥이 꼬리표(currentBabySuffix) 확인 완료!
+    const docRef = typeof doc !== 'undefined' && typeof window.db !== 'undefined' ? doc(window.db, "tracker_" + syncCode + window.currentBabySuffix, "status") : null;
     if(!docRef) return; 
+    
     if (trackerUnsubscribe) trackerUnsubscribe();
     if(typeof window.onSnapshot !== 'function') return;
 
     trackerUnsubscribe = window.onSnapshot(docRef, (docSnap) => {
-        // 🚨 락 걸려있으면(오프라인 큐가 발사 중이면) 서버 데이터 덮어쓰기 무시!
         if (window.isFlushingOfflineData) return; 
 
         if (docSnap.exists()) {
             const serverData = docSnap.data().records || [];
             const localData = JSON.parse(localStorage.getItem('tosil_tracker_records')) || [];
             
-            // 🚨 [스마트 병합 엔진] 부부가 각자 쓰다가 연동해도 데이터가 덮어씌워지지 않고 예쁘게 하나로 뭉칩니다!
             if (serverData.length > 0) {
                 const mergedMap = new Map();
-                // 내 폰에 있던 데이터 먼저 깔아두고
                 localData.forEach(r => mergedMap.set(r.id, r));
-                // 짝꿍 폰(서버)에서 날아온 데이터 덮어쓰기 (중복 id는 서버값으로 갱신)
                 serverData.forEach(r => mergedMap.set(r.id, r)); 
                 
                 const mergedArray = Array.from(mergedMap.values());
-                mergedArray.sort((a, b) => b.timestamp - a.timestamp); // 최신순으로 다시 정렬
+                mergedArray.sort((a, b) => b.timestamp - a.timestamp); 
                 
                 localStorage.setItem('tosil_tracker_records', JSON.stringify(mergedArray));
             }
         }
-        
         if (typeof window.updateTrackerDashboard === 'function') window.updateTrackerDashboard();
         if (typeof window.checkReceiptVisibility === 'function') window.checkReceiptVisibility();
     }, (error) => {
