@@ -390,6 +390,7 @@ body.mode-senior .hide-on-senior { display: none !important; }
         <!-- 🦸‍♂️ 3. [위치 이동 완료!] 아기 사진 바로 밑에 들어오는 아빠 전용 대시보드 -->
         <div class="show-on-dad-block" style="margin-top: 16px;">
             <div class="dad-hero-card" style="background: linear-gradient(135deg, #191F28 0%, #333D4B 100%); border-radius: 24px; padding: 24px; color: #FFF; box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15); position: relative; overflow: hidden;">
+                 <div id="dad-quest-container" style="display:none;"></div>
                 <div style="font-size: 13px; font-weight: 800; color: #3182F6; margin-bottom: 4px;">TODAY'S BRIEFING</div>
                 <h2 style="font-size: 22px; font-weight: 900; margin: 0 0 20px 0; line-height: 1.4; color: #FFF;">
                     수고했어요!<br>오늘 <span style="color:#3182F6;" id="dad-brief-name">우리아기</span>는 이렇게 보냈어요.
@@ -447,6 +448,7 @@ body.mode-senior .hide-on-senior { display: none !important; }
         <input type="file" id="baby-photo-input" accept="image/*" style="display:none;" onchange="uploadPhoto(this)">
         
         <div id="night-duty-container" style="display:none;"></div>
+             <div id="dad-commute-container" style="display:none;"></div>
         <div id="smart-banner-container"></div> 
  
          <!-- 👵 조부모/시터 전용 하이엔드 대시보드 시작 -->
@@ -2308,6 +2310,7 @@ body.mode-senior .hide-on-senior { display: none !important; }
         if (!inputCode || inputCode.length < 5 || !inputCode.startsWith("TS-")) return alert("🚨 올바른 가족 코드를 입력해주세요.");
         if (inputCode === localStorage.getItem('family_sync_code')) return alert("이미 참여 중인 가족 코드입니다.");
 
+        if (!confirm("연동하면 이 기기의 기존 기록이 가족방 기록으로 대체됩니다.\n계속하시겠습니까?")) return;
         alert("⏳ 코드를 확인 중입니다...");
         try {
             const docSnap = await getDoc(doc(window.db, "families", inputCode));
@@ -2327,6 +2330,25 @@ body.mode-senior .hide-on-senior { display: none !important; }
                 }));
                 if (data.babyPhoto) localStorage.setItem("tosil_baby_photo", data.babyPhoto);
                 
+                // 🔄 가족방의 기존 기록 전부 내려받기
+                const buckets = [
+                    ['tracker_', 'tosil_tracker_records', 'records'],
+                    ['fever_',   'tosil_fever_records',   'records'],
+                    ['growth_',  'tosil_growth_records',  'records'],
+                    ['cube_',    'tosil_cube_records',    'records'],
+                    ['baton_',   'tosil_baton_records',   'records'],
+                    ['ledger_',  'tosil_ledger_data',     null]
+                ];
+                for (const [prefix, key, field] of buckets) {
+                    try {
+                        const s = await getDoc(doc(window.db, prefix + inputCode, "status"));
+                        if (s.exists()) {
+                            const v = field ? (s.data()[field] || []) : s.data();
+                            localStorage.setItem(key, JSON.stringify(v));
+                        }
+                    } catch(e) { console.warn(prefix, e); }
+                }
+
                 localStorage.removeItem('pending_invite_code');
                 alert(`🎉 [${data.babyName || '우리아기'}]네 가족 연동 완료!`);
                 location.reload(); 

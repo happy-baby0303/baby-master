@@ -5201,7 +5201,7 @@ window.saveTrackerToFirebase = async function(records) {
         
         try { 
             // 🚨 [긴급 패치] 트래커에도 다둥이 꼬리표(currentBabySuffix) 부착 완료!
-            await setDoc(doc(db, "tracker_" + syncCode + window.currentBabySuffix, "status"), { records: records }); 
+        await setDoc(doc(db, "tracker_" + syncCode + window.currentBabySuffix, "status"), { records: records, updatedAt: Date.now() }); 
             localStorage.removeItem('tosil_offline_queue_tracker'); 
         } catch (e) { 
             console.error("트래커 클라우드 저장 실패", e); 
@@ -5518,23 +5518,27 @@ window.startTrackerRealtimeSync = function() {
     trackerUnsubscribe = window.onSnapshot(docRef, (docSnap) => {
         if (window.isFlushingOfflineData) return; 
 
-        if (docSnap.exists()) {
+      if (docSnap.exists()) {
             const serverData = docSnap.data().records || [];
+            const serverUpdatedAt = docSnap.data().updatedAt || 0;
             const localData = JSON.parse(localStorage.getItem('tosil_tracker_records')) || [];
-            
-            if (serverData.length > 0) {
-                const mergedMap = new Map();
-                localData.forEach(r => mergedMap.set(r.id, r));
-                serverData.forEach(r => mergedMap.set(r.id, r)); 
-                
-                const mergedArray = Array.from(mergedMap.values());
-                mergedArray.sort((a, b) => b.timestamp - a.timestamp); 
-                
-                localStorage.setItem('tosil_tracker_records', JSON.stringify(mergedArray));
-            }
+
+            const mergedMap = new Map();
+            serverData.forEach(r => mergedMap.set(r.id, r));
+            localData.forEach(r => {
+                if (!mergedMap.has(r.id) && r.timestamp > serverUpdatedAt) mergedMap.set(r.id, r);
+            });
+
+            const mergedArray = Array.from(mergedMap.values());
+            mergedArray.sort((a, b) => b.timestamp - a.timestamp);
+            localStorage.setItem('tosil_tracker_records', JSON.stringify(mergedArray));
         }
-        if (typeof window.updateTrackerDashboard === 'function') window.updateTrackerDashboard();
+       if (typeof window.updateTrackerDashboard === 'function') window.updateTrackerDashboard();
         if (typeof window.checkReceiptVisibility === 'function') window.checkReceiptVisibility();
+        if (window.isHistoryView && typeof window.toggleTrackerHistory === 'function') {
+            window.isHistoryView = false;
+            window.toggleTrackerHistory();
+        }
     }, (error) => {
         console.warn("트래커 실시간 연동 에러 (오프라인 모드로 전환됨)", error);
     });
@@ -7688,9 +7692,9 @@ window.renderDadQuests = function() {
                 <div style="font-size: 12px; font-weight: 800; color: #94A3B8; margin-bottom: 12px;">📊 현재 아기 상태 요약</div>
                 ${babyStatusHtml}
             </div>
-            <div style="background: rgba(255,255,255,0.05); border-radius: 16px; padding: 16px; margin-bottom: 20px; border: 1px solid rgba(255,255,255,0.05);">
-                <div style="font-size: 12px; font-weight: 800; color: #94A3B8; margin-bottom: 6px;">❤️ 오늘의 아내 체력(HP) 예상</div>
-                <div style="font-size: 14px; font-weight: 800; color: ${momHpColor};">${momHpText}</div>
+        <div style="background: rgba(255,255,255,0.05); border-radius: 16px; padding: 16px; margin-bottom: 20px; border: 1px solid rgba(255,255,255,0.05);">
+                <div style="font-size: 12px; font-weight: 800; color: #94A3B8; margin-bottom: 6px;">💬 오늘 이것만 해도 충분해요</div>
+                <div style="font-size: 14px; font-weight: 800; color: ${momHpColor}; line-height:1.5; word-break:keep-all;">${momHpText}</div>
             </div>
             ${isHeroToday ? `
                 <div style="text-align:center; padding:16px; background:rgba(16, 185, 129, 0.15); border-radius:16px; border:1px solid rgba(16, 185, 129, 0.3);">
@@ -7798,16 +7802,15 @@ window.updateDadBriefing = function() {
     // ==========================================
     // 💡 1. 초압축 카피라이팅: 아내 HP 편
     // ==========================================
-    let hpBg = "#10B981"; 
-    let hpMsg = "평온한 하루 ☀️ 육아 퇴근까지 눈치껏 집안일 돕기"; // 🔥 이 부분을 수정했습니다!
+ let hpBg = "#34D399"; 
+    let hpMsg = "가서 아기랑 30분만 놀아주면 충분해요 🌿";
     const totalLabor = todayFeedCount + todayDiaperCount; 
-
     if (totalLabor >= 12 || todayDiaperCount >= 7) {
-        hpBg = "#EF4444"; 
-        hpMsg = "HP 1% 🚨 달달한 디저트 조공 필수!"; 
+        hpBg = "#FBBF24"; 
+        hpMsg = "오늘 많이 바빴어요. 1시간만 봐주면 충분 🛋️"; 
     } else if (totalLabor >= 8 || todayFeedCount >= 5) {
-        hpBg = "#F59E0B"; 
-        hpMsg = "체력 방전 🪫 귀가 즉시 바통 터치!"; 
+        hpBg = "#60A5FA"; 
+        hpMsg = "평범하게 바쁜 하루. 커피 한 잔 어때요 ☕"; 
     }
 
     // ==========================================
@@ -13364,7 +13367,7 @@ window.startNightDuty = async function() {
                     Kakao.Share.sendDefault({
                         objectType: 'text',
                         text: `🌙 오늘 밤은 내가 볼게.\n\n푹 자. 새벽에 깨지 마 🤍\n\n- 야간 당번 ${duty.byName}`,
-                        link: { mobileWebUrl: 'https://happy-baby0303.github.io/', webUrl: 'https://happy-baby0303.github.io/' }
+                        link: { mobileWebUrl: 'https://happy-baby0303.github.io/?from=nightduty', webUrl: 'https://happy-baby0303.github.io/?from=nightduty' }
                     });
                 }, "💌", "알리기", "#3182F6"
             );
@@ -13459,7 +13462,7 @@ window.shareNightDuty = function(h, m, feed, diaper) {
     Kakao.Share.sendDefault({
         objectType: 'text',
         text: `🌅 새벽 근무 보고\n\n근무 시간: ${h}시간 ${m}분\n수유 ${feed}회 / 기저귀 ${diaper}회\n\n잘 잤어? 오늘도 화이팅 🤍`,
-        link: { mobileWebUrl: 'https://happy-baby0303.github.io/', webUrl: 'https://happy-baby0303.github.io/' }
+        link: { mobileWebUrl: 'https://happy-baby0303.github.io/?from=nightduty', webUrl: 'https://happy-baby0303.github.io/?from=nightduty' }
     });
 };
 
@@ -13541,3 +13544,127 @@ window.startNightDutyRealtimeSync = function() {
 // 6. 1분마다 시간 갱신
 setInterval(() => { if (localStorage.getItem(window.NIGHT_DUTY_KEY)) window.renderNightDuty(); }, 60000);
 document.addEventListener('DOMContentLoaded', () => setTimeout(window.renderNightDuty, 300));
+
+// ==========================================
+// 👨‍🍼 [아빠 전용] 니치 기능 3종
+// ==========================================
+
+// ① 퇴근길 브리핑 — 집 가기 전 사갈 것
+window.renderDadCommute = function() {
+    const box = document.getElementById('dad-commute-container');
+    if (!box) return;
+    const hour = new Date().getHours();
+    if (localStorage.getItem('user_role') !== 'dad' || hour < 16 || hour > 22) {
+        box.style.display = 'none'; return;
+    }
+
+    const now = Date.now();
+    const records = JSON.parse(localStorage.getItem('tosil_tracker_records')) || [];
+    const cubes = JSON.parse(localStorage.getItem('tosil_cube_records')) || [];
+    const opens = JSON.parse(localStorage.getItem('tosil_open_records')) || [];
+
+    let todayEvents = 0;
+    const startOfToday = new Date().setHours(0,0,0,0);
+    records.forEach(r => { if (r.timestamp >= startOfToday) todayEvents++; });
+
+   let items = [];
+    if (todayEvents >= 12) {
+        items.push({ icon:'🛋️', text:'오늘 아내가 많이 바빴어요', sub:'집 가면 1시간만 아기 봐주면 충분해요' });
+    } else if (todayEvents >= 8) {
+        items.push({ icon:'☕', text:'평범하게 바쁜 하루였어요', sub:'같이 커피 한 잔 어때요' });
+    } else {
+        items.push({ icon:'🌿', text:'오늘은 평화로웠어요', sub:'가서 아기랑 놀아주기만 해도 충분해요' });
+    }
+
+    box.style.display = 'block';
+    box.innerHTML = `
+        <div style="background:var(--bg-card); border:1px solid var(--border); border-radius:20px; padding:20px; margin-bottom:20px; box-shadow:0 4px 12px rgba(0,0,0,0.02);">
+            <div style="display:flex; align-items:center; gap:8px; margin-bottom:14px;">
+                <span style="font-size:20px;">🚇</span>
+                <div style="font-size:15px; font-weight:900; color:var(--text-m);">퇴근길 브리핑</div>
+            </div>
+            ${items.map(i => `
+                <div style="display:flex; align-items:center; gap:12px; padding:12px; background:var(--bg-sub); border-radius:14px; margin-bottom:8px;">
+                    <span style="font-size:22px; flex-shrink:0;">${i.icon}</span>
+                    <div style="min-width:0;">
+                        <div style="font-size:13.5px; font-weight:900; color:var(--text-m); margin-bottom:3px;">${i.text}</div>
+                        <div style="font-size:11.5px; font-weight:700; color:var(--text-s);">${i.sub}</div>
+                    </div>
+                </div>`).join('')}
+        </div>`;
+};
+
+// ② 아빠 랭킹 — 익명 상대평가
+window.getDadRank = function() {
+    const exp = parseInt(localStorage.getItem('tosil_mate_exp') || '0');
+    const records = JSON.parse(localStorage.getItem('tosil_tracker_records')) || [];
+    const weekAgo = Date.now() - 7*86400000;
+    let weekCount = 0;
+    records.forEach(r => { if (r.timestamp >= weekAgo) weekCount++; });
+
+    const score = exp * 0.3 + weekCount * 5;
+    let pct = 90;
+    if (score >= 300) pct = 3;
+    else if (score >= 200) pct = 8;
+    else if (score >= 120) pct = 15;
+    else if (score >= 70) pct = 28;
+    else if (score >= 40) pct = 45;
+    else if (score >= 15) pct = 65;
+
+    let title = '이제 시작하는 아빠';
+    if (pct <= 3) title = '전설의 육아 아빠';
+    else if (pct <= 8) title = '상위권 육아 아빠';
+    else if (pct <= 15) title = '든든한 육아 파트너';
+    else if (pct <= 28) title = '성장 중인 아빠';
+    else if (pct <= 45) title = '노력하는 아빠';
+
+    return { pct, title, weekCount, exp };
+};
+
+window.showDadRankCard = function() {
+    const r = window.getDadRank();
+    const babyName = localStorage.getItem('tosil_babyName') || '우리아기';
+    const body = document.getElementById('modal-dynamic-body');
+    if (!body) return;
+
+    body.innerHTML = `
+        <div id="dad-rank-capture" style="background:linear-gradient(135deg,#1E293B,#0F172A); border-radius:24px; padding:32px 24px; text-align:center; margin-bottom:16px;">
+            <div style="font-size:12px; font-weight:800; color:#60A5FA; letter-spacing:2px; margin-bottom:16px;">THIS WEEK</div>
+            <div style="font-size:48px; margin-bottom:12px;">👨‍🍼</div>
+            <div style="font-size:14px; font-weight:700; color:#94A3B8; margin-bottom:8px;">전국 아빠 중</div>
+            <div style="font-size:42px; font-weight:900; color:#FFF; letter-spacing:-1px; margin-bottom:8px;">상위 ${r.pct}%</div>
+            <div style="display:inline-block; background:rgba(96,165,250,0.15); color:#60A5FA; font-size:14px; font-weight:900; padding:8px 18px; border-radius:20px; margin-bottom:24px;">${r.title}</div>
+            <div style="display:flex; gap:8px;">
+                <div style="flex:1; background:rgba(255,255,255,0.06); border-radius:14px; padding:14px 8px;">
+                    <div style="font-size:11px; font-weight:800; color:#94A3B8; margin-bottom:5px;">이번 주 기록</div>
+                    <div style="font-size:18px; font-weight:900; color:#FFF;">${r.weekCount}회</div>
+                </div>
+                <div style="flex:1; background:rgba(255,255,255,0.06); border-radius:14px; padding:14px 8px;">
+                    <div style="font-size:11px; font-weight:800; color:#94A3B8; margin-bottom:5px;">누적 EXP</div>
+                    <div style="font-size:18px; font-weight:900; color:#FBBF24;">${r.exp}</div>
+                </div>
+            </div>
+            <div style="margin-top:20px; font-size:11px; font-weight:700; color:#64748B;">${babyName}의 아빠 · 육아메이트</div>
+        </div>
+        <button onclick="window.shareDadRank()" style="width:100%; padding:16px; border-radius:14px; background:#FEE500; color:#191919; font-weight:900; font-size:15px; border:none; cursor:pointer; margin-bottom:8px;">💬 아내에게 자랑하기</button>
+        <button onclick="closeFestivalModalForce()" style="width:100%; padding:14px; border-radius:14px; background:var(--bg-sub); color:var(--text-s); font-weight:800; font-size:14px; border:none; cursor:pointer;">닫기</button>`;
+
+    const modal = document.getElementById('premium-modal');
+    if (modal) modal.style.display = 'flex';
+};
+
+window.shareDadRank = function() {
+    const r = window.getDadRank();
+    if (typeof Kakao === 'undefined' || !Kakao.isInitialized()) return;
+    Kakao.Share.sendDefault({
+        objectType: 'text',
+        text: `👨‍🍼 이번 주 나는 전국 아빠 중 상위 ${r.pct}%\n"${r.title}"\n\n이번 주 육아 기록 ${r.weekCount}회 🔥`,
+        link: { mobileWebUrl: 'https://happy-baby0303.github.io/', webUrl: 'https://happy-baby0303.github.io/' }
+    });
+};
+
+// ③ 렌더링 훅
+document.addEventListener('DOMContentLoaded', () => {
+    setTimeout(() => { if (window.renderDadCommute) window.renderDadCommute(); }, 400);
+});
+setInterval(() => { if (window.renderDadCommute) window.renderDadCommute(); }, 300000);
