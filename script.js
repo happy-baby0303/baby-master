@@ -5076,7 +5076,7 @@ window.renderRoutineChecklist = function() {
     const container = document.getElementById('routine-checklist-container');
     if(!container) return;
 
-    const todayStr = window.getSafeTodayStr(); // 🚨 포맷 완벽 통일
+    const todayStr = window.getSafeDateStr(); // 🚨 getSafeDateStr() 로 완벽 통일
     let savedDate = localStorage.getItem('tosil_routine_date');
     let routineData = JSON.parse(localStorage.getItem('tosil_routine_data')) || { probiotics: false, vitaminD: false, nail: false };
     let routineNames = JSON.parse(localStorage.getItem('tosil_routine_names')) || ['유산균', '비타민D', '손톱'];
@@ -5094,10 +5094,8 @@ window.renderRoutineChecklist = function() {
         const border = isChecked ? '1px solid #3182F6' : '1px solid var(--border)';
         const shadow = isChecked ? '0 4px 10px rgba(49,130,246,0.2)' : 'none';
 
-        // 🚨 다크모드의 강제 설정(!important)을 이겨내기 위해 자바스크립트에도 !important를 직접 박아넣습니다!
-        return `<button onclick="window.toggleRoutine('${id}')" style="flex:1; padding:16px 0; border-radius:16px; background:${bg} !important; color:${color} !important; font-size:13.5px; font-weight:800; border:${border} !important; box-shadow:${shadow} !important; cursor:pointer; transition:all 0.2s ease-in-out; outline:none; margin:0; word-break:keep-all;">
-                    ${label}
-                </button>`;
+        // 🚨 줄바꿈 없이 깔끔하게 한 줄로 생성되도록 수정!
+        return `<button onclick="window.toggleRoutine('${id}')" style="flex:1; padding:16px 0; border-radius:16px; background:${bg} !important; color:${color} !important; font-size:13.5px; font-weight:800; border:${border} !important; box-shadow:${shadow} !important; cursor:pointer; transition:all 0.2s ease-in-out; outline:none; margin:0; word-break:keep-all;">${label}</button>`;
     };
 
     container.innerHTML = `
@@ -5145,7 +5143,7 @@ window.saveRoutineSettings = function() {
     let routineData = JSON.parse(localStorage.getItem('tosil_routine_data')) || {};
     if (typeof db !== 'undefined' && typeof setDoc === 'function') {
         const syncCode = window.getSyncCode(); if (!syncCode) return;
-        const todayStr = window.getSafeTodayStr();
+        const todayStr = window.getSafeDateStr(); // 🚨 getSafeDateStr() 로 교체
         setDoc(doc(db, "routine_" + syncCode + window.currentBabySuffix, "status"), { 
             data: routineData, 
             date: todayStr,
@@ -5167,7 +5165,7 @@ window.toggleRoutine = async function(id) {
 
     if (typeof db !== 'undefined' && typeof setDoc === 'function') {
         const syncCode = window.getSyncCode(); if (!syncCode) return;
-        const todayStr = window.getSafeTodayStr();
+        const todayStr = window.getSafeDateStr(); // 🚨 getSafeDateStr() 로 교체
         try { 
             await setDoc(doc(db, "routine_" + syncCode + window.currentBabySuffix, "status"), { 
                 data: routineData, 
@@ -5177,7 +5175,6 @@ window.toggleRoutine = async function(id) {
         } catch(e) {}
     }
 };
-
 // ==========================================
 // 🚀 [CS 방어 1&4번] 불사조 오프라인 큐 & 1인 유저 자동 백업 엔진
 // ==========================================
