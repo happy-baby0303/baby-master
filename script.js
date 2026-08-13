@@ -7,6 +7,13 @@ window.escapeHTML = function(text) {
     });
 };
 
+// 🚨 [날짜 버그 패치] 문자열을 완벽한 한국 로컬 날짜로 변환해주는 헬퍼!
+window.parseLocalDate = function(str) {
+    if (!str) return null;
+    const [y, m, d] = str.split('-').map(Number);
+    return new Date(y, m - 1, d); // UTC 오전 9시가 아닌 로컬 자정으로 고정
+};
+
 // ==========================================
 // 🧬 [다둥이 코어 엔진] Storage Proxy (데이터 완벽 분리 마법)
 // ==========================================
@@ -2284,34 +2291,47 @@ document.addEventListener("DOMContentLoaded", () => {
     if(typeof window.renderGrowthHistory === 'function') window.renderGrowthHistory();
 });
 
-function uploadPhoto(input) {
+// 📸 아기 프로필 사진 업로드 (초압축 엔진으로 용량 폭발 완벽 방어)
+window.uploadPhoto = function(input) {
     if (input.files && input.files[0]) {
         const reader = new FileReader();
         reader.onload = function(e) {
             const img = new Image();
             img.onload = function() {
-                const canvas = document.createElement('canvas'), maxSize = 600; 
+                // 1. 사진 크기를 최대 500px로 줄여서 용량 다이어트!
+                const canvas = document.createElement('canvas');
+                const maxSize = 500; 
                 let width = img.width, height = img.height;
-                if (width > maxSize) { height *= maxSize / width; width = maxSize; }
-                canvas.width = width; canvas.height = height; 
+                
+                if (width > height) {
+                    if (width > maxSize) { height *= maxSize / width; width = maxSize; }
+                } else {
+                    if (height > maxSize) { width *= maxSize / height; height = maxSize; }
+                }
+                
+                canvas.width = width; 
+                canvas.height = height; 
                 const ctx = canvas.getContext('2d'); 
                 ctx.drawImage(img, 0, 0, width, height);
                 
+                // 2. 화질을 50%로 낮춰서 깃털처럼 가볍게 만듦 (약 30~50KB 수준)
                 const dataUrl = canvas.toDataURL('image/jpeg', 0.5); 
                 
+                // 3. 용량이 꽉 찼을 때 앱이 죽는 것(QuotaExceededError)을 방지하는 try-catch 방어막
                 try { 
                     localStorage.setItem('tosil_baby_photo', dataUrl); 
-                    loadBabyPhoto(); 
+                    if(typeof window.loadBabyPhoto === 'function') window.loadBabyPhoto(); 
+                    if(typeof window.showToast === 'function') window.showToast("✅ 사진이 예쁘게 변경되었습니다!");
                 } catch(err) { 
-                    alert("사진 용량이 너무 큽니다. 화면을 캡처해서 올려주세요!"); 
+                    console.warn("로컬 스토리지 용량 초과:", err);
+                    alert("앗! 기기 저장 공간이 꽉 찼어요. 설정 탭에서 '기록 데이터 초기화'를 진행해주세요."); 
                 }
             }; 
             img.src = e.target.result;
         }; 
         reader.readAsDataURL(input.files[0]);
     }
-}
-window.uploadPhoto = uploadPhoto;
+};
 
 function loadBabyPhoto() {
     const savedPhoto = localStorage.getItem('tosil_baby_photo'), imgEl = document.querySelector('.home-hero-img');
@@ -6191,9 +6211,13 @@ window.promptBabyInfo = function() {
 // 🎣 [바이럴 엔진] 남편 강제 소환 (평생 1번만 등장 + 카카오 찐연동)
 // ==========================================
 
-// 1. 카카오톡 통신망 연결
-if (typeof Kakao !== 'undefined' && !Kakao.isInitialized()) {
-    Kakao.init('68bca10ddfe2ec67112b07eb9a08da2b'); 
+// 1. 카카오톡 통신망 연결 (오프라인/에러 시 앱 죽음 방지 캡슐화)
+try {
+    if (typeof Kakao !== 'undefined' && !Kakao.isInitialized()) {
+        Kakao.init('68bca10ddfe2ec67112b07eb9a08da2b'); 
+    }
+} catch (error) {
+    console.warn("카카오 SDK 초기화 지연 (앱은 정상 작동합니다)", error);
 }
 
 // 🌟 삭제되었던 바텀시트 띄우기 함수 복구!
@@ -6344,7 +6368,7 @@ window.renderBabyInfo = function() {
     }
 
     // 2. 날짜 및 D-Day 계산
-    const birthDate = new Date(savedDate);
+    const birthDate = window.parseLocalDate(savedDate); 
     birthDate.setHours(0, 0, 0, 0);
     const today = new Date();
     today.setHours(0, 0, 0, 0);
@@ -8961,8 +8985,8 @@ window.doCommSearch = function() {
                     <span style="font-size: 11.5px; font-weight: 800; color: ${catColor}; background: ${catBg}; padding: 4px 10px; border-radius: 8px;">${catName}</span>
                     <span style="font-size: 12px; color: var(--text-sub); font-weight: 600;">${timeStr}</span>
                 </div>
-                <div style="font-size: 16px; font-weight: 800; color: var(--text-title); margin-bottom: 8px; line-height: 1.4; word-break: keep-all;">${post.title}</div>
-                <div style="font-size: 14px; color: var(--text-body); line-height: 1.5; margin-bottom: 16px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;">${post.content}</div>
+                <div style="font-size: 16px; font-weight: 800; color: var(--text-title); margin-bottom: 8px; line-height: 1.4; word-break: keep-all;">${window.escapeHTML(post.title)}</div>
+<div style="font-size: 14px; color: var(--text-body); line-height: 1.5; margin-bottom: 16px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;">${window.escapeHTML(post.content)}</div>
                 <div style="display: flex; justify-content: space-between; align-items: center; border-top: 1px solid rgba(0,0,0,0.05); padding-top: 12px;">
                     <div style="display: flex; align-items: center; gap: 6px;">
                         <div style="width: 24px; height: 24px; background: #F2F4F6; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px;">${post.authorIcon || '👑'}</div>
@@ -9022,7 +9046,7 @@ window.openMyActivity = function(type) {
                     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
                         <span style="font-size: 11.5px; font-weight: 800; color: ${catColor}; background: ${catBg}; padding: 4px 10px; border-radius: 8px;">${catName}</span>
                     </div>
-                    <div style="font-size: 16px; font-weight: 800; color: var(--text-title); margin-bottom: 8px; line-height: 1.4; word-break: keep-all;">${post.title}</div>
+                    <div style="font-size: 16px; font-weight: 800; color: var(--text-title); margin-bottom: 8px; line-height: 1.4; word-break: keep-all;">${window.escapeHTML(post.title)}</div>
                     <div style="display: flex; gap: 10px; font-size: 12px; font-weight: 700; color: var(--text-sub);">
                         <span style="display: flex; align-items: center; gap: 4px;"><span style="color: #FF5A5F;">❤️</span> ${post.likes || 0}</span>
                         <span style="display: flex; align-items: center; gap: 4px;"><span style="color: var(--brand-primary);">💬</span> ${post.comments || 0}</span>
@@ -11319,7 +11343,7 @@ window.downloadMilestone = function() {
 
     // 5. 캡처 및 이미지 다운로드 실행
     setTimeout(() => {
-        html2canvas(exportDiv, { scale: 2, backgroundColor: '#FAF9F6' }).then(canvas => {
+        html2canvas(exportDiv, { scale: 3, backgroundColor: '#FAF9F6' }).then(canvas => {
             const dataUrl = canvas.toDataURL("image/png");
             const link = document.createElement("a");
             link.download = `${babyName}_100일도감.png`;
@@ -12637,9 +12661,14 @@ if (until) localStorage.setItem('tosil_plan_until', until);
 
 // 2. 유저가 프리미엄인지 확인하는 판독기 (수익 방어막 + 최고관리자 프리패스)
 window.isPremiumUser = function() {
-    // 👑 최고관리자(대표님)와 일반 관리자는 무조건 프리패스!
-    if (localStorage.getItem('tosil_is_master') === 'true') return true;
-    if (localStorage.getItem('tosil_is_subadmin') === 'true') return true;
+    // 🚨 [보안 패치] 클라이언트 조작(해킹) 방어막
+    const myUid = localStorage.getItem('firebase_uid') || '';
+    const MASTER_UIDS = ["7Xj1jGZcV4OdWsyQrtUkuGq0HqJ3"]; // 👑 대표님의 진짜 파이어베이스 UID
+    
+    // 로컬스토리지에 master라고 적혀있어도, 진짜 대표님 UID가 아니면 컷!
+    if (localStorage.getItem('tosil_is_master') === 'true') {
+        if (MASTER_UIDS.includes(String(myUid).trim())) return true;
+    }
     
     const isFounder = localStorage.getItem('tosil_is_founder') === 'true';
     const isPremium = localStorage.getItem('tosil_plan_cache') === 'premium';
@@ -12673,8 +12702,8 @@ window.showPaywall = function() {
                 <div style="font-size:11.5px; font-weight:800; color:#FBBF24; margin-bottom:8px;">지금까지 쌓아온 소중한 기록</div>
                 <div style="font-size:32px; font-weight:900; color:#FFF; margin-bottom:8px;">${total}건</div>
                 <div style="font-size:12.5px; font-weight:700; color:#94A3B8; line-height:1.5; word-break:keep-all;">
-                    무료 플랜은 최근 3개월 기록만 보관됩니다.<br>PLUS로 우리 아이의 모든 순간을 평생 지켜주세요.
-                </div>
+    눈 깜짝할 새 자라는 우리 아기의 소중한 1년,<br>PLUS로 모든 순간을 완벽하게 기록하고 소장하세요.
+</div>
             </div>`;
     })();
 
