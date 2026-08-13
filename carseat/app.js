@@ -3,6 +3,16 @@
 // (강력한 감점 AI 탑재 + 조잡한 하드코딩 배너 제거 및 개별 리포트화)
 // ==========================================
 
+
+// 🚀 카카오 SDK 초기화 (안전 보호막)
+try {
+    if (typeof Kakao !== 'undefined' && !Kakao.isInitialized()) {
+        Kakao.init('68bca10ddfe2ec67112b07eb9a08da2b');
+    }
+} catch (e) {
+    console.warn("카카오 SDK 초기화 지연", e);
+}
+
 let isFavViewMode = false; 
 
 // 🚀 1. 글로벌 데이터 자동 동기화 (다이어트 & 뱃지 동기화 완료)
@@ -11,11 +21,12 @@ function applyGlobalBabyProfile() {
     const babyName = localStorage.getItem('tosil_babyName') || '우리 아기';
     if(!birthStr) return; 
     
-    const birthDate = new Date(birthStr);
+    const [y, m, d] = birthStr.split('-').map(Number);
+    const birthDate = new Date(y, m - 1, d);
     const today = new Date();
-    let months = (today.getFullYear() - birthDate.getFullYear()) * 12;
-    months -= birthDate.getMonth();
-    months += today.getMonth();
+    
+    let months = (today.getFullYear() - birthDate.getFullYear()) * 12 + (today.getMonth() - birthDate.getMonth());
+    if (today.getDate() < birthDate.getDate()) months--; // 아직 이번 달 생일이 안 지났으면 1개월 차감
     if (months < 0) months = 0;
 
     let ageFilter = 'all';
@@ -136,25 +147,35 @@ function generateReportHTML(item) {
             </div>`;
     }
 
-    const safetyChecks = item.safety.map(s => `✅ ${s.toUpperCase()} 최고 등급 인증`).join('<br>');
-    const adacText = item.specs.adacScore.includes('미참여') 
-        ? `✅ ${item.specs.adacScore}` 
-        : `✅ ADAC 테스트: ${item.specs.adacScore}`;
+    const CERT_LABEL = { isize: 'i-Size(R129) 최신 인증', adac: 'ADAC 테스트 참여 (좋음 등급)' };
+const safetyChecks = item.safety
+    .filter(s => CERT_LABEL[s])
+    .map(s => `✅ ${CERT_LABEL[s]}`)
+    .join('<br>') || '☑️ KC 안전인증 (국내 기본 필수)';
+
+const adacText = item.specs.adacScore.includes('미참여') 
+    ? `✅ ${item.specs.adacScore}` 
+    : `✅ ADAC 테스트: ${item.specs.adacScore} (2025년 기준)`;
 
     const isOfficial = (item.reportUrl && item.reportUrl !== "#" && item.reportUrl.trim() !== "");
     const labelText = isOfficial ? "🔗 ADAC 충돌 테스트 원문 보기 ➔" : "🔍 ADAC 테스트 관련 정보 검색 ➔";
     const targetUrl = isOfficial ? item.reportUrl : `https://www.google.com/search?q=ADAC+${encodeURIComponent(item.brand)}+${encodeURIComponent(item.name)}`;
     const reportBtn = `<a href="${targetUrl}" target="_blank" style="display:inline-block; margin-top:8px; font-size:12px; color:#3182F6; text-decoration:underline; font-weight:700;">${labelText}</a>`;
         
-    // ✨ 자동 검색 URL + 파트너스 코드
-    const partnerCode = "flDiNnqr00";
-    const coupangSearchUrl = `https://www.coupang.com/np/search?q=${encodeURIComponent(item.brand + ' ' + item.name)}&afag=${partnerCode}`;
-    const matMirrorUrl = `https://www.coupang.com/np/search?q=${encodeURIComponent('카시트 보호매트 거울 세트')}&afag=${partnerCode}`;
+  // ✨ 자동 검색 URL + 진짜 파트너스 코드(lptag) 적용!
+    const partnerCode = "AF9932454";
+    const coupangSearchUrl = `https://www.coupang.com/np/search?q=${encodeURIComponent(item.brand + ' ' + item.name)}&lptag=${partnerCode}`;
+    const matMirrorUrl = `https://www.coupang.com/np/search?q=${encodeURIComponent('카시트 보호매트 거울 세트')}&lptag=${partnerCode}`;
 
-    // ✨ 파트너님이 주신 워딩으로 쿠팡 방어 멘트 교체 완료!
+    // 🚨 파트너스 딥링크 살리기 로직 (data.js에 정상 링크가 있으면 무조건 그걸 우선 사용!)
+    const buyUrl = (item.linkUrl && item.linkUrl.startsWith('https://link.coupang.com/a/') && !item.linkUrl.includes('여기에'))
+        ? item.linkUrl
+        : coupangSearchUrl;
+
+   // ✨ 파트너님이 주신 워딩으로 쿠팡 방어 멘트 교체 완료!
     let purchaseBtn = item.purchasePlatform === 'coupang' 
         ? `<div style="margin-top: 24px;">
-               <a href="${coupangSearchUrl}" target="_blank" class="buy-btn coupang" style="display: flex; justify-content: center; align-items: center; width: 100%; margin-top: 0; background: #191F28; color: #FFF; border: 1px solid #000; box-shadow: 0 4px 14px rgba(0,0,0,0.1); font-size: 15px; padding: 18px 0; border-radius: 14px; font-weight: 900; text-decoration: none; transition: 0.2s;">
+               <a href="${buyUrl}" target="_blank" class="buy-btn coupang" style="display: flex; justify-content: center; align-items: center; width: 100%; margin-top: 0; background: #191F28; color: #FFF; border: 1px solid #000; box-shadow: 0 4px 14px rgba(0,0,0,0.1); font-size: 15px; padding: 18px 0; border-radius: 14px; font-weight: 900; text-decoration: none; transition: 0.2s;">
                    🚀 쿠팡 최저가 검색하기 〉
                </a>
            </div>
@@ -164,7 +185,7 @@ function generateReportHTML(item) {
            </div>`
         : `<div style="margin-top: 24px;">
                <a href="${item.linkUrl}" target="_blank" class="buy-btn official" style="display: flex; justify-content: center; align-items: center; width: 100%; margin-top: 0; background: #F9FAFB; color: #191F28; border: 1px solid #D1D5DB; font-size: 15px; padding: 18px 0; border-radius: 14px; font-weight: 900; text-decoration: none; transition: 0.2s;">
-                   👑 브랜드 공식 스토어 가기 〉
+                   ✨ 브랜드 공식 스토어 가기 〉
                </a>
            </div>`;
 
@@ -243,9 +264,6 @@ function runCarseatEngine() {
     const install = document.getElementById('filter-install').value; 
     const safety = document.getElementById('filter-safety').value;
     
-    // =========================================================
-    // 👇 여기서부터 (기존 배너 숨김 코드 지우고 이걸로 덮어쓰기!) 👇
-    // =========================================================
     const warningBanner = document.getElementById('vehicle-warning-banner');
     
     // 🚨 카니발 선택 시 강력한 경고 배너 노출!
@@ -275,27 +293,21 @@ function runCarseatEngine() {
         let score = 100;
         let reasons = [];
 
-        // 1. 👶 연령 조건 (안전 직결 - 불일치 시 대폭 감점)
-        if (age !== 'all' && !item.age.includes(age)) { 
-            score -= 60; reasons.push('선택하신 아기 탑승 연령대와 규격이 맞지 않아 극히 위험합니다.'); 
-        }
-
-        // 2. 🛠️ 장착 방식 (차량 호환성 - 불일치 시 가차없이 탈락)
-        if (install !== 'all' && !item.install.includes(install)) { 
-            score -= 50; reasons.push('요청하신 고정 방식(ISOFIX/벨트)으로 장착할 수 없는 모델입니다.'); 
-        }
+        // 🚨 1. 👶 연령 & 장착 방식 (불일치 시 묻지도 따지지도 않고 바로 목록에서 폭파!)
+        if (age !== 'all' && !item.age.includes(age)) return null; 
+        if (install !== 'all' && !item.install.includes(install)) return null; 
 
         // 3. 🛡️ 안전 인증
         if (safety !== 'all' && !item.safety.includes(safety)) { 
             score -= 20; reasons.push('요청하신 최상위 안전 인증/테스트 기준을 충족하지 않습니다.'); 
         }
 
-        // 4. 🚙 차량 크기 & 특수 조건 (AI의 소름 돋는 디테일!)
+        // 4. 🚙 차량 크기 & 특수 조건
         if (carSize === 'carnival' && item.install.includes('isofix_leg')) {
             score -= 50; reasons.push('카니발 2열 바닥 수납함이 서포팅 레그 하중으로 인해 파손될 위험이 큽니다! (탑테더 방식 권장)');
         }
         if (carSize === 'compact') {
-            if (item.age.includes('toddler')) { // 회전형/토들러 모델의 경우
+            if (item.age.includes('toddler') && !item.compactOk) { 
                 score -= 20; reasons.push('소형/준중형 차량 장착 시 조수석 탑승자가 매우 좁아질 수 있습니다.');
             }
         }
@@ -307,7 +319,7 @@ function runCarseatEngine() {
         if(score === 100) reasons.push('✨ 우리 아기의 생명과 차량 호환성을 완벽하게 충족합니다!');
 
         return { ...item, matchRate: score, matchReasons: reasons };
-    });
+    }).filter(Boolean); // 🚨 [수정 완료] 아까 실수로 지워졌던 마법의 닫는 괄호 복구!
 
     if (isFilterActive) processedData.sort((a, b) => b.matchRate - a.matchRate);
 
@@ -333,13 +345,12 @@ function runCarseatEngine() {
             </div>
         `;
     }
-   resultArea.innerHTML = htmlOutput; // 👈 여기입니다!
+    resultArea.innerHTML = htmlOutput;
 
-    // 👇 여기에 스크롤 코드를 추가해 주세요!
     if (isFilterActive) {
         document.querySelector('.matrix-panel').scrollIntoView({ behavior: 'smooth', block: 'start' });
     }
-} // <-- runCarseatEngine() 함수가 끝나는 닫는 괄호
+}
 
 function toggleCarseatOthers() {
     const otherArea = document.getElementById('carseat-other-area');
@@ -363,20 +374,25 @@ function resetFilters() {
     if (isChanged && !isFavViewMode) runCarseatEngine();
 }
 
-if (!Kakao.isInitialized()) {
-    Kakao.init('68bca10ddfe2ec67112b07eb9a08da2b');
-}
-
-// 🚀 카카오톡 공유 시에도 '자동 검색 링크' 적용 완료!
+// 🚀 카카오톡 공유 시에도 '자동 검색 링크' 및 '정상 딥링크' 적용!
 function shareToHusband(id) {
     const item = carseatData.find(d => d.id === id);
     if(!item) return;
 
-    // ✨ 카톡 공유 버튼을 눌렀을 때도 남편이 메인홈이 아닌 검색창으로 바로 가도록 수정
-    const partnerCode = "flDiNnqr00"; 
-    const myLink = item.purchasePlatform === 'coupang' 
-        ? `https://www.coupang.com/np/search?q=${encodeURIComponent(item.brand + ' ' + item.name)}&afag=${partnerCode}`
-        : item.linkUrl; 
+    const partnerCode = "AF9932454"; 
+    const coupangSearchUrl = `https://www.coupang.com/np/search?q=${encodeURIComponent(item.brand + ' ' + item.name)}&lptag=${partnerCode}`;
+    
+    const myLink = (item.purchasePlatform === 'coupang' && item.linkUrl && item.linkUrl.startsWith('https://link.coupang.com/a/') && !item.linkUrl.includes('여기에'))
+        ? item.linkUrl
+        : (item.purchasePlatform === 'coupang' ? coupangSearchUrl : item.linkUrl);
+        
+    // 🚨 [추가된 안전 보험] 카카오가 안 될 경우를 대비한 텍스트 복사 팝업
+    if (typeof Kakao === 'undefined' || !Kakao.isInitialized()) {
+        navigator.clipboard.writeText(myLink)
+            .then(() => alert('구매 링크가 복사되었습니다! 남편에게 붙여넣기 해주세요 🤍'))
+            .catch(() => prompt("아래 주소를 복사해 주세요", myLink));
+        return;
+    }
         
     Kakao.Share.sendDefault({
         objectType: 'feed',

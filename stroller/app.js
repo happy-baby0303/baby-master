@@ -9,9 +9,17 @@ function applyGlobalBabyProfile() {
     const birthStr = localStorage.getItem('tosil_startDate');
     if (!birthStr) return; 
 
-    const birthDate = new Date(birthStr);
+    // 날짜 쏠림(UTC) 버그 방지용 파싱
+    const [y, m, d] = birthStr.split('-').map(Number);
+    const birthDate = new Date(y, m - 1, d);
     const today = new Date();
+    
     let months = (today.getFullYear() - birthDate.getFullYear()) * 12 + (today.getMonth() - birthDate.getMonth());
+    
+    // 🚨 이번 달 생일(일)이 아직 안 지났으면 1개월 차감! (정확한 개월 수 계산)
+    if (today.getDate() < birthDate.getDate()) {
+        months--;
+    }
     if (months < 0) months = 0;
 
     const banner = document.getElementById('auto-sync-banner');
@@ -255,10 +263,10 @@ function generateCardHtml(item) {
     const asIcon = item.asInfo?.status === 'good' ? '🛡️' : (item.asInfo?.status === 'warn' ? '👀' : '🚨');
 
     // 6. 구매버튼 및 방어 멘트
-    const partnerCode = "flDiNnqr00";
+    const partnerCode = "AF9932454";
     const searchKeyword = `${item.name} 유모차`;
     
-    const coupangSearchUrl = `https://www.coupang.com/np/search?q=${encodeURIComponent(searchKeyword)}&afag=${partnerCode}`;
+    const coupangSearchUrl = `https://www.coupang.com/np/search?q=${encodeURIComponent(searchKeyword)}&lptag=${partnerCode}`;
     const naverSearchUrl = `https://search.naver.com/search.naver?query=${encodeURIComponent(searchKeyword)}`;
 
     let purchaseAreaHtml = `
@@ -278,9 +286,9 @@ function generateCardHtml(item) {
     `;
 
     // ✨ 7. [수익 창출 패치] 유모차 찰떡 필수 악세사리 3대장 (디자인 수정본)
-    const accFanUrl = `https://www.coupang.com/np/search?q=${encodeURIComponent('유모차 선풍기')}&afag=${partnerCode}`;
-    const accBagUrl = `https://www.coupang.com/np/search?q=${encodeURIComponent('유모차 정리함 이너백')}&afag=${partnerCode}`;
-    const accHookUrl = `https://www.coupang.com/np/search?q=${encodeURIComponent('유모차 가방걸이 고리')}&afag=${partnerCode}`;
+    const accFanUrl = `https://www.coupang.com/np/search?q=${encodeURIComponent('유모차 선풍기')}&lptag=${partnerCode}`;
+    const accBagUrl = `https://www.coupang.com/np/search?q=${encodeURIComponent('유모차 정리함 이너백')}&lptag=${partnerCode}`;
+    const accHookUrl = `https://www.coupang.com/np/search?q=${encodeURIComponent('유모차 가방걸이 고리')}&lptag=${partnerCode}`;
 
     const accessoryHtml = `
         <div style="background: #F9FAFB; padding: 18px; border-radius: 16px; margin-top: 24px; border: 1px solid #E5E8EB;">
@@ -425,9 +433,9 @@ function renderList(isUserAction = false) {
         const realTotalPrice = item.price + (item.hiddenTax?.cost || 0);
         
         if (budget === 'under40' && realTotalPrice > 400000) {
-            score -= 50; reasons.push(`실결제 예산 초과 (총 ${(realTotalPrice/10000).toFixed(0)}만 원)`);
+            score -= 100; reasons.push(`실결제 예산 초과 (총 ${(realTotalPrice/10000).toFixed(0)}만 원)`);
         } else if (budget === 'under100' && realTotalPrice > 1000000) {
-            score -= 50; reasons.push(`실결제 예산 초과 (총 ${(realTotalPrice/10000).toFixed(0)}만 원)`);
+            score -= 100; reasons.push(`실결제 예산 초과 (총 ${(realTotalPrice/10000).toFixed(0)}만 원)`);
         }
 
         // 2. 🏡 환경: 계단 없는 빌라면 무게가 깡패
@@ -444,12 +452,18 @@ function renderList(isUserAction = false) {
             } else if (item.specs.cabin.includes('⚠️')) { 
                 score -= 15; reasons.push('항공사(LCC) 규정에 따라 기내 반입 거절 위험'); 
             }
-        } else if (car === 'ray' || car === 'casper') {
-            const vol = getVolume(item.foldedDims);
-            if (vol > 100) { score -= 30; reasons.push('경차 트렁크 적재 시 뒷좌석 폴딩 필수'); }
-        } else if (car !== 'all' && car !== 'flight') {
-            const vol = getVolume(item.foldedDims);
-            if (vol > 200) { score -= 20; reasons.push('세단/SUV 트렁크 공간을 과도하게 차지함'); }
+        } else if (car !== 'all' && typeof carDB !== 'undefined' && carDB[car]) {
+            const cd = carDB[car];
+            const dims = [...item.foldedDims].sort((a, b) => a - b);
+            
+            // 정밀 테트리스 검사
+            if (dims[0] > cd.limitDepth) {
+                score -= 50; reasons.push(`${cd.name} 트렁크에 안 들어감 (뒷좌석 폴딩 필수)`);
+            } else if (dims[1] > cd.limitHeight) {
+                score -= 20; reasons.push(`${cd.name} 트렁크 입구에 걸림 (비틀어 넣어야 함)`);
+            } else if (getVolume(item.foldedDims) / cd.vol > 0.6) {
+                score -= 10; reasons.push(`트렁크의 60% 이상 차지 (짐 실을 공간 부족)`);
+            }
         }
 
         // 4. 👶 아기 성장 / 뼈대
@@ -501,7 +515,16 @@ function renderList(isUserAction = false) {
     if (isMatrixActive) processedData.sort((a, b) => b.matchRate - a.matchRate);
 
     if(processedData.length === 0) { 
-        topArea.innerHTML = `<div class="premium-empty-state" style="justify-content:center; padding: 40px;"><div class="empty-text" style="text-align:center;"><b>조건에 맞는 모델이 없습니다.</b><span>필터나 선택 사항을 조금 완화해 보세요.</span></div></div>`; 
+        topArea.innerHTML = `
+            <div class="premium-empty-state" style="justify-content:center; padding: 40px;">
+                <div class="empty-text" style="text-align:center; margin-bottom: 20px;">
+                    <b>조건에 맞는 모델이 없습니다.</b>
+                    <span>필터나 선택 사항을 조금 완화해 보세요.</span>
+                </div>
+                <button onclick="resetAll()" style="padding: 12px 24px; background: #3182F6; color: #FFF; border: none; border-radius: 12px; font-weight: 800; font-size: 14px; cursor: pointer; box-shadow: 0 4px 12px rgba(49, 130, 246, 0.3);">
+                    🔄 필터 및 조건 초기화하기
+                </button>
+            </div>`; 
         otherArea.innerHTML = ''; topTitle.style.display = 'none'; showMoreBtn.style.display = 'none'; return; 
     }
 
@@ -523,9 +546,7 @@ document.addEventListener('click', function(e) {
         const btn = e.target; 
         btn.classList.toggle('active'); 
         renderList(); 
-        
-        // ✨ 필터를 누르면 시선을 다시 필터 영역으로 부드럽게 올려줌
-        document.querySelector('.filter-section').scrollIntoView({ behavior: 'smooth', block: 'start' });
+       
     }
 });
 
@@ -609,23 +630,36 @@ function showComingSoon(category) {
     alert(`💡 ${category} AI 분석 엔진은 현재 딥러닝 학습 중입니다!\n(다음 업데이트를 기대해 주세요)`);
 }
 
-// 🚀 카카오 SDK 초기화
-if (!Kakao.isInitialized()) {
-    Kakao.init('68bca10ddfe2ec67112b07eb9a08da2b');
+// 🚀 카카오 SDK 초기화 (안전 보호막 장착)
+try {
+    if (typeof Kakao !== 'undefined' && !Kakao.isInitialized()) {
+        Kakao.init('68bca10ddfe2ec67112b07eb9a08da2b');
+    }
+} catch (error) {
+    console.warn("카카오 SDK 초기화 지연", error);
 }
 
 function shareResult() {
     const shareUrl = window.location.href; 
-    Kakao.Share.sendDefault({
-        objectType: 'feed',
-        content: {
-            title: '육아메이트 AI 5D 유모차 매칭 🛒',
-            description: '우리 가족 라이프스타일과 트렁크 크기에 딱 맞는 유모차를 AI로 찾아보세요!',
-            imageUrl: 'https://happy-baby0303.github.io/baby-master/stroller/og-image.png',
-            link: { mobileWebUrl: shareUrl, webUrl: shareUrl },
-        },
-        buttons: [
-            { title: '🔍 AI 매칭 결과 확인하기', link: { mobileWebUrl: shareUrl, webUrl: shareUrl } }
-        ],
-    });
+    if (typeof Kakao !== 'undefined' && Kakao.isInitialized()) {
+        Kakao.Share.sendDefault({
+            objectType: 'feed',
+            content: {
+                title: '육아메이트 AI 5D 유모차 매칭 🛒',
+                description: '우리 가족 라이프스타일과 트렁크 크기에 딱 맞는 유모차를 AI로 찾아보세요!',
+                imageUrl: 'https://happy-baby0303.github.io/baby-master/stroller/og-image.png',
+                link: { mobileWebUrl: shareUrl, webUrl: shareUrl },
+            },
+            buttons: [
+                { title: '🔍 AI 매칭 결과 확인하기', link: { mobileWebUrl: shareUrl, webUrl: shareUrl } }
+            ],
+        });
+    } else {
+        // 카카오톡이 안 될 때는 그냥 주소를 복사해 줌!
+        navigator.clipboard.writeText(shareUrl).then(() => {
+            alert('결과 페이지 주소가 복사되었습니다! 남편에게 붙여넣기 해주세요 🤍');
+        }).catch(err => {
+            prompt("아래 주소를 복사해서 남편에게 보내주세요!", shareUrl);
+        });
+    }
 }

@@ -5,16 +5,17 @@ const carseatData = [
     {
         id: "cs01", brand: "조이", name: "아이스핀 360",
         age: ["newborn", "toddler"], install: ["isofix_leg"], carSize: ["compact", "sedan", "suv"], 
+        compactOk: true, // 👈 [추가됨] 소형차 장착 쌉가능!
         rotation: "yes", safety: ["isize", "adac"], price: "mid",
         bodySpec: "📏 40~105cm / ⚖️ 최대 19kg",
-        specs: { adacScore: "1.8 (최우수)", reboundStopper: "컴팩트 베이스" },
+        specs: { adacScore: "1.8 (좋음)", reboundStopper: "컴팩트 베이스" }, // 👈 [수정됨] 최우수 -> 좋음
         desc: "쿠팡 회전형 1위. 하단 베이스가 슬림해서 아반떼, K3 같은 준중형 차량 뒷좌석에 장착해도 앞좌석 공간이 꽤 확보됩니다.",
         purchasePlatform: "coupang", linkUrl: "https://link.coupang.com/a/eGfNlAgYqi", searchKeyword: "조이 아이스핀 360"
     },
     {
         id: "cs02", brand: "순성", name: "아크 올인원 아이사이즈",
         age: ["newborn", "toddler", "junior"], install: ["isofix_leg"], carSize: ["sedan", "suv", "carnival"],
-        rotation: "yes", safety: ["isize", "all"], price: "low",
+        rotation: "yes", safety: ["isize", "kc"], price: "low", // 👈 [수정됨] all -> kc
         bodySpec: "📏 40~145cm / ⚖️ 12세까지 종결",
         specs: { adacScore: "미참여 (국내 최고점 통과)", reboundStopper: "성장 맞춤형 이너시트" },
         desc: "신생아부터 12세까지 하나로 끝내는 가성비 끝판왕. 카시트를 나이마다 바꾸기 부담스럽다면 고민 없이 이 제품입니다.",
@@ -24,7 +25,8 @@ const carseatData = [
         id: "cs03", brand: "폴레드", name: "올에이지 360",
         age: ["newborn", "toddler", "junior"], install: ["isofix_tether", "belt"], 
         carSize: ["compact", "sedan", "suv", "carnival"],
-        rotation: "yes", safety: ["all"], price: "low",
+        compactOk: true, // 👈 [추가됨] 소형차 장착 가능!
+        rotation: "yes", safety: ["kc"], price: "low", // 👈 [수정됨] all -> kc
         bodySpec: "📏 신생아~160cm / ⚖️ 체중: ~36kg",
         specs: { adacScore: "미참여 (한국 KCL 인증)", reboundStopper: "락킹벨트 (모든 차량 장착)" },
         desc: "ISOFIX가 없는 구형 차량(안전벨트 결합)에도 장착 가능! 탑테더 방식이라 카니발이나 팰리세이드 3열에도 설치하기 좋습니다.",
@@ -33,7 +35,7 @@ const carseatData = [
     {
         id: "cs04", brand: "브라이텍스", name: "베르사픽스",
         age: ["toddler", "junior"], install: ["isofix_tether"], carSize: ["suv", "sedan", "carnival"],
-        rotation: "no", safety: ["all"], price: "high",
+        rotation: "no", safety: ["kc"], price: "high", // 👈 [수정됨] all -> kc
         bodySpec: "📏 15개월~12세 / ⚖️ 9~36kg",
         specs: { adacScore: "미참여 (유럽 최고 안전등급)", reboundStopper: "V-Tether (대형차 특화)" },
         desc: "바닥 지지대(레그)가 없는 탑테더 방식이라, 바닥에 수납함이 있는 카니발/대형 SUV 뒷좌석에 파손 위험 없이 설치되는 최고의 모델입니다.",
@@ -51,29 +53,29 @@ const carseatData = [
     {
         id: "cs06", brand: "에어보스", name: "신생아 다기능 인펀트 카시트",
         age: ["newborn"], install: ["belt"], carSize: ["compact", "sedan", "suv", "carnival"],
-        rotation: "no", safety: ["all"], price: "low",
+        rotation: "no", safety: ["kc"], price: "low",
         bodySpec: "📏 신생아 전용 / ⚖️ 최대 13kg",
         specs: { adacScore: "미참여 (국내 KCL 통과)", reboundStopper: "3점식 안전벨트 장착" },
         desc: "조리원 퇴원할 때 안고 타면 불법입니다! 100일까지만 짧게 쓸 초가성비 바구니 카시트가 당장 내일 필요하다면 로켓배송으로 시키세요.",
-        purchasePlatform: "coupang", linkUrl: "https://link.coupang.com/a/여기에_에어보스_링크", searchKeyword: "에어보스 바구니 카시트"
+        purchasePlatform: "coupang", linkUrl: "https://link.coupang.com/a/gbI2WnHhcG", searchKeyword: "에어보스 바구니 카시트"
     },
     {
         id: "cs07", brand: "다이치", name: "브이가드 토들러/주니어",
         age: ["toddler", "junior"], install: ["isofix_tether"], carSize: ["sedan", "suv", "carnival"],
-        rotation: "no", safety: ["all"], price: "mid",
+        rotation: "no", safety: ["kc"], price: "mid",
         bodySpec: "📏 9개월~12세 / ⚖️ 9~36kg",
         specs: { adacScore: "미참여 (국내 판매량 1위 수준)", reboundStopper: "확장형 V자 프레임" },
         desc: "아이가 클수록 어깨 골격에 맞춰 프레임이 V자로 넓어지는 국민 주니어 카시트. 한국 아이들 체형에 제일 잘 맞습니다.",
-        purchasePlatform: "coupang", linkUrl: "https://link.coupang.com/a/여기에_다이치_브이가드_링크", searchKeyword: "다이치 브이가드"
+        purchasePlatform: "coupang", linkUrl: "https://link.coupang.com/a/gbJfStdujQ", searchKeyword: "다이치 브이가드"
     },
     {
         id: "cs08", brand: "다이치", name: "이지캐리2 (휴대용)",
         age: ["toddler", "junior"], install: ["belt", "isofix_leg"], carSize: ["compact", "sedan", "suv", "carnival"],
-        rotation: "no", safety: ["all"], price: "low",
+        rotation: "no", safety: ["kc"], price: "low",
         bodySpec: "📏 12개월~5세 / ⚖️ 9~18kg",
         specs: { adacScore: "미참여 (휴대용 특화)", reboundStopper: "백팩 폴딩 시스템" },
         desc: "제주도 여행 가시나요? 세컨카나 택시를 자주 타시나요? 백팩에 쏙 들어가는 폴딩형 휴대용 카시트 중 1티어입니다.",
-        purchasePlatform: "coupang", linkUrl: "https://link.coupang.com/a/여기에_다이치_이지캐리2_링크", searchKeyword: "다이치 이지캐리2"
+        purchasePlatform: "coupang", linkUrl: "https://link.coupang.com/a/gbI7uY934C", searchKeyword: "다이치 이지캐리2"
     },
     {
         id: "cs09", brand: "다이치", name: "블리바 360",
@@ -82,7 +84,8 @@ const carseatData = [
         bodySpec: "📏 신생아~105cm / ⚖️ 18kg",
         specs: { adacScore: "미참여", reboundStopper: "친환경 밤부 모달 소재" },
         desc: "다이치의 안전성에 감성적인 디자인을 더했습니다. 태열이나 땀이 많은 아기를 위한 통기성 밤부 소재가 돋보입니다.",
-        purchasePlatform: "coupang", linkUrl: "https://link.coupang.com/a/여기에_다이치_블리바_링크", searchKeyword: "다이치 블리바"
+        purchasePlatform: "coupang", linkUrl: "https://link.coupang.com/a/gbJmzhQHqC", // 👈 완벽한 딥링크!
+        searchKeyword: "다이치 블리바 360"
     },
 
     // --------------------------------------------------------
@@ -111,7 +114,7 @@ const carseatData = [
         age: ["newborn"], install: ["isofix_leg", "belt"], carSize: ["sedan", "suv", "carnival"],
         rotation: "yes", safety: ["isize", "adac"], price: "high",
         bodySpec: "📏 45~87cm",
-        specs: { adacScore: "1.7 (최우수)", reboundStopper: "인체공학적 플랫 포지션" },
+        specs: { adacScore: "1.7 (좋음)", reboundStopper: "인체공학적 플랫 포지션" }, // 👈 [수정됨] 최우수 -> 좋음
         desc: "부가부, 스토케 등 디럭스 유모차와 결합하는 '강남엄마 필수템' 바구니 카시트. 차 밖에서는 요람처럼 180도 눕혀집니다.",
         purchasePlatform: "official", linkUrl: "https://cybex-online.com/ko-kr/car-seats/cloud-t-isize", searchKeyword: "싸이벡스 클라우드 T"
     },
@@ -129,7 +132,7 @@ const carseatData = [
         age: ["newborn"], install: ["isofix_leg", "belt"], carSize: ["suv", "sedan", "carnival"],
         rotation: "no", safety: ["isize", "adac"], price: "high",
         bodySpec: "📏 40~75cm",
-        specs: { adacScore: "1.7 (최우수)", reboundStopper: "스토케 유모차 어댑터 프리 결합" },
+        specs: { adacScore: "1.7 (좋음)", reboundStopper: "스토케 유모차 어댑터 프리 결합" }, // 👈 [수정됨] 최우수 -> 좋음
         desc: "스토케 유모차를 쓰신다면 고민할 필요가 없습니다. 귀찮은 어댑터 조립 없이 스토케 프레임에 바로 꽂히는 프리미엄 카시트입니다.",
         purchasePlatform: "official", linkUrl: "https://www.stokke.com/KOR/ko-kr/", searchKeyword: "스토케 이지고 모듈러"
     }

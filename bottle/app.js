@@ -5,14 +5,25 @@
 
 let isFavViewMode = false; 
 
+// 🧼 sterilization 문구를 읽어서 UV 소독 안전도를 자동 판정
+function getUvSafety(item) {
+    const t = item.sterilization || '';
+    if (t.includes('금지') || t.includes('비권장')) return 'no';
+    if (t.includes('주의') || t.includes('변색') || t.includes('끈적')) return 'caution';
+    if (t.includes('UV')) return 'yes';
+    return 'unknown';   // UV 언급 자체가 없는 제품
+}
+
 function applyGlobalBabyProfile() {
     const birthStr = localStorage.getItem('tosil_startDate');
     if(!birthStr) return; 
     
-    const birthDate = new Date(birthStr);
+    const [y, m, d] = birthStr.split('-').map(Number);
+    const birthDate = new Date(y, m - 1, d);
     const today = new Date();
     let months = (today.getFullYear() - birthDate.getFullYear()) * 12 + (today.getMonth() - birthDate.getMonth());
-    if (months < 0) months = 0; 
+    if (today.getDate() < birthDate.getDate()) months--;   // 아직 생일 안 지났으면 -1
+    if (months < 0) months = 0;
 
     let ageFilter = 'all';
     if (months <= 3) { ageFilter = 'newborn'; }
@@ -165,7 +176,8 @@ function generateCardHTML(item, rank) {
     if (isFavViewMode) cardBorderColor = '#E32636';
 
     const searchKeyword = `${item.brand} ${item.name}`; 
-    let myCoupangLink = `https://www.coupang.com/np/search?q=${encodeURIComponent(searchKeyword)}`;
+    const partnerCode = "AF9932454";
+    let myCoupangLink = `https://www.coupang.com/np/search?q=${encodeURIComponent(searchKeyword)}&lptag=${partnerCode}`;
    
     let purchaseBtn = '';
     
@@ -282,10 +294,17 @@ function runBottleEngine() {
         if (compatible === 'yes' && item.compatible !== 'yes') { 
             score -= 30; reasons.push('더블하트/모유실감 젖꼭지와 호환되지 않습니다.'); 
         }
-        if (sterilization === 'uv' && item.wash === 'normal') { 
-            score -= 20; reasons.push('UV 소독기 지속 사용 시 변색이나 균열 위험이 있습니다.'); 
+        if (sterilization === 'uv') {
+            const uv = getUvSafety(item);
+            if (uv === 'no') {
+                score -= 30; reasons.push('제조사가 UV 소독을 금지하거나 권장하지 않는 제품입니다.');
+            } else if (uv === 'caution') {
+                score -= 15; reasons.push('UV 소독기 장기 사용 시 변색이나 끈적임이 생길 수 있습니다.');
+            } else if (uv === 'unknown') {
+                score -= 5; reasons.push('UV 소독 가능 여부가 제조사 스펙에 명시되어 있지 않습니다.');
+            }
         }
-        if (sterilization === 'easy' && item.wash === 'uv') { 
+        if (sterilization === 'easy' && item.wash !== 'easy') { 
             score -= 15; reasons.push('입구가 좁거나 부품이 많아 설거지가 번거로운 편입니다.'); 
         }
         if (price !== 'all' && item.price !== price) { 
@@ -300,7 +319,7 @@ function runBottleEngine() {
 
     if (isFilterActive) processedData.sort((a, b) => b.matchRate - a.matchRate);
 
-    if (processedData.length === 0 || (isFilterActive && processedData[0].matchRate < 70)) {
+    if (processedData.length === 0 || (isFilterActive && processedData[0].matchRate < 40)) {
         resultArea.innerHTML = `
             <div class="premium-empty-state" style="padding:40px; text-align:center; background:#FFF; border-radius:16px; border:1px dashed #D1D5DB; box-shadow: 0 4px 12px rgba(0,0,0,0.02);">
                 <div class="empty-icon" style="font-size:40px; margin-bottom:12px;">🍼</div>
@@ -315,7 +334,22 @@ function runBottleEngine() {
         return;
     }
 
-    let htmlOutput = `<div style="font-size: 16px; font-weight: 800; color: #191F28; margin-bottom: 16px;">✨ AI 맞춤 젖병 리포트</div>`;
+    // 🍼 1등 점수가 낮으면 "완벽한 매칭은 없지만 차선책은 있어요"로 안내
+    const bestScore = isFilterActive ? processedData[0].matchRate : 100;
+    let htmlOutput = '';
+
+    if (isFilterActive && bestScore < 70) {
+        htmlOutput = `
+            <div style="background:#FFF9E6; border:1px solid #FDE68A; border-radius:14px; padding:16px; margin-bottom:16px;">
+                <div style="font-size:14px; font-weight:900; color:#B78103; margin-bottom:4px;">🤍 조건을 모두 만족하는 젖병은 없었어요</div>
+                <div style="font-size:13px; font-weight:600; color:#4E5968; line-height:1.5;">
+                    대신 <b>가장 가까운 대안</b>을 순서대로 보여드릴게요. 조건을 1~2개만 풀면 더 좋은 결과가 나올 수 있어요!
+                </div>
+            </div>
+            <div style="font-size: 16px; font-weight: 800; color: #191F28; margin-bottom: 16px;">✨ 가장 가까운 대안 TOP 3</div>`;
+    } else {
+        htmlOutput = `<div style="font-size: 16px; font-weight: 800; color: #191F28; margin-bottom: 16px;">✨ AI 맞춤 젖병 리포트</div>`;
+    }
     
     let top3Results = processedData.slice(0, 3); 
     let otherResults = processedData.slice(3); 
@@ -365,6 +399,13 @@ if (typeof Kakao !== 'undefined' && !Kakao.isInitialized()) {
 function shareToHusband(id, brand, name) {
     const appUrl = window.location.href; 
     
+       if (typeof Kakao === 'undefined' || !Kakao.isInitialized()) {
+        navigator.clipboard.writeText(appUrl)
+            .then(() => alert('링크가 복사되었어요! 남편에게 붙여넣기 해주세요 🤍'))
+            .catch(() => prompt("아래 주소를 복사해 주세요", appUrl));
+        return;
+    }
+
     Kakao.Share.sendDefault({
         objectType: 'feed',
         content: {
