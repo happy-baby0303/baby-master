@@ -2206,15 +2206,21 @@ body.mode-senior .hide-on-senior { display: none !important; }
         window.history.replaceState({}, document.title, window.location.pathname);
     }
 
-    // 💛 [카카오 로그인 엔진]
-    const auth = getAuth(app);
-    const kakaoProvider = new OAuthProvider('oidc.kakao');
+ // 💛 [카카오 로그인 엔진]
+   const auth = getAuth(app);
+  window.auth = auth; // 👈 이 한 줄이 모든 권한 문제를 해결합니다!
+  const kakaoProvider = new OAuthProvider('oidc.kakao');
 
     window.loginWithKakao = () => {
         signInWithPopup(auth, kakaoProvider)
             .then((result) => {
                 const user = result.user;
+                
+                // 🚨 [패치 1] 카카오의 진짜 고유 번호를 추출해서 함께 저장!
+                const kakaoSub = user.providerData?.[0]?.uid || user.uid;
+                
                 localStorage.setItem('firebase_uid', user.uid);
+                localStorage.setItem('kakao_id', kakaoSub); // 👈 부활!
                 localStorage.setItem('kakao_nickname', user.displayName || '육아동지');
                 localStorage.setItem('kakao_profile_image', user.photoURL || '');
                 
@@ -2233,8 +2239,14 @@ body.mode-senior .hide-on-senior { display: none !important; }
 // 🤝 [로그인 감지 & 안전한 연동]
     onAuthStateChanged(auth, async (user) => {
         if (!user) return;
+        
+        // 🚨 [패치 1-2] 로그인 감지 시에도 카카오 고유 번호 저장 및 콘솔 확인
+        const kakaoSub = user.providerData?.[0]?.uid || user.uid;
         console.log("✅ 현재 로그인된 유저 UID:", user.uid);
+        console.log("✅ 카카오 고유 ID (admin 대조용):", kakaoSub);
+        
         localStorage.setItem('firebase_uid', user.uid); 
+        localStorage.setItem('kakao_id', kakaoSub); // 👈 부활!
 
         // 1. 초대 링크(딥링크)로 들어온 경우 우선 처리
         const pendingCode = localStorage.getItem('pending_invite_code');
@@ -2288,7 +2300,7 @@ body.mode-senior .hide-on-senior { display: none !important; }
         }
 
         if (typeof window.initRealtimeSync === 'function') window.initRealtimeSync();
-    });   
+    }); 
 
 // ==========================================
     // 🔗 아래 함수들은 onAuthStateChanged 바깥쪽(독립된 공간)에 있어야 합니다!

@@ -1710,7 +1710,7 @@ function downloadFeverReport() {
     const target = document.getElementById('fever-timeline');
     if(!target || !target.innerHTML.trim() || target.innerText.includes("기록이 없습니다")) return alert("캡처할 기록이 없어요!");
     if(typeof html2canvas === 'undefined') return alert("이미지 변환 라이브러리가 준비되지 않았습니다.");
-    html2canvas(target, { backgroundColor: '#ffffff', scale: 2 }).then(canvas => {
+    html2canvas(target, { backgroundColor: '#ffffff', scale: 2, useCORS: true }).then(canvas => {
         const link = document.createElement('a'); link.download = '해열제_기록.png'; link.href = canvas.toDataURL("image/png"); link.click();
         alert("📸 캡처가 저장되었습니다!");
     });
@@ -1757,7 +1757,7 @@ window.startFeverRealtimeSync = startFeverRealtimeSync;
 function openChecklistModal() {
     let months = 99, targetDate = localStorage.getItem('tosil_startDate'); 
     if (targetDate) {
-        const dday = Math.ceil(Math.abs(new Date() - new Date(targetDate)) / (1000 * 60 * 60 * 24));
+        const dday = Math.ceil(Math.abs(new Date() - window.parseLocalDate(targetDate)) / (1000 * 60 * 60 * 24));
         months = Math.floor(dday / 30);
     }
     checklistData = [
@@ -2291,16 +2291,15 @@ document.addEventListener("DOMContentLoaded", () => {
     if(typeof window.renderGrowthHistory === 'function') window.renderGrowthHistory();
 });
 
-// 📸 아기 프로필 사진 업로드 (초압축 엔진으로 용량 폭발 완벽 방어)
+// 📸 아기 프로필 사진 업로드 (파이어베이스 스토리지 연동 버전 - 평생 무료 & 영구 보관)
 window.uploadPhoto = function(input) {
     if (input.files && input.files[0]) {
         const reader = new FileReader();
         reader.onload = function(e) {
             const img = new Image();
-            img.onload = function() {
-                // 1. 사진 크기를 최대 500px로 줄여서 용량 다이어트!
+            img.onload = async function() { // 🚨 async 추가
                 const canvas = document.createElement('canvas');
-                const maxSize = 500; 
+                const maxSize = 800; // 화질 마케팅을 위해 800px 유지
                 let width = img.width, height = img.height;
                 
                 if (width > height) {
@@ -2314,17 +2313,38 @@ window.uploadPhoto = function(input) {
                 const ctx = canvas.getContext('2d'); 
                 ctx.drawImage(img, 0, 0, width, height);
                 
-                // 2. 화질을 50%로 낮춰서 깃털처럼 가볍게 만듦 (약 30~50KB 수준)
-                const dataUrl = canvas.toDataURL('image/jpeg', 0.5); 
+                // 화질 0.7로 압축 (용량을 깃털처럼 가볍게 만들면서 화질은 선명하게 유지)
+                const dataUrl = canvas.toDataURL('image/jpeg', 0.7); 
                 
-                // 3. 용량이 꽉 찼을 때 앱이 죽는 것(QuotaExceededError)을 방지하는 try-catch 방어막
-                try { 
-                    localStorage.setItem('tosil_baby_photo', dataUrl); 
-                    if(typeof window.loadBabyPhoto === 'function') window.loadBabyPhoto(); 
-                    if(typeof window.showToast === 'function') window.showToast("✅ 사진이 예쁘게 변경되었습니다!");
-                } catch(err) { 
-                    console.warn("로컬 스토리지 용량 초과:", err);
-                    alert("앗! 기기 저장 공간이 꽉 찼어요. 설정 탭에서 '기록 데이터 초기화'를 진행해주세요."); 
+                // 🚀 파이어베이스 스토리지로 업로드!
+                if (window.storage && window.uploadString && window.getDownloadURL) {
+                    try {
+                        // 🚨 1. 로그인 검증 (안 되어있으면 칼같이 차단!)
+                        const uid = window.auth?.currentUser?.uid;
+                        if (!uid) {
+                            if(typeof window.showToast === 'function') window.showToast("🔐 사진 저장은 로그인 후 이용할 수 있어요!");
+                            return;
+                        }
+
+                        if(typeof window.showToast === 'function') window.showToast("⏳ 프로필 사진을 안전하게 서버에 저장 중입니다...");
+                        
+                        // 🚨 2. 파일명 고정 (새로 올릴 때마다 기존 사진을 덮어써서 용량 폭탄 방지!)
+                        const fileName = `profiles/${uid}/baby.jpg`;
+                        const imgRef = window.storageRef(window.storage, fileName);
+                        
+                        await window.uploadString(imgRef, dataUrl, 'data_url');
+                        const downloadUrl = await window.getDownloadURL(imgRef);
+                        
+                        // 무거운 사진 파일 자체가 아니라, 가벼운 서버 인터넷 주소(URL)만 로컬스토리지에 저장!
+                        localStorage.setItem('tosil_baby_photo', downloadUrl); 
+                        if(typeof window.loadBabyPhoto === 'function') window.loadBabyPhoto(); 
+                        if(typeof window.showToast === 'function') window.showToast("✅ 사진이 안전하게 저장되었습니다!");
+                    } catch(err) {
+                        console.error("아기 사진 업로드 실패", err);
+                        alert("사진 업로드 중 통신 지연이 발생했습니다. 인터넷 연결을 확인해주세요.");
+                    }
+                } else {
+                    alert("스토리지 모듈을 불러오지 못했습니다. 페이지를 새로고침 해보세요.");
                 }
             }; 
             img.src = e.target.result;
@@ -3076,7 +3096,7 @@ function updateSmartBanner() {
         const savedBaby = localStorage.getItem('tosil_baby');
         if (savedBaby) {
             const data = JSON.parse(savedBaby);
-            const diffDays = Math.ceil((new Date() - new Date(data.birth)) / (1000 * 60 * 60 * 24));
+            const diffDays = Math.ceil((new Date() - window.parseLocalDate(data.birth)) / (1000 * 60 * 60 * 24));
             const weekAge = Math.floor(diffDays / 7);
             const monthAge = Math.floor(diffDays / 30.436875);
 
@@ -4822,7 +4842,7 @@ window.updateTrackerDashboard = function() {
     
     const savedDate = localStorage.getItem('tosil_startDate');
     let babyDays = 100; // 기본값
-    if (savedDate) babyDays = Math.floor((nowTime - new Date(savedDate).getTime()) / (1000 * 60 * 60 * 24));
+    if (savedDate) babyDays = Math.floor((nowTime - window.parseLocalDate(savedDate).getTime()) / (1000 * 60 * 60 * 24));
     
     const minFormula = babyDays <= 30 ? 10 : (babyDays <= 100 ? 20 : 40);
     const minBreast = babyDays <= 30 ? 2 : (babyDays <= 100 ? 3 : 5);
@@ -5084,12 +5104,13 @@ setInterval(() => {
 // 💊 데일리 케어 (좌측 정렬 디자인 + 커스텀 설정)
 // ==========================================
 
-// 🚨 1. 기종/국가에 상관없이 무조건 폰의 로컬(한국) 날짜를 뽑아주는 전용 함수!
-// 특정 시각(timestamp)을 한국 로컬 날짜 문자열로 변환
 window.getSafeDateStr = function(ts) {
     const d = ts ? new Date(ts) : new Date();
     return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
 };
+
+// 🚨 오늘 날짜만 뽑는 전용 함수
+window.getSafeTodayStr = function() { return window.getSafeDateStr(); };
 
 // 2. 렌더링 엔진 (다크모드 !important 씹어먹기 방어)
 window.renderRoutineChecklist = function() {
@@ -6668,7 +6689,7 @@ window.deleteOpenRecord = function(id) {
 window.renewOpenRecord = function(id) {
     showConfirm("이 제품을 오늘 날짜로 새로 뜯으셨나요?", function() {
         let records = JSON.parse(localStorage.getItem('tosil_open_records')) || [];
-        window.getSafeTodayStr()
+        const todayStr = window.getSafeTodayStr();
 
         records = records.map(record => {
             if (record.id === id) {
@@ -6716,8 +6737,8 @@ window.renderOpenRecords = function() {
     let records = JSON.parse(localStorage.getItem('tosil_open_records')) || [];
     
     const dateInput = document.getElementById('open-item-date');
-    if (dateInput && !dateInput.value) {
-        window.getSafeTodayStr()
+   if (dateInput && !dateInput.value) {
+        dateInput.value = window.getSafeTodayStr();
     }
 
     if (records.length === 0) {
@@ -7645,7 +7666,7 @@ window.renderDadQuests = function() {
     
     const savedDateForDad = localStorage.getItem('tosil_startDate');
     let dadBabyDays = 100;
-    if (savedDateForDad) dadBabyDays = Math.floor((now - new Date(savedDateForDad).getTime()) / (1000 * 60 * 60 * 24));
+    if (savedDateForDad) dadBabyDays = Math.floor((now - window.parseLocalDate(savedDateForDad).getTime()) / (1000 * 60 * 60 * 24));
     const minFormulaDad = dadBabyDays <= 30 ? 10 : (dadBabyDays <= 100 ? 20 : 40);
     const minBreastDad = dadBabyDays <= 30 ? 2 : (dadBabyDays <= 100 ? 3 : 5);
     
@@ -7802,7 +7823,7 @@ window.updateDadBriefing = function() {
                 // 🍼 [월령 맞춤형] 아빠 1순위 미션 생후 일수 계산
                 const briefDate = localStorage.getItem('tosil_startDate');
                 let briefDays = 100;
-                if (briefDate) briefDays = Math.floor((now.getTime() - new Date(briefDate).getTime()) / (1000 * 60 * 60 * 24));
+                if (briefDate) briefDays = Math.floor((now.getTime() - window.parseLocalDate(briefDate).getTime()) / (1000 * 60 * 60 * 24));
                 const minF = briefDays <= 30 ? 10 : (briefDays <= 100 ? 20 : 40);
                 const minB = briefDays <= 30 ? 2 : (briefDays <= 100 ? 3 : 5);
 
@@ -8488,21 +8509,28 @@ window.handleImageSelection = function(event) {
                 const dataUrl = canvas.toDataURL('image/jpeg', 0.5);
                 
                 // 🚀 [마스터 패치] 글자 뭉치(Base64) 대신, Storage에 올리고 URL 받아오기!
-                if (window.storage && window.uploadString && window.getDownloadURL) {
-                    try {
-                        // 중복 안 되게 랜덤 파일명 생성
-                        const fileName = 'mamsuda/' + new Date().getTime() + '_' + Math.random().toString(36).substring(2, 7) + '.jpg';
-                        const imgRef = window.storageRef(window.storage, fileName);
-                        
-                        await window.uploadString(imgRef, dataUrl, 'data_url'); // 창고에 업로드 슛!
-                        const downloadUrl = await window.getDownloadURL(imgRef); // 인터넷 주소 따오기
-                        
-                        window.attachedImages.push(downloadUrl); // 진짜 인터넷 URL을 꽂아넣음!
-                        window.renderPreviewImages(); 
-                    } catch(err) {
-                        console.error("업로드 에러:", err);
-                        window.showToast("❌ 이미지 업로드에 실패했습니다. (Storage 규칙을 확인하세요)");
-                    }
+if (window.storage && window.uploadString && window.getDownloadURL) {
+    try {
+        // 🚨 로그인 검증 (안 되어있으면 칼같이 차단!)
+        const uid = window.auth?.currentUser?.uid;
+        if (!uid) {
+            window.showToast("🔐 사진 첨부는 로그인 후 이용할 수 있어요!");
+            return;
+        }
+
+        // 중복 안 되게 랜덤 파일명 생성
+        const fileName = `mamsuda/${uid}/${Date.now()}_${Math.random().toString(36).slice(2,7)}.jpg`;
+        const imgRef = window.storageRef(window.storage, fileName);
+        
+        await window.uploadString(imgRef, dataUrl, 'data_url'); // 창고에 업로드 슛!
+        const downloadUrl = await window.getDownloadURL(imgRef); // 인터넷 주소 따오기
+        
+        window.attachedImages.push(downloadUrl); // 진짜 인터넷 URL을 꽂아넣음!
+        window.renderPreviewImages(); 
+    } catch(err) {
+        console.error("업로드 에러:", err);
+        window.showToast("❌ 사진 첨부에 실패했어요. 잠시 후 다시 시도해주세요.");
+    }
                 } else {
                     // 서버 연결 실패 시 오프라인 백업 (기존 로직)
                     window.attachedImages.push(dataUrl); 
@@ -8741,7 +8769,7 @@ window.openPostDetail = function(postId) {
                 <div style="display: flex; align-items: center; gap: 10px;">
                     <div style="width: 40px; height: 40px; background: #FFF4E6; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 20px;">${post.authorIcon || '🧸'}</div>
                     <div>
-                        <div style="font-size: 15px; font-weight: 800; color: var(--text-title);">${post.authorName}</div>
+                        <div style="font-size: 15px; font-weight: 800; color: var(--text-title);">${window.escapeHTML(post.authorName)}</div>
                         <div style="font-size: 13px; color: var(--text-sub);">${post.region ? post.region + ' · ' : ''}${timeStr}</div>
                     </div>
                 </div>
@@ -8752,11 +8780,11 @@ window.openPostDetail = function(postId) {
             </div>
             
             <!-- 📝 본문 제목 및 내용 -->
-            <h2 style="font-size: 22px; font-weight: 800; color: var(--text-title); margin: 0 0 16px 0; line-height: 1.4;">${post.title}</h2>
-            <p style="font-size: 16px; color: var(--text-body); line-height: 1.6; margin: 0 0 24px 0; word-break: keep-all;">
-                ${post.content.replace(/\n/g, '<br>')}
-            </p>
-            ${imageHtml}
+<h2 style="font-size: 22px; font-weight: 800; color: var(--text-title); margin: 0 0 16px 0; line-height: 1.4;">${window.escapeHTML(post.title)}</h2>
+<p style="font-size: 16px; color: var(--text-body); line-height: 1.6; margin: 0 0 24px 0; word-break: keep-all;">
+    ${window.escapeHTML(post.content).replace(/\n/g, '<br>')}
+</p>
+${imageHtml}
             
             <!-- 🚨 좋아요/댓글 (게시글 본문 제일 바닥에 좌측 밀착, 최신순/인기순 중복 텍스트 삭제 완료!) -->
             <div style="display: flex; align-items: center; gap: 16px; margin-top: 40px;">
@@ -8881,10 +8909,9 @@ window.showPostOptions = async function() {
             if (adminSnap.exists() && adminSnap.data().allowed === true) isMasterAdmin = true;
         }
     } catch (e) { console.warn("관리자 권한 확인 에러", e); }
-    if (localStorage.getItem('tosil_is_master') === 'true') isMasterAdmin = true;
 
-    let existing = document.getElementById('post-action-sheet');
-    if(existing) existing.remove();
+let existing = document.getElementById('post-action-sheet');
+if(existing) existing.remove();
 
     let menuHtml = '';
     
@@ -8898,9 +8925,9 @@ window.showPostOptions = async function() {
             <div onclick="window.deletePost('${postId}'); document.getElementById('post-action-sheet').remove();" style="padding: 16px 0; font-size: 16px; font-weight: 700; color: #F04452; border-bottom: 1px solid #F2F4F6; cursor: pointer; display: flex; align-items: center; gap: 12px;">
                 <span style="font-size: 20px;">🗑️</span> 글 강제 삭제하기
             </div>
-            <div onclick="window.blockUser('${post.authorName}')" style="padding: 16px 0; font-size: 16px; font-weight: 700; color: #333D4B; cursor: pointer; display: flex; align-items: center; gap: 12px;">
-                <span style="font-size: 20px;">🚫</span> 이 사용자 영구 차단
-            </div>
+            <div onclick="window.blockUser('${postId}', 'post')" style="padding: 16px 0; font-size: 16px; font-weight: 700; color: #333D4B; cursor: pointer; display: flex; align-items: center; gap: 12px;">
+    <span style="font-size: 20px;">🚫</span> 이 사용자 영구 차단
+</div>
         `;
     } 
     // 🧍‍♂️ 2. 내 글
@@ -8920,9 +8947,9 @@ window.showPostOptions = async function() {
             <div onclick="window.reportContent('post', '${postId}', '${post.authorId}'); document.getElementById('post-action-sheet').remove();" style="padding: 16px 0; font-size: 16px; font-weight: 700; color: #F04452; border-bottom: 1px solid #F2F4F6; cursor: pointer; display: flex; align-items: center; gap: 12px;">
                 <span style="font-size: 20px;">🚨</span> 이 글 신고하기
             </div>
-            <div onclick="window.blockUser('${post.authorId}', '${post.authorName}'); document.getElementById('post-action-sheet').remove();" style="padding: 16px 0; font-size: 16px; font-weight: 700; color: #333D4B; cursor: pointer; display: flex; align-items: center; gap: 12px;">
-                <span style="font-size: 20px;">🚫</span> 이 사용자 차단하기
-            </div>
+            <div onclick="window.blockUser('${postId}', 'post'); document.getElementById('post-action-sheet').remove();" style="padding: 16px 0; font-size: 16px; font-weight: 700; color: #333D4B; cursor: pointer; display: flex; align-items: center; gap: 12px;">
+    <span style="font-size: 20px;">🚫</span> 이 사용자 차단하기
+</div>
         `;
     }
 
@@ -8990,7 +9017,7 @@ window.doCommSearch = function() {
                 <div style="display: flex; justify-content: space-between; align-items: center; border-top: 1px solid rgba(0,0,0,0.05); padding-top: 12px;">
                     <div style="display: flex; align-items: center; gap: 6px;">
                         <div style="width: 24px; height: 24px; background: #F2F4F6; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px;">${post.authorIcon || '👑'}</div>
-                        <span style="font-size: 12px; font-weight: 700; color: var(--text-body);">${post.authorName}</span>
+<span style="font-size: 12px; font-weight: 700; color: var(--text-body);">${window.escapeHTML(post.authorName)}</span>
                     </div>
                     <div style="display: flex; gap: 10px; font-size: 12px; font-weight: 700; color: var(--text-sub);">
                         <span style="display: flex; align-items: center; gap: 4px;"><span style="color: ${post.liked ? '#FF5A5F' : '#CBD5E1'};">❤️</span> ${post.likes || 0}</span>
@@ -9333,24 +9360,6 @@ window.deletePost = function(postId) {
     }, "🗑️", "삭제", "#F04452");
 };
 
-// 🚫 유저 차단 시스템
-window.blockUser = function(authorName) {
-    if(authorName === '육아메이트' || authorName === '육아천재대표님') return window.showToast("🚨 최고 관리자는 차단할 수 없습니다.");
-    
-    window.showConfirm(`'${authorName}'님의 글과 댓글을<br>더 이상 보지 않으시겠습니까?`, function() {
-        let blockedUsers = JSON.parse(localStorage.getItem('tosil_blocked_users')) || [];
-        if(!blockedUsers.includes(authorName)) {
-            blockedUsers.push(authorName);
-            localStorage.setItem('tosil_blocked_users', JSON.stringify(blockedUsers));
-        }
-        
-        document.getElementById('post-action-sheet')?.remove();
-        window.closePostDetail();
-        window.renderCommunityFeed();
-        window.showToast(`🚫 '${authorName}'님이 차단되었습니다.`);
-    }, "🚫", "차단하기", "#333D4B");
-};
-
 // 🚫 차단 목록 보기
 window.openBlockedUsers = function() {
     const listArea = document.getElementById('blockedUsersList');
@@ -9477,6 +9486,7 @@ window.applyCommunityWaitlist = function(btn) {
     if (typeof db !== 'undefined' && typeof setDoc === 'function' && typeof doc === 'function') {
         setDoc(doc(db, "waitlist", String(myKakaoId)), {
             kakaoId: myKakaoId,
+            firebase_uid: (window.auth && window.auth.currentUser) ? window.auth.currentUser.uid : localStorage.getItem('firebase_uid'),
             nickname: myNickname,
             appliedAt: new Date().toISOString()
         }, {merge: true}).then(() => {
@@ -9749,14 +9759,19 @@ if (isFounder) {
     founderUntil = until.toISOString().split('T')[0];
 }
 
+                // 🚨 파이어베이스 UID도 가져오기
+                const myUid = localStorage.getItem('firebase_uid') || '';
+
                 const newUserData = {
-    kakao_id: myKakaoId,
-    nickname: myNickname,
-    joinedAt: new Date().toISOString(),
-    is_founder: isFounder,
-    founder_until: founderUntil,          // ← 이 줄 추가
-    last_login: new Date().toISOString()
-};
+                    kakao_id: myKakaoId,
+                    kakao_sub: myKakaoId,      // 🛡️ [미래 대비용 1] 카카오 고유 ID
+                    firebase_uid: myUid,       // 🛡️ [미래 대비용 2] 파이어베이스 UID 매핑
+                    nickname: myNickname,
+                    joinedAt: new Date().toISOString(),
+                    is_founder: isFounder,
+                    founder_until: founderUntil,          
+                    last_login: new Date().toISOString()
+                };
 
                 if (typeof window.setDoc === 'function') {
                     await window.setDoc(userRef, newUserData, { merge: true });
@@ -9991,16 +10006,15 @@ window.handleSecretAdminClick = function() {
     window.adminClickCount++;
     if (window.adminClickTimer) clearTimeout(window.adminClickTimer);
     
-    window.adminClickTimer = setTimeout(() => {
-        window.adminClickCount = 0; 
-    }, 2000);
+    window.adminClickTimer = setTimeout(() => { window.adminClickCount = 0; }, 2000);
 
     if (window.adminClickCount >= 5) {
         window.adminClickCount = 0; 
-        const isMaster = localStorage.getItem('tosil_is_master') === 'true';
-        const isSubAdmin = localStorage.getItem('tosil_is_subadmin') === 'true';
+        const myUid = localStorage.getItem('firebase_uid') || '';
+        const MASTER_UIDS = ["7Xj1jGZcV4OdWsyQrtUkuGq0HqJ3"]; // 대표님 진짜 UID
         
-        if (isMaster || isSubAdmin) {
+        // 🚨 로컬스토리지 글자가 아니라, 진짜 UID가 대표님 것이 맞을 때만 관제센터 오픈!
+        if (MASTER_UIDS.includes(String(myUid).trim())) {
             if (navigator.vibrate) navigator.vibrate([50, 50, 100]); 
             window.openAdminDashboard();
         } else {
@@ -10335,9 +10349,9 @@ window.showCommentOptions = async function(commentId, postId) {
             <div onclick="window.deleteComment('${commentId}', '${postId}'); document.getElementById('comment-action-sheet').remove();" style="padding: 16px 0; font-size: 16px; font-weight: 700; color: #F04452; border-bottom: 1px solid #F2F4F6; cursor: pointer; display: flex; align-items: center; gap: 12px;">
                 <span style="font-size: 20px;">🗑️</span> 댓글 강제 삭제
             </div>
-            <div onclick="window.blockUser('${comment.authorName}')" style="padding: 16px 0; font-size: 16px; font-weight: 700; color: #333D4B; cursor: pointer; display: flex; align-items: center; gap: 12px;">
-                <span style="font-size: 20px;">🚫</span> 이 사용자 영구 차단
-            </div>
+            <div onclick="window.blockUser('${commentId}', 'comment')" style="padding: 16px 0; font-size: 16px; font-weight: 700; color: #333D4B; cursor: pointer; display: flex; align-items: center; gap: 12px;">
+    <span style="font-size: 20px;">🚫</span> 이 사용자 영구 차단
+</div>
         `;
     } else if (isMyComment) {
         menuHtml = `
@@ -10350,9 +10364,9 @@ window.showCommentOptions = async function(commentId, postId) {
             <div onclick="window.showToast('🚨 댓글 신고가 접수되었습니다.'); document.getElementById('comment-action-sheet').remove();" style="padding: 16px 0; font-size: 16px; font-weight: 700; color: #F04452; border-bottom: 1px solid #F2F4F6; cursor: pointer; display: flex; align-items: center; gap: 12px;">
                 <span style="font-size: 20px;">🚨</span> 이 댓글 신고하기
             </div>
-            <div onclick="window.blockUser('${comment.authorName}')" style="padding: 16px 0; font-size: 16px; font-weight: 700; color: #333D4B; cursor: pointer; display: flex; align-items: center; gap: 12px;">
-                <span style="font-size: 20px;">🚫</span> 이 사용자 차단하기
-            </div>
+            <div onclick="window.blockUser('${commentId}', 'comment')" style="padding: 16px 0; font-size: 16px; font-weight: 700; color: #333D4B; cursor: pointer; display: flex; align-items: center; gap: 12px;">
+    <span style="font-size: 20px;">🚫</span> 이 사용자 영구 차단
+</div>
         `;
     }
 
@@ -10403,16 +10417,27 @@ window.deleteComment = function(commentId, postId) {
 // ==========================================
 // 🚫 글로벌 차단 시스템 (메뉴판 겹침 버그 완벽 해결 버전)
 // ==========================================
-window.blockUser = function(targetName) {
+window.blockUser = function(id, type) {
+    let targetName = '이 사용자';
+    
+    // ID를 통해 안전한 곳에서 진짜 닉네임을 찾아옵니다
+    if (type === 'post') {
+        const posts = JSON.parse(localStorage.getItem('tosil_community_posts')) || [];
+        const p = posts.find(x => x.id === id);
+        if (p) targetName = p.authorName;
+    } else if (type === 'comment') {
+        const comments = JSON.parse(localStorage.getItem('tosil_community_comments')) || [];
+        const c = comments.find(x => x.id === id);
+        if (c) targetName = c.authorName;
+    }
+
     if (!targetName || targetName === '육아메이트' || targetName === '육아천재대표님') {
         return window.showToast("🚨 최고 관리자는 차단할 수 없습니다.");
     }
     
-    // 🧹 1단계: 차단 확인창을 띄우기 전에, 화면에 떠 있는 모든 점 3개 메뉴(Action Sheet)를 즉시 제거합니다!
     document.getElementById('post-action-sheet')?.remove();
     document.getElementById('comment-action-sheet')?.remove();
     
-    // 2단계: 확인창 띄우기
     window.showConfirm(`정말 <b>${targetName}</b>님을 차단하시겠습니까?<br>앞으로 이 사용자의 글과 댓글이 더 이상 보이지 않습니다.`, function() {
         let blockedUsers = JSON.parse(localStorage.getItem('tosil_blocked_users')) || [];
         if (!blockedUsers.includes(targetName)) {
@@ -10420,7 +10445,6 @@ window.blockUser = function(targetName) {
             localStorage.setItem('tosil_blocked_users', JSON.stringify(blockedUsers));
         }
         
-        // 상세 페이지 닫기 및 피드 새로고침
         if (typeof window.closePostDetail === 'function') window.closePostDetail();
         if (typeof window.renderCommunityFeed === 'function') window.renderCommunityFeed();
         
@@ -10434,11 +10458,17 @@ window.blockUser = function(targetName) {
 window.replyingToCommentId = null; // 대댓글 작성 시 부모 댓글 ID 기억
 
 // 1. 답글 달기 버튼 눌렀을 때
-window.prepareReply = function(commentId, authorName) {
+window.prepareReply = function(commentId) {
     window.replyingToCommentId = commentId;
+    
+    // ID를 통해 안전하게 닉네임 찾기
+    let comments = JSON.parse(localStorage.getItem('tosil_community_comments')) || [];
+    let c = comments.find(x => x.id === commentId);
+    let targetName = c ? c.authorName : '익명';
+
     const inputField = document.getElementById('newCommentInput');
     if (inputField) {
-        inputField.placeholder = `@${authorName} 님에게 답글 남기는 중...`;
+        inputField.placeholder = `@${targetName} 님에게 답글 남기는 중...`;
         inputField.focus();
     }
 };
@@ -10586,22 +10616,22 @@ window.renderComments = function(postId) {
                 <div style="flex: 1; min-width: 0; padding-top: 2px;">
                     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
                         <div style="display: flex; align-items: center; gap: 6px; min-width: 0;">
-                            <span style="font-size: 14px; font-weight: 800; color: #333D4B;">${c.authorName}</span>
+                            <span style="font-size: 14px; font-weight: 800; color: #333D4B;">${window.escapeHTML(c.authorName)}</span>
                             <span style="font-size: 12px; color: #8B95A1;">${timeStr}</span>
                         </div>
                         <svg onclick="window.showCommentOptions('${c.id}', '${postId}')" style="cursor:pointer; padding: 4px; margin-right: -4px; flex-shrink: 0;" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#8B95A1" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="1.5"></circle><circle cx="12" cy="5" r="1.5"></circle><circle cx="12" cy="19" r="1.5"></circle></svg>
                     </div>
 
                     <div style="font-size: 15px; color: #4E5968; line-height: 1.5; word-break: keep-all; padding-right: 4px; margin-bottom: 10px;">
-                        ${c.text.replace(/\n/g, '<br>')}
-                    </div>
+    ${window.escapeHTML(c.text).replace(/\n/g, '<br>')}
+</div>
                     
                     <div style="display: flex; gap: 16px; align-items: center; margin-top: 2px;">
                         <div onclick="window.toggleCommentLike('${c.id}', '${postId}', event)" style="display: inline-flex; align-items: center; gap: 4px; cursor: pointer;">
                             <span style="color: ${likeColor}; font-size: 13px; transition: 0.2s;">${likeIcon}</span>
                             <span style="color: ${likeTextColor}; font-size: 12px; font-weight: 600;">${c.likes || 0}</span>
                         </div>
-                        ${!isReply ? `<div onclick="window.prepareReply('${c.id}', '${c.authorName}')" style="font-size: 12px; font-weight: 700; color: #8B95A1; cursor: pointer;">답글 달기</div>` : ''}
+                        ${!isReply ? `<div onclick="window.prepareReply('${c.id}')" style="font-size: 12px; font-weight: 700; color: #8B95A1; cursor: pointer;">답글 달기</div>` : ''}
                     </div>
                 </div>
             </div>
@@ -10906,9 +10936,9 @@ window.checkFeedPlateauBreakthrough = function() {
 
     let records = JSON.parse(localStorage.getItem('tosil_tracker_records')) || [];
     
-    const yesterday = new Date();
+   const yesterday = new Date();
     yesterday.setDate(yesterday.getDate() - 1);
-    const yesterdayStr = window.getSafeTodayStr();
+    const yesterdayStr = window.getSafeDateStr(yesterday.getTime());
 
     let todayFeedTotal = 0;
     let yesterdayFeedTotal = 0;
@@ -10920,7 +10950,7 @@ window.checkFeedPlateauBreakthrough = function() {
     records.forEach(r => {
         if (r.type === 'feed' && r.amount) {
             const rDate = new Date(r.timestamp);
-            const rDateStr = window.getSafeTodayStr();
+            const rDateStr = window.getSafeDateStr(r.timestamp);
             const rMinutes = rDate.getHours() * 60 + rDate.getMinutes();
 
             if (rDateStr === todayStr) {
@@ -11257,7 +11287,7 @@ window.downloadMilestone = function() {
     const savedDate = localStorage.getItem('tosil_startDate');
     let ddayText = 'D-Day';
     if (savedDate) {
-        const diffDays = Math.ceil((new Date() - new Date(savedDate)) / (1000 * 60 * 60 * 24));
+        const diffDays = Math.ceil((new Date() - window.parseLocalDate(savedDate)) / (1000 * 60 * 60 * 24));
         if (diffDays > 0) ddayText = `D+${diffDays}`;
     }
 
@@ -11343,7 +11373,7 @@ window.downloadMilestone = function() {
 
     // 5. 캡처 및 이미지 다운로드 실행
     setTimeout(() => {
-        html2canvas(exportDiv, { scale: 3, backgroundColor: '#FAF9F6' }).then(canvas => {
+        html2canvas(exportDiv, { scale: 3, backgroundColor: '#FAF9F6', useCORS: true }).then(canvas => {
             const dataUrl = canvas.toDataURL("image/png");
             const link = document.createElement("a");
             link.download = `${babyName}_100일도감.png`;
@@ -12661,19 +12691,16 @@ if (until) localStorage.setItem('tosil_plan_until', until);
 
 // 2. 유저가 프리미엄인지 확인하는 판독기 (수익 방어막 + 최고관리자 프리패스)
 window.isPremiumUser = function() {
-    // 🚨 [보안 패치] 클라이언트 조작(해킹) 방어막
-    const myUid = localStorage.getItem('firebase_uid') || '';
-    const MASTER_UIDS = ["7Xj1jGZcV4OdWsyQrtUkuGq0HqJ3"]; // 👑 대표님의 진짜 파이어베이스 UID
+    // 로컬스토리지 임의 조작 방지: firebase_uid가 없으면 무조건 컷
+    const myUid = localStorage.getItem('firebase_uid');
+    if (!myUid) return false;
     
-    // 로컬스토리지에 master라고 적혀있어도, 진짜 대표님 UID가 아니면 컷!
-    if (localStorage.getItem('tosil_is_master') === 'true') {
-        if (MASTER_UIDS.includes(String(myUid).trim())) return true;
-    }
-    
+    // 이 뒤의 진짜 방어는 Firestore Rules(서버)가 담당합니다.
     const isFounder = localStorage.getItem('tosil_is_founder') === 'true';
     const isPremium = localStorage.getItem('tosil_plan_cache') === 'premium';
+    const isMaster = localStorage.getItem('tosil_is_master') === 'true';
     
-    return isFounder || isPremium;
+    return isFounder || isPremium || isMaster;
 };
 
 // 3. 앱이 켜질 때 백그라운드에서 프리미엄 상태를 서버와 조용히 동기화
@@ -13074,7 +13101,7 @@ window.downloadPediatricianReport = function() {
     const savedDate = localStorage.getItem('tosil_startDate');
     let ageText = '생년월일 미입력';
     if(savedDate) {
-        const diffDays = Math.floor((today - new Date(savedDate)) / (1000 * 60 * 60 * 24));
+        const diffDays = Math.floor((today - window.parseLocalDate(savedDate)) / (1000 * 60 * 60 * 24));
         const months = Math.floor(diffDays / 30);
         ageText = `생후 ${diffDays}일 (${months}개월)`;
     }
@@ -13199,7 +13226,7 @@ window.downloadPediatricianReport = function() {
             return alert("이미지 변환 엔진이 필요합니다.");
         }
         
-        html2canvas(reportDiv, { scale: 2, backgroundColor: '#FFFFFF' }).then(canvas => {
+            html2canvas(reportDiv, { scale: 2, backgroundColor: '#FFFFFF', useCORS: true }).then(canvas => {
             const dataUrl = canvas.toDataURL("image/png");
             const link = document.createElement("a");
             link.download = `${babyName}_소아과_종합리포트.png`;
@@ -13303,7 +13330,7 @@ window.downloadMonthlyGrowthCard = function() {
     document.body.appendChild(cardDiv);
 
     setTimeout(() => {
-        html2canvas(cardDiv, { scale: 2, backgroundColor: null }).then(canvas => {
+        html2canvas(cardDiv, { scale: 3, backgroundColor: null, useCORS: true }).then(canvas => {
             const dataUrl = canvas.toDataURL("image/png");
             const link = document.createElement("a");
             link.download = `${babyName}_${monthNames[currentMonth]}_성장카드.png`;
@@ -13450,7 +13477,7 @@ window.downloadPediatricianPDF = function() {
     window.showToast("📄 리포트를 만드는 중입니다...");
 
     setTimeout(() => {
-        html2canvas(box, { scale: 3, backgroundColor: '#FFFFFF' }).then(canvas => {
+        html2canvas(box, { scale: 2, backgroundColor: '#FFFFFF', useCORS: true }).then(canvas => {
             canvas.toBlob(blob => {
     const fileName = `${babyName}_소아과리포트.png`;
     const dataUrl = canvas.toDataURL('image/png');
