@@ -11,12 +11,14 @@ function applyGlobalBabyProfile() {
     const babyName = localStorage.getItem('tosil_babyName') || '우리 아기';
     if(!birthStr) return;
 
-    const birthDate = new Date(birthStr);
+    // 👇 교체된 완벽한 월령 계산 로직
+    const [by, bm, bd] = birthStr.split('-').map(Number);
+    const birthDate = new Date(by, bm - 1, bd);
     const today = new Date();
-    
-    let months = (today.getFullYear() - birthDate.getFullYear()) * 12;
-    months -= birthDate.getMonth();
-    months += today.getMonth();
+
+    let months = (today.getFullYear() - birthDate.getFullYear()) * 12
+               + (today.getMonth() - birthDate.getMonth());
+    if (today.getDate() < birthDate.getDate()) months--;
     if (months < 0) months = 0;
 
     // 👶 이유식 월령 단계 (로직은 그대로 유지)
@@ -381,8 +383,12 @@ function toggleFoodFilter(btn) {
 }
 
 // 🚀 카카오 SDK 초기화 (food/app.js)
-if (!Kakao.isInitialized()) {
-    Kakao.init('68bca10ddfe2ec67112b07eb9a08da2b');
+try {
+    if (typeof Kakao !== 'undefined' && !Kakao.isInitialized()) {
+        Kakao.init('68bca10ddfe2ec67112b07eb9a08da2b');
+    }
+} catch (e) {
+    console.warn("카카오 SDK 초기화 지연", e);
 }
 
 // 🛒 남편 아바타 조종기 (상업적 멘트 싹 빼고 자연스러운 아내 말투로 변경!)
@@ -404,18 +410,32 @@ function shareToHusband(recipeName, ingredients) {
     // ✨ 완벽하게 자연스러운 아내의 멘트로 수정 (수익 얘기 100% 삭제)
     shareText += `\n👇 아래 링크 눌러서 쿠팡 장바구니에 싹 담아주면 돼!\n👉 ${partnerLink}\n\n고마워 내사랑! 조심해서 와 🥰`;
 
-    if (navigator.share) {
-        navigator.share({
-            title: '여보 장보기 부탁해!',
-            text: shareText
-        }).catch(console.error);
-    } else {
+    // 🚨 카카오톡이 안 될 때 클립보드 복사 폴백
+    if (typeof Kakao === 'undefined' || !Kakao.isInitialized()) {
         navigator.clipboard.writeText(shareText).then(() => {
-            // ✨ 팝업창에서도 '수익'이라는 단어 싹 삭제!
             alert("✅ 남편에게 보낼 장보기 리스트가 복사되었습니다!\n카카오톡에 붙여넣기 해주세요.");
-        });
+        }).catch(() => prompt("아래 텍스트를 복사해 주세요", shareText));
+        return;
     }
-}
+
+    Kakao.Share.sendDefault({
+        objectType: 'text',
+        text: shareText,
+        link: {
+            mobileWebUrl: 'https://happy-baby0303.github.io/',
+            webUrl: 'https://happy-baby0303.github.io/'
+        },
+        buttons: [
+            {
+                title: '장바구니 담으러 가기 👉',
+                link: {
+                    mobileWebUrl: 'https://happy-baby0303.github.io/',
+                    webUrl: 'https://happy-baby0303.github.io/'
+                }
+            }
+        ]
+    });
+} // 🚨🚨🚨 바로 이 닫는 괄호 '}' 하나가 빠져서 모든 게 멈췄던 겁니다!!! 🚨🚨🚨
 
 // 🚀 페이지 로드 시 글로벌 동기화 후 엔진 실행
 window.onload = () => { 
@@ -1224,7 +1244,7 @@ window.downloadCalendarImage = function() {
 };
 
 // ==========================================
-// 💧 이유식 배죽 계산기 로직 (핵심 니치: 재료별 수분량 팩트체크 반영)
+// 💧 이유식 배죽 계산기 로직 (UI 개편 및 역산 최적화)
 // ==========================================
 
 function toggleFoodCalc() {
@@ -1233,49 +1253,145 @@ function toggleFoodCalc() {
     
     if (body.style.display === 'none') {
         body.style.display = 'block';
-        chevron.style.transform = 'rotate(180deg)';
+        if(chevron) chevron.style.transform = 'rotate(180deg)';
     } else {
         body.style.display = 'none';
-        chevron.style.transform = 'rotate(0deg)';
+        if(chevron) chevron.style.transform = 'rotate(0deg)';
     }
 }
 
+// 🔄 탭 전환 애니메이션 로직
+function switchCalcMode(mode) {
+    const btnReverse = document.getElementById('tab-calc-reverse');
+    const btnForward = document.getElementById('tab-calc-forward');
+    const viewReverse = document.getElementById('calc-view-reverse');
+    const viewForward = document.getElementById('calc-view-forward');
+
+    if (mode === 'reverse') {
+        btnReverse.style.background = '#FFFFFF'; btnReverse.style.color = '#191F28'; btnReverse.style.boxShadow = '0 2px 4px rgba(0,0,0,0.05)';
+        btnForward.style.background = 'transparent'; btnForward.style.color = '#8B95A1'; btnForward.style.boxShadow = 'none';
+        viewReverse.style.display = 'block'; viewForward.style.display = 'none';
+    } else {
+        btnForward.style.background = '#FFFFFF'; btnForward.style.color = '#191F28'; btnForward.style.boxShadow = '0 2px 4px rgba(0,0,0,0.05)';
+        btnReverse.style.background = 'transparent'; btnReverse.style.color = '#8B95A1'; btnReverse.style.boxShadow = 'none';
+        viewForward.style.display = 'block'; viewReverse.style.display = 'none';
+    }
+}
+
+// 🍳 우리 집 회수율 (실측 보정값 우선, 없으면 조리방법 기본값)
+function getYieldRate() {
+    const saved = parseFloat(localStorage.getItem('tosil_food_yield'));
+    if (saved && saved > 0.5 && saved <= 1) return saved;
+    const el = document.getElementById('food-cook-method');
+    const evap = el ? parseFloat(el.value) : 0.15;
+    return 1 - evap;
+}
+
+// ⏩ 정방향: 얼마나 나올까?
 function calcBabyFoodWater() {
     const type = document.getElementById('food-base-type').value;
     const ratio = parseFloat(document.getElementById('food-ratio-type').value);
     const weightVal = document.getElementById('food-base-weight').value;
-    
-    if (!weightVal) {
-        alert("⚠️ 베이스 재료의 무게를 숫자로 입력해주세요!");
+
+    if (!weightVal || parseFloat(weightVal) <= 0) {
+        alert("⚠️ 투입할 베이스 재료의 무게를 숫자로 입력해주세요!");
         return;
     }
-    
+
     const weight = parseFloat(weightVal);
-    let waterMl = 0;
-    
-    // 💡 핵심 니치: 재료별 수분 머금는 양이 완전히 다름!
-    if (type === 'flour') {
-        // [쌀가루] 수분이 0이라 10배죽 농도를 내려면 물을 2배(20배) 넣어야 함!
-        waterMl = Math.round(weight * (ratio * 2));
-    } else if (type === 'raw') {
-        // [불린 쌀] 공식 배수 그대로 적용
-        waterMl = Math.round(weight * ratio);
-    } else if (type === 'cooked') {
-        // [지은 밥] 이미 물을 먹은 상태라 절반만 넣어야 한강이 안 됨!
-        waterMl = Math.round(weight * (ratio / 2));
+    let waterG = 0;
+
+    if (type === 'flour')       waterG = Math.round(weight * (ratio * 2));
+    else if (type === 'raw')    waterG = Math.round(weight * ratio);
+    else if (type === 'cooked') waterG = Math.round(weight * (ratio / 2));
+
+    const rate     = getYieldRate();
+    const totalG   = waterG + weight;
+    const yieldG   = Math.round(totalG * rate);
+
+    // 🚨 여기서 ID를 res-water-g 로 완벽 매칭!
+    document.getElementById('res-water-g').innerText = waterG.toLocaleString();
+    document.getElementById('res-yield-g').innerText = yieldG.toLocaleString();
+
+    const cube = Math.floor(yieldG / 60), rest = yieldG % 60;
+    document.getElementById('res-cube-info').innerText =
+        cube > 0 ? `(60g 큐브 ${cube}칸${rest >= 10 ? ` + ${rest}g` : ''} 분량)` : `(한 끼 분량)`;
+
+    const isCalib = !!localStorage.getItem('tosil_food_yield');
+    const statusEl = document.getElementById('food-calib-status');
+    if (statusEl) {
+        statusEl.innerHTML = isCalib ? `✅ 우리 집 회수율 <b>${Math.round(rate * 100)}%</b> 적용 중` : '';
     }
-    
-    document.getElementById('res-water-ml').innerText = waterMl.toLocaleString();
-    
-    // 재료별 맞춤 팩트체크 꿀팁
-    const tipEl = document.getElementById('res-food-tip');
-    if (type === 'flour') {
-        tipEl.innerHTML = `💡 <strong>육아메이트 팩트체크:</strong> 쌀가루로 원하는 농도를 내려면 <strong>표기된 배수의 2배의 물</strong>을 넣어야 떡이 되지 않습니다! (계산기에 이미 2배로 자동 반영되었습니다.)`;
-    } else if (type === 'cooked') {
-        tipEl.innerHTML = `💡 <strong>육아메이트 팩트체크:</strong> 지은 밥은 이미 수분을 머금고 있어 <strong>물을 절반만 넣어야</strong> 한강이 되지 않습니다! (계산기에 자동 반영됨)`;
-    } else {
-        tipEl.innerHTML = `💡 <strong>육아메이트 꿀팁:</strong> 고기육수나 채소(무, 배추 등)를 듬뿍 넣는다면 수분이 나오니 계산된 물양보다 20~30ml 적게 넣고 끓이면서 맞추세요.`;
-    }
-    
+
     document.getElementById('food-calc-result').style.display = 'block';
+}
+
+// 🎯 실측 보정: 냄비 회수율 저장
+function saveEvapCalibration() {
+    const actual   = parseFloat(document.getElementById('food-actual-yield').value);
+    // 🚨 여기서도 ID를 res-water-g 로 완벽 매칭!
+    const waterG   = parseFloat(document.getElementById('res-water-g').innerText.replace(/,/g, ''));
+    const weight   = parseFloat(document.getElementById('food-base-weight').value);
+    const statusEl = document.getElementById('food-calib-status');
+
+    if (!actual || actual <= 0 || !waterG || !weight) {
+        statusEl.style.color = '#E32636';
+        statusEl.innerText = '⚠️ 저울로 잰 완성 무게를 숫자로 입력해주세요.';
+        return;
+    }
+
+    const totalG = waterG + weight;
+    const rate   = actual / totalG;
+
+    if (rate > 1) {
+        statusEl.style.color = '#E32636';
+        statusEl.innerText = '⚠️ 투입량보다 많이 나왔어요. 용기 무게를 빼셨나요?';
+        return;
+    }
+    if (rate < 0.5) {
+        statusEl.style.color = '#E32636';
+        statusEl.innerText = '⚠️ 절반 이상이 사라졌어요. 계량을 다시 확인해주세요!';
+        return;
+    }
+
+    localStorage.setItem('tosil_food_yield', rate.toFixed(3));
+    statusEl.style.color = '#3182F6';
+    statusEl.innerHTML = `✅ 저장 완료! 우리 집 회수율은 <b>${Math.round(rate * 100)}%</b>네요.`;
+    
+    // 저장 후 즉시 재계산 돌리기
+    calcBabyFoodWater(); 
+    calcReverseFood(); 
+    
+    // 입력창 비우고 아코디언 닫기 효과
+    document.getElementById('food-actual-yield').value = '';
+}
+
+// 🔄 역방향: 이만큼 만들고 싶어요
+function calcReverseFood() {
+    const target = parseFloat(document.getElementById('food-target-yield').value);
+    const type   = document.getElementById('food-base-type').value;
+    const ratio  = parseFloat(document.getElementById('food-ratio-type').value);
+
+    if (!target || target <= 0) {
+        alert("⚠️ 만들고 싶은 총량(g)을 숫자로 입력해주세요!");
+        return;
+    }
+
+    let mult = ratio;                      
+    if (type === 'flour')  mult = ratio * 2;
+    if (type === 'cooked') mult = ratio / 2;
+
+    const rate   = getYieldRate();
+    const baseG  = target / (rate * (1 + mult));
+    const waterG = baseG * mult;
+
+    document.getElementById('rev-base-g').innerText  = baseG.toFixed(1);
+    document.getElementById('rev-water-g').innerText = Math.round(waterG).toLocaleString();
+    
+    const resultBox = document.getElementById('food-reverse-result');
+    resultBox.style.display = 'block';
+    
+    // 살짝 띠용 하는 애니메이션으로 계산됐음을 어필
+    resultBox.style.transform = 'scale(1.02)';
+    setTimeout(() => { resultBox.style.transform = 'scale(1)'; }, 150);
 }

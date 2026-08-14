@@ -55,7 +55,7 @@
             </div>
 
            <!-- ========================================== -->
-            <!-- 💧 스마트 배죽(물 양) 계산기 (접이식 아코디언) -->
+            <!-- 💧 스마트 이유식 계량 계산기 (접이식 아코디언) -->
             <!-- ========================================== -->
             <div style="margin-bottom: 24px; background: #FFFFFF; border-radius: 16px; border: 1px solid #E5E8EB; box-shadow: 0 4px 12px rgba(0,0,0,0.02); overflow: hidden;">
                 <!-- 닫혀있을 때 보이는 헤더 (터치 영역) -->
@@ -63,8 +63,8 @@
                     <div style="display: flex; align-items: center; gap: 12px;">
                         <div style="font-size: 22px; background: #FFFFFF; width: 40px; height: 40px; border-radius: 12px; display: flex; justify-content: center; align-items: center; box-shadow: 0 2px 6px rgba(49,130,246,0.1);">💧</div>
                         <div>
-                            <div style="font-size: 15px; font-weight: 800; color: #1B64DA;">이유식 배죽(물 양) 계산기</div>
-                            <div style="font-size: 12px; font-weight: 600; color: #3182F6; margin-top: 2px;">초기 쌀가루부터 후기 진밥까지 완벽 계산</div>
+                            <div style="font-size: 15px; font-weight: 800; color: #1B64DA;">이유식 계량 계산기</div>
+                            <div style="font-size: 12px; font-weight: 600; color: #3182F6; margin-top: 2px;">몇 g 넣으면 몇 g 나오는지, 저울 하나로 끝</div>
                         </div>
                     </div>
                     <div id="food-calc-chevron" style="color: #3182F6; font-weight: 900; font-size: 14px; transition: transform 0.3s ease;">▼</div>
@@ -72,40 +72,118 @@
 
                 <!-- 터치하면 열리는 계산기 본체 -->
                 <div id="food-calc-body" style="display: none; padding: 20px; border-top: 1px solid #E5E8EB;">
-                    <label style="font-size: 13px; font-weight: 800; margin-bottom: 8px; display: block; color: #4E5968;">1. 어떤 재료로 만드나요?</label>
-                    <select id="food-base-type" style="width: 100%; padding: 14px; border-radius: 12px; font-size: 14px; font-weight: 700; background: #F9FAFB; border: 1px solid #E5E8EB; outline: none; margin-bottom: 16px; color: #191F28;">
-                        <option value="flour">🍚 쌀가루 (초기/중기)</option>
-                        <option value="raw">🌾 불린 쌀 (초기/중기)</option>
-                        <option value="cooked">🍙 이미 지어진 밥 (후기/완료기)</option>
-                    </select>
-
-                    <label style="font-size: 13px; font-weight: 800; margin-bottom: 8px; display: block; color: #4E5968;">2. 원하는 농도</label>
-                    <select id="food-ratio-type" style="width: 100%; padding: 14px; border-radius: 12px; font-size: 14px; font-weight: 700; background: #F9FAFB; border: 1px solid #E5E8EB; outline: none; margin-bottom: 16px; color: #191F28;">
-                        <option value="10">주르륵 흐르는 10배죽 (초기)</option>
-                        <option value="8">마요네즈 농도 8배죽 (초기 후반)</option>
-                        <option value="7">묽은 7배죽 (중기)</option>
-                        <option value="5">일반 5배죽 (중기 후반)</option>
-                        <option value="4">무른 4배죽 (후기)</option>
-                        <option value="3">촉촉한 3배죽 (후기 후반 진밥)</option>
-                    </select>
                     
-                    <label style="font-size: 13px; font-weight: 800; margin-bottom: 8px; display: block; color: #4E5968;">3. 베이스 재료의 무게 (g)</label>
-                    <div style="display: flex; align-items: center; background: #F9FAFB; border: 1px solid #E5E8EB; border-radius: 12px; padding-right: 16px; margin-bottom: 20px;">
-                        <input type="number" id="food-base-weight" placeholder="예: 30" style="flex: 1; width: 100%; padding: 14px; border: none; outline: none; font-weight: 900; text-align: right; background: transparent; font-size: 16px; color: #3182F6;">
-                        <span style="font-size: 14px; font-weight: 800; color: #8B95A1;">g</span>
+                    <!-- 🌟 공통 입력: 재료와 농도는 둘 다 쓰니까 탭 위에 고정! -->
+                    <label style="font-size: 13px; font-weight: 800; margin-bottom: 8px; display: block; color: #4E5968;">1. 베이스 재료 및 농도</label>
+                    <div style="display: flex; gap: 8px; margin-bottom: 20px;">
+                        <select id="food-base-type" style="flex: 1; padding: 14px 10px; border-radius: 12px; font-size: 13px; font-weight: 700; background: #F9FAFB; border: 1px solid #E5E8EB; outline: none; color: #191F28;">
+                            <option value="flour">쌀가루</option>
+                            <option value="raw">불린 쌀</option>
+                            <option value="cooked">지은 밥</option>
+                        </select>
+                        <select id="food-ratio-type" style="flex: 1.5; padding: 14px 10px; border-radius: 12px; font-size: 13px; font-weight: 700; background: #F9FAFB; border: 1px solid #E5E8EB; outline: none; color: #191F28;">
+                            <option value="10">10배죽 (주르륵)</option>
+                            <option value="8">8배죽 (마요네즈)</option>
+                            <option value="7">7배죽 (묽은죽)</option>
+                            <option value="5">5배죽 (일반죽)</option>
+                            <option value="4">4배죽 (무른밥)</option>
+                            <option value="3">3배죽 (진밥)</option>
+                        </select>
                     </div>
-                    
-                    <button onclick="calcBabyFoodWater()" style="width: 100%; padding: 16px; font-size: 15px; font-weight: 800; border-radius: 12px; border: none; background: #3182F6; color: white; cursor: pointer; box-shadow: 0 4px 12px rgba(49,130,246,0.2);">물 양 계산하기</button>
-                    
-                    <!-- 결과창 -->
-                    <div id="food-calc-result" style="display: none; margin-top: 16px; background: #F0F7FF; padding: 16px; border-radius: 12px; border: 1px solid #CBE0FF; text-align: center;">
-                        <div style="font-size: 12px; font-weight: 800; color: #1B64DA; margin-bottom: 4px;">냄비에 부어야 할 물(육수)의 양</div>
-                        <div style="font-size: 14px; font-weight: 800; color: #191F28;">약 <span id="res-water-ml" style="font-size: 26px; font-weight: 900; color: #3182F6;">0</span> ml</div>
-                        <div id="res-food-tip" style="margin-top: 12px; font-size: 11.5px; font-weight: 700; color: #4E5968; line-height: 1.5; word-break: keep-all; background: #FFFFFF; padding: 10px; border-radius: 8px;"></div>
+
+                    <!-- 🌟 스마트 탭 (토스 스타일) -->
+                    <div style="display: flex; gap: 8px; margin-bottom: 24px; background: #F2F4F6; padding: 4px; border-radius: 12px;">
+                        <button id="tab-calc-reverse" onclick="switchCalcMode('reverse')" style="flex: 1; padding: 12px 0; border-radius: 10px; border: none; font-size: 14px; font-weight: 800; background: #FFFFFF; color: #191F28; box-shadow: 0 2px 4px rgba(0,0,0,0.05); cursor: pointer; transition: 0.2s;">이만큼 만들래</button>
+                        <button id="tab-calc-forward" onclick="switchCalcMode('forward')" style="flex: 1; padding: 12px 0; border-radius: 10px; border: none; font-size: 14px; font-weight: 800; background: transparent; color: #8B95A1; cursor: pointer; transition: 0.2s;">얼마나 나올까?</button>
+                    </div>
+
+                    <!-- 🔄 [탭 1] 역산 뷰: "이만큼 만들고 싶어요" (아내분 최애 기능) -->
+                    <div id="calc-view-reverse" style="display: block;">
+                        <label style="font-size: 13px; font-weight: 800; margin-bottom: 8px; display: block; color: #4E5968;">2. 목표 완성량 (g)</label>
+                        <div style="display: flex; align-items: center; background: #F9FAFB; border: 1px solid #E5E8EB; border-radius: 12px; padding-right: 16px; margin-bottom: 16px;">
+                            <input type="number" id="food-target-yield" placeholder="예: 120 (60g씩 2끼)" style="flex: 1; width: 100%; padding: 14px; border: none; outline: none; font-weight: 900; text-align: right; background: transparent; font-size: 16px; color: #3182F6;">
+                            <span style="font-size: 14px; font-weight: 800; color: #8B95A1;">g</span>
+                        </div>
+
+                        <button onclick="calcReverseFood()" style="width: 100%; padding: 16px; font-size: 15px; font-weight: 800; border-radius: 12px; border: none; background: #3182F6; color: white; cursor: pointer; box-shadow: 0 4px 12px rgba(49,130,246,0.2);">재료량 역산하기</button>
+
+                        <div id="food-reverse-result" style="display: none; margin-top: 16px; background: #F8F9FA; padding: 24px; border-radius: 16px; border: 1px solid #E5E8EB; text-align: center;">
+                            <div style="display: flex; justify-content: space-around; align-items: center;">
+                                <div>
+                                    <div style="font-size: 12px; font-weight: 800; color: #8B95A1; margin-bottom: 4px;">베이스 재료</div>
+                                    <div style="font-size: 14px; font-weight: 800; color: #191F28;"><span id="rev-base-g" style="font-size: 28px; font-weight: 900; color: #3182F6;">0</span> g</div>
+                                </div>
+                                <div style="font-size: 20px; color: #D1D5DB; font-weight: 300;">+</div>
+                                <div>
+                                    <div style="font-size: 12px; font-weight: 800; color: #8B95A1; margin-bottom: 4px;">물 (육수)</div>
+                                    <div style="font-size: 14px; font-weight: 800; color: #191F28;"><span id="rev-water-g" style="font-size: 28px; font-weight: 900; color: #3182F6;">0</span> g</div>
+                                </div>
+                            </div>
+                            <!-- ✨ 여기에 리뷰어님이 요청한 안내문구 한 줄 추가! -->
+                            <div style="margin-top: 16px; padding-top: 14px; border-top: 1px dashed #E5E8EB; font-size: 11.5px; font-weight: 700; color: #8B95A1; line-height: 1.5; word-break: keep-all; text-align: left;">
+                                ⚖️ 냄비를 저울에 올리고 <b style="color:#4E5968;">영점(0g)</b>을 누른 뒤 그대로 부으세요. 물 1ml = 1g이라 계량컵보다 정확합니다.
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- ⏩ [탭 2] 정방향 뷰: "얼마나 나올까?" -->
+                    <div id="calc-view-forward" style="display: none;">
+                        <label style="font-size: 13px; font-weight: 800; margin-bottom: 8px; display: block; color: #4E5968;">2. 베이스 재료의 투입량 (g)</label>
+                        <div style="display: flex; align-items: center; background: #F9FAFB; border: 1px solid #E5E8EB; border-radius: 12px; padding-right: 16px; margin-bottom: 16px;">
+                            <input type="number" id="food-base-weight" placeholder="예: 20" style="flex: 1; width: 100%; padding: 14px; border: none; outline: none; font-weight: 900; text-align: right; background: transparent; font-size: 16px; color: #3182F6;">
+                            <span style="font-size: 14px; font-weight: 800; color: #8B95A1;">g</span>
+                        </div>
+
+                        <!-- 조리방법 (기본값 제공, 실측 후엔 무시됨) -->
+                        <select id="food-cook-method" style="width: 100%; padding: 14px; border-radius: 12px; font-size: 14px; font-weight: 700; background: #F9FAFB; border: 1px solid #E5E8EB; outline: none; margin-bottom: 16px; color: #191F28;">
+                            <option value="0.15">냄비 (뚜껑 덮고 약불)</option>
+                            <option value="0.25">냄비 (뚜껑 열고 저어가며)</option>
+                            <option value="0.05">이유식 마스터기</option>
+                            <option value="0.08">밥솥 / 찜기</option>
+                        </select>
+
+                        <button onclick="calcBabyFoodWater()" style="width: 100%; padding: 16px; font-size: 15px; font-weight: 800; border-radius: 12px; border: none; background: #3182F6; color: white; cursor: pointer; box-shadow: 0 4px 12px rgba(49,130,246,0.2);">예상 완성량 계산</button>
+
+                        <div id="food-calc-result" style="display: none; margin-top: 16px; background: #F8F9FA; padding: 24px; border-radius: 16px; border: 1px solid #E5E8EB; text-align: center;">
+    <div style="font-size: 12px; font-weight: 800; color: #8B95A1; margin-bottom: 4px;">부어야 할 물 (저울 기준)</div>
+    <div style="font-size: 16px; font-weight: 900; color: #4E5968; margin-bottom: 16px;"><span id="res-water-g">0</span> g</div>
+    
+    <div style="font-size: 12px; font-weight: 800; color: #3182F6; margin-bottom: 4px;">최종 완성량</div>
+    <div style="font-size: 14px; font-weight: 800; color: #191F28; margin-bottom: 4px;"><span id="res-yield-g" style="font-size: 34px; font-weight: 900; color: #3182F6; letter-spacing: -1px;">0</span> g</div>
+    <div id="res-cube-info" style="font-size: 12px; font-weight: 700; color: #8B95A1; margin-bottom: 12px;"></div>
+
+    <!-- 💡 리뷰어님이 말씀하신 저울 사용법 안내문 (res-food-tip 복구) -->
+    <div id="res-food-tip" style="font-size: 11.5px; font-weight: 700; color: #8B95A1; line-height: 1.5; word-break: keep-all; background: #FFFFFF; padding: 12px; border-radius: 10px; border: 1px solid #E5E8EB; text-align: left;">
+        냄비를 저울에 올리고 <strong>영점(0g)</strong>을 누른 뒤 부으세요. 물 1ml = 1g이라 계량컵보다 정확합니다.
+    </div>
+</div>
+                        
+                        <!-- 🎯 [아코디언] 우리 집 냄비 보정 (평생 1번만 쓰니까 숨겨둠) -->
+                        <details style="margin-top: 24px; background: #FFFFFF; border: 1px solid #E5E8EB; border-radius: 12px;">
+                            <summary style="padding: 14px 16px; font-size: 13px; font-weight: 800; color: #4E5968; cursor: pointer; list-style: none; display: flex; justify-content: space-between; align-items: center;">
+                                <span>🎯 우리집 냄비 회수율 맞추기</span>
+                                <span style="font-size: 12px; color: #8B95A1;">▼</span>
+                            </summary>
+                            <div style="padding: 0 16px 16px 16px; border-top: 1px dashed #E5E8EB; margin-top: 4px; padding-top: 16px;">
+                                <div style="font-size: 11.5px; font-weight: 600; color: #8B95A1; line-height: 1.5; margin-bottom: 12px; word-break: keep-all;">
+                                    계산된 양과 실제 완성량이 다른가요? 딱 한 번만 <b>'저울에 찍힌 실제 완성 무게'</b>를 적어주시면, 다음부터 오차 없이 완벽하게 역산해 드립니다.
+                                </div>
+                                <div style="display: flex; gap: 8px;">
+                                    <input type="number" id="food-actual-yield" placeholder="실제 나온 g수" style="flex: 1; padding: 12px; border: 1px solid #E5E8EB; border-radius: 10px; outline: none; font-weight: 800; text-align: center; font-size: 14px; background: #F9FAFB;">
+                                    <button onclick="saveEvapCalibration()" style="padding: 12px 16px; font-size: 13px; font-weight: 800; border-radius: 10px; border: none; background: #191F28; color: #FFF; cursor: pointer; white-space: nowrap;">보정하기</button>
+                                </div>
+                            </div>
+                        </details>
+                        
+                        <!-- 보정 완료 시 나타나는 뱃지 -->
+                        <div id="food-calib-status" style="margin-top: 12px; text-align: center; font-size: 12px; font-weight: 800; color: #3182F6;"></div>
+
                     </div>
                 </div>
             </div>
+            </div>
             <!-- ========================================== -->
+
 
             <div class="search-box">
                 <label style="display:block; font-size:14px; font-weight:800; color:#191F28; margin-bottom:12px;">🚦 이 식재료 먹여도 될까? (신호등 판독기)</label>

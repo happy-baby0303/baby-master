@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>육아메이트 AI - 놀이/장난감</title>
     <link rel="stylesheet" href="style.css">
-    <script src="https://developers.kakao.com/sdk/js/kakao.min.js"></script>
+    <script src="https://t1.kakaocdn.net/kakao_js_sdk/2.7.2/kakao.min.js"></script>
 </head>
 <body>
 
@@ -52,9 +52,9 @@
     <button id="tab-btn-play" class="tab-on" onclick="switchToyMainTab('play')" style="flex: 1; padding: 12px 0; border-radius: 10px; border: none; font-size: 14px; cursor: pointer; transition: 0.2s;">
         🧸 놀이 처방전
     </button>
-    <button id="tab-btn-gear" class="tab-off" onclick="switchToyMainTab('gear')" style="flex: 1; padding: 12px 0; border-radius: 10px; border: none; font-size: 14px; cursor: pointer; transition: 0.2s;">
-        🛒 육아는 템빨
-    </button>
+<button id="tab-btn-gear" class="tab-off" onclick="switchToyMainTab('gear')" style="flex: 1; padding: 12px 0; border-radius: 10px; border: none; font-size: 14px; cursor: pointer; transition: 0.2s; font-weight: 800;">
+    🛒 장난감 추천
+</button>
 </div>
 
         <!-- ========================================== -->
@@ -67,8 +67,10 @@
             </div>
 
             <!-- 놀이 필터 -->
+          <!-- 놀이 필터 -->
           <div style="position: sticky; top: 0; z-index: 10; background: #FAFAFC; padding: 12px 0; margin-bottom: 12px; margin-top: -10px; box-shadow: 0 4px 6px -4px rgba(0,0,0,0.05);">
-                <div style="display: flex; gap: 8px; overflow-x: auto; padding-bottom: 4px; scrollbar-width: none; -ms-overflow-style: none; padding-left: 4px;">
+                <!-- 👇 여기에 id="play-filter-scroll" 추가됨! -->
+                <div id="play-filter-scroll" style="display: flex; gap: 8px; overflow-x: auto; padding-bottom: 4px; scrollbar-width: none; -ms-overflow-style: none; padding-left: 4px;">
                     <button class="play-filter-btn active" onclick="filterPlays('all', this)" style="flex-shrink: 0; padding: 10px 16px; border-radius: 12px; border: none; background: #191F28; color: #FFF; font-weight: 800; font-size: 13.5px; cursor: pointer; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">전체보기</button>
                     <button class="play-filter-btn" onclick="filterPlays('lieDown', this)" style="flex-shrink: 0; padding: 10px 16px; border-radius: 12px; border: 1px solid #E5E8EB; background: #FFF; color: #4E5968; font-weight: 800; font-size: 13.5px; cursor: pointer;">🛌 엄마 방전</button>
                     <button class="play-filter-btn" onclick="filterPlays('poop', this)" style="flex-shrink: 0; padding: 10px 16px; border-radius: 12px; border: 1px solid #E5E8EB; background: #FFF; color: #4E5968; font-weight: 800; font-size: 13.5px; cursor: pointer;">💩 쾌변 기원</button>
@@ -76,11 +78,13 @@
                     <button class="play-filter-btn" onclick="filterPlays('zero', this)" style="flex-shrink: 0; padding: 10px 16px; border-radius: 12px; border: 1px solid #E5E8EB; background: #FFF; color: #4E5968; font-weight: 800; font-size: 13.5px; cursor: pointer;">🏠 0원 놀이</button>
                     <button class="play-filter-btn" onclick="filterPlays('dad', this)" style="flex-shrink: 0; padding: 10px 16px; border-radius: 12px; border: 1px solid #E5E8EB; background: #FFF; color: #4E5968; font-weight: 800; font-size: 13.5px; cursor: pointer;">🏋️ 아빠 노동</button>
                     <button class="play-filter-btn" onclick="filterPlays('toy', this)" style="flex-shrink: 0; padding: 10px 16px; border-radius: 12px; border: 1px solid #E5E8EB; background: #FFF; color: #4E5968; font-weight: 800; font-size: 13.5px; cursor: pointer;">🧸 국민템 뽕뽑기</button>
+<button class="play-filter-btn" onclick="filterPlays('fav', this)" style="flex-shrink: 0; padding: 10px 16px; border-radius: 12px; border: 1px solid #FCA5A5; background: #FFF2F2; color: #E32636; font-weight: 900; font-size: 13.5px; cursor: pointer;">❤️ 찜한 놀이</button>
                 </div>
             </div>
             
             <style>
-                .play-filter-btn::-webkit-scrollbar { display: none; }
+                /* 👇 수정됨: 버튼 클래스가 아니라 스크롤 부모의 id로 타겟팅! */
+                #play-filter-scroll::-webkit-scrollbar { display: none; }
                 /* 💡 버튼 누를 때 까만색으로 부드럽게 바뀌게 해주는 마법의 CSS */
                 .play-filter-btn.active { background: #191F28 !important; color: #FFF !important; border: none !important; }
             </style>
