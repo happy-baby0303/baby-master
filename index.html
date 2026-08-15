@@ -292,6 +292,145 @@ body.dark-mode #stats-sheet-content { background: #191F28 !important; }
             background-color: rgba(168, 85, 247, 0.15) !important;
         }
 
+     /* ========================================================================= */
+/* 🤍 [육아메이트 감성 마스터 패치] 디지털 배냇함 UI 대공사 🤍 */
+/* ========================================================================= */
+
+/* 1. 글로벌 따뜻한 배경색 & 폰트 렌더링 최적화 */
+body {
+    background-color: #FDFBF7 !important; /* 차가운 회색에서 따뜻한 미색(종이 질감)으로 변경 */
+    color: #4A413C !important; /* 완전 검은색 대신 부드러운 다크 브라운 */
+    font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, Roboto, "Helvetica Neue", "Segoe UI", "Apple SD Gothic Neo", "Noto Sans KR", "Malgun Gothic", "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", sans-serif !important;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}
+
+/* 2. 공통 카드 디자인 (둥글고 몽글몽글하게) */
+div[style*="background: var(--bg-card)"],
+div[style*="background:#FFFFFF"],
+.box-main, .box-sub {
+    background: #FFFFFF !important;
+    border: 1px solid #F0EBE6 !important; /* 차가운 회색 테두리 -> 따뜻한 베이지 톤 */
+    border-radius: 24px !important; /* 모서리를 훨씬 더 둥글게 */
+    box-shadow: 0 12px 30px rgba(139, 126, 116, 0.05), 0 2px 8px rgba(139, 126, 116, 0.02) !important; /* 퍼지는 감성 그림자 */
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+/* 카드 터치 시 살짝 눌리는 애니메이션 (아날로그 손맛) */
+div[style*="background: var(--bg-card)"]:active,
+.box-main:active {
+    transform: scale(0.98);
+    box-shadow: 0 4px 12px rgba(139, 126, 116, 0.04) !important;
+}
+
+/* 3. 텍스트 감성 최적화 (다크 브라운 & 웜 그레이) */
+div[style*="color: var(--text-m)"], 
+div[style*="color: #191F28"],
+div[style*="color: #333D4B"] {
+    color: #5A4D44 !important; /* 메인 텍스트: 따뜻한 다크 브라운 */
+    letter-spacing: -0.3px !important;
+}
+
+div[style*="color: var(--text-s)"], 
+div[style*="color: #8B95A1"],
+div[style*="color: #4E5968"] {
+    color: #9A8F86 !important; /* 서브 텍스트: 웜 그레이 */
+    letter-spacing: -0.2px !important;
+}
+
+/* 4. 메인 액션 버튼 (쨍한 파란색 -> 감성적인 코랄/블루 그라데이션) */
+button[style*="background: #3182F6"], 
+button[style*="background:#3182F6"] {
+    background: linear-gradient(135deg, #7FA8DF 0%, #5B8ACA 100%) !important; /* 은은한 수채화 블루 */
+    box-shadow: 0 8px 20px rgba(91, 138, 202, 0.25) !important;
+    border-radius: 18px !important;
+    font-weight: 800 !important;
+    letter-spacing: -0.5px !important;
+    text-shadow: 0 1px 2px rgba(0,0,0,0.1);
+}
+
+/* 5. 트래커 버튼 (맘마, 수면, 기저귀) 디자인 리뉴얼 */
+.btn-main, 
+button[onclick*="selectTrackerBtn"] {
+    border-radius: 20px !important;
+    font-weight: 800 !important;
+    letter-spacing: -0.5px !important;
+    box-shadow: 0 2px 8px rgba(139, 126, 116, 0.03) !important;
+    background: #FDFBF7 !important; /* 기본 배경 미색 */
+    border: 1px solid #F0EBE6 !important;
+    color: #8C827A !important;
+}
+
+/* 트래커 버튼 활성화 상태 (파스텔 톤 틴트) */
+button[onclick*="selectTrackerBtn"][style*="background: #EBF4FF"] {
+    background: #F0F5FC !important;
+    color: #5B8ACA !important;
+    border: 1px solid #D5E2F2 !important;
+}
+button[onclick*="selectTrackerBtn"][style*="background: #FFF0F1"] {
+    background: #FFF0F2 !important;
+    color: #D96A79 !important;
+    border: 1px solid #FADBE0 !important;
+}
+button[onclick*="selectTrackerBtn"][style*="background: #F3E8FF"] {
+    background: #F6F0FC !important;
+    color: #8D74C4 !important;
+    border: 1px solid #E6DDF2 !important;
+}
+
+/* 6. "오늘 하루 요약 영수증" -> "오늘의 육아 일기" 버튼 승격 */
+button[onclick*="openReceiptModal"] {
+    background: linear-gradient(135deg, #FFFFFF 0%, #FDFBF7 100%) !important;
+    color: #7A6F68 !important;
+    border: 1px solid #E8E3DD !important;
+    border-radius: 20px !important;
+    padding: 20px !important;
+    box-shadow: 0 8px 24px rgba(139, 126, 116, 0.06) !important;
+    font-family: 'Gowun Batang', 'Pretendard', serif !important; /* 감성 폰트 적용 */
+    font-size: 16px !important;
+    font-weight: 700 !important;
+    letter-spacing: -0.5px !important;
+    display: flex !important;
+    justify-content: center !important;
+    align-items: center !important;
+    gap: 8px !important;
+}
+button[onclick*="openReceiptModal"]::before {
+    content: '💌'; /* 영수증 대신 편지봉투 이모지 */
+    font-size: 18px;
+}
+
+/* 7. 홈 상단 '오늘의 레터(Today's Letter)' 디자인 정돈 */
+div[style*="font-family: 'Gowun Batang'"] {
+    color: #5A4D44 !important;
+    line-height: 1.6 !important;
+}
+
+/* 8. 태그/뱃지(Badge) 몽글몽글하게 */
+span[style*="border-radius: 8px"],
+span[style*="border-radius:6px"],
+div[style*="border-radius: 8px"] {
+    border-radius: 12px !important; /* 알약(Pill) 모양으로 더 둥글게 */
+    padding: 6px 12px !important;
+    font-weight: 800 !important;
+}
+
+/* 9. 아빠 상황판 (Dad Dashboard) 감성 한 스푼 */
+#dad-quest-container > div {
+    background: #FFFFFF !important;
+    border: 1px solid #F0EBE6 !important;
+    box-shadow: 0 12px 30px rgba(139, 126, 116, 0.05) !important;
+}
+
+/* 10. 스크롤바 숨기기 (깔끔한 UI 유지) */
+::-webkit-scrollbar {
+    display: none;
+}
+
+/* ========================================================================= */
+/* CSS 패치 끝 */
+/* ========================================================================= */
+
 </style>
 
 </head>
@@ -575,32 +714,41 @@ body.dark-mode #stats-sheet-content { background: #191F28 !important; }
                 <div id="ai-time-greeting" style="font-size: 16px; font-weight: 900; color: var(--text-m); letter-spacing: -0.3px;">지금 우리 아기</div>
             </div>
 
-            <!-- 상태 요약 3분할 -->
-            <div style="display: flex; gap: 8px; justify-content: space-between; align-items: center;">
-                <div style="flex: 1; display: flex; flex-direction: column; align-items: center; text-align: center;">
+            <!-- 👇👇👇 여기서부터 덮어씌우세요! 👇👇👇 -->
+            <!-- 🚨 상태 요약 3분할 (글씨가 길어져도 수평 고정 패치!) -->
+            <div style="display: flex; gap: 4px; justify-content: space-between; align-items: stretch;">
+                
+                <!-- 1. 수유 -->
+                <div style="flex: 1; display: flex; flex-direction: column; align-items: center; text-align: center; justify-content: flex-start;">
                     <div style="width: 36px; height: 36px; border-radius: 12px; background: #EBF4FF; display: flex; justify-content: center; align-items: center; font-size: 18px; margin-bottom: 8px;">🍼</div>
                     <div style="font-size: 11.5px; font-weight: 700; color: #8B95A1; margin-bottom: 4px;">수유</div>
-                    <div id="now-feed" style="font-size: 14px; font-weight: 800; color: var(--text-m); letter-spacing: -0.3px;">-</div>
+                    <div id="now-feed" style="font-size: 13.5px; font-weight: 800; color: var(--text-m); letter-spacing: -0.5px; word-break: keep-all; line-height: 1.3;">-</div>
                 </div>
                 
-                <div style="width: 1px; height: 40px; background: #F2F4F6;"></div>
+                <!-- 구분선 (항상 가운데에 예쁘게 떠 있도록 고정) -->
+                <div style="width: 1px; height: 40px; background: #F2F4F6; align-self: center; margin-top: -12px;"></div>
                 
-                <div style="flex: 1; display: flex; flex-direction: column; align-items: center; text-align: center;">
+                <!-- 2. 기저귀 -->
+                <div style="flex: 1; display: flex; flex-direction: column; align-items: center; text-align: center; justify-content: flex-start;">
                     <div style="width: 36px; height: 36px; border-radius: 12px; background: #FFF0F1; display: flex; justify-content: center; align-items: center; font-size: 18px; margin-bottom: 8px;">💩</div>
                     <div style="font-size: 11.5px; font-weight: 700; color: #8B95A1; margin-bottom: 4px;">기저귀</div>
-                    <div id="now-diaper" style="font-size: 14px; font-weight: 800; color: var(--text-m); letter-spacing: -0.3px;">-</div>
+                    <div id="now-diaper" style="font-size: 13.5px; font-weight: 800; color: var(--text-m); letter-spacing: -0.5px; word-break: keep-all; line-height: 1.3;">-</div>
                 </div>
                 
-                <div style="width: 1px; height: 40px; background: #F2F4F6;"></div>
+                <!-- 구분선 -->
+                <div style="width: 1px; height: 40px; background: #F2F4F6; align-self: center; margin-top: -12px;"></div>
                 
-                <div style="flex: 1; display: flex; flex-direction: column; align-items: center; text-align: center;">
+                <!-- 3. 수면 -->
+                <div style="flex: 1; display: flex; flex-direction: column; align-items: center; text-align: center; justify-content: flex-start;">
                     <div style="width: 36px; height: 36px; border-radius: 12px; background: #F3E8FF; display: flex; justify-content: center; align-items: center; font-size: 18px; margin-bottom: 8px;">💤</div>
                     <div id="now-sleep-label" style="font-size: 11.5px; font-weight: 700; color: #8B95A1; margin-bottom: 4px;">수면</div>
-                    <div id="now-sleep-state" style="font-size: 14px; font-weight: 800; color: var(--text-m); letter-spacing: -0.3px;">-</div>
+                    <div id="now-sleep-state" style="font-size: 13.5px; font-weight: 800; color: var(--text-m); letter-spacing: -0.5px; word-break: keep-all; line-height: 1.3;">-</div>
                 </div>
+                
             </div>
+            <!-- 👆👆👆 여기까지 덮어씌우면 끝! 👆👆👆 -->
 
-            <!-- 하단 여백선 -->
+            <!-- 하단 여백선 (이 태그 바로 위까지 덮어쓰시면 완벽합니다) -->
             <div style="height: 1px; background: #F2F4F6; margin: 20px -20px 16px -20px;"></div>
             
              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; padding: 0 4px;">
@@ -651,7 +799,7 @@ body.dark-mode #stats-sheet-content { background: #191F28 !important; }
             
             <!-- 🧾 영수증 배너 -->
             <button id="receipt-banner-btn" onclick="window.openReceiptModal()" style="display: none; width: 100%; background: linear-gradient(135deg, #FFF9F0, #FFF3E0); color: #FF8F00; border: 1px solid #FFE0B2; padding: 14px; border-radius: 16px; font-size: 14px; font-weight: 800; cursor: pointer; justify-content: center; align-items: center; gap: 8px; box-shadow: 0 4px 12px rgba(255,152,0,0.1); margin-bottom: 24px; transition: 0.2s;">
-                ✨ 오늘 하루 요약, 영수증으로 뽑기 🧾
+                 오늘 하루 요약, 영수증으로 뽑기 
             </button>
 
             <!-- 👨‍👩‍👦 아내의 바통터치 미션 (아빠 모드에서만) -->
