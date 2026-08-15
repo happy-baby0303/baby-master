@@ -282,9 +282,29 @@
     var REPLIES_KEY = "tosil_replies";
     var editingKey = null;
 
+    // 엄마와 아빠가 각자 한 통씩 남긴다.
+    // 옛 구조({date:{text,by}})는 읽을 때 자동으로 새 구조로 바꾼다.
     function loadReplies() {
-        try { return JSON.parse(localStorage.getItem(REPLIES_KEY)) || {}; } catch (e) { return {}; }
+        var raw = {};
+        try { raw = JSON.parse(localStorage.getItem(REPLIES_KEY)) || {}; } catch (e) { return {}; }
+        var out = {}, changed = false;
+        Object.keys(raw).forEach(function (k) {
+            var v = raw[k];
+            if (v && typeof v.text === "string") {
+                var slot = (v.by === "아빠") ? "dad" : "mom";
+                out[k] = {};
+                out[k][slot] = { text: v.text, at: v.at || Date.now() };
+                changed = true;
+            } else {
+                out[k] = v || {};
+            }
+        });
+        if (changed) { try { localStorage.setItem(REPLIES_KEY, JSON.stringify(out)); } catch (e) {} }
+        return out;
     }
+
+    function myRoleSlot() { return myTitle() === "아빠" ? "dad" : "mom"; }
+    function slotTitle(slot) { return slot === "dad" ? "아빠" : "엄마"; }
     function saveReplies(o) {
         try { localStorage.setItem(REPLIES_KEY, JSON.stringify(o)); } catch (e) {}
     }
@@ -778,31 +798,40 @@
                 var reply = replies[k];
                 var editing = (editingKey === k);
 
+                var mySlot = myRoleSlot();
                 var replyHtml = "";
+
+                // 이미 남긴 답장들을 먼저 보여준다 (엄마 → 아빠 순)
+                ["mom", "dad"].forEach(function (slot) {
+                    var r = reply && reply[slot];
+                    if (!r || !r.text) return;
+                    if (editing && slot === mySlot) return;   // 지금 고치는 중이면 아래 편집기가 대신 뜬다
+                    var mine = (slot === mySlot);
+                    replyHtml +=
+                    '<div style="margin-top:14px; padding:16px 18px; background:' + (slot === "dad" ? "rgba(49,130,246,0.06)" : "rgba(127,119,221,0.06)") + '; border-left:3px solid ' + (slot === "dad" ? "#3182F6" : "#7F77DD") + '; border-radius:0 14px 14px 0;">' +
+                        '<div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">' +
+                            '<span style="font-size:11px; font-weight:800; color:' + (slot === "dad" ? "#3182F6" : "#7F77DD") + '; letter-spacing:1.5px;">' + esc(slotTitle(slot)) + '의 답장</span>' +
+                            (mine ? '<span onclick="window.editReply(\'' + k + '\')" style="font-size:11.5px; font-weight:700; color:var(--text-sub); cursor:pointer;">고치기</span>' : "") +
+                        '</div>' +
+                        '<div style="font-family:\'Nanum Pen Script\', cursive; font-size:21px; line-height:1.6; color:var(--text-m); white-space:pre-line; word-break:keep-all;">' + esc(r.text) + '</div>' +
+                    '</div>';
+                });
+
+                var myReply = reply && reply[mySlot];
                 if (editing) {
-                    replyHtml =
-                    '<div style="margin-top:18px; padding-top:16px; border-top:1px dashed var(--border);">' +
+                    replyHtml +=
+                    '<div style="margin-top:16px; padding-top:16px; border-top:1px dashed var(--border);">' +
                         '<div style="font-size:11px; font-weight:800; color:#7F77DD; letter-spacing:1.5px; margin-bottom:10px;">' + esc(me) + '의 답장</div>' +
-                        '<textarea id="reply-input" placeholder="' + esc(name) + '에게 한 줄 남겨보세요" style="width:100%; min-height:84px; box-sizing:border-box; background:rgba(127,119,221,0.05); border:1px solid var(--border); border-radius:14px; padding:14px; font-family:\'Nanum Pen Script\', cursive; font-size:21px; line-height:1.5; color:var(--text-m); resize:vertical; outline:none;">' + esc(reply ? reply.text : "") + '</textarea>' +
+                        '<textarea id="reply-input" placeholder="' + esc(name) + '에게 한 줄 남겨보세요" style="width:100%; min-height:84px; box-sizing:border-box; background:rgba(127,119,221,0.05); border:1px solid var(--border); border-radius:14px; padding:14px; font-family:\'Nanum Pen Script\', cursive; font-size:21px; line-height:1.5; color:var(--text-m); resize:vertical; outline:none;">' + esc(myReply ? myReply.text : "") + '</textarea>' +
                         '<div style="display:flex; gap:8px; justify-content:flex-end; margin-top:10px;">' +
                             '<div onclick="window.cancelReply()" style="font-size:12.5px; font-weight:700; color:var(--text-sub); cursor:pointer; padding:8px 14px;">취소</div>' +
                             '<div onclick="window.saveReply(\'' + k + '\')" style="font-size:12.5px; font-weight:800; color:#FFF; background:#7F77DD; cursor:pointer; padding:8px 18px; border-radius:12px;">남기기</div>' +
                         '</div>' +
                     '</div>';
-                } else if (reply && reply.text) {
-                    replyHtml =
-                    '<div style="margin-top:18px; padding:16px 18px; background:rgba(127,119,221,0.06); border-left:3px solid #7F77DD; border-radius:0 14px 14px 0;">' +
-                        '<div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">' +
-                            '<span style="font-size:11px; font-weight:800; color:#7F77DD; letter-spacing:1.5px;">' + esc(me) + '의 답장</span>' +
-                            '<span onclick="window.editReply(\'' + k + '\')" style="font-size:11.5px; font-weight:700; color:var(--text-sub); cursor:pointer;">고치기</span>' +
-                        '</div>' +
-                        '<div style="font-family:\'Nanum Pen Script\', cursive; font-size:21px; line-height:1.6; color:var(--text-m); white-space:pre-line; word-break:keep-all;">' + esc(reply.text) + '</div>' +
-                    '</div>';
-                } else {
-                    replyHtml =
-                    '<div onclick="window.editReply(\'' + k + '\')" style="margin-top:16px; padding-top:14px; border-top:1px dashed var(--border); font-size:12.5px; font-weight:700; color:#7F77DD; cursor:pointer;">답장 쓰기 ›</div>';
+                } else if (!myReply || !myReply.text) {
+                    replyHtml +=
+                    '<div onclick="window.editReply(\'' + k + '\')" style="margin-top:16px; padding-top:14px; border-top:1px dashed var(--border); font-size:12.5px; font-weight:700; color:#7F77DD; cursor:pointer;">' + esc(me) + '도 답장 쓰기 ›</div>';
                 }
-
                 body +=
                 '<div style="background:var(--bg-card); border:1px solid var(--border); border-radius:20px; padding:26px 22px 22px; margin-bottom:14px; box-shadow:0 4px 14px rgba(0,0,0,0.03); position:relative;">' +
                     (isToday ? '<div style="position:absolute; top:-8px; left:50%; transform:translateX(-50%) rotate(-2.5deg); width:52px; height:16px; background:rgba(127,119,221,0.22); border-radius:2px;"></div>' : "") +
@@ -869,8 +898,11 @@
         var ta = document.getElementById("reply-input");
         var text = ta ? String(ta.value || "").trim() : "";
         var box = loadReplies();
-        if (text) box[key] = { text: text, at: Date.now(), by: myTitle() };
-        else delete box[key];
+        var slot = myRoleSlot();
+        if (!box[key]) box[key] = {};
+        if (text) box[key][slot] = { text: text, at: Date.now() };
+        else delete box[key][slot];
+        if (!box[key].mom && !box[key].dad) delete box[key];
         saveReplies(box);
         editingKey = null;
         window.openLetterBox();
@@ -995,7 +1027,7 @@
         var summary = "";
         if (st.have < 3) {
             summary = '<div style="text-align:center; padding:26px 20px; font-size:13px; font-weight:600; color:var(--text-sub); line-height:1.7;">' +
-                '아직 ' + st.have + '일치뿐이에요<br>사흘이 모이면 무달이 보이기 시작해요' +'</div>';
+                '아직 ' + st.have + '일치뿐이에요<br>사흘이 모이면 무늬가 보이기 시작해요' +'</div>';
         } else {
             var cells = [];
             if (st.avgBed !== null) cells.push(["잠드는 시간", hhmm(st.avgBed) + " 쯤"]);
@@ -1023,7 +1055,7 @@
             '<div style="position:sticky; top:0; background:var(--bg-main); padding:22px 0 16px; z-index:2;">' +
                 '<div style="display:flex; justify-content:space-between; align-items:flex-start;">' +
                     '<div>' +
-                        '<div class="serif-display" style="font-size:23px; font-weight:700; color:var(--text-title); letter-spacing:-0.5px;">' + esc(name) + '의 잠 무달</div>' +
+                        '<div class="serif-display" style="font-size:23px; font-weight:700; color:var(--text-title); letter-spacing:-0.5px;">' + esc(name) + '의 잠 무늬</div>' +
                         '<div style="font-size:13px; font-weight:600; color:var(--text-sub); margin-top:6px;">이레 동안 쌓인 잠의 결</div>' +
                     '</div>' +
                     '<div onclick="window.closeSleepMap()" style="font-size:22px; font-weight:300; color:var(--text-sub); cursor:pointer; padding:2px 8px; line-height:1;">×</div>' +
@@ -1046,7 +1078,7 @@
                 summary +
             '</div>' +
 
-            '<div style="text-align:center; font-size:11.5px; font-weight:600; color:var(--text-sub); margin-top:30px; line-height:1.7;">무달은 재우는 날마다 진해져요<br>아이마다 다른, 지문 같은 거예요</div>' +
+            '<div style="text-align:center; font-size:11.5px; font-weight:600; color:var(--text-sub); margin-top:30px; line-height:1.7;">무늬는 재우는 날마다 진해져요<br>아이마다 다른, 지문 같은 거예요</div>' +
         '</div>';
         document.body.style.overflow = "hidden";
     };
