@@ -772,26 +772,18 @@ const formatter = new Intl.NumberFormat('ko-KR');
 
 
 // ==========================================
-// 💡 숫자 픽셀 길이에 맞춰 밑줄/크기가 완벽하게 따라붙는 함수 (잘림 방지 패치)
+// 💡 숫자 길이에 맞춰 입력칸 넓이를 자동으로 계산해주는 무적 엔진 (잘림 영구 방지!)
 // ==========================================
 window.resizeInput = function(el) {
-    let span = document.createElement('span');
-    span.style.font = window.getComputedStyle(el).font;
-    span.style.letterSpacing = window.getComputedStyle(el).letterSpacing; // 글자 간격까지 계산
-    span.style.visibility = 'hidden';
-    span.style.whiteSpace = 'pre';
-    span.style.position = 'absolute';
-    span.innerText = el.value || el.placeholder;
-    document.body.appendChild(span);
+    // 1. 입력된 숫자의 길이를 잽니다. 아무것도 없으면 '1'로 계산
+    const currentLength = el.value.length || 1;
     
-    // getBoundingClientRect를 써서 소수점 픽셀까지 더 정확하게 측정!
-    let width = span.getBoundingClientRect().width; 
-    document.body.removeChild(span);
+    // 2. 글자 1개당 28px(글자 크기) + 최소 너비 40px을 보장해서 넓이를 쫙쫙 늘립니다!
+    const newWidth = Math.max(40, currentLength * 28);
     
-    // 🚨 핵심 패치: 커서 공간 등 여유 버퍼를 15px 정도 넉넉하게 줘서 절대 안 잘리게 만듭니다!
-    el.style.width = Math.max(width + 15, 20) + 'px'; 
+    // 3. 모바일 기기의 강제 CSS를 무시하고 무조건 늘어나도록 !important 장착
+    el.style.setProperty('width', newWidth + 'px', 'important');
 };
-
 // ==========================================
 // 🍩 토스 스타일 도넛 차트 (차트 바깥쪽 라벨 렌더링)
 // ==========================================
@@ -2421,9 +2413,8 @@ function updateHomeDashboard() {
 }
 
 function initDarkMode() {
-    const savedMode = localStorage.getItem('tosil_dark_mode');
-    if (savedMode === 'on') { document.body.classList.add('dark-mode'); const toggleBtn = document.getElementById('dark-mode-toggle'); if(toggleBtn) toggleBtn.innerText = '☀️'; }
 }
+  
 function toggleDarkMode() {
     const body = document.body; body.classList.toggle('dark-mode');
     const toggleBtn = document.getElementById('dark-mode-toggle');
@@ -7443,7 +7434,7 @@ window.renderSettingsTab = function() {
                     <span style="background: #EBF4FF; color: #3182F6; font-size: 11px; font-weight: 900; padding: 4px 8px; border-radius: 8px;">기록 보호중 ✨</span>
                 </div>
                 <!-- 🚨 안내 문구: 폰트 축소(11.5px), 자간 축소, 단어 쪼개짐 방지 패치 -->
-                <div style="font-size: 11.5px; color: var(--text-s); font-weight: 600; margin-bottom: 16px; line-height: 1.5; letter-spacing: -0.3px; word-break: keep-all;">소중한 육아 기록이 서버에 안전하게 보관되고 있어요.<br>초대장을 보내 짝꿍과 함께 육아의 기쁨을 나눠볼까요? 🤍</div>
+                <div style="font-size: 11.5px; color: var(--text-s); font-weight: 600; margin-bottom: 16px; line-height: 1.5; letter-spacing: -0.3px; word-break: keep-all;">소중한 육아 기록이 서버에 안전하게 보관되고 있어요.<br>초대장을 보내 짝꿍과 함께 육아의 기쁨을 나눠볼까요? </div>
                 
                 <div style="display: flex; gap: 8px;">
                     <!-- 🚨 버튼: 폰트 축소(13px), 자간 축소, 강제 한 줄 고정(nowrap) 패치 -->
@@ -7520,12 +7511,7 @@ window.renderSettingsTab = function() {
                     <div style="color: #8B95A1; font-size: 12px;">〉</div>
                 </div>
 
-                <div style="display: flex; justify-content: space-between; align-items: center; padding: 18px 20px;">
-                    <div style="font-size: 14.5px; font-weight: 800; color: var(--text-m);">다크 모드 (어두운 화면)</div>
-                    <button onclick="window.toggleDarkMode(); window.renderSettingsTab();" style="padding: 6px 16px; border-radius: 20px; border: 1px solid var(--border); background: var(--bg-sub); color: var(--text-m); font-weight: 800; font-size: 12px; cursor: pointer;">
-                        ${document.body.classList.contains('dark-mode') ? '켜짐 ON' : '꺼짐 OFF'}
-                    </button>
-                </div>
+                
             </div>
 
             <!-- 데이터 관리 -->
@@ -11457,12 +11443,12 @@ window.openMilestoneModal = function() {
         }
     }
     
-    let html = `
-        <button onclick="downloadMilestone()" style="width: 100%; background: var(--bg-card); color: var(--text-m); border: 1px solid var(--border); padding: 16px; border-radius: 16px; font-size: 14.5px; font-weight: 800; margin-bottom: 24px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.02); transition: 0.2s;">
-            📸 기적 같은 오늘을 한 장의 사진으로 간직하기
-        </button>
-        <div id="milestone-capture-area" style="background: transparent; padding-bottom: 10px;">
-    `;
+let html = `
+    <button onclick="window.openPostcardPicker()" style="width: 100%; background: var(--bg-card); color: var(--text-m); border: 1px solid var(--border); padding: 16px; border-radius: 16px; font-size: 14.5px; font-weight: 800; margin-bottom: 24px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.02); transition: 0.2s;">
+        💌 사진 붙인 순간을 엽서로 만들기
+    </button>
+    <div id="milestone-capture-area" style="background: transparent; padding-bottom: 10px;">
+`;
 
     MILESTONE_DATA.forEach((item, index) => {
         const isDone = achievedIds.includes(item.id);
@@ -11556,7 +11542,7 @@ window.toggleMilestone = function(id) {
 // ==========================================
 // 📸 [마스터피스] 도감 캡처 (순도 100% 몽글몽글 감성 엽서 디자인 💌) - 메모리 초과/오류 완벽 해결본
 // ==========================================
-window.downloadMilestone = function() {
+window.__old_downloadMilestone_unused = function() {
     if (typeof html2canvas === 'undefined') {
         return alert("이미지 저장 라이브러리가 필요합니다.");
     }

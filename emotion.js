@@ -489,7 +489,8 @@
     }
 
     function buildLetter(ledger) {
-        if (new Date().getHours() < LETTER_HOUR) return '';
+        // 🚨 기존 8시 고정 삭제! -> bedtime.js의 스마트 육퇴 판독기로 교체!
+        if (!(window.isWindDownTime && window.isWindDownTime())) return '';
 
         var today = ledger.days[todayKey()];
         if (!today || today.care < 2) return '';

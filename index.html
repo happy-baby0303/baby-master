@@ -12,9 +12,9 @@
     </script>
     <meta charset="UTF-8">
     <meta property="og:title" content="육아 메이트">
-    <meta property="og:description" content="데이터로 똑똑하게, 일일문답으로 다정하게. 우리 가족 육아 플랫폼, 육아메이트">
+    <meta property="og:description" content="우리 아기의 모든 처음을 영원히 기억할게요. 사랑과 추억으로 채워가는 우리 가족만의 디지털 배냇함, 육아메이트 🕊️">
     <meta property="og:image" content="https://happy-baby0303.github.io/icon-512.png">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <meta name="naver-site-verification" content="ca4d9c6e9d67449206cd0c54313cc776aff61ce1" />
     <meta name="theme-color" media="(prefers-color-scheme: light)" content="#FFFFFF">
     <meta name="theme-color" media="(prefers-color-scheme: dark)" content="#111111">
@@ -34,7 +34,7 @@
         }
     </script>
     <title>육아 메이트</title>
-    <meta name="description" content="부부의 마음을 잇는 일일문답·바통터치부터 유모차 AI 매칭, 해열제 계산기, 성장 진단까지! 우리 가족을 위한 똑똑한 올인원 공동육아 플랫폼.">
+    <meta name="description" content="우리 아기의 모든 처음을 영원히 기억할게요. 사랑과 추억으로 채워가는 우리 가족만의 디지털 배냇함, 육아메이트 🕊️">
     <link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.8/dist/web/static/pretendard.css" />
     <link href="https://fonts.googleapis.com/css2?family=Gowun+Batang:wght@400;700&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -390,11 +390,12 @@ button[onclick*="openReceiptModal"] {
     font-size: 16px !important;
     font-weight: 700 !important;
     letter-spacing: -0.5px !important;
-    display: flex !important;
+    display: flex; /* 🚨 딱 여기만 !important를 지웠습니다! */
     justify-content: center !important;
     align-items: center !important;
     gap: 8px !important;
 }
+
 button[onclick*="openReceiptModal"]::before {
     content: '💌'; /* 영수증 대신 편지봉투 이모지 */
     font-size: 18px;
@@ -678,12 +679,7 @@ div[style*="border-radius: 8px"] {
                 <!-- 아랫부분 살짝 어둡게 (글씨 가독성용) -->
                 <div style="position: absolute; bottom: 0; left: 0; width: 100%; height: 120px; background: linear-gradient(to top, rgba(0,0,0,0.6) 0%, transparent 100%); pointer-events: none;"></div>
 
-                <!-- 좌측 상단: 예쁜 반투명 감성 인사말 -->
-                <div style="position: absolute; top: 16px; left: 16px; z-index: 10;">
-                    <div id="ai-time-sub" class="show-on-mom-block" style="font-size: 11.5px; font-weight: 800; color: rgba(255,255,255,0.95); background: rgba(0,0,0,0.2); padding: 6px 14px; border-radius: 20px; backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.2); box-shadow: 0 4px 12px rgba(0,0,0,0.1);">오늘도 육아팅 🤍</div>
-                </div>
-
-                <!-- 우측 상단: 도약기 뱃지 -->
+                           <!-- 우측 상단: 도약기 뱃지 -->
                 <div style="position: absolute; top: 16px; right: 16px; z-index: 10;">
                     <div id="wonderweek-badge" style="background: rgba(0,0,0,0.4); padding: 6px 12px; border-radius: 12px; font-size: 11.5px; font-weight: 800; color: #FFF; backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.2); display: none;"></div>
                 </div>
@@ -784,8 +780,8 @@ div[style*="border-radius: 8px"] {
             </div>
         </div>
 
-        <!-- 📊 3. 데이터 요약: 아기 하루 패턴 -->
-        <div id="tracker-stats-container">0 4px 12px rgba(0,0,0,0.02);">
+    <!-- 📊 3. 데이터 요약: 아기 하루 패턴 -->
+        <div id="tracker-stats-container">
             <div id="tracker-stats-inline"></div>
             <div style="padding:10px 0; text-align:center; font-size:13px; color:var(--text-s); font-weight:700;">아직 기록된 트래커 데이터가 없습니다.</div>
         </div>
@@ -930,15 +926,14 @@ div[style*="border-radius: 8px"] {
         </div>
     </div>
 
-    <!-- 오른쪽: 예산 영역 -->
+<!-- 오른쪽: 예산 영역 -->
     <div style="flex: 1 1 40%; text-align: right; min-width: 100px;">
         <div style="font-size: 11px; font-weight: 800; color: var(--primary); margin-bottom: 6px; background: #EBF4FF; display: inline-block; padding: 4px 10px; border-radius: 12px; white-space: nowrap;">이번 달 예산 🎯</div>
-        <div style="display: flex; align-items: baseline; justify-content: flex-end;">
-            <input type="text" inputmode="numeric" id="v-budget" placeholder="500,000" onkeyup="formatNum(this); window.analyzeMoney(); window.resizeInput(this);" style="font-size: clamp(16px, 5vw, 18px); font-weight: 900; border: none; outline: none; background: transparent; color: var(--text-m); text-align: right; padding: 0; min-width: 50px; width: 80px;">
+        <div style="display: flex; align-items: baseline; justify-content: flex-end; width: 100%;">
+            <input type="text" inputmode="numeric" id="v-budget" placeholder="500,000" onkeyup="formatNum(this); window.analyzeMoney();" style="flex: 1; min-width: 50px; font-size: 18px; font-weight: 900; border: none; outline: none; background: transparent; color: var(--text-m); text-align: right; padding: 0;">
             <span style="font-size: 14px; font-weight: 800; color: var(--text-s); margin-left: 4px; flex-shrink: 0;">원</span>
         </div>
-    </div>
-    
+    </div>    
 </div>
 
                     <!-- 🌟 쾌적한 원터치 입력 폼 -->
@@ -946,11 +941,14 @@ div[style*="border-radius: 8px"] {
                         <!-- 🚨 수정됨: 대표님 아이디어 카피 반영! -->
                         <div style="font-size: 14px; font-weight: 800; color: #3182F6; margin-bottom: 8px;">얼마를 기록할까요?</div>
                         
-                        <div style="display:flex; align-items:center; justify-content:center; margin-bottom:24px;">
-                            <input type="text" inputmode="numeric" id="v-input-amount" placeholder="0" onkeyup="formatNum(this); window.toggleCategoryButtons(this); window.resizeInput(this);" style="width: 40px; min-width: 40px; padding: 0; border: none; border-bottom: 3px solid #E5E8EB; font-size: 46px; font-weight: 900; text-align: center; color: var(--text-m); outline: none !important; background: transparent; transition: border-color 0.3s; caret-color: #3182F6; border-radius: 0;">
-                            <span style="font-size: 20px; font-weight: 800; color: var(--text-s); margin-left: 8px; transform: translateY(8px);">원</span>
+             <!-- 🚨 [최종 해결] theme.js의 간섭을 피하기 위해 색상 코드를 CSS 변수(var)로 교체하여 고무줄 너비 정상 작동! -->
+                        <div style="display:flex; align-items:baseline; justify-content:center; margin-bottom:24px;">
+                            <input type="text" inputmode="numeric" id="v-input-amount" placeholder="0" 
+                                   oninput="this.style.width = Math.max(40, (this.value.length || 1) * 28) + 'px'; formatNum(this); window.toggleCategoryButtons(this);" 
+                                   style="width: 40px; min-width: 40px; max-width: 280px; padding: 0; border: none; border-bottom: 3px solid var(--border); font-size: 42px; line-height: 1; font-weight: 900; text-align: center; color: var(--text-m); outline: none !important; background: transparent; transition: width 0.05s ease, border-color 0.3s; caret-color: var(--primary); border-radius: 0;">
+                            <span style="font-size: 20px; font-weight: 800; color: var(--text-s); margin-left: 8px;">원</span>
                         </div>
-                        
+
                         <!-- 카테고리 버튼들 -->
                         <div id="expense-category-area" style="opacity: 0.3; pointer-events: none; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); transform: translateY(10px);">
                             <div style="font-size: 12px; font-weight: 800; color: var(--text-s); margin-bottom: 12px;">👇 터치하면 즉시 저장됩니다</div>
@@ -970,11 +968,11 @@ div[style*="border-radius: 8px"] {
                         <div style="font-size: 32px; background: var(--bg-sub); width: 56px; height: 56px; border-radius: 16px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; border: 1px solid var(--border);">🎁</div>
                         <div style="flex: 1; min-width: 0;">
                             <input type="text" id="v-goal-text" placeholder="아기 전집 사기" onchange="window.saveGoal()" style="background:transparent; border:none; color:var(--text-m); font-size: 15px; font-weight: 900; width: 100%; outline:none; margin-bottom: 4px; padding: 0;">
-                            <div style="display: inline-flex; align-items: baseline; justify-content: flex-start;">
-                                <span style="font-size: 12px; font-weight: 700; color: var(--text-s); margin-right: 4px;">목표액  :</span>
-                                <!-- 🚨 수정됨: min-width 확보해서 글씨 안 잘리게! -->
-                                <input type="text" inputmode="numeric" id="v-goal-amount" placeholder="1,000,000" onkeyup="formatNum(this); window.saveGoal(); window.resizeInput(this);" style="background:transparent; border:none; color:#00B37A; font-size: 15px; font-weight: 900; min-width: 70px; max-width: 140px; text-align: right; outline:none; padding: 0;">
-                                <span style="font-size: 12px; font-weight: 800; color: var(--text-m); margin-left: 2px;">원</span>
+                            <!-- 🚨 [수정 완료] 자바스크립트 자동 리사이즈 끄고, CSS 플렉스로 영역 침범 완벽 방어! -->
+                            <div style="display: flex; align-items: center; justify-content: flex-start; width: 100%; gap: 6px;">
+                                <span style="font-size: 12px; font-weight: 700; color: var(--text-s); flex-shrink: 0;">목표액:</span>
+                                <input type="text" inputmode="numeric" id="v-goal-amount" placeholder="1,000,000" onkeyup="formatNum(this); window.saveGoal();" style="flex: 1; min-width: 0; background:transparent; border:none; color:#00B37A; font-size: 15px; font-weight: 900; text-align: right; outline:none; padding: 0;">
+                                <span style="font-size: 12px; font-weight: 800; color: var(--text-m); flex-shrink: 0;">원</span>
                             </div>
                         </div>
                     </div>
@@ -1181,23 +1179,21 @@ div[style*="border-radius: 8px"] {
                             키·몸무게 중 하나만 적어주세요 🤍
                         </div>
                         
-         <!-- ✨ [수정] 모바일 화면에서 날짜 글자가 잘리지 않도록 폰트 크기와 패딩을 꽉 차게 최적화! -->
-                     <!-- ✨ [수정 완료] 모바일 화면에서 날짜 글자가 잘리지 않도록 폰트 12.5px & 패딩 최적화 -->
-    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 16px;">
-        <div style="min-width:0;">
-            <label style="font-size:13px; font-weight:800; display:block; margin-bottom:8px; color:var(--text-m);">1. 생년월일</label>
-            <input type="text" id="v-birth" class="box-main" placeholder="터치해서 선택" onfocus="(this.type='date')" onblur="(this.value === '' ? this.type='text' : this.type='date')" style="width:100%; box-sizing:border-box; padding:14px 2px; border-radius:12px; font-size:12.5px; font-weight:800; outline:none; text-align:center;">
+  <!-- 🚨 [수정 완료] 글자 잘림 방어 코드는 유지하면서, 보기 좋게 다시 가운데 정렬(center) 적용! -->
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 16px;">
+            <div style="min-width:0;">
+                <label style="font-size:13px; font-weight:800; display:block; margin-bottom:8px; color:var(--text-m);">1. 생년월일</label>
+                <input type="text" id="v-birth" class="box-main" placeholder="날짜 선택" onfocus="(this.type='date')" onblur="(this.value === '' ? this.type='text' : this.type='date')" style="width:100%; box-sizing:border-box; padding:14px 4px !important; border-radius:12px; font-size:12px !important; font-weight:800; outline:none; text-align:center; letter-spacing:-1px !important;">
+            </div>
+            <div style="min-width:0;">
+                <label style="font-size:13px; font-weight:800; display:block; margin-bottom:8px; color:var(--text-m);">2. 성별</label>
+                <select id="v-gender" class="box-main" onchange="this.style.color = this.value ? 'var(--text-m)' : 'var(--text-s)'" style="width:100%; box-sizing:border-box; padding:14px 4px !important; border-radius:12px; font-size:13px !important; font-weight:800; outline:none; text-align:center; text-align-last:center; border:1px solid var(--border); background:var(--bg-card); color:var(--text-s); transition: 0.2s;">
+                    <option value="" disabled selected style="color: var(--text-s);">선택</option>
+                    <option value="boy" style="color: var(--text-m);">👦 남아</option>
+                    <option value="girl" style="color: var(--text-m);">👧 여아</option>
+                </select>
+            </div>
         </div>
-                            <div style="min-width:0;">
-                                <label style="font-size:13px; font-weight:800; display:block; margin-bottom:8px; color:var(--text-m);">2. 성별</label>
-                                <!-- ✨ 고르기 전엔 연한 회색, 고르면 진한 글씨로 바뀌는 스마트 셀렉트 -->
-                                <select id="v-gender" class="box-main" onchange="this.style.color = this.value ? 'var(--text-m)' : 'var(--text-s)'" style="width:100%; box-sizing:border-box; padding:14px 10px; border-radius:12px; font-size:15px; font-weight:800; outline:none; text-align:center; text-align-last:center; border:1px solid var(--border); background:var(--bg-card); color:var(--text-s); transition: 0.2s;">
-                                    <option value="" disabled selected style="color: var(--text-s);">선택</option>
-                                    <option value="boy" style="color: var(--text-m);">👦 남아</option>
-                                    <option value="girl" style="color: var(--text-m);">👧 여아</option>
-                                </select>
-                            </div>
-                        </div>
                         
                 <!-- ✨ [수정] padding-left를 24px로 늘려서 숫자를 오른쪽으로 미세 조정! -->
                         <div style="display:flex; gap:12px;">
@@ -1394,13 +1390,13 @@ div[style*="border-radius: 8px"] {
             <!-- 빠른 입력 버튼들이 들어갈 자리 -->
         </div>
 
-        <!-- 카테고리 및 이름 입력 (연회색 둥근 박스 통일) -->
-        <div style="display: flex; gap: 10px; margin-bottom: 12px; width: 100%;">
-            <select id="cube-category" style="width: 100px; flex-shrink: 0; box-sizing: border-box; padding: 14px; border-radius: 12px; background: #F9FAFB; border: 1px solid #E5E8EB; font-weight: 800; font-size: 14px; color: #191F28; outline:none;">
+<!-- 🚨 [수정 완료] 카테고리 폭을 90px로 확 줄이고 플레이스홀더 폰트를 13px로 조절 -->
+        <div style="display: flex; gap: 8px; margin-bottom: 12px; width: 100%;">
+            <select id="cube-category" style="width: 90px; flex-shrink: 0; box-sizing: border-box; padding: 14px 4px; border-radius: 12px; background: #F9FAFB; border: 1px solid #E5E8EB; font-weight: 800; font-size: 13px; color: #191F28; outline:none; text-align:center;">
                 <option value="meat">🥩 고기</option>
                 <option value="veg">🥦 채소</option>
             </select>
-            <input type="text" id="cube-name" placeholder="직접 입력 (예: 소고기)" style="flex:1; min-width:0; box-sizing: border-box; padding:14px; border-radius:12px; background: #F9FAFB; border: 1px solid #E5E8EB; font-size: 14px; font-weight: 800; color: #191F28; outline:none;">
+            <input type="text" id="cube-name" placeholder="직접 입력 (예: 소고기)" style="flex:1; min-width:0; box-sizing: border-box; padding:14px 10px; border-radius:12px; background: #F9FAFB; border: 1px solid #E5E8EB; font-size: 13px; font-weight: 800; color: #191F28; outline:none;">
         </div>
         
         <!-- 날짜 및 수량 입력 -->
@@ -2079,7 +2075,7 @@ div[style*="border-radius: 8px"] {
         </div>
     </div> <!-- 여기까지가 기존 4번째 육아정보 탭 끝 -->
 
-      <div id="tab-settings" class="tab-content"></div>
+      <div id="tab-settings" class="tab-content"></div>    <div id="tab-memorybox" class="tab-content"></div>
 
  <!-- ==========================================
      💬 맘수다 탭 (당근마켓 + 블라인드 감성 UI 껍데기)
@@ -2223,7 +2219,7 @@ div[style*="border-radius: 8px"] {
     <div id="nav-toolbox" class="nav-item" onclick="switchTab('toolbox', this)"><span class="icon">🧰</span><span class="label">툴박스</span></div>
     <div id="nav-hotplace" class="nav-item" onclick="switchTab('hotplace', this)"><span class="icon">🗺️</span><span class="label">나들이</span></div>
     <div id="nav-info" class="nav-item" onclick="switchTab('info', this)"><span class="icon">📚</span><span class="label">육아정보</span></div>
-    <div id="nav-community" class="nav-item" onclick="switchTab('community', this)" style="display: flex; flex-direction: column; align-items: center; justify-content: center;"><span class="icon">💬</span><span class="label">맘수다</span></div>
+  <div id="nav-memorybox" class="nav-item" onclick="switchTab('memorybox', this)" style="display: flex; flex-direction: column; align-items: center; justify-content: center;"><span class="icon">🧺</span><span class="label">배냇함</span></div>
 </nav>
 
 <!-- 🎒 외출 준비물 체크리스트 모달 -->
@@ -2639,7 +2635,17 @@ div[style*="border-radius: 8px"] {
 <script src="script.js?v=20260728"></script>
 <script src="playdata.js"></script>
 <script src="receiptData.js"></script>
-<script src="emotion.js?v=2"></script>
+<script src="./emotion.js"></script>
+<script src="./memorybox.js"></script>
+<script src="./photos.js"></script>
+<script src="./premium.js"></script>
+<script src="./anniversaries.js"></script>
+<script src="./home.js"></script>
+<script src="./postcard.js"></script>
+<script src="./bedtime.js"></script>
+<script src="./theme.js"></script>
+<script src="./mobile.js"></script>
+<script src="./fit.js"></script>
 
 <!-- 💩 기저귀 바텀시트 모달 -->
 <div id="diaper-bottom-sheet" style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.6); z-index: 9999; flex-direction: column; justify-content: flex-end;">
