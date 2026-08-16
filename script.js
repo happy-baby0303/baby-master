@@ -4374,7 +4374,7 @@ window.saveTrackerRecord = function() {
 };
 
 window.editTrackerRecord = function(id) {
-    // 🚨 버튼 누르자마자 스와이프 열려있던 뚜껑 강제로 원상복구
+    // 🚨 스와이프 열려있던 뚜껑 강제로 원상복구
     const swipeContents = document.querySelectorAll('.swipe-content');
     swipeContents.forEach(el => { el.style.transform = 'translateX(0)'; });
     if(window.swipeState) window.swipeState.activeEl = null;
@@ -4383,7 +4383,15 @@ window.editTrackerRecord = function(id) {
     let record = records.find(r => r.id === id);
     if (!record) return;
     
-    window.openTrackerSheet(record.type, id); 
+    // 🚨 [핵심 해결] 현재 열려있는 통계/기록 창(z-index 99999)을 닫아줍니다!
+    if (typeof window.closeStatsSheet === 'function') {
+        window.closeStatsSheet();
+    }
+    
+    // 🚨 창이 닫히는 애니메이션 시간(0.3초)을 기다렸다가 수정 창을 예쁘게 띄웁니다!
+    setTimeout(() => {
+        window.openTrackerSheet(record.type, id); 
+    }, 300);
 };
     
 window.deleteTrackerRecord = function(id) {
@@ -4685,10 +4693,11 @@ window.updateTrackerDashboard = function() {
                 <div style="max-height:350px; overflow-y:auto; padding-right:4px;">
             `;
 
+           // 🚨 [수정됨] 아래 트래커 카드들과 동일하게 둥글고 하얀 예쁜 카드로 렌더링!
             for(let date in grouped) {
                 historyHtml += `
-                    <div style="position: sticky; top: -1px; z-index: 10; background: var(--bg-card); padding: 12px 0 8px 0; border-bottom:1px solid #F2F5F8;">
-                        <div style="font-size:14px; font-weight:900; color:#4E5968; margin-bottom: 6px;">📅 ${date}</div>
+                    <div style="position: sticky; top: -1px; z-index: 10; background: var(--bg-card); border: 1px solid var(--border); border-radius: 12px; padding: 14px 16px 10px 16px; margin-bottom: 8px; box-shadow: 0 2px 6px rgba(0,0,0,0.02);">
+                        <div style="font-size: 14px; font-weight: 900; color: var(--text-m); margin-bottom: 6px;">📅 ${date}</div>
                         ${window.getDailySummaryHtml(grouped[date])}
                     </div>
                 `;
@@ -4738,7 +4747,7 @@ window.updateTrackerDashboard = function() {
                         txt = `<span style="color:#059669">${r.subType}</span>`;
                     }
                     
-                   // 🚨 여기서부터 덮어쓰기!
+                    // 🚨 여기서부터 덮어쓰기!
                     historyHtml += `
                         <div class="swipe-list-item" style="position:relative; margin-bottom:8px; border-radius:12px; background:var(--bg-card); border:1px solid #E5E8EB; overflow:hidden;">
                             
@@ -11870,7 +11879,7 @@ window.setWakeTimeNow = function() {
 };
 
 // ==========================================
-// 💡 [일간 통계 요약 엔진 V5] 수면 합치기 & 1줄 스와이프(가로 스크롤) 패치
+// 💡 [일간 통계 요약 엔진 V5] 스크린샷 뚱뚱이 버그 완벽 다이어트 패치!
 // ==========================================
 window.getDailySummaryHtml = function(dailyRecords) {
     if (!dailyRecords || dailyRecords.length === 0) return '';
@@ -11878,7 +11887,7 @@ window.getDailySummaryHtml = function(dailyRecords) {
     let formulaAmt = 0;   
     let breastMins = 0;   
     let babyfoodAmt = 0;  
-    let totalSleepMins = 0; // 🌟 낮잠/밤잠 합치기
+    let totalSleepMins = 0; 
     let pee = 0, poop = 0;
 
     dailyRecords.forEach(r => {
@@ -11888,7 +11897,7 @@ window.getDailySummaryHtml = function(dailyRecords) {
             else if (r.subType === '모유') breastMins += amt;
             else formulaAmt += amt; 
         } else if (r.type === 'sleep' && r.amount > 0) {
-            totalSleepMins += r.amount; // 🌟 수면 시간 무조건 합산!
+            totalSleepMins += r.amount; 
         } else if (r.type === 'diaper') {
             if (r.subType === '소변') pee++;
             else if (r.subType === '대변') poop++;
@@ -11898,26 +11907,23 @@ window.getDailySummaryHtml = function(dailyRecords) {
 
     let summaryItems = [];
     
-    if (formulaAmt > 0) summaryItems.push(`<span style="color:#3182F6;">분유 ${formulaAmt}ml</span>`);
-    if (breastMins > 0) summaryItems.push(`<span style="color:#F59E0B;">모유 ${breastMins}분</span>`);
-    if (babyfoodAmt > 0) summaryItems.push(`<span style="color:#10B981;">이유식 ${babyfoodAmt}g</span>`);
-    
-    // 🌟 합쳐진 수면 시간 출력
+    if (formulaAmt > 0) summaryItems.push(`<span style="color:#3182F6; font-weight:800;">분유 ${formulaAmt}ml</span>`);
+    if (breastMins > 0) summaryItems.push(`<span style="color:#F59E0B; font-weight:800;">모유 ${breastMins}분</span>`);
+    if (babyfoodAmt > 0) summaryItems.push(`<span style="color:#10B981; font-weight:800;">이유식 ${babyfoodAmt}g</span>`);
     if (totalSleepMins > 0) {
         let h = Math.floor(totalSleepMins / 60);
         let m = totalSleepMins % 60;
-        let sleepText = h > 0 ? `수면 ${h}h ${m}m` : `수면 ${m}m`;
-        summaryItems.push(`<span style="color:#A855F7;">${sleepText}</span>`);
+        let sleepText = h > 0 ? `수면 ${h}시간 ${m}분` : `수면 ${m}분`;
+        summaryItems.push(`<span style="color:#A855F7; font-weight:800;">${sleepText}</span>`);
     }
-    
-    if (pee > 0 || poop > 0) summaryItems.push(`<span style="color:#EF4444;">기저귀 ${pee+poop}번</span>`);
+    if (pee > 0 || poop > 0) summaryItems.push(`<span style="color:#EF4444; font-weight:800;">기저귀 ${pee+poop}번</span>`);
 
     if (summaryItems.length === 0) return '';
 
-    // 🚨 핵심 패치: white-space: nowrap 과 overflow-x: auto 로 절대 2줄로 안 꺾이게 1줄 스와이프 처리!
+    // 🚨 패딩(padding)을 확 줄이고 폰트를 다듬어서 공간을 압축했습니다!
     return `
-        <div style="font-size: 12px; font-weight: 800; color: #4E5968; display: flex; overflow-x: auto; white-space: nowrap; scrollbar-width: none; gap: 10px; padding: 4px 0 12px 0; align-items: center;">
-            ${summaryItems.join('<span style="color:#E5E8EB; font-size:10px;">|</span>')}
+        <div style="font-size: 12.5px; display: flex; overflow-x: auto; white-space: nowrap; scrollbar-width: none; gap: 8px; padding: 2px 0 4px 0; align-items: center;">
+            ${summaryItems.join('<span style="color:#E5E8EB; font-size:11px; font-weight:bold;">|</span>')}
         </div>
     `;
 };
