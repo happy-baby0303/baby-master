@@ -3075,121 +3075,96 @@ function updateSmartBanner() {
     const container = document.getElementById('smart-banner-container');
     if(!container) return;
 
-    // 🌟 [조부모 모드 방어막] 시니어 모드일 때는 맞춤 알림 배너를 강제로 완전히 숨김!
+    // 돌봄 도우미 모드에서는 맞춤 알림을 띄우지 않는다
     if (localStorage.getItem('user_role') === 'senior') {
         container.style.display = 'none';
         return;
     }
 
     container.style.setProperty('border', 'none', 'important');
-    container.style.setProperty('outline', 'none', 'important');
     container.style.setProperty('background', 'transparent', 'important');
     container.style.setProperty('box-shadow', 'none', 'important');
 
-    let banners = [];
+    const babyName = localStorage.getItem('tosil_babyName') || '우리 아기';
     const todayStr = new Date().toDateString();
     const isDismissed = (type) => localStorage.getItem('tosil_dismiss_banner_' + type) === todayStr;
-    // 1. SOS 바통터치
+
+    // 카드 한 장을 찍어내는 틀. 왼쪽 세로선 하나로만 성격을 구분한다.
+    const card = (opt) => `
+        <div onclick="${opt.action}" style="background:var(--bg-card); border:1px solid var(--border); border-radius:20px; padding:22px 20px 20px 22px; margin-bottom:12px; cursor:pointer; position:relative; overflow:hidden; box-shadow:0 4px 14px rgba(0,0,0,0.03);">
+            <div style="position:absolute; top:0; left:0; width:3px; height:100%; background:${opt.accent};"></div>
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px;">
+                <div style="font-size:11px; font-weight:800; color:var(--text-sub); letter-spacing:2px;">${opt.label}</div>
+                <div onclick="event.stopPropagation(); window.dismissSmartBanner('${opt.key}');" style="font-size:12px; font-weight:600; color:var(--text-sub); padding:2px 6px;">닫기</div>
+            </div>
+            <div class="serif-display" style="font-size:19px; font-weight:700; line-height:1.5; color:var(--text-title); margin-bottom:10px; word-break:keep-all;">${opt.head}</div>
+            <div style="font-size:13.5px; font-weight:500; color:var(--text-s); line-height:1.6; word-break:keep-all;">${opt.body}</div>
+            ${opt.cta ? `<div style="font-size:12.5px; font-weight:700; color:${opt.accent}; margin-top:14px;">${opt.cta} ›</div>` : ''}
+        </div>`;
+
+    let cards = [];
+
+    // 1. 아내가 보낸 SOS — 가장 급한 것이라 맨 위
     const batonRecords = JSON.parse(localStorage.getItem('tosil_baton_records')) || [];
     const urgentBaton = batonRecords.find(r => r.status === 'requested');
     if (urgentBaton && !isDismissed('baton')) {
-        banners.push(`
-            <div onclick="switchTab('toolbox', document.getElementById('nav-toolbox')); setTimeout(() => switchTool('baton'), 50);" style="position: relative; flex-shrink: 0; width: __WIDTH__; scroll-snap-align: start; background: var(--bg-card); border: 1px solid #6B4EFF; border-radius: 16px; padding: 18px 20px; display: flex; align-items: center; justify-content: space-between; gap: 12px; cursor: pointer; box-shadow: 0 4px 12px rgba(0,0,0,0.05); box-sizing: border-box;">
-                <button onclick="event.stopPropagation(); window.dismissSmartBanner('baton');" style="position:absolute; top:8px; right:8px; background:rgba(0,0,0,0.05); border-radius:50%; border:none; color:#8B95A1; font-size:12px; font-weight:900; width:26px; height:26px; display:flex; align-items:center; justify-content:center; cursor:pointer; z-index:10; backdrop-filter: blur(2px);">✕</button>
-                <div style="display: flex; align-items: center; gap: 14px; flex: 1; min-width: 0;">
-                    <div style="font-size: 26px; flex-shrink: 0;">💌</div>
-                    <div style="flex: 1; min-width: 0; text-align: left;">
-                        <div style="font-size: 12px; font-weight: 800; color: #6B4EFF; margin-bottom: 4px;">긴급 SOS 요청 !</div>
-                        <div style="font-size: 15.5px; font-weight: 900; color: var(--text-m); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; letter-spacing: -0.3px;">"${urgentBaton.text}"</div>
-                    </div>
-                </div>
-                <span style="flex-shrink: 0; white-space: nowrap; background: #6B4EFF; color: white; font-size: 13px; font-weight: 900; padding: 8px 14px; border-radius: 12px;">교대하기</span>
-            </div>
-        `);
+        cards.push(card({
+            key: 'baton',
+            accent: '#7F77DD',
+            label: 'SOS',
+            head: '짝꿍이 손을 내밀었어요',
+            body: '"' + urgentBaton.text + '"',
+            cta: '미션 받으러 가기',
+            action: "switchTab('toolbox', document.getElementById('nav-toolbox')); setTimeout(() =&gt; switchTool('baton'), 50);"
+        }));
     }
 
     try {
         const savedBaby = localStorage.getItem('tosil_baby');
         if (savedBaby) {
             const data = JSON.parse(savedBaby);
-            const diffDays = Math.ceil((new Date() - window.parseLocalDate(data.birth)) / (1000 * 60 * 60 * 24));
+            const diffDays = Math.ceil((new Date() - new Date(data.birth)) / (1000 * 60 * 60 * 24));
             const weekAge = Math.floor(diffDays / 7);
             const monthAge = Math.floor(diffDays / 30.436875);
 
-            // 3. 원더윅스
+            // 2. 도약기 — 부모의 자책을 덜어주는 정보
             if (typeof wwList !== 'undefined') {
                 const curWW = wwList.find(x => weekAge >= (x.w - 1) && weekAge <= (x.w + 1));
                 if (curWW && !isDismissed('wonderweek')) {
-                    banners.push(`
-                        <div onclick="switchTab('toolbox', document.getElementById('nav-toolbox')); setTimeout(() => switchTool('growth'), 50);" style="position: relative; flex-shrink: 0; width: __WIDTH__; scroll-snap-align: start; background: var(--bg-card); border: 1px solid #F04452; border-radius: 16px; padding: 18px 20px; display: flex; align-items: center; justify-content: space-between; gap: 12px; cursor: pointer; box-sizing: border-box;">
-                            <button onclick="event.stopPropagation(); window.dismissSmartBanner('wonderweek');" style="position:absolute; top:8px; right:8px; background:rgba(0,0,0,0.05); border-radius:50%; border:none; color:#8B95A1; font-size:12px; font-weight:900; width:26px; height:26px; display:flex; align-items:center; justify-content:center; cursor:pointer; z-index:10; backdrop-filter: blur(2px);">✕</button>
-                            <div style="display: flex; align-items: center; gap: 14px; flex: 1; min-width: 0;">
-                                <div style="font-size: 26px; flex-shrink: 0;">⛈️</div>
-                                <div style="flex: 1; min-width: 0; text-align: left;">
-                                    <div style="font-size: 12px; font-weight: 800; color: #D32F2F; margin-bottom: 4px;">원더윅스 경보</div>
-                                    <div style="font-size: 15.5px; font-weight: 900; color: var(--text-m); letter-spacing: -0.3px;">현재 ${curWW.t} 구간!</div>
-                                </div>
-                            </div>
-                            <span style="flex-shrink: 0; white-space: nowrap; background: #F04452; color: white; font-size: 13px; font-weight: 900; padding: 8px 14px; border-radius: 12px;">대처법 보기</span>
-                        </div>
-                    `);
+                    cards.push(card({
+                        key: 'wonderweek',
+                        accent: '#EF9F27',
+                        label: '오늘의 신호',
+                        head: babyName + '가 지금 도약기 한가운데예요',
+                        body: '이유 없이 보채고 잠을 설칠 수 있어요. 아기가 자라느라 그런 거예요.',
+                        cta: '도약기 자세히 보기',
+                        action: "switchTab('toolbox', document.getElementById('nav-toolbox')); setTimeout(() =&gt; switchTool('growth'), 50);"
+                    }));
                 }
             }
 
-            // 4. 예방접종
+            // 3. 예방접종 — 놓칠까 봐 늘 불안한 것
             if (typeof vaccineData !== 'undefined') {
                 const curVac = vaccineData.find(v => monthAge === v.maxMonth);
                 if (curVac && !isDismissed('vaccine')) {
-                    banners.push(`
-                        <div onclick="switchTab('toolbox', document.getElementById('nav-toolbox')); setTimeout(() => switchTool('growth'), 50);" style="position: relative; flex-shrink: 0; width: __WIDTH__; scroll-snap-align: start; background: var(--bg-card); border: 1px solid #3182F6; border-radius: 16px; padding: 18px 20px; display: flex; align-items: center; justify-content: space-between; gap: 12px; cursor: pointer; box-sizing: border-box;">
-                            <button onclick="event.stopPropagation(); window.dismissSmartBanner('vaccine');" style="position:absolute; top:8px; right:8px; background:rgba(0,0,0,0.05); border-radius:50%; border:none; color:#8B95A1; font-size:12px; font-weight:900; width:26px; height:26px; display:flex; align-items:center; justify-content:center; cursor:pointer; z-index:10; backdrop-filter: blur(2px);">✕</button>
-                            <div style="display: flex; align-items: center; gap: 14px; flex: 1; min-width: 0;">
-                                <div style="font-size: 26px; flex-shrink: 0;">💉</div>
-                                <div style="flex: 1; min-width: 0; text-align: left;">
-                                    <div style="font-size: 12px; font-weight: 800; color: #1967D2; margin-bottom: 4px;">이번 달 필수 접종</div>
-                                    <div style="font-size: 15.5px; font-weight: 900; color: var(--text-m); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; letter-spacing: -0.3px;">${curVac.desc}</div>
-                                </div>
-                            </div>
-                            <span style="flex-shrink: 0; white-space: nowrap; background: #1A73E8; color: white; font-size: 13px; font-weight: 900; padding: 8px 14px; border-radius: 12px;">확인하기</span>
-                        </div>
-                    `);
+                    cards.push(card({
+                        key: 'vaccine',
+                        accent: '#5DCAA5',
+                        label: '이번 달 접종',
+                        head: '접종할 때가 됐어요',
+                        body: curVac.desc,
+                        cta: '접종 일정 확인',
+                        action: "switchTab('toolbox', document.getElementById('nav-toolbox')); setTimeout(() =&gt; switchTool('growth'), 50);"
+                    }));
                 }
             }
         }
     } catch(e) {}
 
-    // 5. 큐브 알림
-    const cubeRecords = JSON.parse(localStorage.getItem('tosil_cube_records')) || [];
-    const lowCube = cubeRecords.find(r => r.qty <= 2);
-    if (lowCube && !isDismissed('cube')) {
-        banners.push(`
-            <div onclick="switchTab('toolbox', document.getElementById('nav-toolbox')); setTimeout(() => switchTool('cube'), 50);" style="position: relative; flex-shrink: 0; width: __WIDTH__; scroll-snap-align: start; background: var(--bg-card); border: 1px solid #F59E0B; border-radius: 16px; padding: 18px 20px; display: flex; align-items: center; justify-content: space-between; gap: 12px; cursor: pointer; box-sizing: border-box;">
-                <button onclick="event.stopPropagation(); window.dismissSmartBanner('cube');" style="position:absolute; top:8px; right:8px; background:rgba(0,0,0,0.05); border-radius:50%; border:none; color:#8B95A1; font-size:12px; font-weight:900; width:26px; height:26px; display:flex; align-items:center; justify-content:center; cursor:pointer; z-index:10; backdrop-filter: blur(2px);">✕</button>
-                <div style="display: flex; align-items: center; gap: 14px; flex: 1; min-width: 0;">
-                    <div style="font-size: 26px; flex-shrink: 0;">🧊</div>
-                    <div style="flex: 1; min-width: 0; text-align: left;">
-                        <div style="font-size: 12px; font-weight: 800; color: #B78103; margin-bottom: 4px;">큐브 충전 필요</div>
-                        <div style="font-size: 15.5px; font-weight: 900; color: var(--text-m); letter-spacing: -0.3px;">${lowCube.name} 큐브가 ${lowCube.qty}개 남았어요!</div>
-                    </div>
-                </div>
-                <span style="flex-shrink: 0; white-space: nowrap; background: #F59E0B; color: white; font-size: 13px; font-weight: 900; padding: 8px 14px; border-radius: 12px;">채우기</span>
-            </div>
-        `);
-    }
+    // 큐브 재고 알림은 냉장고 얘기라 홈에서 빼고 툴박스에서만 다룬다
 
-    if (banners.length > 0) {
-        const dynamicWidth = banners.length === 1 ? '100%' : '88%';
-        const finalBanners = banners.map(b => b.replace(/__WIDTH__/g, dynamicWidth));
-        
-        container.innerHTML = `
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; padding: 0 4px; border: none !important; outline: none !important; background: transparent !important; box-shadow: none !important;">
-                <div style="font-size: 13.5px; font-weight: 800; color: var(--text-s);">🔔 맞춤 알림 <span style="color:#3182F6">${banners.length}</span></div>
-                ${banners.length > 1 ? `<div style="font-size: 11px; font-weight: 700; color: var(--text-s); background: var(--bg-sub); padding: 2px 8px; border-radius: 10px;">옆으로 넘겨보세요 👉</div>` : ''}
-            </div>
-            <div style="display: flex; overflow-x: auto; scroll-snap-type: x mandatory; gap: 12px; padding-bottom: 8px; scrollbar-width: none; border: none !important; outline: none !important; background: transparent !important; box-shadow: none !important;">
-                ${finalBanners.join('')}
-            </div>
-        `;
+    if (cards.length > 0) {
+        container.innerHTML = cards.join('');
         container.style.display = 'block';
     } else {
         container.innerHTML = '';
@@ -4399,6 +4374,11 @@ window.saveTrackerRecord = function() {
 };
 
 window.editTrackerRecord = function(id) {
+    // 🚨 버튼 누르자마자 스와이프 열려있던 뚜껑 강제로 원상복구
+    const swipeContents = document.querySelectorAll('.swipe-content');
+    swipeContents.forEach(el => { el.style.transform = 'translateX(0)'; });
+    if(window.swipeState) window.swipeState.activeEl = null;
+
     let records = JSON.parse(localStorage.getItem('tosil_tracker_records')) || [];
     let record = records.find(r => r.id === id);
     if (!record) return;
@@ -4407,19 +4387,24 @@ window.editTrackerRecord = function(id) {
 };
     
 window.deleteTrackerRecord = function(id) {
-    showConfirm("이 기록을 정말 삭제하시겠습니까?", async function() {
+    // 🚨 버튼 누르자마자 스와이프 열려있던 뚜껑 강제로 원상복구
+    const swipeContents = document.querySelectorAll('.swipe-content');
+    swipeContents.forEach(el => { el.style.transform = 'translateX(0)'; });
+    if(window.swipeState) window.swipeState.activeEl = null;
+
+    window.showConfirm("이 기록을 정말 삭제하시겠습니까?", async function() {
         let records = JSON.parse(localStorage.getItem('tosil_tracker_records')) || [];
         records = records.filter(r => r.id !== id);
         
         if (typeof saveTrackerToFirebase === 'function') {
             await saveTrackerToFirebase(records);
-            window.flushOfflineQueue(); // 🚨 유령 함수(flushTrackerSync) 완벽 치료 완료!
+            if(typeof window.flushOfflineQueue === 'function') window.flushOfflineQueue(); 
         } else {
             localStorage.setItem('tosil_tracker_records', JSON.stringify(records));
             window.updateTrackerDashboard();
         }
         
-        showToast("🗑️ 기록이 깔끔하게 삭제되었습니다!");
+        window.showToast("🗑️ 기록이 깔끔하게 삭제되었습니다!");
     }, "🗑️", "삭제", "#F04452");
 };
 
@@ -4753,17 +4738,22 @@ window.updateTrackerDashboard = function() {
                         txt = `<span style="color:#059669">${r.subType}</span>`;
                     }
                     
+                   // 🚨 여기서부터 덮어쓰기!
                     historyHtml += `
-                        <div class="swipe-list-item" style="position:relative; border-bottom:1px solid rgba(0,0,0,0.05); margin-bottom:4px; border-radius:12px; overflow:hidden; background:var(--bg-card);">
+                        <div class="swipe-list-item" style="position:relative; margin-bottom:8px; border-radius:12px; background:var(--bg-card); border:1px solid #E5E8EB; overflow:hidden;">
+                            
+                            <!-- 🚨 [수정됨] div를 button으로 교체! (iOS 터치 씹힘 완벽 해결) -->
                             <div style="position:absolute; top:0; right:0; height:100%; display:flex; z-index:1;">
-                                <div onclick="window.editTrackerRecord('${r.id}')" style="background:#E8F3FF; color:#3182F6; width:65px; display:flex; flex-direction:column; align-items:center; justify-content:center; font-weight:800; font-size:12px; cursor:pointer;">
+                                <button type="button" onclick="window.editTrackerRecord('${r.id}')" style="background:#E8F3FF; color:#3182F6; width:65px; height:100%; display:flex; flex-direction:column; align-items:center; justify-content:center; font-weight:800; font-size:12px; cursor:pointer; border:none; padding:0; outline:none; pointer-events:auto;">
                                     <span style="font-size:16px; margin-bottom:2px;">✏️</span>수정
-                                </div>
-                                <div onclick="window.deleteTrackerRecord('${r.id}')" style="background:#FFF0F1; color:#F04452; width:65px; display:flex; flex-direction:column; align-items:center; justify-content:center; font-weight:800; font-size:12px; cursor:pointer;">
+                                </button>
+                                <button type="button" onclick="window.deleteTrackerRecord('${r.id}')" style="background:#FFF0F1; color:#F04452; width:65px; height:100%; display:flex; flex-direction:column; align-items:center; justify-content:center; font-weight:800; font-size:12px; cursor:pointer; border:none; padding:0; outline:none; pointer-events:auto;">
                                     <span style="font-size:16px; margin-bottom:2px;">🗑️</span>삭제
-                                </div>
+                                </button>
                             </div>
-                            <div class="swipe-content" data-id="${r.id}" style="position:relative; z-index:2; background:var(--bg-card); display:flex; justify-content:space-between; align-items:center; padding:14px 4px; transition:transform 0.2s cubic-bezier(0.2, 0.8, 0.2, 1);"
+                            
+                            <!-- 🚨 [수정됨] transform:translateZ(0) 추가 (iOS 화면 렌더링 버그 방어) -->
+                            <div class="swipe-content" data-id="${r.id}" style="position:relative; z-index:2; background:var(--bg-card); display:flex; justify-content:space-between; align-items:center; padding:14px 4px; transition:transform 0.2s cubic-bezier(0.2, 0.8, 0.2, 1); transform:translateZ(0);"
                                  ontouchstart="window.handleSwipeStart(event)" 
                                  ontouchmove="window.handleSwipeMove(event)" 
                                  ontouchend="window.handleSwipeEnd(event, this)">
@@ -4780,10 +4770,11 @@ window.updateTrackerDashboard = function() {
                                     </div>
                                 </div>
                                 
-                                <div style="color:#D1D6DB; font-size:18px; padding-right:8px; opacity:0.6; pointer-events:none;">‹</div>
+                                <div style="color:#D1D6DB; font-size:18px; padding-right:8px; opacity:0.6; pointer-events:none; flex-shrink:0;">‹</div>
                             </div>
                         </div>
                     `;
+                    // 🚨 여기까지 덮어쓰기 완료!
                 });
             }
             historyHtml += '</div>';
@@ -4969,8 +4960,7 @@ window.updateTrackerDashboard = function() {
             ${sleepBlocks}
         </div>
 
-        <div style="position:relative; height:15px; margin-top:8px;">${feedDots}</div>
-        <div style="position:relative; height:15px;">${diaperDots}</div>
+        <div style="position:relative; height:16px; margin-top:7px;">${feedDots}${diaperDots}</div>
 
         <div style="display:flex; justify-content:space-between; font-size:10.5px; font-weight:500; color:var(--text-sub); margin-top:5px; padding:0 2px;"><span>0시</span><span>6시</span><span>12시</span><span>18시</span><span>24시</span></div>
         ${ribbonCaption}
@@ -5156,32 +5146,41 @@ window.updateNowStatusCard = function() {
     const feedEl = document.getElementById('now-feed');
     if (!feedEl) return;
 
-    // 트래커 버튼이 이미 계산해둔 값을 그대로 재활용 (중복 계산 X)
+    // 트래커 버튼이 이미 계산해둔 값을 그대로 재활용
     const srcFeed   = document.getElementById('btn-sub-feed');
     const srcDiaper = document.getElementById('btn-sub-diaper');
-    const srcSleep  = document.getElementById('btn-sub-sleep');
 
+    // 1. 수유: 기존 방식 유지 (HTML 태그 그대로 복사해서 숫자 큼)
     if (srcFeed) feedEl.innerHTML = srcFeed.innerHTML || '기록 없음';
 
+    // 2. 🚨 기저귀: innerText ➔ innerHTML로 변경! (숫자 커지는 효과 유지)
     const dEl = document.getElementById('now-diaper');
-    if (dEl && srcDiaper) dEl.innerText = srcDiaper.innerText || '기록 없음';
+    if (dEl && srcDiaper) dEl.innerHTML = srcDiaper.innerHTML || '기록 없음'; 
 
-  const fmtMin = (m) => (m >= 60 ? `${Math.floor(m / 60)}시간 ${m % 60}분` : `${m}분`);
+    // 3. 🚨 수면: 숫자만 16px로 키워주는 통일된 포맷 함수로 교체!
+    const fmtMin = (m) => {
+        let h = Math.floor(m / 60);
+        let mins = m % 60;
+        if (h > 0 && mins > 0) return `<span style="font-size:16px; font-weight:900;">${h}</span>시간 <span style="font-size:16px; font-weight:900;">${mins}</span>분`;
+        if (h > 0) return `<span style="font-size:16px; font-weight:900;">${h}</span>시간`;
+        return `<span style="font-size:16px; font-weight:900;">${mins}</span>분`;
+    };
 
     const sleepLabelEl = document.getElementById('now-sleep-label');
     const sleepStateEl = document.getElementById('now-sleep-state');
+    
     if (sleepLabelEl && sleepStateEl) {
         if (window._activeSleepStart) {
             sleepLabelEl.innerText = '😴 자는 중';
-            sleepStateEl.innerText = fmtMin(Math.floor((Date.now() - window._activeSleepStart) / 60000));
+            sleepStateEl.innerHTML = fmtMin(Math.floor((Date.now() - window._activeSleepStart) / 60000));
             sleepStateEl.style.color = '#A855F7';
         } else if (window._lastWakeTime) {
             sleepLabelEl.innerText = '⏰ 깬 지';
-            sleepStateEl.innerText = fmtMin(Math.floor((Date.now() - window._lastWakeTime) / 60000));
-            sleepStateEl.style.color = 'var(--text-title)';
+            sleepStateEl.innerHTML = fmtMin(Math.floor((Date.now() - window._lastWakeTime) / 60000));
+            sleepStateEl.style.color = 'var(--text-m)';
         } else {
             sleepLabelEl.innerText = '💤 수면';
-            sleepStateEl.innerText = '기록 없음';
+            sleepStateEl.innerHTML = '기록 없음';
             sleepStateEl.style.color = '#8B95A1';
         }
     }
@@ -6688,11 +6687,8 @@ window.renderBabyInfo = function() {
     // 6. 하단 위젯 & 센서 가동
     if(typeof updateMainAISensors === 'function') updateMainAISensors(monthAge); 
 
-    // 7. 예방접종 배너 띄우기
-    const bannerContainer = document.getElementById('health-smart-banner');
-    if (bannerContainer) {
-        bannerContainer.style.display = 'none';
-    }
+    // 7. 맞춤 알림 배너 갱신 (smart-banner-container 가 담당)
+    if(typeof updateSmartBanner === 'function') updateSmartBanner();
 };
 
 // 🚨 온보딩 체크 후 renderBabyInfo 호출 (앱 맨 밑쪽에 있는 DOMContentLoaded 덮어쓰기)
@@ -11488,7 +11484,7 @@ window.openMilestoneModal = function() {
                     <div style="flex: 1; padding-top: 2px;">
                         <div style="font-size: 15.5px; font-weight: 900; color: ${titleColor}; margin-bottom: 4px; letter-spacing: -0.3px;">${item.title}</div>
                         <div style="font-size: 13px; font-weight: 600; color: ${descColor}; word-break: keep-all; line-height: 1.4; margin-bottom: ${isDone ? '8px' : '0'};">${item.desc}</div>
-                        ${isDone ? `<div style="font-size: 11px; font-weight: 800; color: #BE123C; display: inline-flex; align-items: center; gap: 4px; background: rgba(255,255,255,0.7); border: 1px solid rgba(225, 29, 72, 0.2); padding: 4px 10px; border-radius: 8px;">Date. ${doneDate}</div>` : ``}
+                        ${isDone ? `<div onclick="event.stopPropagation(); window.editMilestoneDate && window.editMilestoneDate('${item.id}')" style="font-size: 11px; font-weight: 800; color: #BE123C; display: inline-flex; align-items: center; gap: 4px; background: rgba(255,255,255,0.7); border: 1px solid rgba(225, 29, 72, 0.2); padding: 4px 10px; border-radius: 8px; cursor: pointer;">${doneDate} · 날짜 바꾸기</div>` : ``}
                     </div>
                 </div>
                 <div style="flex-shrink: 0; margin-left: 12px; display: flex; align-items: center; justify-content: center; min-width: 30px;">
