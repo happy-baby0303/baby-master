@@ -255,6 +255,11 @@
 
         // 6. 기념일 (anniversaries.js 가 있을 때만)
         //    아무 기록이 없어도 백일과 첫 명절은 연대기에 놓인다.
+        // 소리만 담긴 날도 연대기에 놓인다
+        if (typeof window.voiceDays === "function") {
+            window.voiceDays().forEach(function (k) { touch(k); });
+        }
+
         if (typeof window.anniversaryDays === "function") {
             window.anniversaryDays().forEach(function (k) { touch(k); });
         }
@@ -352,6 +357,11 @@
             inner += window.renderPhotoStrip(d.key);
         }
 
+        // 소리는 사진 바로 아래. 얼굴 다음은 목소리다.
+        if (typeof window.renderVoiceRow === "function") {
+            inner += window.renderVoiceRow(d.key);
+        }
+
         // 첫 순간 — 여러 개여도 라벨은 한 번만. 배지가 반복되면 정작 이름이 묻힌다.
         if (d.milestones.length) {
             var msLabel = d.milestones.length > 1
@@ -411,6 +421,9 @@
         // 그 자리에서 바로 담을 수 있게
         if (typeof window.renderPhotoAdd === "function") {
             inner += window.renderPhotoAdd(d.key);
+        }
+        if (typeof window.renderVoiceAdd === "function") {
+            inner += window.renderVoiceAdd(d.key);
         }
 
         return '<div style="position:relative; background:var(--bg-card); border:1px solid var(--border); border-radius:22px; padding:24px 22px; margin-bottom:16px; box-shadow:0 4px 16px rgba(0,0,0,0.03);">' +
@@ -491,6 +504,7 @@
 
             (typeof window.renderNextAnniversary === "function" ? window.renderNextAnniversary() : "") +
             (typeof window.addDayPhoto === "function" ? todayPhotoBar() : "") +
+            (typeof window.renderVoiceBar === "function" ? window.renderVoiceBar() : "") +
 
             '<div style="display:flex; gap:10px; margin-bottom:8px;">' +
                 shortcut("💌", "편지함", "쌓인 편지 읽기", "window.openLetterBox()") +

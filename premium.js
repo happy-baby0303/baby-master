@@ -189,9 +189,12 @@
 
     window.renderPremiumRow = function () {
         var pro = window.isPremium();
-        var row = function (key, icon, label, sub) {
+          var row = function (key, icon, label, sub) {
+            var act = key === "book"  ? "window.exportMemoryBook()"
+                    : key === "voice" ? "window.openVoiceSheet()"
+                    : "window.requirePremium('" + key + "')";
             var f = FEATURES[key];
-            return '<div onclick="window.requirePremium(\'' + key + '\')" ' +
+            return '<div onclick="' + act + '" ' +
                 'style="flex:1; background:var(--bg-card); border:1px solid var(--border); border-radius:18px; ' +
                 'padding:15px 12px; text-align:center; cursor:pointer;' + (pro ? '' : ' opacity:0.88;') + '">' +
                 '<div style="font-size:21px; margin-bottom:7px;">' + icon + '</div>' +
