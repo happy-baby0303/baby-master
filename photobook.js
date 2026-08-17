@@ -403,7 +403,9 @@
         });
     };
 
-    async function bakeBook() {
+    async function bakeBook(opts) {
+        opts = opts || {};
+        var previewOnly = !!opts.preview;      // 앞 몇 쪽만 굽고 화면에 보여준다
         if (typeof html2canvas === "undefined") return toast("이미지 라이브러리를 불러오지 못했어요");
 
         var data = collect();
@@ -478,8 +480,13 @@
         }
 
         // 3) 한 장씩 굽는다
+        var total = pages.length;
+        if (previewOnly) pages = pages.slice(0, 3);      // 표지 · 태어난 날 · 첫 장면
+
         var jsPDF = window.jspdf.jsPDF;
-        var pdf = new jsPDF({ orientation: "portrait", unit: "px", format: [PW, PH], compress: true });
+        var pdf = previewOnly ? null
+            : new jsPDF({ orientation: "portrait", unit: "px", format: [PW, PH], compress: true });
+        var shots = [];
         var folioNo = 0;
 
         for (var n = 0; n < pages.length; n++) {
@@ -502,14 +509,96 @@
             }
 
             var jpg = await shoot(html);
+            if (previewOnly) { shots.push(jpg); continue; }
             if (n > 0) pdf.addPage([PW, PH], "portrait");
             pdf.addImage(jpg, "JPEG", 0, 0, PW, PH, undefined, "FAST");
         }
+
+        closeProgress();
+
+        if (previewOnly) { showPreview(shots, total); return; }
 
         progress(pages.length, pages.length, "책을 묶는 중이에요");
         pdf.save(babyName() + "의 배냇함.pdf");
         closeProgress();
         toast("📖 " + pages.length + "쪽짜리 책이 만들어졌어요");
+    };
+
+    /* ---------- 미리보기 ----------
+       잠긴 문 앞에서 파는 것과, 열어보고 나서 파는 것은 다르다.
+       앞 세 쪽은 무료로 구워서 손에 쥐여준다. -------- */
+
+    function showPreview(shots, total) {
+        var old = document.getElementById("book-preview");
+        if (old) old.remove();
+
+        var pro = (typeof window.isPremium !== "function") || window.isPremium();
+
+        var wrap = document.createElement("div");
+        wrap.id = "book-preview";
+        wrap.setAttribute("style", "position:fixed; inset:0; z-index:100004; background:#241E19; " +
+            "overflow-y:auto; -webkit-overflow-scrolling:touch;");
+
+        wrap.innerHTML =
+        '<div style="max-width:520px; margin:0 auto; padding:0 20px calc(40px + env(safe-area-inset-bottom, 0px));">' +
+
+            '<div style="display:flex; justify-content:space-between; align-items:flex-start; padding:22px 2px 18px;">' +
+                '<div>' +
+                    '<div style="font-family:\'Gowun Batang\',serif; font-size:21px; font-weight:700; color:#FFF; letter-spacing:-0.5px;">' +
+                        esc(babyName()) + '의 배냇함</div>' +
+                    '<div style="font-size:12px; font-weight:600; color:#A3958A; margin-top:6px;">' +
+                        '전부 ' + total + '쪽 · 앞 ' + shots.length + '쪽 미리보기</div>' +
+                '</div>' +
+                '<span onclick="document.getElementById(\'book-preview\').remove(); document.body.style.overflow=\'\';" ' +
+                    'style="font-size:24px; font-weight:300; color:#A3958A; cursor:pointer; line-height:1;">×</span>' +
+            '</div>' +
+
+            shots.map(function (src, i) {
+                return '<div style="margin-bottom:14px; border-radius:6px; overflow:hidden; box-shadow:0 10px 30px rgba(0,0,0,0.35);">' +
+                    '<img src="' + src + '" style="width:100%; display:block;">' +
+                '</div>' +
+                '<div style="text-align:center; font-size:11px; font-weight:700; color:#7A6F68; margin-bottom:22px;">' +
+                    (i + 1) + ' / ' + total + '</div>';
+            }).join("") +
+
+            '<div style="background:rgba(185,138,46,0.12); border:1px solid rgba(185,138,46,0.3); border-radius:20px; ' +
+                'padding:22px 20px; margin-top:8px; text-align:center;">' +
+                '<div style="font-size:15px; font-weight:800; color:#D2A340; letter-spacing:-0.3px;">' +
+                    '나머지 ' + Math.max(0, total - shots.length) + '쪽이 남아 있어요</div>' +
+                '<div style="font-size:12.5px; font-weight:600; color:#A3958A; line-height:1.7; margin-top:9px; word-break:keep-all;">' +
+                    '사진과 첫 순간, 그날의 편지, 담긴 목소리까지<br>한 권으로 묶여 있습니다.</div>' +
+                '<div onclick="window.bookFromPreview()" style="margin-top:18px; padding:16px; background:#B98A2E; ' +
+                    'color:#FFF; border-radius:15px; font-size:15px; font-weight:800; cursor:pointer;">' +
+                    (pro ? '전체 ' + total + '쪽 내려받기' : '전체 ' + total + '쪽 뽑기') + '</div>' +
+            '</div>' +
+
+            '<div style="text-align:center; font-size:11px; font-weight:600; color:#7A6F68; margin-top:20px; line-height:1.8;">' +
+                'A5 판형으로 인쇄소에 그대로 넘길 수 있어요' +
+            '</div>' +
+        '</div>';
+
+        document.body.appendChild(wrap);
+        document.body.style.overflow = "hidden";
+    }
+
+    window.bookFromPreview = function () {
+        var el = document.getElementById("book-preview");
+        if (el) { el.remove(); document.body.style.overflow = ""; }
+
+        var pro = (typeof window.isPremium !== "function") || window.isPremium();
+        if (!pro) {
+            if (typeof window.openUpsell === "function") return window.openUpsell("book");
+            return toast("프리미엄에서 전체를 뽑을 수 있어요");
+        }
+        window.makeMemoryBook();
+    };
+
+    window.previewMemoryBook = function () {
+        return bakeBook({ preview: true }).catch(function (e) {
+            console.error("[포토북 미리보기] 실패", e);
+            closeProgress();
+            toast("미리보기를 만들지 못했어요: " + (e && e.message ? e.message : "알 수 없는 오류"));
+        });
     };
 
     /* ---------- 프리미엄 문 ----------
@@ -518,8 +607,10 @@
        여기서 가로채서, 통과한 사람은 실제로 책이 나오게 한다. -------- */
 
     window.exportMemoryBook = function () {
+        // 무료 사용자에게 잠금창부터 들이밀지 않는다.
+        // 앞 세 쪽을 굽어서 보여주고, 그 다음에 나머지를 판다.
         if (typeof window.isPremium === "function" && !window.isPremium()) {
-            if (typeof window.openUpsell === "function") return window.openUpsell("book");
+            return window.previewMemoryBook();
         }
         window.makeMemoryBook();
     };
