@@ -8136,8 +8136,8 @@ window.updateDadBriefing = function() {
         hpMsg = "평범하게 바쁜 하루. 커피 한 잔 어때요 ☕"; 
     }
 
-    // ==========================================
-    // 💡 2. 초압축 카피라이팅: 1순위 미션 편
+  // ==========================================
+    // 💡 2. 초압축 카피라이팅: 1순위 미션 편 (감성 & 1줄 강제 고정)
     // ==========================================
     let missionBg = "#3182F6"; 
     let missionMsg = "";
@@ -8158,7 +8158,7 @@ window.updateDadBriefing = function() {
 
     if (isSleeping) {
         missionBg = "#A855F7"; 
-        missionMsg = "🚨 수면중! 까치발 입장 필수"; 
+        missionMsg = "쉿! 아기 꿀잠 중, 까치발 입장 "; 
     } else {
         const nowTime = now.getTime();
         let feedDiffMins = lastFeed ? Math.floor((nowTime - lastFeed.timestamp) / 60000) : 0;
@@ -8167,18 +8167,18 @@ window.updateDadBriefing = function() {
 
         if (lastFeed && feedDiffMins >= feedInterval - 30) {
             missionBg = "#3182F6"; 
-            missionMsg = "🍼 맘마 타임! 겉옷 벗기 전 젖병 세팅"; 
+            missionMsg = "옷 벗기 전, 젖병부터 세팅하기 "; 
         } else if (lastDiaper && diaperDiffMins >= 180) {
             missionBg = "#F04452"; 
-            missionMsg = "💩 엉덩이 경보! 들어가자마자 기저귀부터"; 
+            missionMsg = "현관문 열자마자 기저귀 갈아주기 "; 
         } else {
             missionBg = "#00B37A"; 
             
-            // 🔥 평화 미션도 초압축!
+            // 🔥 감성 한 스푼 넣은 초압축 1줄 평화 미션!
             const fallbackMissions = [
-                "평화롭네요! 밀린 젖병 설거지 부탁해요✨", 
-                "아기 기분 최고! 아내에게 1시간 휴식을💖", 
-                "육아 휴전! 조용히 집안 쓰레기통 비우기🗑️" 
+                "아내를 위해 밀린 설거지 돕기 ", 
+                "고생한 아내 푹 쉬게 해주기 ", 
+                "센스있게 집안 쓰레기통 비우기 " 
             ];
             const dayIndex = new Date().getDate() % fallbackMissions.length;
             missionMsg = fallbackMissions[dayIndex];
@@ -8210,30 +8210,45 @@ window.updateDadBriefing = function() {
         parentDiv.style.alignItems = "stretch"; 
         parentDiv.style.gap = "0"; // 갭을 없애고 라인으로 구분
         parentDiv.style.boxShadow = "0 4px 16px rgba(0,0,0,0.03)"; 
+const actionButtonHtml = isCleared 
+            ? `<button disabled style="background: #F0FDF4; border: 1px solid #BBF7D0; color: #059669; padding: 10px 16px; border-radius: 12px; font-size: 13px; font-weight: 900; cursor: not-allowed; flex-shrink: 0;">완수 👏</button>`
+            : `<button onclick="window.completeTopMission(this, '${missionMsg.replace(/'/g, "\\'")}')" style="background: #191F28; color: #FFFFFF; border: none; padding: 10px 16px; border-radius: 12px; font-size: 13px; font-weight: 900; cursor: pointer; flex-shrink: 0; box-shadow: 0 4px 10px rgba(0,0,0,0.1); transition: 0.2s;">완료하기</button>`;
 
-        const actionButtonHtml = isCleared 
-            ? `<button disabled style="background: #F0FDF4; border: 1px solid #BBF7D0; color: #059669; padding: 8px 14px; border-radius: 12px; font-size: 12px; font-weight: 900; cursor: not-allowed; flex-shrink: 0;">완수 👏</button>`
-            : `<button onclick="window.completeTopMission(this, '${missionMsg.replace(/'/g, "\\'")}')" style="background: #191F28; color: #FFFFFF; border: none; padding: 8px 14px; border-radius: 12px; font-size: 12px; font-weight: 900; cursor: pointer; flex-shrink: 0; box-shadow: 0 4px 10px rgba(0,0,0,0.1); transition: 0.2s;">완료하기</button>`;
-
-        // 🌟 [니치 패치] 동적 색상(hpBg, missionBg)은 완벽 유지하면서, 디자인 레이아웃만 애플 감성으로!
+        // 🌟 [최종 UI 패치] 뚱뚱한 색상 배지를 없애고, 토스/애플 스타일의 세련된 '도트(점)' 인디케이터로 변경!
         parentDiv.innerHTML = `
-            <div style="display: flex; align-items: center; justify-content: space-between; padding-bottom: 16px; border-bottom: 1px solid var(--border);">
-                <div style="display: flex; align-items: center; gap: 10px;">
-                    <div style="background: ${hpBg}; color: #FFF; font-size: 11px; font-weight: 900; padding: 4px 8px; border-radius: 8px; letter-spacing: -0.5px;">아내 상태</div>
-                    <div style="font-size: 14px; font-weight: 800; color: var(--text-m); letter-spacing: -0.3px; line-height: 1.4; word-break: keep-all;">${hpMsg}</div>
+            <!-- 아내 상태 영역 -->
+            <div style="padding-bottom: 16px; border-bottom: 1px solid var(--border);">
+                <div style="display: flex; align-items: center; gap: 6px; margin-bottom: 6px;">
+                    <div style="width: 8px; height: 8px; border-radius: 50%; background: ${hpBg};"></div>
+                    <div style="font-size: 12px; font-weight: 800; color: var(--text-s);">아내 상태</div>
+                </div>
+                <div style="font-size: 14px; font-weight: 800; color: var(--text-m); line-height: 1.5; word-break: keep-all; padding-left: 14px;">
+                    ${hpMsg}
                 </div>
             </div>
             
-            <div style="display: flex; align-items: center; justify-content: space-between; padding-top: 16px;">
-                <div style="display: flex; align-items: center; gap: 10px; padding-right: 12px;">
-                    <div style="background: ${missionBg}; color: #FFF; font-size: 11px; font-weight: 900; padding: 4px 8px; border-radius: 8px; letter-spacing: -0.5px;">1순위 미션</div>
-                    <div style="font-size: 14px; font-weight: 800; color: var(--text-m); line-height: 1.4; word-break: keep-all; letter-spacing: -0.3px;">${missionMsg}</div>
+            <!-- 1순위 미션 영역 -->
+            <div style="padding-top: 16px; display: flex; justify-content: space-between; align-items: flex-end; gap: 12px;">
+                <div style="flex: 1; min-width: 0;">
+                    <div style="display: flex; align-items: center; gap: 6px; margin-bottom: 6px;">
+                        <div style="width: 8px; height: 8px; border-radius: 50%; background: ${missionBg};"></div>
+                        <div style="font-size: 12px; font-weight: 800; color: var(--text-s);">1순위 미션</div>
+                    </div>
+                    <div style="font-size: 14px; font-weight: 800; color: var(--text-m); line-height: 1.5; word-break: keep-all; padding-left: 14px;">
+                        ${missionMsg}
+                    </div>
                 </div>
-                ${actionButtonHtml}
+                <div style="flex-shrink: 0;">
+                    ${actionButtonHtml}
+                </div>
             </div>
+            
+            <!-- 🚨 다음번 갱신을 위해 투명한 닻(hook)을 다시 심어줍니다! -->
+            <span id="dad-brief-msg" style="display:none;"></span>
         `;
     }
 }; // 🚨 여기가 window.updateDadBriefing 함수를 끝내는 진짜 괄호입니다! 절대 지워지면 안 됩니다!
+
 
 // 5. 아빠 모드: 홈 화면용 바통터치 리스트 렌더링
 window.renderHomeBatonList = function() {
