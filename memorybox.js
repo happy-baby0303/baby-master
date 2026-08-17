@@ -558,6 +558,107 @@
         '</div>';
     }
 
+    /* ---------- 연대기 서랍 ----------
+       하루씩 쌓이면 1년에 카드가 이백 장이 된다.
+       피드로 줄줄이 내려가면 '첫 목욕이 언제였지'를 못 찾는다.
+
+       실제 배냇함에도 칸막이가 있다. 연도 탭, 월 칸,
+       그리고 열려 있는 달 안에만 주 구분선. -------- */
+
+    var openYear = null;      // 지금 보고 있는 연도
+    var openMonth = null;     // 펼쳐둔 달 (YYYY-M)
+
+    function ymOf(key) {
+        var d = parseKey(key);
+        return d.getFullYear() + "-" + (d.getMonth() + 1);
+    }
+
+    function groupTimeline(timeline) {
+        var years = {};
+        timeline.forEach(function (d) {
+            var dt = parseKey(d.key);
+            var y = dt.getFullYear(), m = dt.getMonth() + 1;
+            if (!years[y]) years[y] = {};
+            if (!years[y][m]) years[y][m] = [];
+            years[y][m].push(d);
+        });
+        return years;
+    }
+
+    window.mbGoYear = function (y) {
+        openYear = Number(y);
+        openMonth = null;                     // 그 해에서 가장 최근 달이 열린다
+        window.renderMemoryBox();
+        var box = document.getElementById("mb-chronicle");
+        if (box && box.scrollIntoView) box.scrollIntoView({ behavior: "smooth", block: "start" });
+    };
+
+    window.mbToggleMonth = function (ym) {
+        openMonth = (openMonth === ym) ? null : ym;
+        window.renderMemoryBox();
+        var el = document.getElementById("mb-m-" + ym);
+        if (el && el.scrollIntoView) el.scrollIntoView({ behavior: "smooth", block: "start" });
+    };
+
+    // 한 달 안에서 주 구분. 카드가 적으면 오히려 방해라 넉넉할 때만 넣는다.
+    function weekLabel(key) {
+        var d = parseKey(key);
+        var w = Math.ceil(d.getDate() / 7);
+        return ["첫째 주", "둘째 주", "셋째 주", "넷째 주", "다섯째 주"][Math.min(w, 5) - 1];
+    }
+
+    function yearTabs(years, cur) {
+        var list = Object.keys(years).map(Number).sort(function (a, b) { return b - a; });
+        if (list.length < 2) return "";
+        return '<div style="display:flex; gap:7px; margin-bottom:14px; overflow-x:auto; -webkit-overflow-scrolling:touch;">' +
+            list.map(function (y) {
+                var on = (y === cur);
+                return '<div onclick="window.mbGoYear(' + y + ')" style="flex-shrink:0; padding:8px 15px; border-radius:12px; cursor:pointer; ' +
+                    'font-size:12.5px; font-weight:800; letter-spacing:-0.2px; ' +
+                    (on ? 'background:#7F77DD; color:#FFF;' : 'background:var(--bg-sub); color:var(--text-sub);') + '">' +
+                    y + '년</div>';
+            }).join("") +
+        '</div>';
+    }
+
+    function monthStrip(months, year, cur) {
+        var cells = "";
+        for (var m = 1; m <= 12; m++) {
+            var has = !!months[m];
+            var ym = year + "-" + m;
+            var on = has && (ym === cur);
+            cells += '<div' + (has ? ' onclick="window.mbToggleMonth(\'' + ym + '\')"' : '') + ' ' +
+                'style="flex:1; text-align:center; padding:9px 0; border-radius:10px; ' +
+                'font-size:11.5px; font-weight:800; letter-spacing:-0.3px; ' +
+                (on ? 'background:rgba(127,119,221,0.14); color:#7F77DD;'
+                    : has ? 'color:var(--text-s); cursor:pointer;'
+                          : 'color:var(--text-sub); opacity:0.32;') + '">' +
+                m + '월' +
+                (has ? '<div style="width:3px; height:3px; border-radius:50%; background:' + (on ? '#7F77DD' : 'var(--border)') + '; margin:3px auto 0;"></div>'
+                     : '<div style="height:6px;"></div>') +
+            '</div>';
+        }
+        return '<div style="display:flex; gap:1px; background:var(--bg-card); border:1px solid var(--border); ' +
+            'border-radius:16px; padding:5px 4px; margin-bottom:20px;">' + cells + '</div>';
+    }
+
+    function monthRow(year, m, days, isOpen) {
+        var ym = year + "-" + m;
+        var age = monthAgeLabel(days[0].key);
+        return '<div id="mb-m-' + ym + '" onclick="window.mbToggleMonth(\'' + ym + '\')" ' +
+            'style="position:relative; display:flex; justify-content:space-between; align-items:center; ' +
+            'padding:14px 2px; margin:' + (isOpen ? '26px 0 14px' : '0') + '; cursor:pointer;' +
+            (isOpen ? '' : ' border-bottom:1px solid var(--border);') + '">' +
+            '<div style="position:absolute; left:-29px; top:50%; margin-top:-4px; width:7px; height:7px; border-radius:50%; ' +
+                'background:' + (isOpen ? '#7F77DD' : 'var(--border)') + '; border:3px solid var(--bg-main);"></div>' +
+            '<span style="font-size:' + (isOpen ? '13.5' : '13') + 'px; font-weight:800; color:' +
+                (isOpen ? 'var(--text-m)' : 'var(--text-sub)') + '; letter-spacing:-0.2px;">' +
+                m + '월' + esc(age) + '</span>' +
+            '<span style="font-size:11.5px; font-weight:700; color:var(--text-sub);">' +
+                days.length + '일' + (isOpen ? '' : '  ›') + '</span>' +
+        '</div>';
+    }
+
     /* ---------- 배냇함 그리기 ---------- */
 
     window.renderMemoryBox = function () {
@@ -579,17 +680,45 @@
                 '</div>' +
             '</div>';
         } else {
-            var lastYm = "";
-            timeline.forEach(function (d) {
-                var dt = parseKey(d.key);
-                var ym = dt.getFullYear() + "년 " + (dt.getMonth() + 1) + "월";
-                if (ym !== lastYm) {
-                    lastYm = ym;
-                    body += '<div style="position:relative; font-size:12px; font-weight:800; color:var(--text-sub); letter-spacing:2px; margin:34px 4px 16px;">' +
-                        '<div style="position:absolute; left:-29px; top:2px; width:7px; height:7px; border-radius:50%; background:var(--border); border:3px solid var(--bg-main);"></div>' +
-                        esc(ym + monthAgeLabel(d.key)) + '</div>';
-                }
-                body += dayCard(d);
+            var years = groupTimeline(timeline);
+            var yearList = Object.keys(years).map(Number).sort(function (a, b) { return b - a; });
+
+            // 처음 열면 가장 최근 해의 가장 최근 달
+            if (openYear === null || !years[openYear]) openYear = yearList[0];
+            var months = years[openYear];
+            var monthList = Object.keys(months).map(Number).sort(function (a, b) { return b - a; });
+            if (!openMonth || openMonth.split("-")[0] != openYear || !months[Number(openMonth.split("-")[1])]) {
+                openMonth = openYear + "-" + monthList[0];
+            }
+
+            body += yearTabs(years, openYear);
+            body += monthStrip(months, openYear, openMonth);
+
+            monthList.forEach(function (m) {
+                var ym = openYear + "-" + m;
+                var days = months[m];
+                var isOpen = (ym === openMonth);
+
+                body += monthRow(openYear, m, days, isOpen);
+                if (!isOpen) return;
+
+                // 카드가 많을 때만 주 구분선. 적으면 오히려 방해다.
+                var showWeeks = days.length >= 8;
+                var lastWeek = "";
+                days.forEach(function (d) {
+                    if (showWeeks) {
+                        var w = weekLabel(d.key);
+                        if (w !== lastWeek) {
+                            lastWeek = w;
+                            body += '<div style="position:relative; font-size:10.5px; font-weight:800; color:var(--text-sub); ' +
+                                'letter-spacing:1.8px; margin:20px 4px 12px; opacity:0.75;">' +
+                                '<div style="position:absolute; left:-27px; top:1px; width:5px; height:5px; border-radius:50%; ' +
+                                    'background:var(--border); border:2px solid var(--bg-main);"></div>' +
+                                esc(w) + '</div>';
+                        }
+                    }
+                    body += dayCard(d);
+                });
             });
         }
 
@@ -624,7 +753,10 @@
             // 잠긴 자리도 보이게 둔다. 빈자리보다 잠긴 자리가 낫다.
             (typeof window.renderPremiumRow === "function" ? window.renderPremiumRow() : "") +
 
-            (timeline.length || birthTime() ? '<div style="font-size:12px; font-weight:800; color:var(--text-sub); letter-spacing:2px; margin:36px 4px 18px;">연대기</div>' : '') +
+            (timeline.length || birthTime() ? '<div id="mb-chronicle" style="display:flex; justify-content:space-between; align-items:baseline; margin:36px 4px 18px;">' +
+                '<span style="font-size:12px; font-weight:800; color:var(--text-sub); letter-spacing:2px;">연대기</span>' +
+                (timeline.length ? '<span style="font-size:11px; font-weight:700; color:var(--text-sub); opacity:0.7;">' + timeline.length + '일이 담겼어요</span>' : '') +
+            '</div>' : '') +
             (timeline.length || birthTime() ?
                 '<div style="position:relative; padding-left:28px;">' +
                     '<div style="position:absolute; left:5px; top:6px; bottom:24px; width:1px; background:var(--border);"></div>' +
