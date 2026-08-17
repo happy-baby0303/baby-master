@@ -123,7 +123,11 @@
     window.firstFillSeal = function () {
         if (typeof window.openSealSheet !== "function") return window.firstFillSkip();
         waitFor("seal", function () { step = 4; draw(); });
-        window.openSealSheet();
+
+        // 화면이 '스무 살'이라고 약속했으니 그대로 연다.
+        // 여기서 다섯 개 중에 고르게 하면 약속이 깨지고, 고민이 이탈이 된다.
+        var fixed = (typeof window.sealPresetBy === "function") ? window.sealPresetBy("스무 살") : null;
+        window.openSealSheet(fixed || undefined);
     };
 
     /* ---------- 그리기 ---------- */

@@ -197,11 +197,20 @@
         return out;
     }
 
+    window.sealPresets = presets;
+
+    // 라벨로 하나 집어오기 (첫 담기에서 '스무 살'을 고정으로 쓴다)
+    window.sealPresetBy = function (label) {
+        return presets().filter(function (p) { return p.label === label; })[0] || null;
+    };
+
     /* ---------- 쓰기 ---------- */
 
-    var draft = { at: null, label: "", to: "" };
+    var draft = { at: null, label: "", to: "", locked: false };
 
-    window.openSealSheet = function () {
+    // fixed 를 주면 '언제 열까요' 단계를 건너뛰고 바로 쓰기로 간다.
+    // 온보딩처럼 고민할 여유가 없는 자리에서는 선택지가 곧 이탈이다.
+    window.openSealSheet = function (fixed) {
         var pro = (typeof window.isPremium !== "function") || window.isPremium();
         if (!pro && load().length >= FREE_MAX) {
             if (typeof window.openUpsell === "function") return window.openUpsell("book");
@@ -209,7 +218,13 @@
         }
         if (!birth()) return toast("생년월일을 먼저 등록해 주세요");
 
-        draft = { at: null, label: "", to: "" };
+        if (fixed && fixed.at) {
+            draft = { at: fixed.at, label: fixed.label, to: fixed.to, locked: true };
+            drawSeal("write");
+            return;
+        }
+
+        draft = { at: null, label: "", to: "", locked: false };
         drawSeal("when");
     };
 
@@ -220,7 +235,7 @@
     };
 
     window.pickSealDate = function (at, label, to) {
-        draft = { at: at, label: label, to: to };
+        draft = { at: at, label: label, to: to, locked: false };
         drawSeal("write");
     };
 
@@ -228,7 +243,7 @@
         var el = document.getElementById("seal-custom");
         if (!el || !el.value) return toast("날짜를 골라주세요");
         if (fromKey(el.value).getTime() <= today0().getTime()) return toast("오늘보다 뒤여야 해요");
-        draft = { at: el.value, label: "직접 정한 날", to: "그날의" };
+        draft = { at: el.value, label: "직접 정한 날", to: "그날의", locked: false };
         drawSeal("write");
     };
 
@@ -314,7 +329,9 @@
                     'font-size:22px; line-height:1.65; outline:none; resize:none;"></textarea>' +
 
                 '<div style="display:flex; gap:9px; margin-top:14px;">' +
-                    '<div onclick="window.openSealSheet()" style="padding:15px 20px; background:var(--bg-sub); color:var(--text-sub); border-radius:14px; font-size:14px; font-weight:700; cursor:pointer;">뒤로</div>' +
+                    (draft.locked
+                        ? '<div onclick="window.closeSealSheet()" style="padding:15px 20px; background:var(--bg-sub); color:var(--text-sub); border-radius:14px; font-size:14px; font-weight:700; cursor:pointer;">닫기</div>'
+                        : '<div onclick="window.openSealSheet()" style="padding:15px 20px; background:var(--bg-sub); color:var(--text-sub); border-radius:14px; font-size:14px; font-weight:700; cursor:pointer;">뒤로</div>') +
                     '<div onclick="window.doSeal()" style="flex:1; text-align:center; padding:15px; background:' + GOLD + '; color:#FFF; border-radius:14px; font-size:15px; font-weight:800; cursor:pointer;">🕯️ 봉인하기</div>' +
                 '</div>' +
                 '<div style="text-align:center; font-size:11px; font-weight:600; color:var(--text-sub); margin-top:12px; line-height:1.6;">' +
