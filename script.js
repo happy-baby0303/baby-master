@@ -9753,7 +9753,9 @@ window.applyCommunityWaitlist = function(btn) {
     if (typeof db !== 'undefined' && typeof setDoc === 'function' && typeof doc === 'function') {
         setDoc(doc(db, "waitlist", String(myKakaoId)), {
             kakaoId: myKakaoId,
-            firebase_uid: (window.auth && window.auth.currentUser) ? window.auth.currentUser.uid : localStorage.getItem('firebase_uid'),
+            firebase_uid: (window.auth && window.auth.currentUser)
+                ? window.auth.currentUser.uid
+                : (function () { throw new Error("not-signed-in"); })(),
             nickname: myNickname,
             appliedAt: new Date().toISOString()
         }, {merge: true}).then(() => {
@@ -13151,8 +13153,12 @@ window.applyPremiumWaitlist = function(btn) {
         return window.showToast('이미 얼리버드 탑승을 완료하셨어요! 🤍');
     }
 
-    // 🚨 카카오 ID 대신 안전한 파이어베이스 UID 사용!
-    const myUid = localStorage.getItem('firebase_uid');
+   // 저장 경로가 곧 권한이다. 캐시된 값이 아니라 '지금 로그인된' UID 를 쓴다.
+    // 규칙이 request.auth.uid 와 문서 ID 를 대조하기 때문에,
+    // 로컬 캐시가 한 세대라도 어긋나면 permission-denied 가 난다.
+    const liveUid = (window.auth && window.auth.currentUser) ? window.auth.currentUser.uid : null;
+   const myUid = liveUid;   // 캐시로는 시도하지 않는다. 어차피 규칙이 거부한다.
+    if (liveUid) localStorage.setItem('firebase_uid', liveUid);
     const myNickname = localStorage.getItem('community_nickname') || localStorage.getItem('kakao_nickname') || '익명엄빠';
     
     if(!myUid) {
@@ -13190,12 +13196,16 @@ window.applyPremiumWaitlist = function(btn) {
                 if(paywall) paywall.remove();
             }, 1500);
 
-        }).catch((e) => {
+      }).catch((e) => {
             console.error("얼리버드 저장 실패:", e);
             btn.innerText = "얼리버드 1년 무료 신청하기";
             btn.disabled = false;
-            window.showToast("앗, 통신 지연이 발생했어요. 다시 시도해주세요.");
-        });
+            window.showToast(
+                (e && e.code === 'permission-denied')
+                    ? "로그인이 만료된 것 같아요. 다시 로그인하고 시도해주세요."
+                    : "앗, 통신 지연이 발생했어요. 다시 시도해주세요."
+            );
+           });
     } else {
         window.showToast("오프라인 상태입니다. 나중에 다시 시도해주세요.");
     }
