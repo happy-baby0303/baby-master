@@ -610,6 +610,7 @@
 
             (typeof window.renderNextAnniversary === "function" ? window.renderNextAnniversary() : "") +
             unsyncedWarning() +
+            (typeof window.renderSealedBar === "function" ? window.renderSealedBar() : "") +
             todayBar() +
 
             '<div style="display:flex; gap:10px; margin-bottom:8px;">' +
