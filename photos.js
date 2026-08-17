@@ -14,8 +14,17 @@
     'use strict';
 
     var IDX_KEY     = "tosil_day_photos";
-    var MAX_SIDE    = 1080;   // 긴 변 기준
+    /* 화질을 두 갈래로 나눈다.
+       그날의 사진은 화면에서 보는 것이라 가볍게.
+       도감 사진은 언젠가 종이책이 될 것이라 넉넉하게.
+
+       한번 압축해서 올리면 원본은 영영 못 되찾는다.
+       나중에 코드를 고쳐도 오늘 올린 사진은 오늘 화질 그대로다.
+       그래서 아낄 데와 안 아낄 데를 지금 갈라둔다. */
+    var MAX_SIDE    = 1080;   // 그날의 사진 — 긴 변 기준
     var QUALITY     = 0.72;
+    var MS_SIDE     = 1600;   // 도감 사진 — 인쇄까지 버티는 크기
+    var MS_QUALITY  = 0.85;
     var MAX_PER_DAY = 3;      // '그날의 사진'만 해당. 첫 순간 사진은 항목마다 1장씩 따로.
     var DAY         = 86400000;
 
@@ -424,7 +433,7 @@
         toast("⏳ 배냇함에 담는 중이에요…");
         var done = 0;
         picked.forEach(function (file) {
-            shrink(file, function (dataUrl) {
+            shrink(file, !!msId, function (dataUrl) {
                 if (!dataUrl) return;
                 upload(key, msId, uidNow, dataUrl, function () {
                     done++;
@@ -440,19 +449,21 @@
         });
     }
 
-    // 긴 변 1080px, 품질 0.72. 화면에서 보기엔 충분하고 통신비는 가볍다.
-    function shrink(file, cb) {
+    // 도감 사진이면 1600px/0.85, 그날의 사진이면 1080px/0.72
+    function shrink(file, forMilestone, cb) {
+        var side = forMilestone ? MS_SIDE : MAX_SIDE;
+        var q    = forMilestone ? MS_QUALITY : QUALITY;
         var reader = new FileReader();
         reader.onload = function (e) {
             var img = new Image();
             img.onload = function () {
                 var w = img.width, h = img.height;
-                if (w > h) { if (w > MAX_SIDE) { h *= MAX_SIDE / w; w = MAX_SIDE; } }
-                else       { if (h > MAX_SIDE) { w *= MAX_SIDE / h; h = MAX_SIDE; } }
+                if (w > h) { if (w > side) { h *= side / w; w = side; } }
+                else       { if (h > side) { w *= side / h; h = side; } }
                 var c = document.createElement("canvas");
                 c.width = Math.round(w); c.height = Math.round(h);
                 c.getContext("2d").drawImage(img, 0, 0, c.width, c.height);
-                try { cb(c.toDataURL("image/jpeg", QUALITY)); }
+                try { cb(c.toDataURL("image/jpeg", q)); }
                 catch (err) { console.warn("[배냇함 사진] 변환 실패", err); cb(null); }
             };
             img.onerror = function () { cb(null); };

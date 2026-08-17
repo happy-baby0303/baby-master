@@ -99,10 +99,10 @@
         if (typeof window.getCachedPhotoData === "function") {
             try {
                 var c = await window.getCachedPhotoData(p.id);
-                if (c) { var d = await toDataUrl(c, 1000); if (d) return d; }
+                if (c) { var d = await toDataUrl(c, 1400); if (d) return d; }
             } catch (e) {}
         }
-        return await toDataUrl(p.url, 1000);
+        return await toDataUrl(p.url, 1400);   // 도감 사진이 1600px 이라 책에서도 살린다
     }
 
     /* ---------- 재료 모으기 ---------- */
