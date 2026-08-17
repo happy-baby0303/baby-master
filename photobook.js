@@ -278,21 +278,26 @@
 
     function voicePage(list, folio) {
         var rows = list.map(function (v) {
-            return '<div style="display:flex; align-items:baseline; gap:18px; padding:22px 0; border-bottom:1px solid ' + LINE + ';">' +
-                '<span style="font-size:24px; color:' + GOLD + ';">◗</span>' +
-                '<span style="flex:1; font-size:26px; font-weight:600;">' + esc(v.label) + '</span>' +
-                '<span style="font-size:20px; font-weight:600; color:' + INK_L + ';">' + esc(v.when) + '  ·  ' + v.sec + '초</span>' +
+            var wave = (typeof window.renderWave === "function" && v.peaks)
+                ? window.renderWave(v.peaks, { w: 900, h: 74, color: "#C69A3C", gap: 2.2, min: 3 })
+                : "";
+            return '<div style="padding:26px 0; border-bottom:1px solid ' + LINE + ';">' +
+                '<div style="display:flex; align-items:baseline; gap:16px; margin-bottom:' + (wave ? 14 : 0) + 'px;">' +
+                    '<span style="flex:1; font-size:26px; font-weight:600;">' + esc(v.label) + '</span>' +
+                    '<span style="font-size:19px; font-weight:600; color:' + INK_L + ';">' + esc(v.when) + '  ·  ' + v.sec + '초</span>' +
+                '</div>' +
+                wave +
             '</div>';
         }).join("");
 
         return shell(
             '<div style="height:100%; display:flex; flex-direction:column;">' +
                 '<div style="font-size:16px; font-weight:800; color:' + GOLD + '; letter-spacing:5px; margin-bottom:14px;">담긴 목소리</div>' +
-                '<div style="font-family:\'Gowun Batang\',serif; font-size:44px; font-weight:700; letter-spacing:-2px; margin-bottom:40px;">' +
-                    '종이에는 담기지 않는 것</div>' +
+                '<div style="font-family:\'Gowun Batang\',serif; font-size:44px; font-weight:700; letter-spacing:-2px; margin-bottom:36px;">' +
+                    '소리의 모양</div>' +
                 '<div>' + rows + '</div>' +
-                '<div style="margin-top:44px; font-size:22px; font-weight:400; color:' + INK_S + '; line-height:1.8;">' +
-                    '이 소리들은 앱 안에 그대로 있습니다.<br>배냇함을 열면 언제든 다시 들을 수 있어요.</div>' +
+                '<div style="margin-top:40px; font-size:22px; font-weight:400; color:' + INK_S + '; line-height:1.8;">' +
+                    '소리는 종이에 담기지 않지만,<br>그 모양은 이렇게 남길 수 있습니다.</div>' +
             '</div>', folio
         );
     }
@@ -453,7 +458,7 @@
             window.voiceDays().sort().forEach(function (k) {
                 (window.getDayVoices(k) || []).forEach(function (v) {
                     var t = v.msId && typeof msItem === "function" && msItem(v.msId) ? msItem(v.msId).title : (v.note || "그날의 소리");
-                    vs.push({ label: t, when: pretty(k), sec: v.sec || 0 });
+                    vs.push({ label: t, when: pretty(k), sec: v.sec || 0, peaks: v.peaks || null });
                 });
             });
             if (vs.length) pages.push({ type: "voice", list: vs });

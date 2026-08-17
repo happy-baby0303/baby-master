@@ -166,6 +166,12 @@
         saveIndex(idx);
     }
 
+    window.attachVoicePeaks = function (key, id, peaks) {
+        var idx = loadIndex();
+        (idx[key] || []).forEach(function (v) { if (v.id === id) v.peaks = peaks; });
+        saveIndex(idx);
+    };
+
     function dropVoice(key, id) {
         var idx = loadIndex();
         if (!Array.isArray(idx[key])) return;
@@ -371,9 +377,16 @@
             await window.uploadString(ref, dataUrl, "data_url");
             var url = await window.getDownloadURL(ref);
 
+            // 파형은 지금 계산해서 숫자 120개로 저장한다.
+            // 나중에 URL 로 다시 받아 디코딩하면 느리고 CORS 도 탄다.
+            var peaks = null;
+            if (typeof window.peaksFrom === "function") {
+                try { peaks = await window.peaksFrom(blob); } catch (e) {}
+            }
+
             putVoice(key, {
                 id: id, url: url, path: path, ts: Date.now(),
-                sec: Math.round(blobSec), note: note, msId: msId
+                sec: Math.round(blobSec), note: note, msId: msId, peaks: peaks
             });
             window.syncVoicesToFirebase();
 
@@ -565,6 +578,18 @@
 
     /* ---------- 배냇함에 그리기 ---------- */
 
+    // 소리의 모양. 저장된 게 없으면 그려두고 나중에 채운다.
+    function wave(v, key, h) {
+        if (typeof window.renderWave !== "function") return "";
+        var opts = { w: 260, h: h || 26, color: v.msId ? "#B98A2E" : "#7F77DD", gap: 1.4, min: 2 };
+        var boxId = "wv-" + v.id;
+        var inner = (Array.isArray(v.peaks) && v.peaks.length) ? window.renderWave(v.peaks, opts) : "";
+        if (!inner && typeof window.paintWaveLater === "function") {
+            window.paintWaveLater(boxId, key, v.id, opts);
+        }
+        return '<div id="' + boxId + '" style="margin:5px 0 3px; opacity:0.85;">' + inner + '</div>';
+    }
+
     function chip(v, key) {
         return '<div style="display:flex; align-items:center; gap:11px; background:var(--bg-sub); border-radius:15px; padding:12px 14px;">' +
             '<div id="vplay-' + esc(v.id) + '" onclick="event.stopPropagation(); window.playVoice(\'' + key + '\',\'' + esc(v.id) + '\')" ' +
@@ -572,6 +597,7 @@
             '<div style="flex:1; min-width:0;">' +
                 '<div style="font-size:13px; font-weight:800; color:var(--text-m); letter-spacing:-0.3px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">' +
                     (v.msId ? esc(msTitle(v.msId) || "목소리") : (v.note ? esc(v.note) : "그날의 소리")) + '</div>' +
+                wave(v, key, 26) +
                 '<div style="font-size:11px; font-weight:700; color:var(--text-sub); margin-top:2px;">' +
                     (v.sec || 0) + '초' + (v.msId && v.note ? "  ·  " + esc(v.note) : "") + '</div>' +
             '</div>' +
@@ -673,9 +699,15 @@
                                 '<div style="font-size:11.5px; font-weight:700; color:var(--text-sub); margin-top:3px;">' +
                                     esc(prettyKey(k)) + '  ·  ' + esc(ddayOf(k)) + '  ·  ' + (v.sec || 0) + '초</div>' +
                             '</div>' +
-                            '<span onclick="window.removeVoice(\'' + k + '\',\'' + esc(v.id) + '\'); window.openVoiceBox();" ' +
-                                'style="font-size:11px; font-weight:700; color:var(--text-sub); cursor:pointer; padding:6px; flex-shrink:0;">빼기</span>' +
                         '</div>' +
+                        wave(v, k, 40) +
+                        '<div style="display:flex; gap:7px; margin-top:10px;">' +
+                            (typeof window.downloadWaveCard === "function"
+                                ? '<span onclick="window.downloadWaveCard(\'' + k + '\',\'' + esc(v.id) + '\')" ' +
+                                  'style="flex:1; text-align:center; padding:9px; border-radius:11px; background:rgba(185,138,46,0.12); ' +
+                                  'font-size:11px; font-weight:800; color:#B98A2E; cursor:pointer;">🎵 파형 엽서로 저장</span>' : '') +
+                            '<span onclick="window.removeVoice(\'' + k + '\',\'' + esc(v.id) + '\'); window.openVoiceBox();" ' +
+                                'style="padding:9px 14px; border-radius:11px; background:var(--bg-sub); font-size:11px; font-weight:700; color:var(--text-sub); cursor:pointer;">빼기</span>' +
                         (isMs && v.note ? '<div style="font-family:\'Nanum Pen Script\',cursive; font-size:19px; color:var(--text-s); margin-top:10px; padding-left:55px; line-height:1.4;">' + esc(v.note) + '</div>' : '') +
                     '</div>';
                 });
