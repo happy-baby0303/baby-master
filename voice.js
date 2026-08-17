@@ -104,6 +104,9 @@
         return GUIDE[GUIDE.length - 1];
     }
 
+    // 첫 담기 화면에서도 쓴다
+    window.guideWhat = function () { return guide().what; };
+
     function tipOfDay() {
         return TIPS[ddays() % TIPS.length];
     }
