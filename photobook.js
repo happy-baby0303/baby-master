@@ -484,26 +484,45 @@
     };
 
     /* 로드 순서에 기대지 않는 방법.
-       premium.js 가 나중에 로드돼 함수를 덮어써도, 클릭은 문서에서 먼저 잡는다.
-       캡처 단계라 인라인 onclick 보다 앞선다. */
+       premium.js 가 나중에 로드되면 window.exportMemoryBook 을 자기 껍데기로
+       덮어쓴다. 그 껍데기는 프리미엄 사용자에게 아무것도 안 한다.
+       그래서 두 겹으로 막는다.
+         1) 클릭을 문서에서 캡처 단계로 먼저 잡고, 내부 함수를 직접 부른다
+         2) 로드가 끝난 뒤 이름을 다시 가져온다 */
+
+    var realExport = window.exportMemoryBook;
+
     document.addEventListener("click", function (e) {
-        var el = e.target && e.target.closest ? e.target.closest('[onclick*="requirePremium"]') : null;
+        if (!e.target || !e.target.closest) return;
+        var el = e.target.closest('[onclick*="MemoryBook"], [onclick*="requirePremium"]');
         if (!el) return;
 
-        var pro = (typeof window.isPremium !== "function") || window.isPremium();
-        if (!pro) return;                        // 무료 사용자는 원래대로 안내창
-
         var oc = el.getAttribute("onclick") || "";
-        var hit = function (k) { return oc.indexOf("'" + k + "'") > -1 || oc.indexOf('"' + k + '"') > -1; };
+        var wantBook  = oc.indexOf("MemoryBook") > -1 || oc.indexOf("'book'") > -1 || oc.indexOf('"book"') > -1;
+        var wantVoice = oc.indexOf("'voice'") > -1 || oc.indexOf('"voice"') > -1;
+        if (!wantBook && !wantVoice) return;
 
-        if (hit("book")) {
-            e.preventDefault(); e.stopPropagation();
-            window.exportMemoryBook();
-        } else if (hit("voice") && typeof window.openVoiceSheet === "function") {
-            e.preventDefault(); e.stopPropagation();
-            window.openVoiceSheet();
+        e.preventDefault();
+        e.stopPropagation();
+
+        var pro = (typeof window.isPremium !== "function") || window.isPremium();
+
+        if (wantBook) {
+            if (!pro && typeof window.openUpsell === "function") return window.openUpsell("book");
+            window.makeMemoryBook();          // 내부에서 다시 잡아둔 이름
+        } else {
+            if (!pro && typeof window.openUpsell === "function") return window.openUpsell("voice");
+            if (typeof window.openVoiceSheet === "function") window.openVoiceSheet();
         }
     }, true);
+
+    // 누가 덮어썼든 되찾는다
+    function claim() {
+        if (window.exportMemoryBook !== realExport) window.exportMemoryBook = realExport;
+    }
+    setTimeout(claim, 0);
+    setTimeout(claim, 1200);
+    if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", claim);
 
     var origRequire = window.requirePremium;
     window.requirePremium = function (key) {

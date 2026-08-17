@@ -255,6 +255,11 @@
 
         // 6. 기념일 (anniversaries.js 가 있을 때만)
         //    아무 기록이 없어도 백일과 첫 명절은 연대기에 놓인다.
+        // 한 줄만 남긴 날도 연대기에 놓인다
+        if (typeof window.noteDays === "function") {
+            window.noteDays().forEach(function (k) { touch(k); });
+        }
+
         // 소리만 담긴 날도 연대기에 놓인다
         if (typeof window.voiceDays === "function") {
             window.voiceDays().forEach(function (k) { touch(k); });
@@ -417,6 +422,11 @@
             '</div>';
         }
 
+        // 부모의 한 줄은 맨 마지막. 하루를 닫는 글이다.
+        if (typeof window.renderNoteRow === "function") {
+            inner += window.renderNoteRow(d.key);
+        }
+
         if (!inner) return "";
 
         // 그 자리에서 바로 담을 수 있게
@@ -425,6 +435,9 @@
         }
         if (typeof window.renderVoiceAdd === "function") {
             inner += window.renderVoiceAdd(d.key);
+        }
+        if (typeof window.renderNoteAdd === "function") {
+            inner += window.renderNoteAdd(d.key);
         }
 
         return '<div style="position:relative; background:var(--bg-card); border:1px solid var(--border); border-radius:22px; padding:24px 22px; margin-bottom:16px; box-shadow:0 4px 16px rgba(0,0,0,0.03);">' +
@@ -506,6 +519,7 @@
             (typeof window.renderNextAnniversary === "function" ? window.renderNextAnniversary() : "") +
             (typeof window.addDayPhoto === "function" ? todayPhotoBar() : "") +
             (typeof window.renderVoiceBar === "function" ? window.renderVoiceBar() : "") +
+            (typeof window.renderNoteBar === "function" ? window.renderNoteBar() : "") +
 
             '<div style="display:flex; gap:10px; margin-bottom:8px;">' +
                 shortcut("💌", "편지함", "쌓인 편지 읽기", "window.openLetterBox()") +
