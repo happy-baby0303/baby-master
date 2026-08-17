@@ -9749,13 +9749,19 @@ window.applyCommunityWaitlist = function(btn) {
         }, "💬", "로그인 하러가기", "#3182F6");
     }
 
+     // 로그인 세션이 없으면 보내봐야 규칙이 거부한다. 아예 안 보낸다.
+    const liveUid = (window.auth && window.auth.currentUser) ? window.auth.currentUser.uid : null;
+    if (!liveUid) {
+        return window.showConfirm("알림을 받으시려면 먼저 로그인해주세요!", function() {
+            window.switchTab('settings');
+        }, "💬", "로그인 하러가기", "#3182F6");
+    }
+
     // 3. 파이어베이스 [waitlist] 폴더에 카카오ID 저장!
     if (typeof db !== 'undefined' && typeof setDoc === 'function' && typeof doc === 'function') {
         setDoc(doc(db, "waitlist", String(myKakaoId)), {
             kakaoId: myKakaoId,
-            firebase_uid: (window.auth && window.auth.currentUser)
-                ? window.auth.currentUser.uid
-                : (function () { throw new Error("not-signed-in"); })(),
+            firebase_uid: liveUid,
             nickname: myNickname,
             appliedAt: new Date().toISOString()
         }, {merge: true}).then(() => {
@@ -9767,9 +9773,13 @@ window.applyCommunityWaitlist = function(btn) {
             btn.innerText = "✅ 알림 신청 완료";
             btn.style.background = "#00B37A";
             btn.style.boxShadow = "none";
-        }).catch((e) => {
+          }).catch((e) => {
             console.error("대기명단 저장 에러:", e);
-            window.showToast("앗, 일시적인 오류가 발생했어요. 다시 시도해주세요.");
+            window.showToast(
+                (e && e.code === 'permission-denied')
+                    ? "로그인이 만료된 것 같아요. 다시 로그인하고 시도해주세요."
+                    : "앗, 일시적인 오류가 발생했어요. 다시 시도해주세요."
+            );
         });
     } else {
         window.showToast("오프라인 상태입니다. 나중에 다시 시도해주세요.");
@@ -13075,25 +13085,25 @@ window.showPaywall = function() {
                         <div style="position: absolute; top: -10px; left: 16px; background: #38BDF8; color: #0F172A; font-size: 10px; font-weight: 900; padding: 4px 8px; border-radius: 6px; letter-spacing: 0.5px;">BEST VALUE (20% 할인)</div>
                         <div>
                             <div style="font-size: 14px; font-weight: 800; color: #38BDF8; margin-bottom: 2px;">1년 플랜</div>
-                            <div style="font-size: 12px; color: #94A3B8;">연 ₩46,800 일시불</div>
+                            <div style="font-size: 12px; color: #94A3B8;">연 ₩39,000 일시불</div>
                         </div>
                         <div style="display: flex; align-items: center; gap: 12px;">
                             <div style="text-align: right;">
                                 <div style="font-size: 11px; color: #94A3B8; text-decoration: line-through;">₩58,800</div>
-                                <div style="font-size: 16px; font-weight: 900; color: #FFF;">₩3,900<span style="font-size: 12px; color: #38BDF8; font-weight: 600;"> /월</span></div>
+                                <div style="font-size: 16px; font-weight: 900; color: #FFF;">₩3,250<span style="font-size: 12px; color: #38BDF8; font-weight: 600;"> /월</span></div>
                             </div>
                             <div class="check-circle" style="width: 20px; height: 20px; border-radius: 50%; border: 2px solid #38BDF8; background: #38BDF8; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 900; color: #FFF; transition: 0.2s;">✓</div>
                         </div>
                     </div>
 
-                    <div id="plan-life" class="plan-card" onclick="window.selectPlan('life')" style="background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.1); border-radius: 16px; padding: 16px; display: flex; justify-content: space-between; align-items: center; cursor: pointer; transition: 0.2s;">
+                    <div style="background: rgba(185,138,46,0.10); border: 1px solid rgba(185,138,46,0.32); border-radius: 16px; padding: 16px; display: flex; justify-content: space-between; align-items: center;">
                         <div>
-                            <div style="font-size: 14px; font-weight: 800; color: #E2E8F0; margin-bottom: 2px;">평생 소장 플랜</div>
-                            <div style="font-size: 12px; color: #94A3B8;">단 한 번 결제로 둘째, 셋째까지</div>
+                            <div style="font-size: 14px; font-weight: 800; color: #D2A340; margin-bottom: 2px;">📖 실물 포토북</div>
+                            <div style="font-size: 12px; color: #94A3B8;">담긴 걸 한 권으로 인쇄해서 배송</div>
                         </div>
-                        <div style="display: flex; align-items: center; gap: 12px;">
+                        <div style="text-align: right;">
                             <div style="font-size: 16px; font-weight: 900; color: #FFF;">₩89,000</div>
-                            <div class="check-circle" style="width: 20px; height: 20px; border-radius: 50%; border: 2px solid #64748B; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 900; color: #FFF; transition: 0.2s;"></div>
+                            <div style="font-size: 10px; font-weight: 800; color: #D2A340; margin-top: 3px;">준비 중</div>
                         </div>
                     </div>
 
