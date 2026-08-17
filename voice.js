@@ -67,6 +67,47 @@
                   .filter(Boolean);
     }
 
+    /* ---------- 무엇을 담을까 ----------
+       녹음기를 열어놓고 "뭘 녹음하지" 하다가 그냥 닫는다.
+       지금 이 아기가 낼 수 있는 소리를 하나만 짚어준다. -------- */
+
+    function ddays() {
+        var s = localStorage.getItem("tosil_startDate");
+        if (!s) return 0;
+        var p = s.split("-");
+        var b = new Date(Number(p[0]), Number(p[1]) - 1, Number(p[2])).getTime();
+        if (isNaN(b)) return 0;
+        var t = new Date(); t.setHours(0, 0, 0, 0);
+        return Math.max(0, Math.floor((t.getTime() - b) / DAY));
+    }
+
+    var GUIDE = [
+        { until:  59, what: "숨소리와 하품",       why: "이 시기 소리는 정말 짧게 지나가요" },
+        { until: 119, what: "아~ 우~ 하는 쿠잉",   why: "말이 되기 전의 첫 소리예요" },
+        { until: 209, what: "까르르 웃는 소리",     why: "옹알이가 가장 길어지는 때예요" },
+        { until: 299, what: "바바, 마마 같은 소리", why: "곧 단어로 바뀌어요. 지금이 마지막이에요" },
+        { until: 399, what: "이름 부르면 내는 대답", why: "첫 단어 직전의 소리예요" },
+        { until: 9999, what: "지금 하는 말버릇",    why: "말투는 몇 달이면 또 바뀝니다" }
+    ];
+
+    var TIPS = [
+        "TV를 끄면 목소리가 훨씬 선명해요",
+        "폰을 30cm 안쪽에 두세요",
+        "수유 후나 목욕 후에 제일 잘 놀아요",
+        "말을 걸면 대답하듯 소리를 내요",
+        "부모 목소리를 같이 담아도 좋아요. 나중엔 그것도 그리워져요"
+    ];
+
+    function guide() {
+        var d = ddays();
+        for (var i = 0; i < GUIDE.length; i++) if (d <= GUIDE[i].until) return GUIDE[i];
+        return GUIDE[GUIDE.length - 1];
+    }
+
+    function tipOfDay() {
+        return TIPS[ddays() % TIPS.length];
+    }
+
     function repaint() {
         if (typeof window.renderMemoryBox === "function") {
             try { window.renderMemoryBox(); } catch (e) {}
@@ -387,6 +428,7 @@
             }).join("") + '</div>';
 
         var left = Math.max(0, MAX_SEC - Math.round(blobSec));
+        var g = guide();
         var body;
 
         if (state === "idle") {
@@ -397,6 +439,14 @@
                     '</div>' +
                     '<div style="font-size:13px; font-weight:700; color:var(--text-sub); margin-top:16px;">눌러서 녹음을 시작하세요</div>' +
                     '<div style="font-size:11.5px; font-weight:600; color:var(--text-sub); opacity:0.7; margin-top:5px;">최대 ' + MAX_SEC + '초까지 담깁니다</div>' +
+
+                    '<div style="text-align:left; background:var(--bg-sub); border-radius:16px; padding:16px 17px; margin-top:22px;">' +
+                        '<div style="font-size:10px; font-weight:800; color:#7F77DD; letter-spacing:2px; margin-bottom:9px;">지금 담으면 좋은 것</div>' +
+                        '<div style="font-size:14.5px; font-weight:800; color:var(--text-m); letter-spacing:-0.3px;">' + esc(g.what) + '</div>' +
+                        '<div style="font-size:12px; font-weight:600; color:var(--text-sub); margin-top:5px; line-height:1.6; word-break:keep-all;">' + esc(g.why) + '</div>' +
+                        '<div style="border-top:1px dashed var(--border); margin-top:13px; padding-top:11px; font-size:11.5px; font-weight:700; color:var(--text-sub); word-break:keep-all;">' +
+                            '💡 ' + esc(tipOfDay()) + '</div>' +
+                    '</div>' +
                 '</div>';
         } else if (state === "recording") {
             body =
@@ -447,7 +497,7 @@
                 '<span style="font-size:16px; font-weight:900; color:var(--text-m); letter-spacing:-0.3px;">🎙️ ' + esc(babyName()) + '의 목소리</span>' +
                 '<span onclick="window.closeVoiceSheet()" style="font-size:22px; font-weight:300; color:var(--text-sub); cursor:pointer; line-height:1; padding:0 4px;">×</span>' +
             '</div>' +
-            '<div style="font-size:12px; font-weight:700; color:var(--text-sub); margin-bottom:8px;">옹알이는 두 달이면 사라져요</div>' +
+            '<div style="font-size:12px; font-weight:700; color:var(--text-sub); margin-bottom:8px;">D+' + ddays() + '일 · ' + esc(g.what) + '을 담아보세요</div>' +
             body +
         '</div>';
     }
@@ -529,10 +579,130 @@
         var n = window.voiceCount();
         var pro = (typeof window.isPremium === "function") && window.isPremium();
         var lock = (!pro && n >= FREE_MAX && typeof window.lockChip === "function") ? window.lockChip("프리미엄") : "";
-        return '<div onclick="window.openVoiceSheet()" style="display:flex; justify-content:space-between; align-items:center; padding:17px 18px; border:1px dashed var(--border); border-radius:18px; margin-bottom:14px; cursor:pointer;">' +
-            '<span style="font-size:13.5px; font-weight:800; color:var(--text-m);">🎙️ 오늘 목소리 담기</span>' +
+        var act = n ? "window.openVoiceBox()" : "window.openVoiceSheet()";
+        return '<div onclick="' + act + '" style="display:flex; justify-content:space-between; align-items:center; padding:17px 18px; border:1px dashed var(--border); border-radius:18px; margin-bottom:14px; cursor:pointer;">' +
+            '<span style="font-size:13.5px; font-weight:800; color:var(--text-m);">🎙️ ' + (n ? "소리함 열기" : "오늘 목소리 담기") + '</span>' +
             '<span style="font-size:11.5px; font-weight:600; color:var(--text-sub);">' +
                 (lock || (n ? n + "개 담겼어요" : "옹알이는 지금뿐이에요")) + '</span>' +
+        '</div>';
+    };
+
+    /* ---------- 소리함 ----------
+       담을 데만 있고 모아 볼 데가 없으면, 담은 게 어디 갔는지 모른다.
+       편지함과 같은 자리에 소리함을 둔다. -------- */
+
+    function prettyKey(k) {
+        var p = String(k).split("-");
+        return Number(p[1]) + "월 " + Number(p[2]) + "일";
+    }
+
+    function ymOf(k) {
+        var p = String(k).split("-");
+        return p[0] + "년 " + Number(p[1]) + "월";
+    }
+
+    function ddayOf(k) {
+        var s2 = localStorage.getItem("tosil_startDate");
+        if (!s2) return "";
+        var b = new Date(s2 + "T00:00:00").getTime();
+        var p = String(k).split("-");
+        var t = new Date(Number(p[0]), Number(p[1]) - 1, Number(p[2])).getTime();
+        if (isNaN(b) || isNaN(t)) return "";
+        var n = Math.floor((t - b) / DAY);
+        return n >= 0 ? "D+" + n + "일" : "";
+    }
+
+    window.openVoiceBox = function () {
+        var idx = loadIndex();
+        var keys = Object.keys(idx).sort().reverse();
+        var total = window.voiceCount();
+
+        var old2 = document.getElementById("voice-box");
+        if (old2) old2.remove();
+
+        var wrap = document.createElement("div");
+        wrap.id = "voice-box";
+        wrap.setAttribute("style", "position:fixed; inset:0; z-index:100002; background:var(--bg-main); overflow-y:auto; -webkit-overflow-scrolling:touch;");
+
+        var body = "";
+        if (!total) {
+            body = '<div style="text-align:center; padding:80px 24px;">' +
+                '<div style="font-family:\'Nanum Pen Script\', cursive; font-size:26px; color:var(--text-sub); line-height:1.6;">' +
+                    '아직 담긴 소리가 없어요<br>지금 내는 소리는<br>두 달 뒤면 안 나요' +
+                '</div></div>';
+        } else {
+            var lastYm = "";
+            keys.forEach(function (k) {
+                var ym = ymOf(k);
+                if (ym !== lastYm) {
+                    lastYm = ym;
+                    body += '<div style="font-size:11.5px; font-weight:800; color:var(--text-sub); letter-spacing:2px; margin:28px 4px 12px;">' + esc(ym) + '</div>';
+                }
+                (idx[k] || []).forEach(function (v) {
+                    var isMs = !!v.msId;
+                    body +=
+                    '<div style="background:var(--bg-card); border:1px solid var(--border); border-radius:18px; padding:16px 17px; margin-bottom:9px;">' +
+                        '<div style="display:flex; align-items:center; gap:13px;">' +
+                            '<div id="vplay-' + esc(v.id) + '" onclick="window.playVoice(\'' + k + '\',\'' + esc(v.id) + '\')" ' +
+                                'style="width:42px; height:42px; border-radius:50%; background:' + (isMs ? '#B98A2E' : '#7F77DD') + '; color:#FFF; display:flex; align-items:center; justify-content:center; font-size:15px; cursor:pointer; flex-shrink:0;">▶</div>' +
+                            '<div style="flex:1; min-width:0;">' +
+                                (isMs ? '<div style="font-size:9.5px; font-weight:800; color:#B98A2E; letter-spacing:1.5px; margin-bottom:3px;">처음 해낸 일</div>' : '') +
+                                '<div style="font-size:14.5px; font-weight:800; color:var(--text-m); letter-spacing:-0.3px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">' +
+                                    (isMs ? esc(msTitle(v.msId) || "목소리") : (v.note ? esc(v.note) : "그날의 소리")) + '</div>' +
+                                '<div style="font-size:11.5px; font-weight:700; color:var(--text-sub); margin-top:3px;">' +
+                                    esc(prettyKey(k)) + '  ·  ' + esc(ddayOf(k)) + '  ·  ' + (v.sec || 0) + '초</div>' +
+                            '</div>' +
+                            '<span onclick="window.removeVoice(\'' + k + '\',\'' + esc(v.id) + '\'); window.openVoiceBox();" ' +
+                                'style="font-size:11px; font-weight:700; color:var(--text-sub); cursor:pointer; padding:6px; flex-shrink:0;">빼기</span>' +
+                        '</div>' +
+                        (isMs && v.note ? '<div style="font-family:\'Nanum Pen Script\',cursive; font-size:19px; color:var(--text-s); margin-top:10px; padding-left:55px; line-height:1.4;">' + esc(v.note) + '</div>' : '') +
+                    '</div>';
+                });
+            });
+        }
+
+        wrap.innerHTML =
+        '<div style="max-width:520px; margin:0 auto; padding:0 20px 60px;">' +
+            '<div style="position:sticky; top:0; background:var(--bg-main); padding:22px 0 16px; z-index:2;">' +
+                '<div style="display:flex; justify-content:space-between; align-items:flex-start;">' +
+                    '<div>' +
+                        '<div class="serif-display" style="font-size:23px; font-weight:700; color:var(--text-title); letter-spacing:-0.5px;">' + esc(babyName()) + '의 소리함</div>' +
+                        '<div style="font-size:13px; font-weight:600; color:var(--text-sub); margin-top:6px;">' +
+                            (total ? esc(total + "개가 담겼어요") : "첫 소리를 기다리는 중") + '</div>' +
+                    '</div>' +
+                    '<div onclick="window.closeVoiceBox()" style="font-size:22px; font-weight:300; color:var(--text-sub); cursor:pointer; padding:2px 8px; line-height:1;">×</div>' +
+                '</div>' +
+            '</div>' +
+
+            '<div onclick="window.closeVoiceBox(); window.openVoiceSheet();" style="display:flex; justify-content:space-between; align-items:center; padding:16px 18px; border:1px dashed var(--border); border-radius:18px; margin-bottom:6px; cursor:pointer;">' +
+                '<span style="font-size:13.5px; font-weight:800; color:var(--text-m);">🎙️ 새로 담기</span>' +
+                '<span style="font-size:11.5px; font-weight:600; color:var(--text-sub);">' + esc(guide().what) + '</span>' +
+            '</div>' +
+
+            body +
+            (total ? '<div style="text-align:center; font-size:11.5px; font-weight:600; color:var(--text-sub); margin-top:34px; line-height:1.7;">소리는 종이에 담기지 않아요<br>배냇함에서만 다시 들을 수 있습니다</div>' : "") +
+        '</div>';
+
+        document.body.appendChild(wrap);
+        document.body.style.overflow = "hidden";
+    };
+
+    window.closeVoiceBox = function () {
+        var el = document.getElementById("voice-box");
+        if (el) el.remove();
+        document.body.style.overflow = "";
+    };
+
+    // 도감 항목 밑에 붙는 작은 소리 줄
+    window.renderMilestoneVoice = function (msId) {
+        var f = window.getMilestoneVoice(msId);
+        if (!f) return "";
+        var v = f.voice;
+        return '<div onclick="event.stopPropagation(); window.playVoice(\'' + f.key + '\',\'' + esc(v.id) + '\')" ' +
+            'style="display:inline-flex; align-items:center; gap:7px; margin-top:8px; background:rgba(185,138,46,0.12); ' +
+            'border-radius:11px; padding:6px 11px; cursor:pointer;">' +
+            '<span id="vplay-' + esc(v.id) + '" style="font-size:10px; color:#B98A2E;">▶</span>' +
+            '<span style="font-size:11px; font-weight:800; color:#B98A2E;">그때 소리 듣기 · ' + (v.sec || 0) + '초</span>' +
         '</div>';
     };
 

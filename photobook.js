@@ -356,7 +356,16 @@
         }
     }
 
-    window.makeMemoryBook = async function () {
+    window.makeMemoryBook = function () {
+        // 조용히 끝나는 게 제일 나쁘다. 뭐가 됐든 흔적을 남긴다.
+        return bakeBook().catch(function (e) {
+            console.error("[포토북] 실패", e);
+            closeProgress();
+            toast("책을 만들지 못했어요: " + (e && e.message ? e.message : "알 수 없는 오류"));
+        });
+    };
+
+    async function bakeBook() {
         if (typeof html2canvas === "undefined") return toast("이미지 라이브러리를 불러오지 못했어요");
 
         var data = collect();
@@ -462,13 +471,50 @@
         toast("📖 " + pages.length + "쪽짜리 책이 만들어졌어요");
     };
 
-    /* ---------- 프리미엄 문 ---------- */
+    /* ---------- 프리미엄 문 ----------
+       requirePremium('book') 은 프리미엄 사용자에게 true 만 돌려주고
+       아무것도 안 한다. 그래서 눌러도 조용했다.
+       여기서 가로채서, 통과한 사람은 실제로 책이 나오게 한다. -------- */
 
     window.exportMemoryBook = function () {
         if (typeof window.isPremium === "function" && !window.isPremium()) {
             if (typeof window.openUpsell === "function") return window.openUpsell("book");
         }
         window.makeMemoryBook();
+    };
+
+    /* 로드 순서에 기대지 않는 방법.
+       premium.js 가 나중에 로드돼 함수를 덮어써도, 클릭은 문서에서 먼저 잡는다.
+       캡처 단계라 인라인 onclick 보다 앞선다. */
+    document.addEventListener("click", function (e) {
+        var el = e.target && e.target.closest ? e.target.closest('[onclick*="requirePremium"]') : null;
+        if (!el) return;
+
+        var pro = (typeof window.isPremium !== "function") || window.isPremium();
+        if (!pro) return;                        // 무료 사용자는 원래대로 안내창
+
+        var oc = el.getAttribute("onclick") || "";
+        var hit = function (k) { return oc.indexOf("'" + k + "'") > -1 || oc.indexOf('"' + k + '"') > -1; };
+
+        if (hit("book")) {
+            e.preventDefault(); e.stopPropagation();
+            window.exportMemoryBook();
+        } else if (hit("voice") && typeof window.openVoiceSheet === "function") {
+            e.preventDefault(); e.stopPropagation();
+            window.openVoiceSheet();
+        }
+    }, true);
+
+    var origRequire = window.requirePremium;
+    window.requirePremium = function (key) {
+        var pro = (typeof window.isPremium !== "function") || window.isPremium();
+        if (pro) {
+            if (key === "book") { window.exportMemoryBook(); return true; }
+            if (key === "voice" && typeof window.openVoiceSheet === "function") {
+                window.openVoiceSheet(); return true;
+            }
+        }
+        return (typeof origRequire === "function") ? origRequire.apply(this, arguments) : false;
     };
 
     /* ---------- 점검용 ---------- */

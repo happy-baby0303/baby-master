@@ -379,6 +379,7 @@
                     '<div style="flex:1; min-width:0;">' +
                         '<div class="serif-display" style="font-size:18px; font-weight:700; color:var(--text-title); line-height:1.45; margin-bottom:4px; word-break:keep-all;">' + esc(m.title) + '</div>' +
                         (m.desc ? '<div style="font-size:12.5px; font-weight:500; color:var(--text-sub); line-height:1.6; word-break:keep-all;">' + esc(m.desc) + '</div>' : '') +
+                        (typeof window.renderMilestoneVoice === "function" ? window.renderMilestoneVoice(m.id) : '') +
                     '</div>' +
                     thumb +
                 '</div>';
