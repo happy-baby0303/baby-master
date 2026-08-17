@@ -99,6 +99,27 @@ body { overscroll-behavior-y: contain; }
 }
 
 
+/* ===== 전체 화면 모달의 상단 안전영역 =====
+   viewport-fit=cover 를 켜면 화면이 노치 밑까지 확장된다.
+   그래서 inset:0 인 모달의 맨 위 X 버튼이 배터리·시계와 겹쳐
+   눌리지 않는다. 아이폰에서 편지함을 못 닫던 이유. */
+
+[style*="position:fixed"][style*="inset:0"],
+[style*="position: fixed"][style*="inset: 0"] {
+    padding-top: env(safe-area-inset-top, 0px) !important;
+    box-sizing: border-box !important;
+}
+
+/* 홈 화면에 설치한 PWA 는 상태바가 화면 위에 그대로 얹힌다.
+   env() 를 못 읽는 기기까지 대비해 최소값을 준다. */
+@media all and (display-mode: standalone) {
+    [style*="position:fixed"][style*="inset:0"],
+    [style*="position: fixed"][style*="inset: 0"] {
+        padding-top: max(env(safe-area-inset-top, 0px), 44px) !important;
+    }
+}
+
+
 /* ===== 375px 이하 : 작은 폰 (SE, 구형 갤럭시) ===== */
 @media (max-width: 375px) {
 

@@ -332,17 +332,29 @@
         var records = [];
         try { records = JSON.parse(localStorage.getItem("tosil_tracker_records")) || []; } catch (e) {}
         var e0 = s0 + DAY;
-        var st = { milk: 0, sleepMins: 0, poop: 0, diaper: 0, care: 0, dawn: 0 };
+        var st = { milk: 0, breastMins: 0, breastCount: 0, sleepMins: 0, poop: 0, diaper: 0, care: 0, dawn: 0 };
         records.forEach(function (r) {
             var ts = Number(r && r.timestamp);
             if (!ts || ts < s0 || ts >= e0) return;
             st.care++;
             if (new Date(ts).getHours() < DAWN_END) st.dawn++;
-            if (r.type === "feed") { st.milk += Number(r.amount) || 0; }
-            else if (r.type === "diaper") {
+
+            if (r.type === "feed") {
+                // 모유는 amount 에 '분'이, 분유·유축은 'ml' 이 들어간다.
+                // 이걸 더하면 20분 + 120ml = 140 같은 숫자가 나온다.
+                var sub = String(r.subType || "");
+                var amt = Number(r.amount) || 0;
+                if (sub.indexOf("모유") > -1) { st.breastMins += amt; st.breastCount++; }
+                else { st.milk += amt; }
+            } else if (r.type === "diaper") {
                 st.diaper++;
                 if (r.subType && String(r.subType).indexOf("대변") > -1) st.poop++;
-            } else if (r.type === "sleep") { st.sleepMins += Number(r.amount) || 0; }
+            } else if (r.type === "sleep") {
+                // 타이머로 잰 잠은 amount 가 비어 있고 endTs 만 있다. 그게 대개 밤잠이다.
+                st.sleepMins += r.endTs
+                    ? Math.max(0, Math.round((Number(r.endTs) - ts) / 60000))
+                    : (Number(r.amount) || 0);
+            }
         });
         return st;
     }
@@ -361,15 +373,45 @@
         if (!rd || !rd.intro) return "";
         var hours = st.sleepMins / 60;
         var clean = function (x) { return stripEmoji(String(x || "")); };
-        // 세 문단으로 나눈다: 열며(인사+잠) / 먹고 쌌고 / 닫으며
-        var paras = [
-            [seedPick(rd.intro, key + "a"),
-             (hours >= 3) ? seedPick(rd.sleepGood, key + "b") : seedPick(rd.sleepBad, key + "c")],
-            [(st.milk >= 700) ? seedPick(rd.feedMuch, key + "d")
-                : (st.milk > 0 ? seedPick(rd.feedLittle, key + "e") : seedPick(rd.feedZero, key + "f")),
-             (st.poop > 0) ? seedPick(rd.poopMuch, key + "g") : seedPick(rd.poopZero, key + "h")],
-            [seedPick(rd.outro, key + "i")]
-        ];
+
+        // 날짜에서 뽑은 고정 난수. 같은 날은 늘 같은 편지가 나온다.
+        var dice = function (salt) {
+            var h = 0, t = key + salt;
+            for (var i = 0; i < t.length; i++) h = (h * 31 + t.charCodeAt(i)) % 1000;
+            return h / 1000;
+        };
+
+        // 문단을 매일 똑같이 쌓으면 한 달이면 눈치챈다.
+        // 있는 날만 넣고, 가끔은 통째로 뺀다.
+        var paras = [];
+
+        paras.push([
+            seedPick(rd.intro, key + "a"),
+            (hours >= 3) ? seedPick(rd.sleepGood, key + "b") : seedPick(rd.sleepBad, key + "c")
+        ]);
+
+        // 새벽에 깬 날 — 부모가 제일 힘든 시간을 아기가 알아봐 주는 자리
+        if (st.dawn >= 2 && rd.dawn && rd.dawn.length) {
+            paras.push([seedPick(rd.dawn, key + "n")]);
+        }
+
+        var body = [];
+        var fed = (st.milk >= 700 || st.breastMins >= 120) ? seedPick(rd.feedMuch, key + "d")
+                : ((st.milk > 0 || st.breastMins > 0) ? seedPick(rd.feedLittle, key + "e")
+                                                      : seedPick(rd.feedZero, key + "f"));
+        body.push(fed);
+        // 응가 얘기는 다섯 중 넷만. 매일 나오면 편지가 아니라 보고서다.
+        if (st.poop > 0 || dice("p") < 0.8) {
+            body.push((st.poop > 0) ? seedPick(rd.poopMuch, key + "g") : seedPick(rd.poopZero, key + "h"));
+        }
+        paras.push(body);
+
+        // 열흘에 한 번쯤 오는 말. 매일 나오면 무뎌진다.
+        if (rd.rare && rd.rare.length && dice("r") < 0.12) {
+            paras.push([seedPick(rd.rare, key + "z")]);
+        }
+
+        paras.push([seedPick(rd.outro, key + "i")]);
         var t = paras.map(function (g) {
             return g.map(clean).filter(function (x) { return x; }).join(" ");
         }).filter(function (x) { return x; }).join("\n\n");
@@ -423,6 +465,9 @@
     }
 
     function saveTodayLetter() {
+        // 편지는 하루가 닫힌 뒤에 쓴다. 아침에 두 번 기록했다고
+        // 그날의 편지가 완성될 수는 없다.
+        if (typeof window.isWindDownTime === "function" && !window.isWindDownTime()) return;
         var st = todayStats();
         if (st.care < 2) return;
         var key = todayKey();
@@ -432,7 +477,7 @@
         var box = loadLetters();
         var cur = box[key];
         if (cur && cur.text === text && cur.ms === ms && cur.milk === st.milk && cur.sleepMins === st.sleepMins && cur.poop === st.poop) return;
-        box[key] = { text: text, ms: ms, milk: st.milk, sleepMins: st.sleepMins, poop: st.poop, care: st.care, dawn: st.dawn };
+        box[key] = { text: text, ms: ms, milk: st.milk, breastMins: st.breastMins, breastCount: st.breastCount, sleepMins: st.sleepMins, poop: st.poop, care: st.care, dawn: st.dawn };
         var keys = Object.keys(box).sort();
         if (keys.length > 400) keys.slice(0, keys.length - 400).forEach(function (k) { delete box[k]; });
         saveLetters(box);
@@ -459,7 +504,7 @@
             if (st.care < 2) return;
             var text = composeLetter(st, key);
             if (!text) return;
-            box[key] = { text: text, ms: milestoneLine(key), milk: st.milk, sleepMins: st.sleepMins, poop: st.poop, care: st.care, dawn: st.dawn };
+            box[key] = { text: text, ms: milestoneLine(key), milk: st.milk, breastMins: st.breastMins, breastCount: st.breastCount, sleepMins: st.sleepMins, poop: st.poop, care: st.care, dawn: st.dawn };
             touched = true;
         });
         if (touched) saveLetters(box);
@@ -760,6 +805,7 @@
     function statLine(l) {
         var bits = [];
         if (l.milk) bits.push("수유 " + l.milk + "ml");
+        if (l.breastMins) bits.push("모유 " + l.breastMins + "분" + (l.breastCount > 1 ? " (" + l.breastCount + "회)" : ""));
         if (l.sleepMins) {
             var h = Math.floor(l.sleepMins / 60), m = l.sleepMins % 60;
             bits.push(("수면 " + (h ? h + "시간 " : "") + (m ? m + "분" : "")).trim());
