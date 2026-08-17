@@ -29,8 +29,16 @@
 
     function babyName() { return localStorage.getItem("tosil_babyName") || "우리 아기"; }
 
+    // 역할 키가 앱 안에 두 개다.
+    //   emotion.js  → user_role      ('dad' / 'mom')
+    //   diary.html  → tosil_userRole ('husband' / 'wife')
+    // 둘 다 본다. 안 그러면 아빠가 쓴 글에 '엄마'가 붙는다.
     function myTitle() {
-        return (localStorage.getItem("user_role") || "mom") === "dad" ? "아빠" : "엄마";
+        var a = localStorage.getItem("user_role");
+        if (a) return a === "dad" ? "아빠" : "엄마";
+        var b = localStorage.getItem("tosil_userRole");
+        if (b) return b === "husband" ? "아빠" : "엄마";
+        return "엄마";
     }
 
     function toast(m) { if (typeof window.showToast === "function") window.showToast(m); }

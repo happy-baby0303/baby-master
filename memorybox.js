@@ -255,6 +255,11 @@
 
         // 6. 기념일 (anniversaries.js 가 있을 때만)
         //    아무 기록이 없어도 백일과 첫 명절은 연대기에 놓인다.
+        // 부부가 둘 다 답한 문답이 있는 날도 연대기에 놓인다
+        if (typeof window.diaryDays === "function") {
+            window.diaryDays().forEach(function (k) { touch(k); });
+        }
+
         // 한 줄만 남긴 날도 연대기에 놓인다
         if (typeof window.noteDays === "function") {
             window.noteDays().forEach(function (k) { touch(k); });
@@ -317,6 +322,72 @@
             '<div class="serif-display" style="font-size:26px; font-weight:700; color:var(--text-title); letter-spacing:-1px;">' + num + '</div>' +
             '<div style="font-size:11.5px; font-weight:600; color:var(--text-sub); margin-top:5px;">' + label + '</div>' +
         '</div>';
+    }
+
+    /* ---------- 오늘 담기 ----------
+       사진·소리·한 줄이 각자 점선 바를 하나씩 차지하고 있었다.
+       똑같이 생긴 줄이 세 개면 눈이 셋 다 안 읽는다. 한 칸에 모은다. -------- */
+
+    function tile(icon, label, action, locked) {
+        return '<div onclick="' + action + '" style="flex:1; padding:13px 6px; border-radius:14px; ' +
+            'border:1px dashed var(--border); text-align:center; cursor:pointer;">' +
+            '<div style="font-size:17px; margin-bottom:5px; line-height:1;">' + icon + '</div>' +
+            '<div style="font-size:11.5px; font-weight:800; color:var(--text-s); letter-spacing:-0.2px;">' +
+                esc(label) + (locked ? ' 🔒' : '') + '</div>' +
+        '</div>';
+    }
+
+    function todayBar() {
+        var key = dayKeyOf(Date.now());
+        var dd = ddayOf(key);
+
+        var photos = (typeof window.getLoosePhotos === "function") ? window.getLoosePhotos(key).length : 0;
+        var voices = (typeof window.getDayVoices === "function") ? window.getDayVoices(key).length : 0;
+        var notes  = (typeof window.getDayNotes === "function")  ? window.getDayNotes(key).length  : 0;
+
+        var pro = (typeof window.isPremium !== "function") || window.isPremium();
+        var cap = (typeof window.photoCapPerDay === "function") ? window.photoCapPerDay() : 3;
+
+        var bits = [];
+        if (photos) bits.push("사진 " + photos);
+        if (voices) bits.push("소리 " + voices);
+        if (notes)  bits.push("한 줄 " + notes);
+        var right = bits.length ? bits.join("  ·  ") : (dd || "오늘");
+
+        var cells = "";
+        if (typeof window.addDayPhoto === "function") {
+            cells += tile("📷", "사진", "window.addDayPhoto('" + key + "')", !pro && photos >= cap);
+        }
+        if (typeof window.openVoiceSheet === "function") {
+            cells += tile("🎙️", "소리", "window.openVoiceSheet('" + key + "')", false);
+        }
+        if (typeof window.openNoteSheet === "function") {
+            cells += tile("✍️", "한 줄", "window.openNoteSheet('" + key + "')", false);
+        }
+        if (!cells) return "";
+
+        return '<div style="background:var(--bg-card); border:1px solid var(--border); border-radius:20px; padding:16px; margin-bottom:14px;">' +
+            '<div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">' +
+                '<span style="font-size:13px; font-weight:900; color:var(--text-m); letter-spacing:-0.3px;">오늘 담기</span>' +
+                '<span style="font-size:11.5px; font-weight:700; color:var(--text-sub);">' + esc(right) + '</span>' +
+            '</div>' +
+            '<div style="display:flex; gap:8px;">' + cells + '</div>' +
+        '</div>';
+    }
+
+    // 날짜 카드 바닥. 세 줄이 아니라 한 줄.
+    function addRow(key) {
+        var chip = function (label, action) {
+            return '<span onclick="event.stopPropagation(); ' + action + '" style="flex:1; text-align:center; ' +
+                'padding:9px 4px; border-radius:11px; background:var(--bg-sub); font-size:11px; font-weight:800; ' +
+                'color:var(--text-sub); cursor:pointer;">＋ ' + esc(label) + '</span>';
+        };
+        var out = "";
+        if (typeof window.addDayPhoto === "function")   out += chip("사진", "window.addDayPhoto('" + key + "')");
+        if (typeof window.openVoiceSheet === "function") out += chip("소리", "window.openVoiceSheet('" + key + "')");
+        if (typeof window.openNoteSheet === "function")  out += chip("한 줄", "window.openNoteSheet('" + key + "')");
+        if (!out) return "";
+        return '<div style="display:flex; gap:6px; margin-top:15px; padding-top:13px; border-top:1px dashed var(--border);">' + out + '</div>';
     }
 
     // 기록이 하나도 없는 날에도 사진은 담을 수 있어야 한다.
@@ -422,6 +493,11 @@
             '</div>';
         }
 
+        // 부부가 나눈 말
+        if (typeof window.renderDiaryRow === "function") {
+            inner += window.renderDiaryRow(d.key);
+        }
+
         // 부모의 한 줄은 맨 마지막. 하루를 닫는 글이다.
         if (typeof window.renderNoteRow === "function") {
             inner += window.renderNoteRow(d.key);
@@ -430,15 +506,7 @@
         if (!inner) return "";
 
         // 그 자리에서 바로 담을 수 있게
-        if (typeof window.renderPhotoAdd === "function") {
-            inner += window.renderPhotoAdd(d.key);
-        }
-        if (typeof window.renderVoiceAdd === "function") {
-            inner += window.renderVoiceAdd(d.key);
-        }
-        if (typeof window.renderNoteAdd === "function") {
-            inner += window.renderNoteAdd(d.key);
-        }
+        inner += addRow(d.key);
 
         return '<div style="position:relative; background:var(--bg-card); border:1px solid var(--border); border-radius:22px; padding:24px 22px; margin-bottom:16px; box-shadow:0 4px 16px rgba(0,0,0,0.03);">' +
             '<div style="position:absolute; left:-27px; top:30px; width:11px; height:11px; border-radius:50%; background:#7F77DD; border:3px solid var(--bg-main); box-shadow:0 0 0 1px rgba(127,119,221,0.25);"></div>' +
@@ -517,13 +585,13 @@
             '</div>' +
 
             (typeof window.renderNextAnniversary === "function" ? window.renderNextAnniversary() : "") +
-            (typeof window.addDayPhoto === "function" ? todayPhotoBar() : "") +
-            (typeof window.renderVoiceBar === "function" ? window.renderVoiceBar() : "") +
-            (typeof window.renderNoteBar === "function" ? window.renderNoteBar() : "") +
+            todayBar() +
 
             '<div style="display:flex; gap:10px; margin-bottom:8px;">' +
                 shortcut("💌", "편지함", "쌓인 편지 읽기", "window.openLetterBox()") +
-                shortcut("🌙", "잠 무늬", "이레 동안의 결", "window.openSleepMap && window.openSleepMap()") +
+                (typeof window.diaryCount === "function" && window.diaryCount()
+                    ? shortcut("💬", "문답함", window.diaryCount() + "개의 대화", "window.openDiaryBox()")
+                    : shortcut("🌙", "잠 무늬", "이레 동안의 결", "window.openSleepMap && window.openSleepMap()")) +
                 shortcut("🏅", "첫 도감", milestoneSub(s), "window.openMilestoneModal && window.openMilestoneModal()") +
             '</div>' +
 

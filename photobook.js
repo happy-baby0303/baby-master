@@ -110,7 +110,7 @@
     function collect() {
         var days = {};
         var touch = function (k) {
-            if (!days[k]) days[k] = { key: k, ms: [], photos: [], letter: null, anni: [] };
+            if (!days[k]) days[k] = { key: k, ms: [], photos: [], letter: null, anni: [], diary: [] };
             return days[k];
         };
 
@@ -134,6 +134,15 @@
 
         // 편지 — 전부 넣으면 책이 아니라 일지가 된다.
         // 사진이나 첫 순간이 있는 날은 그날 편지를, 그 외에는 달마다 한 통만.
+        // 부부가 둘 다 답한 문답
+        if (typeof window.diaryEntries === "function") {
+            window.diaryEntries().forEach(function (e) {
+                var t = touch(e.key);
+                if (!t.diary) t.diary = [];
+                t.diary.push(e);
+            });
+        }
+
         var letters = {};
         try { letters = JSON.parse(localStorage.getItem("tosil_letters")) || {}; } catch (e) {}
         var monthTaken = {};
@@ -288,6 +297,27 @@
         );
     }
 
+    function diaryPage(e, folio) {
+        return shell(
+            '<div style="height:100%; display:flex; flex-direction:column;">' +
+                '<div style="font-size:16px; font-weight:800; color:' + GOLD + '; letter-spacing:5px; margin-bottom:26px;">우리의 문답</div>' +
+                '<div style="font-family:\'Gowun Batang\',serif; font-size:38px; font-weight:700; letter-spacing:-1.5px; line-height:1.5; word-break:keep-all;">' +
+                    esc(e.q) + '</div>' +
+                '<div style="width:1px; height:60px; background:' + LINE + '; margin:44px 0;"></div>' +
+
+                '<div style="font-size:17px; font-weight:800; color:' + GOLD + '; letter-spacing:3px; margin-bottom:14px;">아빠</div>' +
+                '<div style="font-size:24px; font-weight:400; color:' + INK_S + '; line-height:1.8; word-break:keep-all; white-space:pre-wrap;">' + esc(e.husband) + '</div>' +
+
+                '<div style="font-size:17px; font-weight:800; color:' + GOLD + '; letter-spacing:3px; margin:38px 0 14px;">엄마</div>' +
+                '<div style="font-size:24px; font-weight:400; color:' + INK_S + '; line-height:1.8; word-break:keep-all; white-space:pre-wrap;">' + esc(e.wife) + '</div>' +
+
+                '<div style="margin-top:auto; padding-top:34px; border-top:1px solid ' + LINE + '; display:flex; justify-content:space-between; font-size:19px; font-weight:600; color:' + INK_L + ';">' +
+                    '<span>문답 ' + e.day + '일차</span><span>' + esc(pretty(e.key)) + '</span>' +
+                '</div>' +
+            '</div>', folio
+        );
+    }
+
     function endPage(n) {
         return shell(
             '<div style="height:100%; display:flex; flex-direction:column; justify-content:center; text-align:center;">' +
@@ -409,6 +439,8 @@
                 });
             });
 
+            (d.diary || []).forEach(function (e) { pages.push({ type: "diary", e: e }); });
+
             if (d.letter) pages.push({ type: "letter", l: d.letter, key: d.key });
         });
 
@@ -454,6 +486,7 @@
                 if (p.type === "anni")        html = anniPage(p.a, p.key, String(folioNo));
                 else if (p.type === "letter") html = letterPage(p.l, p.key, String(folioNo));
                 else if (p.type === "voice")  html = voicePage(p.list, String(folioNo));
+                else if (p.type === "diary")  html = diaryPage(p.e, String(folioNo));
                 else html = scenePage({
                     img: p.img, kicker: p.kicker, title: p.title,
                     desc: p.desc, note: p.note, key: p.key
@@ -541,7 +574,7 @@
         var d = collect();
         var pages = 2;
         d.forEach(function (x) {
-            pages += x.anni.length + x.ms.length +
+            pages += (x.diary || []).length + x.anni.length + x.ms.length +
                      x.photos.filter(function (p) { return !p.msId; }).length +
                      (x.letter ? 1 : 0);
         });
