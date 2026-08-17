@@ -275,9 +275,10 @@
         var left = comma(daysLeft(draft.at));
         if (typeof window.showConfirm === "function") {
             window.showConfirm(
-                "봉인하면 " + pretty(draft.at) + "까지\n열어볼 수 없어요.\n\n" + left + "일 뒤에 만나요.",
+                "이 편지는 " + pretty(draft.at) + "에\n" + babyName() + "가 열어보게 됩니다.\n\n" +
+                "그때까지 " + left + "일,\n조용히 기다릴게요.",
                 go, "🕯️", "봉인하기", GOLD);
-        } else if (confirm("봉인하면 " + pretty(draft.at) + "까지 열 수 없어요. 봉인할까요?")) go();
+        } else if (confirm("이 편지는 " + pretty(draft.at) + "에 열립니다. 봉인할까요?")) go();
     };
 
     function drawSeal(step) {
@@ -319,11 +320,11 @@
                 '<div style="background:' + GOLD_BG + '; border-radius:14px; padding:12px 15px; margin-bottom:14px;">' +
                     '<div style="font-size:12.5px; font-weight:800; color:' + GOLD + ';">' + esc(draft.label) + ' · ' + esc(pretty(draft.at)) + '</div>' +
                     '<div style="font-size:11.5px; font-weight:600; color:var(--text-sub); margin-top:4px;">' +
-                        comma(daysLeft(draft.at)) + '일 동안 봉인됩니다</div>' +
+                        comma(daysLeft(draft.at)) + '일을 기다렸다가 열립니다</div>' +
                 '</div>' +
 
                 '<textarea id="seal-text" rows="9" maxlength="' + MAX_LEN + '" ' +
-                    'placeholder="' + esc(draft.to) + ' ' + esc(babyName()) + '에게…" ' +
+                    'placeholder="' + esc(draft.to) + ' ' + esc(babyName()) + '에게,&#10;&#10;오늘 너는…" ' +
                     'style="width:100%; box-sizing:border-box; padding:16px; border-radius:16px; border:1px solid var(--border); ' +
                     'background:var(--bg-sub); color:var(--text-m); font-family:\'Nanum Pen Script\',cursive; ' +
                     'font-size:22px; line-height:1.65; outline:none; resize:none;"></textarea>' +
@@ -334,8 +335,9 @@
                         : '<div onclick="window.openSealSheet()" style="padding:15px 20px; background:var(--bg-sub); color:var(--text-sub); border-radius:14px; font-size:14px; font-weight:700; cursor:pointer;">뒤로</div>') +
                     '<div onclick="window.doSeal()" style="flex:1; text-align:center; padding:15px; background:' + GOLD + '; color:#FFF; border-radius:14px; font-size:15px; font-weight:800; cursor:pointer;">🕯️ 봉인하기</div>' +
                 '</div>' +
-                '<div style="text-align:center; font-size:11px; font-weight:600; color:var(--text-sub); margin-top:12px; line-height:1.6;">' +
-                    '봉인한 뒤에는 그날까지 열 수 없어요' +
+                '<div style="text-align:center; font-size:11.5px; font-weight:600; color:var(--text-sub); margin-top:14px; line-height:1.75; word-break:keep-all;">' +
+                    '한 줄이어도 괜찮아요.<br>' +
+                    esc(draft.to) + ' ' + esc(babyName()) + '는 그 한 줄도 오래 읽을 거예요.' +
                 '</div>';
         }
 

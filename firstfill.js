@@ -213,11 +213,11 @@
         } else if (step === 3) {
             var left = daysToTwenty();
             shell(ask(3, "🕯️",
-                "스무 살 " + name + "에게<br>편지 한 통",
+                "스무 살 " + name + "에게<br>한 줄만 남겨두기",
                 "지금의 마음은 지금밖에 못 씁니다.<br>" +
-                (left ? '<span style="color:' + GOLD + '; font-weight:800;">' + comma(left) + '일</span> 뒤에 열립니다.'
-                      : "먼 훗날 열립니다."),
-                "편지 쓰기", "window.firstFillSeal()"));
+                (left ? '<span style="color:' + GOLD + '; font-weight:800;">' + comma(left) + '일</span> 뒤에 ' + name + '가 읽게 됩니다.'
+                      : name + "가 언젠가 읽게 됩니다."),
+                "편지 남기기", "window.firstFillSeal()"));
 
         } else {
             var c = counts();
