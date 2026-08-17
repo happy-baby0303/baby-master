@@ -10029,14 +10029,14 @@ window.saveUserInfoToFirebase = async function() {
                     if (sData && sData.founder_event_closed === true) isEventClosed = true;
                 }
 
-                // 👑 이벤트가 안 끝났으면 1년 무료(founder) 권한 부여!
-const isFounder = !isEventClosed;
-let founderUntil = null;
-if (isFounder) {
-    const until = new Date();
-    until.setFullYear(until.getFullYear() + 1);
-    founderUntil = until.toISOString().split('T')[0];
-}
+// 👑 이벤트가 안 끝났으면 첫 1개월(30일) 무료(founder) 권한 부여!
+                const isFounder = !isEventClosed;
+                let founderUntil = null;
+                if (isFounder) {
+                    const until = new Date();
+                    until.setMonth(until.getMonth() + 1); // 👈 1년(setFullYear)을 1달(setMonth)로 수정!
+                    founderUntil = until.toISOString().split('T')[0];
+                }
 
                 // 🚨 파이어베이스 UID도 가져오기
                 const myUid = localStorage.getItem('firebase_uid') || '';
@@ -10061,13 +10061,14 @@ if (isFounder) {
                 // 이벤트 당첨자라면 내 폰에도 황금 뱃지 부여
                 if (isFounder) {
                     localStorage.setItem('tosil_is_founder', 'true');
+                    localStorage.setItem('tosil_founder_until', founderUntil); // 👈 마이페이지 날짜 표시를 위한 캐시 추가
+                    
                     // 유저 기분 좋게 1.5초 뒤에 팝업 띄워주기
                     setTimeout(() => {
-                        window.showToast(`🎉 축하합니다! 선착순 얼리버드 당첨!<br>${founderUntil}까지 프리미엄 전 기능 무료 💎`);
+                        window.showToast(`🎉 축하합니다! 선착순 얼리버드 당첨!<br>${founderUntil}까지 (1개월) 프리미엄 무료 💎`);
                         if(typeof window.renderSettingsTab === 'function') window.renderSettingsTab();
                     }, 1500);
                 }
-
             } 
             // 🌟 [케이스 B] 이미 가입했던 유저일 때 (앱을 지웠다 다시 깔았거나 매일 접속 시)
             else {
@@ -13181,7 +13182,7 @@ window.applyPremiumWaitlist = function(btn) {
         }, "💬", "로그인 하러가기", "#3182F6");
     }
 
-    // 서버로 혜택 신청 기록 보내기
+  // 서버로 혜택 신청 기록 보내기
     if (typeof db !== 'undefined' && typeof setDoc === 'function' && typeof doc === 'function') {
         btn.innerText = "탑승 처리 중... ⏳";
         btn.disabled = true;
@@ -13199,7 +13200,9 @@ window.applyPremiumWaitlist = function(btn) {
             btn.style.boxShadow = "none";
             
             if (navigator.vibrate) navigator.vibrate([30, 50, 30]);
-            window.showToast('🎉 얼리버드 명단에 등록되었습니다! 정식 오픈 시 혜택이 자동 적용됩니다.');
+            
+            // 🚨 1. 성공 시 토스트 알림 텍스트 변경 (1개월 무료 강조)
+            window.showToast('🎉 얼리버드 명단에 등록되었습니다! 승인되면 첫 1개월(30일)간 프리미엄을 무료로 이용하실 수 있습니다 💎');
             
             setTimeout(() => {
                 const paywall = document.getElementById('premium-paywall-modal');
@@ -13208,18 +13211,21 @@ window.applyPremiumWaitlist = function(btn) {
 
       }).catch((e) => {
             console.error("얼리버드 저장 실패:", e);
-            btn.innerText = "얼리버드 1년 무료 신청하기";
+            
+            // 🚨 2. 에러 나서 튕겼을 때 원래대로 돌아가는 버튼 텍스트 변경
+            btn.innerText = "첫 1개월 무료 체험 시작하기";
             btn.disabled = false;
+            
             window.showToast(
                 (e && e.code === 'permission-denied')
-                    ? "로그인이 만료된 것 같아요. 다시 로그인하고 시도해주세요."
+                    ? "권한이 없습니다. 앱을 재실행하거나 다시 로그인해주세요."
                     : "앗, 통신 지연이 발생했어요. 다시 시도해주세요."
             );
            });
     } else {
         window.showToast("오프라인 상태입니다. 나중에 다시 시도해주세요.");
     }
-};
+}; // <- applyPremiumWaitlist 함수 닫는 괄호
 
 // ==========================================
 // 🚨 기존 핵심 함수들을 가로채서 자물쇠(Lock) 걸기!
