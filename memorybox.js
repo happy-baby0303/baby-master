@@ -407,7 +407,17 @@
                 'color:var(--text-sub); cursor:pointer;">＋ ' + esc(label) + '</span>';
         };
         var out = "";
-        if (typeof window.addDayPhoto === "function")   out += chip("사진", "window.addDayPhoto('" + key + "')");
+        if (typeof window.addDayPhoto === "function") {
+            // 무료 한도를 채웠으면 사라지는 게 아니라 잠긴 채로 남는다
+            var n = (typeof window.getLoosePhotos === "function") ? window.getLoosePhotos(key).length : 0;
+            var cap = (typeof window.photoCapPerDay === "function") ? window.photoCapPerDay() : 3;
+            var pro = (typeof window.isPremium !== "function") || window.isPremium();
+            out += (n >= cap && !pro)
+                ? '<span onclick="event.stopPropagation(); window.openUpsell(\'photo\')" style="flex:1; text-align:center; ' +
+                  'padding:9px 4px; border-radius:11px; background:rgba(185,138,46,0.10); font-size:11px; font-weight:800; ' +
+                  'color:#B98A2E; cursor:pointer;">🔒 사진</span>'
+                : chip("사진", "window.addDayPhoto('" + key + "')");
+        }
         if (typeof window.openVoiceSheet === "function") out += chip("소리", "window.openVoiceSheet('" + key + "')");
         if (typeof window.openNoteSheet === "function")  out += chip("한 줄", "window.openNoteSheet('" + key + "')");
         if (!out) return "";
@@ -424,6 +434,46 @@
                 (n ? "오늘 사진 한 장 더 담기" : "오늘 사진 담기") + '</span>' +
             '<span style="font-size:11.5px; font-weight:600; color:var(--text-sub);">' +
                 (dd ? esc(dd) : "오늘") + (n ? "  ·  " + n + "장" : "") + '</span>' +
+        '</div>';
+    }
+
+    /* ---------- 보관함 ----------
+       편지함·소리함·문답함·첫도감·포토북·잠무늬.
+       3구에 넣으려니 소리함과 문답함이 서로 자리를 뺏었다.
+       한 격자로 펴면 다 보이고, 비어 있는 칸도 초대장이 된다. -------- */
+
+    function boxGrid(s) {
+        var pro = (typeof window.isPremium !== "function") || window.isPremium();
+        var vN  = (typeof window.voiceCount === "function") ? window.voiceCount() : 0;
+        var dN  = (typeof window.diaryCount === "function") ? window.diaryCount() : 0;
+        var lock = (typeof window.lockChip === "function") ? window.lockChip("프리미엄") : "";
+
+        var items = [
+            { icon: "💌", label: "편지함", sub: "쌓인 편지 읽기",
+              act: "window.openLetterBox()" },
+            { icon: "🎙️", label: "소리함", sub: vN ? vN + "개 담겼어요" : "아직 비어 있어요",
+              act: vN ? "window.openVoiceBox()" : "window.openVoiceSheet()" },
+            { icon: "💬", label: "문답함", sub: dN ? dN + "개의 대화" : "아직 비어 있어요",
+              act: "window.openDiaryBox && window.openDiaryBox()" },
+            { icon: "🏅", label: "첫 도감", sub: milestoneSub(s),
+              act: "window.openMilestoneModal && window.openMilestoneModal()" },
+            { icon: "📖", label: "포토북", sub: pro ? "한 권으로 내보내기" : null,
+              act: "window.exportMemoryBook && window.exportMemoryBook()" },
+            { icon: "🌙", label: "잠 무늬", sub: "이레 동안의 결",
+              act: "window.openSleepMap && window.openSleepMap()" }
+        ];
+
+        return '<div style="display:grid; grid-template-columns:repeat(3,1fr); gap:9px; margin-bottom:8px;">' +
+            items.map(function (it) {
+                return '<div onclick="' + it.act + '" style="background:var(--bg-card); border:1px solid var(--border); ' +
+                    'border-radius:18px; padding:15px 8px; text-align:center; cursor:pointer;">' +
+                    '<div style="font-size:20px; margin-bottom:7px; line-height:1;">' + it.icon + '</div>' +
+                    '<div style="font-size:12px; font-weight:800; color:var(--text-m); letter-spacing:-0.3px; margin-bottom:4px;">' +
+                        esc(it.label) + '</div>' +
+                    (it.sub === null ? lock
+                        : '<div style="font-size:10px; font-weight:700; color:var(--text-sub); line-height:1.35;">' + esc(it.sub) + '</div>') +
+                '</div>';
+            }).join("") +
         '</div>';
     }
 
@@ -742,16 +792,7 @@
             (typeof window.renderSealedBar === "function" ? window.renderSealedBar() : "") +
             todayBar() +
 
-            '<div style="display:flex; gap:10px; margin-bottom:8px;">' +
-                shortcut("💌", "편지함", "쌓인 편지 읽기", "window.openLetterBox()") +
-                (typeof window.diaryCount === "function" && window.diaryCount()
-                    ? shortcut("💬", "문답함", window.diaryCount() + "개의 대화", "window.openDiaryBox()")
-                    : shortcut("🌙", "잠 무늬", "이레 동안의 결", "window.openSleepMap && window.openSleepMap()")) +
-                shortcut("🏅", "첫 도감", milestoneSub(s), "window.openMilestoneModal && window.openMilestoneModal()") +
-            '</div>' +
-
-            // 잠긴 자리도 보이게 둔다. 빈자리보다 잠긴 자리가 낫다.
-            (typeof window.renderPremiumRow === "function" ? window.renderPremiumRow() : "") +
+            boxGrid(s) +
 
             (timeline.length || birthTime() ? '<div id="mb-chronicle" style="display:flex; justify-content:space-between; align-items:baseline; margin:36px 4px 18px;">' +
                 '<span style="font-size:12px; font-weight:800; color:var(--text-sub); letter-spacing:2px;">연대기</span>' +
