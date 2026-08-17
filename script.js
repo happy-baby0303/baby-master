@@ -13082,7 +13082,7 @@ window.showPaywall = function() {
                     </div>
 
                     <div id="plan-year" class="plan-card" onclick="window.selectPlan('year')" style="background: rgba(56,189,248,0.1); border: 2px solid #38BDF8; border-radius: 16px; padding: 16px; display: flex; justify-content: space-between; align-items: center; cursor: pointer; transition: 0.2s; position: relative;">
-                        <div style="position: absolute; top: -10px; left: 16px; background: #38BDF8; color: #0F172A; font-size: 10px; font-weight: 900; padding: 4px 8px; border-radius: 6px; letter-spacing: 0.5px;">BEST VALUE (20% 할인)</div>
+                        <div style="position: absolute; top: -10px; left: 16px; background: #38BDF8; color: #0F172A; font-size: 10px; font-weight: 900; padding: 4px 8px; border-radius: 6px; letter-spacing: 0.5px;">BEST VALUE (34% 할인)</div>
                         <div>
                             <div style="font-size: 14px; font-weight: 800; color: #38BDF8; margin-bottom: 2px;">1년 플랜</div>
                             <div style="font-size: 12px; color: #94A3B8;">연 ₩39,000 일시불</div>
