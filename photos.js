@@ -24,7 +24,7 @@
     function esc(s) {
         return String(s == null ? "" : s)
             .replace(/&/g, "&amp;").replace(/</g, "&lt;")
-            .replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+            .replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#39;");
     }
 
     function babyName() {
@@ -201,6 +201,108 @@
         } catch (e) { console.warn("[사진 캐시] 저장 실패", e); }
     };
 
+    window.dropCachedPhotoData = async function (id) {
+        try {
+            var db = await idb();
+            await new Promise(function (res) {
+                var tx = db.transaction(STORE, "readwrite");
+                tx.objectStore(STORE).delete(id);
+                tx.oncomplete = res; tx.onerror = res;
+            });
+        } catch (e) {}
+    };
+
+    /* ---------- 못 올린 것들 ----------
+       지하철에서 옹알이를 녹음했는데 업로드가 실패하면 그대로 날아갔다.
+       실패하면 기기에 재워뒀다가, 연결이 돌아오면 다시 올린다. -------- */
+
+    var QSTORE = "pending";
+
+    function qdb() {
+        return new Promise(function (res, rej) {
+            if (!window.indexedDB) return rej(new Error("no indexedDB"));
+            var req = indexedDB.open(DB_NAME, 2);
+            req.onupgradeneeded = function () {
+                var db = req.result;
+                if (!db.objectStoreNames.contains(STORE)) db.createObjectStore(STORE);
+                if (!db.objectStoreNames.contains(QSTORE)) db.createObjectStore(QSTORE);
+            };
+            req.onsuccess = function () { res(req.result); };
+            req.onerror = function () { rej(req.error); };
+        });
+    }
+
+    // job = { id, kind:'photo'|'voice', path, dataUrl, meta }
+    window.queueUpload = async function (job) {
+        try {
+            var db = await qdb();
+            await new Promise(function (res) {
+                var tx = db.transaction(QSTORE, "readwrite");
+                tx.objectStore(QSTORE).put(job, job.id);
+                tx.oncomplete = res; tx.onerror = res;
+            });
+            toast("📡 연결이 돌아오면 자동으로 담을게요");
+        } catch (e) { console.warn("[대기열] 저장 실패", e); }
+    };
+
+    window.pendingUploads = async function () {
+        try {
+            var db = await qdb();
+            return await new Promise(function (res) {
+                var tx = db.transaction(QSTORE, "readonly");
+                var r = tx.objectStore(QSTORE).getAll();
+                r.onsuccess = function () { res(r.result || []); };
+                r.onerror = function () { res([]); };
+            });
+        } catch (e) { return []; }
+    };
+
+    async function dropJob(id) {
+        try {
+            var db = await qdb();
+            await new Promise(function (res) {
+                var tx = db.transaction(QSTORE, "readwrite");
+                tx.objectStore(QSTORE).delete(id);
+                tx.oncomplete = res; tx.onerror = res;
+            });
+        } catch (e) {}
+    }
+
+    window.flushUploads = async function () {
+        if (!navigator.onLine) return;
+        var jobs = await window.pendingUploads();
+        if (!jobs.length) return;
+        if (!window.storage || !window.uploadString || !window.getDownloadURL || !window.storageRef) return;
+
+        for (var i = 0; i < jobs.length; i++) {
+            var j = jobs[i];
+            try {
+                var ref = window.storageRef(window.storage, j.path);
+                await window.uploadString(ref, j.dataUrl, "data_url");
+                var url = await window.getDownloadURL(ref);
+
+                if (j.kind === "voice" && typeof window.acceptQueuedVoice === "function") {
+                    window.acceptQueuedVoice(j, url);
+                } else {
+                    putPhoto(j.meta.key, {
+                        id: j.id, url: url, path: j.path, ts: j.meta.ts,
+                        caption: j.meta.caption || "", msId: j.meta.msId || null
+                    });
+                    if (window.cachePhotoData) window.cachePhotoData(j.id, j.dataUrl);
+                    window.syncPhotosToFirebase();
+                }
+                await dropJob(j.id);
+                toast("📡 미뤄뒀던 " + (j.kind === "voice" ? "목소리" : "사진") + "를 담았어요");
+                repaint();
+            } catch (e) {
+                console.warn("[대기열] 재시도 실패", e);
+                break;                       // 아직 안 되면 다음 기회에
+            }
+        }
+    };
+
+    window.addEventListener("online", function () { setTimeout(window.flushUploads, 1500); });
+
     window.getCachedPhotoData = async function (id) {
         try {
             var db = await idb();
@@ -372,7 +474,14 @@
             done();
         } catch (err) {
             console.error("[배냇함 사진] 업로드 실패", err);
-            toast("사진을 담지 못했어요. 연결을 확인해 주세요");
+            if (window.queueUpload) {
+                await window.queueUpload({
+                    id: id, kind: "photo", path: path, dataUrl: dataUrl,
+                    meta: { key: key, ts: Date.now(), msId: msId || null, caption: "" }
+                });
+            } else {
+                toast("사진을 담지 못했어요. 연결을 확인해 주세요");
+            }
         }
     }
 
@@ -479,6 +588,7 @@
             if (window.deleteObject && window.storage && window.storageRef && p.path) {
                 try { window.deleteObject(window.storageRef(window.storage, p.path)); } catch (e) {}
             }
+            if (window.dropCachedPhotoData) window.dropCachedPhotoData(p.id);
             dropPhoto(vKey, p.id);
             window.syncPhotosToFirebase();
             vList = vList.filter(function (x) { return x.id !== p.id; });
@@ -561,6 +671,7 @@
     function boot() {
         fileInput();
         window.startPhotoRealtimeSync();
+        setTimeout(window.flushUploads, 3000);
     }
 
     if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", boot);

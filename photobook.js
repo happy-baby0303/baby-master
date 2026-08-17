@@ -30,7 +30,7 @@
     function esc(s) {
         return String(s == null ? "" : s)
             .replace(/&/g, "&amp;").replace(/</g, "&lt;")
-            .replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+            .replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#39;");
     }
 
     function babyName() { return localStorage.getItem("tosil_babyName") || "우리 아기"; }
@@ -383,6 +383,9 @@
             return canvas.toDataURL("image/jpeg", 0.88);
         } finally {
             stage.remove();       // 한 장씩 지운다. 안 그러면 폰이 죽는다.
+            // 브라우저가 방금 캔버스를 회수할 틈을 준다.
+            // 이게 없으면 구형 폰에서 열 장쯤 굽다가 튕긴다.
+            await new Promise(function (r) { setTimeout(r, 160); });
         }
     }
 

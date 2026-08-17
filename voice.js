@@ -24,7 +24,7 @@
     function esc(s) {
         return String(s == null ? "" : s)
             .replace(/&/g, "&amp;").replace(/</g, "&lt;")
-            .replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+            .replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#39;");
     }
 
     function babyName() { return localStorage.getItem("tosil_babyName") || "우리 아기"; }
@@ -383,10 +383,31 @@
             repaint();
         } catch (e) {
             console.error("[목소리] 업로드 실패", e);
-            draw("review");
-            toast("담지 못했어요. 연결을 확인해 주세요");
+            if (window.queueUpload) {
+                // 사진은 다시 찍으면 되지만 옹알이는 다시 안 난다. 반드시 붙잡는다.
+                await window.queueUpload({
+                    id: id, kind: "voice", path: path, dataUrl: dataUrl,
+                    meta: { key: key, ts: Date.now(), sec: Math.round(blobSec), note: note, msId: msId }
+                });
+                resetRec();
+                window.closeVoiceSheet();
+                repaint();
+            } else {
+                draw("review");
+                toast("담지 못했어요. 연결을 확인해 주세요");
+            }
         }
     }
+
+    // 대기열이 나중에 성공하면 여기로 돌아온다
+    window.acceptQueuedVoice = function (job, url) {
+        var m = job.meta || {};
+        putVoice(m.key, {
+            id: job.id, url: url, path: job.path, ts: m.ts || Date.now(),
+            sec: m.sec || 0, note: m.note || "", msId: m.msId || null
+        });
+        window.syncVoicesToFirebase();
+    };
 
     /* ---------- 시트 ---------- */
 

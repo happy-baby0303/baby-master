@@ -17,7 +17,7 @@
 
     function esc(s) {
         return String(s == null ? "" : s)
-            .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+            .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#39;");
     }
 
     function babyName() {
@@ -337,6 +337,30 @@
         '</div>';
     }
 
+    /* ---------- 이 기기에만 있는 상태 ----------
+       동기화 코드가 없으면 사진·소리·한 줄·편지가 전부 이 폰에만 있다.
+       폰을 바꾸거나 브라우저를 지우면 통째로 사라진다.
+       '평생 앱'이라면서 이 사실을 작은 글씨로만 적어둘 수는 없다. -------- */
+
+    function unsyncedWarning() {
+        if (localStorage.getItem("family_sync_code")) return "";
+
+        var n = 0;
+        if (typeof window.photoCount === "function") n += window.photoCount();
+        if (typeof window.voiceCount === "function") n += window.voiceCount();
+        if (typeof window.noteCount === "function")  n += window.noteCount();
+        if (n < 1) return "";                       // 담긴 게 없으면 겁줄 일도 없다
+
+        return '<div onclick="window.openFamilySync && window.openFamilySync()" ' +
+            'style="background:rgba(240,68,82,0.07); border:1px solid rgba(240,68,82,0.20); ' +
+            'border-radius:18px; padding:15px 17px; margin-bottom:14px; cursor:pointer;">' +
+            '<div style="font-size:12.5px; font-weight:800; color:#D93B48; letter-spacing:-0.3px;">' +
+                '지금 담긴 ' + n + '개가 이 폰에만 있어요</div>' +
+            '<div style="font-size:11.5px; font-weight:600; color:var(--text-sub); margin-top:5px; line-height:1.6; word-break:keep-all;">' +
+                '폰을 바꾸거나 브라우저를 정리하면 사라집니다. 가족 연동을 하면 안전하게 보관돼요.</div>' +
+        '</div>';
+    }
+
     function todayBar() {
         var key = dayKeyOf(Date.now());
         var dd = ddayOf(key);
@@ -585,6 +609,7 @@
             '</div>' +
 
             (typeof window.renderNextAnniversary === "function" ? window.renderNextAnniversary() : "") +
+            unsyncedWarning() +
             todayBar() +
 
             '<div style="display:flex; gap:10px; margin-bottom:8px;">' +
@@ -606,7 +631,10 @@
                 '</div>' : '') +
 
             (timeline.length ? '<div style="text-align:center; font-size:11.5px; font-weight:600; color:var(--text-sub); margin-top:36px; line-height:1.8;">' +
-                '여기 담긴 건 이 기기에만 있어요<br>' + esc(name) + '가 자라는 만큼 배냇함도 무거워집니다' +
+                (localStorage.getItem("family_sync_code")
+                    ? '가족 연동이 되어 있어 안전하게 보관됩니다'
+                    : '여기 담긴 건 이 기기에만 있어요') +
+                '<br>' + esc(name) + '가 자라는 만큼 배냇함도 무거워집니다' +
             '</div>' : '') +
         '</div>';
     };
