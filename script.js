@@ -2361,10 +2361,40 @@ window.uploadPhoto = function(input) {
     }
 };
 
-function loadBabyPhoto() {
-    const savedPhoto = localStorage.getItem('tosil_baby_photo'), imgEl = document.querySelector('.home-hero-img');
-    if (savedPhoto && imgEl) { imgEl.src = savedPhoto; imgEl.style.display = 'block'; imgEl.parentNode.style.background = 'none'; }
-}
+// ==========================================
+// 📸 홈 화면 아기 사진 로딩 엔진 (기존 디자인 100% 유지 + 꽉 채우기 + 얼굴 초점)
+// ==========================================
+window.loadBabyPhoto = function() {
+    const savedPhoto = localStorage.getItem('tosil_baby_photo');
+    const imgEl = document.querySelector('.home-hero-img');
+    
+    if (savedPhoto && imgEl) { 
+        // 1. 기존 레이아웃 박스 크기는 절대 건드리지 않음!
+        imgEl.parentNode.style.background = 'none';
+
+        // 2. 🚨 빈 공간 없이 꽉 채우되(Cover), 
+        // 아기 얼굴이나 대표님 얼굴이 잘리지 않도록 초점을 가운데에서 살짝 위(25% 지점)로 맞춥니다!
+        imgEl.style.objectFit = 'cover'; 
+        imgEl.style.objectPosition = 'center 25%'; 
+        imgEl.style.width = '100%';
+        imgEl.style.height = '100%';
+
+        // 3. 회색 화면 깜빡임 방지 (스르륵 나타나는 효과만 유지)
+        imgEl.style.opacity = '0';
+        imgEl.style.transition = 'opacity 0.4s ease-in-out';
+        
+        imgEl.onload = function() {
+            imgEl.style.opacity = '1';
+        };
+
+        imgEl.onerror = function() {
+            imgEl.style.display = 'none';
+        };
+
+        imgEl.src = savedPhoto; 
+        imgEl.style.display = 'block'; 
+    }
+};
 
 function updateHomeDashboard() {
     const feverRecords = JSON.parse(localStorage.getItem('tosil_fever_records')) || [];
