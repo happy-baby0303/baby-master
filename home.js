@@ -82,7 +82,7 @@
         var tiles = shots.map(function (s) {
             return '<div onclick="window.openLoosePhoto ? window.openLoosePhoto(\'' + s.key + '\',0) : null" ' +
                 'style="flex:1; aspect-ratio:1/1; border-radius:14px; overflow:hidden; cursor:pointer; background:var(--bg-sub);">' +
-                '<img src="' + esc(s.photo.url) + '" loading="lazy" alt="" style="width:100%; height:100%; object-fit:cover; display:block;">' +
+                '<img src="' + esc(window.photoThumb ? window.photoThumb(s.photo) : s.photo.url) + '" loading="lazy" alt="" style="width:100%; height:100%; object-fit:cover; display:block;">' +
             '</div>';
         }).join("");
 
@@ -167,7 +167,9 @@
         window.photoDays().sort().reverse().forEach(function (k) {
             (window.getDayPhotos(k) || []).slice().reverse().forEach(function (p) {
                 out.push({
-                    key: k, id: p.id, url: p.url, msId: p.msId || null,
+                    key: k, id: p.id,
+                    url: (window.photoThumb ? window.photoThumb(p) : p.url),
+                    msId: p.msId || null,
                     label: p.msId ? (msTitle(p.msId) || prettyKey(k)) : prettyKey(k),
                     sub: p.msId ? "처음 해낸 일" : "그날의 사진"
                 });

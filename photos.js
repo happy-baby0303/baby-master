@@ -25,6 +25,13 @@
     var QUALITY     = 0.72;
     var MS_SIDE     = 1600;   // 도감 사진 — 인쇄까지 버티는 크기
     var MS_QUALITY  = 0.85;
+
+    /* 목록에 뜨는 사진은 대부분 54~110px 칸이다.
+       거기에 1080px(120KB)·1600px(250KB) 원본을 내려받고 있었다.
+       도감 100줄이면 그것만 25MB. 320px 썸네일을 같이 올려두면
+       목록 트래픽이 1/10 로 준다. 사용자한테 뺏는 건 하나도 없다. */
+    var TH_SIDE     = 320;
+    var TH_QUALITY  = 0.7;
     var MAX_PER_DAY = 3;      // '그날의 사진'만 해당. 첫 순간 사진은 항목마다 1장씩 따로.
     var DAY         = 86400000;
 
@@ -293,9 +300,18 @@
                 if (j.kind === "voice" && typeof window.acceptQueuedVoice === "function") {
                     window.acceptQueuedVoice(j, url);
                 } else {
+                    var th = null;
+                    if (j.thumbData && j.thumbPath) {
+                        try {
+                            var tr = window.storageRef(window.storage, j.thumbPath);
+                            await window.uploadString(tr, j.thumbData, "data_url");
+                            th = await window.getDownloadURL(tr);
+                        } catch (e) {}
+                    }
                     putPhoto(j.meta.key, {
-                        id: j.id, url: url, path: j.path, ts: j.meta.ts,
-                        caption: j.meta.caption || "", msId: j.meta.msId || null
+                        id: j.id, url: url, path: j.path,
+                        thumb: th, thumbPath: th ? j.thumbPath : null,
+                        ts: j.meta.ts, caption: j.meta.caption || "", msId: j.meta.msId || null
                     });
                     if (window.cachePhotoData) window.cachePhotoData(j.id, j.dataUrl);
                     window.syncPhotosToFirebase();
@@ -433,9 +449,9 @@
         toast("⏳ 배냇함에 담는 중이에요…");
         var done = 0;
         picked.forEach(function (file) {
-            shrink(file, !!msId, function (dataUrl) {
+            shrinkBoth(file, !!msId, function (dataUrl, thumbUrl) {
                 if (!dataUrl) return;
-                upload(key, msId, uidNow, dataUrl, function () {
+                upload(key, msId, uidNow, dataUrl, thumbUrl, function () {
                     done++;
                     if (done === picked.length) {
                         var t = msId ? milestoneTitle(msId) : "";
@@ -449,7 +465,35 @@
         });
     }
 
-    // 도감 사진이면 1600px/0.85, 그날의 사진이면 1080px/0.72
+    // 원본과 썸네일을 한 번에 만든다. 파일은 한 번만 읽는다.
+    function shrinkBoth(file, forMilestone, cb) {
+        var side = forMilestone ? MS_SIDE : MAX_SIDE;
+        var q    = forMilestone ? MS_QUALITY : QUALITY;
+        var draw = function (img, maxSide, quality) {
+            var w = img.width, h = img.height;
+            if (w > h) { if (w > maxSide) { h *= maxSide / w; w = maxSide; } }
+            else       { if (h > maxSide) { w *= maxSide / h; h = maxSide; } }
+            var c = document.createElement("canvas");
+            c.width = Math.round(w); c.height = Math.round(h);
+            c.getContext("2d").drawImage(img, 0, 0, c.width, c.height);
+            return c.toDataURL("image/jpeg", quality);
+        };
+
+        var reader = new FileReader();
+        reader.onload = function (e) {
+            var img = new Image();
+            img.onload = function () {
+                try { cb(draw(img, side, q), draw(img, TH_SIDE, TH_QUALITY)); }
+                catch (err) { console.warn("[배냇함 사진] 변환 실패", err); cb(null, null); }
+            };
+            img.onerror = function () { cb(null, null); };
+            img.src = e.target.result;
+        };
+        reader.onerror = function () { cb(null, null); };
+        reader.readAsDataURL(file);
+    }
+
+    // 예전 이름 (지금은 안 쓰이지만 남겨둔다)
     function shrink(file, forMilestone, cb) {
         var side = forMilestone ? MS_SIDE : MAX_SIDE;
         var q    = forMilestone ? MS_QUALITY : QUALITY;
@@ -473,14 +517,31 @@
         reader.readAsDataURL(file);
     }
 
-    async function upload(key, msId, uidNow, dataUrl, done) {
+    async function upload(key, msId, uidNow, dataUrl, thumbUrl, done) {
         var id = uid8();
-        var path = "memories/" + uidNow + "/" + key + "_" + id + ".jpg";
+        var base = "memories/" + uidNow + "/" + key + "_" + id;
+        var path = base + ".jpg";
+        var thumbPath = base + "_t.jpg";
         try {
             var ref = window.storageRef(window.storage, path);
             await window.uploadString(ref, dataUrl, "data_url");
             var url = await window.getDownloadURL(ref);
-            putPhoto(key, { id: id, url: url, path: path, ts: Date.now(), caption: "", msId: msId || null });
+
+            // 썸네일은 실패해도 사진은 살린다. 목록이 좀 무거워질 뿐이다.
+            var thumb = null;
+            if (thumbUrl) {
+                try {
+                    var tref = window.storageRef(window.storage, thumbPath);
+                    await window.uploadString(tref, thumbUrl, "data_url");
+                    thumb = await window.getDownloadURL(tref);
+                } catch (e) { console.warn("[썸네일] 업로드 실패", e); }
+            }
+
+            putPhoto(key, {
+                id: id, url: url, path: path,
+                thumb: thumb, thumbPath: thumb ? thumbPath : null,
+                ts: Date.now(), caption: "", msId: msId || null
+            });
             if (window.cachePhotoData) window.cachePhotoData(id, dataUrl);   // 엽서용
             done();
         } catch (err) {
@@ -488,6 +549,7 @@
             if (window.queueUpload) {
                 await window.queueUpload({
                     id: id, kind: "photo", path: path, dataUrl: dataUrl,
+                    thumbPath: thumbPath, thumbData: thumbUrl || null,
                     meta: { key: key, ts: Date.now(), msId: msId || null, caption: "" }
                 });
             } else {
@@ -495,6 +557,13 @@
             }
         }
     }
+
+    /* ---------- 목록용 주소 ----------
+       썸네일이 있으면 그걸, 없으면(옛날 사진) 원본을 쓴다. -------- */
+
+    window.photoThumb = function (p) {
+        return (p && p.thumb) ? p.thumb : (p ? p.url : "");
+    };
 
     /* ---------- 날짜 카드 안의 사진 줄 (그날의 사진만) ---------- */
 
@@ -511,7 +580,7 @@
 
         var cells = list.map(function (p, i) {
             return '<div onclick="window.openLoosePhoto(\'' + key + '\',' + i + ')" style="flex:1; aspect-ratio:1/1; border-radius:13px; overflow:hidden; cursor:pointer; background:var(--bg-sub);">' +
-                '<img src="' + esc(p.url) + '" loading="lazy" alt="" style="width:100%; height:100%; object-fit:cover; display:block;">' +
+                '<img src="' + esc(window.photoThumb(p)) + '" loading="lazy" alt="" style="width:100%; height:100%; object-fit:cover; display:block;">' +
             '</div>';
         }).join("");
 
@@ -536,7 +605,7 @@
 
         if (found) {
             return '<div ' + tap + ' style="width:62px; height:62px; border-radius:13px; overflow:hidden; flex-shrink:0; cursor:pointer; background:var(--bg-sub);">' +
-                '<img src="' + esc(found.photo.url) + '" loading="lazy" alt="" style="width:100%; height:100%; object-fit:cover; display:block;">' +
+                '<img src="' + esc(window.photoThumb(found.photo)) + '" loading="lazy" alt="" style="width:100%; height:100%; object-fit:cover; display:block;">' +
             '</div>';
         }
 
@@ -596,8 +665,9 @@
         if (!p) return;
 
         var go = function () {
-            if (window.deleteObject && window.storage && window.storageRef && p.path) {
-                try { window.deleteObject(window.storageRef(window.storage, p.path)); } catch (e) {}
+            if (window.deleteObject && window.storage && window.storageRef) {
+                if (p.path)      try { window.deleteObject(window.storageRef(window.storage, p.path)); } catch (e) {}
+                if (p.thumbPath) try { window.deleteObject(window.storageRef(window.storage, p.thumbPath)); } catch (e) {}
             }
             if (window.dropCachedPhotoData) window.dropCachedPhotoData(p.id);
             dropPhoto(vKey, p.id);
