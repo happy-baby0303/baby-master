@@ -908,19 +908,21 @@
             wrap.id = "letterbox-modal";
             document.body.appendChild(wrap);
         }
-        wrap.setAttribute("style", "position:fixed; inset:0; z-index:9999; background:var(--bg-main); overflow-y:auto; -webkit-overflow-scrolling:touch;");
-        wrap.innerHTML =
-        '<div style="max-width:520px; margin:0 auto; padding:0 20px 60px;">' +
-            '<div style="position:sticky; top:0; background:var(--bg-main); padding:22px 0 16px; z-index:2;">' +
-                '<div style="display:flex; justify-content:space-between; align-items:flex-start;">' +
-                    '<div>' +
-                        '<div class="serif-display" style="font-size:23px; font-weight:700; color:var(--text-title); letter-spacing:-0.5px;">' + esc(name) + '의 편지함</div>' +
-                        '<div style="font-size:13px; font-weight:600; color:var(--text-sub); margin-top:6px;">' +
-                            (keys.length ? esc(keys.length + "통이 쌓였어요") : "첫 편지를 기다리는 중") + '</div>' +
-                    '</div>' +
-                    '<div onclick="window.closeLetterBox()" style="font-size:22px; font-weight:300; color:var(--text-sub); cursor:pointer; padding:2px 8px; line-height:1;">×</div>' +
-                '</div>' +
+       wrap.setAttribute("style", "position:fixed; inset:0; z-index:9999; background:var(--bg-main); overflow-y:auto; -webkit-overflow-scrolling:touch;");
+wrap.innerHTML =
+// 🚨 아이폰 상태표시줄 및 노치 영역만큼 알아서 띄워주는 안전장치(env) 장착!
+'<div style="max-width:520px; margin:0 auto; padding:calc(24px + env(safe-area-inset-top)) 20px 60px;">' +
+    '<div style="position:relative; background:var(--bg-main); padding:0 0 16px; z-index:2;">' +
+        '<div style="display:flex; justify-content:space-between; align-items:flex-start;">' +
+            '<div>' +
+                '<div class="serif-display" style="font-size:23px; font-weight:700; color:var(--text-title); letter-spacing:-0.5px;">' + esc(name) + '의 편지함</div>' +
+                '<div style="font-size:13px; font-weight:600; color:var(--text-sub); margin-top:6px;">' +
+                    (keys.length ? esc(keys.length + "통이 쌓였어요") : "첫 편지를 기다리는 중") + '</div>' +
             '</div>' +
+            // 🚨 X 버튼을 조금 더 크고, 대충 눌러도 닫히도록 여백(padding) 튜닝!
+            '<div onclick="window.closeLetterBox()" style="font-size:28px; font-weight:300; color:var(--text-sub); cursor:pointer; padding:0 0 16px 16px; line-height:0.8;">×</div>' +
+        '</div>' +
+    '</div>' +
             body +
             (keys.length ? '<div style="text-align:center; font-size:11.5px; font-weight:600; color:var(--text-sub); margin-top:34px; line-height:1.7;">편지는 이 기기에만 저장돼요<br>하루에 한 통씩, 기록을 남기면 도착합니다</div>' : "") +
         '</div>';
