@@ -2362,31 +2362,30 @@ window.uploadPhoto = function(input) {
 };
 
 // ==========================================
-// 📸 홈 화면 아기 사진 로딩 엔진 (기존 디자인 100% 유지 + 꽉 채우기 + 얼굴 초점)
+// 📸 홈 화면 아기 사진 로딩 엔진 (회색 로딩 지연 완벽 차단 🚀)
 // ==========================================
 window.loadBabyPhoto = function() {
     const savedPhoto = localStorage.getItem('tosil_baby_photo');
     const imgEl = document.querySelector('.home-hero-img');
     
     if (savedPhoto && imgEl) { 
-        // 1. 기존 레이아웃 박스 크기는 절대 건드리지 않음!
+        // 1. 기존 레이아웃 박스 배경 투명화
         imgEl.parentNode.style.background = 'none';
 
-        // 2. 🚨 빈 공간 없이 꽉 채우되(Cover), 
-        // 아기 얼굴이나 대표님 얼굴이 잘리지 않도록 초점을 가운데에서 살짝 위(25% 지점)로 맞춥니다!
+        // 2. 🚨 크롬 브라우저가 맘대로 회색 화면(지연 로딩) 띄우는 것 강제 금지!
+        imgEl.removeAttribute('loading'); 
+
+        // 3. 여백 없이 꽉 채우기 (Cover) + 초점 위로(25%) 유지
         imgEl.style.objectFit = 'cover'; 
         imgEl.style.objectPosition = 'center 25%'; 
         imgEl.style.width = '100%';
         imgEl.style.height = '100%';
 
-        // 3. 회색 화면 깜빡임 방지 (스르륵 나타나는 효과만 유지)
-        imgEl.style.opacity = '0';
-        imgEl.style.transition = 'opacity 0.4s ease-in-out';
-        
-        imgEl.onload = function() {
-            imgEl.style.opacity = '1';
-        };
+        // 4. 🚨 쓸데없는 애니메이션 삭제! 투명도 100%로 딜레이 없이 바로 꽂아버리기!
+        imgEl.style.opacity = '1';
+        imgEl.style.transition = 'none'; 
 
+        // 에러 시 엑스박스 뜨는 것 방지
         imgEl.onerror = function() {
             imgEl.style.display = 'none';
         };
