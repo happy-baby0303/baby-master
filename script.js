@@ -3338,12 +3338,12 @@ window.selectTrackerBtn = function(btn, category) {
         const siblings = btn.parentElement.children;
         for(let i=0; i<siblings.length; i++) {
             siblings[i].style.setProperty('background', 'var(--bg-sub)', 'important');
-            siblings[i].style.setProperty('color', '#8B95A1', 'important');
+            siblings[i].style.setProperty('color', 'var(--text-sub)', 'important');
             siblings[i].style.setProperty('border', 'none', 'important');
             siblings[i].style.setProperty('font-weight', '700', 'important');
         }
-        btn.style.setProperty('background', '#EBF4FF', 'important');
-        btn.style.setProperty('color', '#3182F6', 'important');
+        btn.style.setProperty('background', 'rgba(127, 119, 221, 0.15)', 'important');
+        btn.style.setProperty('color', 'var(--primary)', 'important');
         btn.style.setProperty('border', 'none', 'important');
         btn.style.setProperty('font-weight', '900', 'important');
         window.trackerState.status = '양쪽';
@@ -3355,12 +3355,12 @@ window.selectTrackerBtn = function(btn, category) {
         const siblings = btn.parentElement.children;
         for(let i=0; i<siblings.length; i++) {
             siblings[i].style.setProperty('background', 'var(--bg-sub)', 'important');
-            siblings[i].style.setProperty('color', '#8B95A1', 'important');
+            siblings[i].style.setProperty('color', 'var(--text-sub)', 'important');
             siblings[i].style.setProperty('border', 'none', 'important');
             siblings[i].style.setProperty('font-weight', '700', 'important');
         }
-        btn.style.setProperty('background', '#ECFDF5', 'important'); 
-        btn.style.setProperty('color', '#059669', 'important');
+        btn.style.setProperty('background', 'rgba(185, 138, 46, 0.15)', 'important'); 
+        btn.style.setProperty('color', 'var(--accent)', 'important');
         btn.style.setProperty('border', 'none', 'important');
         btn.style.setProperty('font-weight', '900', 'important');
         
@@ -3387,49 +3387,49 @@ window.selectTrackerBtn = function(btn, category) {
         btn.style.setProperty('box-shadow', '0 4px 12px rgba(0,0,0,0.2)', 'important');
         btn.style.setProperty('opacity', '1', 'important');
         btn.style.setProperty('filter', 'grayscale(0%)', 'important');
-        btn.style.setProperty('border', '2px solid #191F28', 'important'); 
+        btn.style.setProperty('border', '2px solid rgba(74, 65, 60, 1)', 'important'); // --text-m color
 
         let statusTxt = '';
         let warningTxt = '🚨 단순 참고용: 평소와 다르다면 반드시 전문의의 진료를 받으세요.';
-        let warningColor = '#8B95A1'; let warningBg = 'transparent';
+        let warningColor = 'var(--text-sub)'; let warningBg = 'transparent';
 
         const feedingStage = localStorage.getItem('tosil_feedingStage') || '모유/분유';
         const isSolidFood = feedingStage.includes('이유식') || feedingStage.includes('유아식');
 
         if (category === 'status_golden') { 
-            btn.style.setProperty('background', '#FBBF24', 'important'); btn.style.setProperty('color', '#000', 'important'); statusTxt = '황금색'; 
+            btn.style.setProperty('background', 'var(--accent)', 'important'); btn.style.setProperty('color', 'rgba(255,255,255,1)', 'important'); statusTxt = '황금색'; 
             warningTxt = '🟢 완벽한 황금 변입니다!<br>아기의 소화 상태가 아주 훌륭하네요.';
-            warningColor = '#00B37A'; warningBg = '#E6F7F2';
+            warningColor = 'var(--accent)'; warningBg = 'rgba(185, 138, 46, 0.1)';
         }
         else if (category === 'status_green') { 
-            btn.style.setProperty('background', '#4ADE80', 'important'); btn.style.setProperty('color', '#FFF', 'important'); statusTxt = '녹색'; 
+            btn.style.setProperty('background', 'var(--accent)', 'important'); btn.style.setProperty('color', 'rgba(255,255,255,1)', 'important'); statusTxt = '녹색'; 
             warningTxt = '🟢 지극히 정상입니다!<br>담즙, 철분 분유 또는 녹색 채소의 영향일 수 있습니다.';
-            warningColor = '#00B37A'; warningBg = '#E6F7F2';
+            warningColor = 'var(--accent)'; warningBg = 'rgba(185, 138, 46, 0.1)';
         }
         else if (category === 'status_brown') { 
-            btn.style.setProperty('background', '#B45309', 'important'); btn.style.setProperty('color', '#FFF', 'important'); statusTxt = '갈색'; 
+            btn.style.setProperty('background', 'rgba(160, 119, 34, 1)', 'important'); btn.style.setProperty('color', 'rgba(255,255,255,1)', 'important'); statusTxt = '갈색'; 
             if (isSolidFood) {
                 warningTxt = '🟢 건강한 갈색 변입니다!<br>어른처럼 변이 짙어지는 자연스러운 과정입니다.';
-                warningColor = '#00B37A'; warningBg = '#E6F7F2';
+                warningColor = 'var(--accent)'; warningBg = 'rgba(185, 138, 46, 0.1)';
             } else {
                 warningTxt = '⚠️ 수분 부족 / 변비 의심!<br>모유/분유만 먹는데 짙은 갈색에 딱딱하다면 수분 부족일 수 있습니다.';
-                warningColor = '#D32F2F'; warningBg = '#FFF0F1';
+                warningColor = 'rgba(240, 68, 82, 1)'; warningBg = 'rgba(240, 68, 82, 0.1)';
             }
         }
         else if (category === 'status_white') { 
-            btn.style.setProperty('background', '#F2F5F8', 'important'); btn.style.setProperty('color', '#191F28', 'important'); statusTxt = '흰/회색';
+            btn.style.setProperty('background', 'var(--bg-sub)', 'important'); btn.style.setProperty('color', 'var(--text-m)', 'important'); statusTxt = '흰/회색';
             warningTxt = '🚨 소아과 방문 요망! 담도폐쇄증이 의심될 수 있는 색상입니다.';
-            warningColor = '#D32F2F'; warningBg = '#FFF0F1';
+            warningColor = 'rgba(240, 68, 82, 1)'; warningBg = 'rgba(240, 68, 82, 0.1)';
         }
         else if (category === 'status_red') { 
-            btn.style.setProperty('background', '#EF4444', 'important'); btn.style.setProperty('color', '#FFF', 'important'); statusTxt = '붉은색';
+            btn.style.setProperty('background', 'rgba(240, 68, 82, 1)', 'important'); btn.style.setProperty('color', 'rgba(255,255,255,1)', 'important'); statusTxt = '붉은색';
             warningTxt = '🚨 혈변 주의! 피가 섞여 나왔을 수 있습니다. 사진을 찍고 소아과 진료를 권장합니다.';
-            warningColor = '#D32F2F'; warningBg = '#FFF0F1';
+            warningColor = 'rgba(240, 68, 82, 1)'; warningBg = 'rgba(240, 68, 82, 0.1)';
         }
         else if (category === 'status_black') { 
-            btn.style.setProperty('background', '#1F2937', 'important'); btn.style.setProperty('color', '#FFF', 'important'); statusTxt = '검은색';
+            btn.style.setProperty('background', 'rgba(59, 50, 44, 1)', 'important'); btn.style.setProperty('color', 'rgba(255,255,255,1)', 'important'); statusTxt = '검은색';
             warningTxt = '🚨 위장 출혈 의심! 위나 장 위쪽 출혈로 검게 변했을 수 있습니다.';
-            warningColor = '#D32F2F'; warningBg = '#FFF0F1';
+            warningColor = 'rgba(240, 68, 82, 1)'; warningBg = 'rgba(240, 68, 82, 0.1)';
         }
         
         window.trackerState.status = statusTxt;
@@ -3445,24 +3445,24 @@ window.selectTrackerBtn = function(btn, category) {
     const siblings = btn.parentElement.children;
     for(let i=0; i<siblings.length; i++) {
         siblings[i].style.setProperty('background', 'var(--bg-sub)', 'important');
-        siblings[i].style.setProperty('color', '#8B95A1', 'important');
+        siblings[i].style.setProperty('color', 'var(--text-sub)', 'important');
         siblings[i].style.setProperty('border', 'none', 'important');
         siblings[i].style.setProperty('font-weight', '700', 'important');
     }
 
-    // 활성화된 버튼 색상 입히기 (테두리 없음!)
+    // 🚨 활성화된 버튼 색상 입히기 (테마 엔진이 간섭할 수 없게 처음부터 보라색/테마색으로 렌더링!)
     if (category.includes('feed') || category.includes('breast') || category.includes('diaper_pee')) {
-        btn.style.setProperty('background', '#EBF4FF', 'important');
-        btn.style.setProperty('color', '#3182F6', 'important');
+        btn.style.setProperty('background', 'rgba(127, 119, 221, 0.15)', 'important');
+        btn.style.setProperty('color', 'var(--primary)', 'important');
     } else if (category.includes('diaper_poop')) {
-        btn.style.setProperty('background', '#FFF0F1', 'important');
-        btn.style.setProperty('color', '#F04452', 'important');
+        btn.style.setProperty('background', 'rgba(240, 68, 82, 0.1)', 'important');
+        btn.style.setProperty('color', 'rgba(240, 68, 82, 1)', 'important');
     } else if (category === 'diaper_both' || category === 'sleep_night') {
-        btn.style.setProperty('background', '#F3E8FF', 'important');
-        btn.style.setProperty('color', '#7C3AED', 'important');
+        btn.style.setProperty('background', 'rgba(106, 97, 206, 0.15)', 'important');
+        btn.style.setProperty('color', 'rgba(106, 97, 206, 1)', 'important');
     } else if (category === 'sleep_day') {
-        btn.style.setProperty('background', '#FFF9E6', 'important');
-        btn.style.setProperty('color', '#B78103', 'important');
+        btn.style.setProperty('background', 'rgba(185, 138, 46, 0.15)', 'important');
+        btn.style.setProperty('color', 'var(--accent)', 'important');
     }
     btn.style.setProperty('border', 'none', 'important');
     btn.style.setProperty('font-weight', '900', 'important');
@@ -3507,7 +3507,7 @@ window.selectTrackerBtn = function(btn, category) {
 window.clearMedButtons = function() {
     document.querySelectorAll('button[onclick*="med_"]').forEach(btn => {
         btn.style.setProperty('background', 'var(--bg-sub)', 'important');
-        btn.style.setProperty('color', '#8B95A1', 'important');
+        btn.style.setProperty('color', 'var(--text-sub)', 'important');
         btn.style.setProperty('border', 'none', 'important');
         btn.style.setProperty('font-weight', '700', 'important');
     });
@@ -4168,7 +4168,9 @@ window.openTrackerSheet = function(type, editId = null, preSelect = null) {
     }, 80);
 };
 
+// ==========================================
 // 💡 [이유식 패치] 토글 버튼 누를 때 화면 바뀌게 해주는 엔진 (버튼 색상 변경 포함)
+// ==========================================
 window.toggleMammaTab = function(type) {
     const milkArea = document.getElementById('milk-input-area');
     const foodArea = document.getElementById('food-input-area');
@@ -4185,17 +4187,19 @@ window.toggleMammaTab = function(type) {
         if (foodArea) foodArea.style.display = 'block';
         window.trackerState.subType = '이유식'; 
         
-        // 버튼 색깔 스위칭
+        // 🚨 버튼 색깔 스위칭 (!important 강제 주입으로 완벽 고정)
         if (btnFood && btnMilk) {
-            btnFood.style.background = 'var(--bg-card)';
-            btnFood.style.color = 'var(--text-m)';
-            btnFood.style.fontWeight = '900';
-            btnFood.style.boxShadow = '0 2px 6px rgba(0,0,0,0.04)';
+            btnFood.style.setProperty('background', 'var(--bg-card)', 'important');
+            btnFood.style.setProperty('color', 'var(--text-m)', 'important');
+            btnFood.style.setProperty('font-weight', '900', 'important');
+            btnFood.style.setProperty('box-shadow', '0 2px 6px rgba(0,0,0,0.04)', 'important');
+            btnFood.removeAttribute('data-theme-src'); // 메모장 초기화
             
-            btnMilk.style.background = 'transparent';
-            btnMilk.style.color = 'var(--text-s)';
-            btnMilk.style.fontWeight = '800';
-            btnMilk.style.boxShadow = 'none';
+            btnMilk.style.setProperty('background', 'transparent', 'important');
+            btnMilk.style.setProperty('color', 'var(--text-s)', 'important');
+            btnMilk.style.setProperty('font-weight', '800', 'important');
+            btnMilk.style.setProperty('box-shadow', 'none', 'important');
+            btnMilk.removeAttribute('data-theme-src'); // 메모장 초기화
         }
     } else {
         // UI 변경
@@ -4205,19 +4209,215 @@ window.toggleMammaTab = function(type) {
         const feedBtns = document.querySelectorAll('#milk-input-area .btn-main');
         if(feedBtns.length > 0) window.selectTrackerBtn(feedBtns[0], 'feed'); 
         
-        // 버튼 색깔 스위칭
+        // 🚨 버튼 색깔 스위칭 (!important 강제 주입으로 완벽 고정)
         if (btnFood && btnMilk) {
-            btnMilk.style.background = 'var(--bg-card)';
-            btnMilk.style.color = 'var(--text-m)';
-            btnMilk.style.fontWeight = '900';
-            btnMilk.style.boxShadow = '0 2px 6px rgba(0,0,0,0.04)';
+            btnMilk.style.setProperty('background', 'var(--bg-card)', 'important');
+            btnMilk.style.setProperty('color', 'var(--text-m)', 'important');
+            btnMilk.style.setProperty('font-weight', '900', 'important');
+            btnMilk.style.setProperty('box-shadow', '0 2px 6px rgba(0,0,0,0.04)', 'important');
+            btnMilk.removeAttribute('data-theme-src'); // 메모장 초기화
             
-            btnFood.style.background = 'transparent';
-            btnFood.style.color = 'var(--text-s)';
-            btnFood.style.fontWeight = '800';
-            btnFood.style.boxShadow = 'none';
+            btnFood.style.setProperty('background', 'transparent', 'important');
+            btnFood.style.setProperty('color', 'var(--text-s)', 'important');
+            btnFood.style.setProperty('font-weight', '800', 'important');
+            btnFood.style.setProperty('box-shadow', 'none', 'important');
+            btnFood.removeAttribute('data-theme-src'); // 메모장 초기화
         }
     }
+};
+
+// ==========================================
+// 💡 투약/기저귀/수면 버튼 컬러 토글 엔진 (소프트 UI 보더리스 패치)
+// ==========================================
+window.selectTrackerBtn = function(btn, category) {
+    // 1. 모유 양쪽 버튼 로직
+    if (category === 'breast_both') {
+        const siblings = btn.parentElement.children;
+        for(let i=0; i<siblings.length; i++) {
+            siblings[i].style.setProperty('background', 'var(--bg-sub)', 'important');
+            siblings[i].style.setProperty('color', '#8B95A1', 'important');
+            siblings[i].style.setProperty('border', 'none', 'important');
+            siblings[i].style.setProperty('font-weight', '700', 'important');
+            siblings[i].removeAttribute('data-theme-src'); // 🚨 핵심 패치
+        }
+        btn.style.setProperty('background', '#EBF4FF', 'important');
+        btn.style.setProperty('color', '#3182F6', 'important');
+        btn.style.setProperty('border', 'none', 'important');
+        btn.style.setProperty('font-weight', '900', 'important');
+        btn.removeAttribute('data-theme-src'); // 🚨 핵심 패치
+        window.trackerState.status = '양쪽';
+        return;
+    }
+    
+    // 2. 투약 (약/비타민) 버튼 로직
+    if (category.includes('med_')) {
+        const siblings = btn.parentElement.children;
+        for(let i=0; i<siblings.length; i++) {
+            siblings[i].style.setProperty('background', 'var(--bg-sub)', 'important');
+            siblings[i].style.setProperty('color', '#8B95A1', 'important');
+            siblings[i].style.setProperty('border', 'none', 'important');
+            siblings[i].style.setProperty('font-weight', '700', 'important');
+            siblings[i].removeAttribute('data-theme-src'); // 🚨 핵심 패치
+        }
+        btn.style.setProperty('background', '#ECFDF5', 'important'); 
+        btn.style.setProperty('color', '#059669', 'important');
+        btn.style.setProperty('border', 'none', 'important');
+        btn.style.setProperty('font-weight', '900', 'important');
+        btn.removeAttribute('data-theme-src'); // 🚨 핵심 패치
+        
+        window.trackerState.subType = btn.innerText;
+        const customInput = document.getElementById('v-med-custom');
+        if(customInput) customInput.value = ''; 
+        return;
+    }
+
+    // 3. 똥 색깔 버튼 로직
+    if (category.includes('status_')) {
+        const siblings = btn.parentElement.children;
+        const warningArea = document.getElementById('poop-warning-msg');
+        
+        for(let i=0; i<siblings.length; i++) {
+            siblings[i].style.setProperty('transform', 'scale(1)', 'important');
+            siblings[i].style.setProperty('box-shadow', 'none', 'important');
+            siblings[i].style.setProperty('opacity', '0.35', 'important');
+            siblings[i].style.setProperty('filter', 'grayscale(100%)', 'important');
+            siblings[i].style.setProperty('border', 'none', 'important'); 
+            siblings[i].removeAttribute('data-theme-src'); // 🚨 핵심 패치
+        }
+        
+        btn.style.setProperty('transform', 'scale(1.05)', 'important');
+        btn.style.setProperty('box-shadow', '0 4px 12px rgba(0,0,0,0.2)', 'important');
+        btn.style.setProperty('opacity', '1', 'important');
+        btn.style.setProperty('filter', 'grayscale(0%)', 'important');
+        btn.style.setProperty('border', '2px solid #191F28', 'important'); 
+        btn.removeAttribute('data-theme-src'); // 🚨 핵심 패치
+
+        let statusTxt = '';
+        let warningTxt = '🚨 단순 참고용: 평소와 다르다면 반드시 전문의의 진료를 받으세요.';
+        let warningColor = '#8B95A1'; let warningBg = 'transparent';
+
+        const feedingStage = localStorage.getItem('tosil_feedingStage') || '모유/분유';
+        const isSolidFood = feedingStage.includes('이유식') || feedingStage.includes('유아식');
+
+        if (category === 'status_golden') { 
+            btn.style.setProperty('background', '#FBBF24', 'important'); btn.style.setProperty('color', '#000', 'important'); statusTxt = '황금색'; 
+            warningTxt = '🟢 완벽한 황금 변입니다!<br>아기의 소화 상태가 아주 훌륭하네요.';
+            warningColor = '#00B37A'; warningBg = '#E6F7F2';
+        }
+        else if (category === 'status_green') { 
+            btn.style.setProperty('background', '#4ADE80', 'important'); btn.style.setProperty('color', '#FFF', 'important'); statusTxt = '녹색'; 
+            warningTxt = '🟢 지극히 정상입니다!<br>담즙, 철분 분유 또는 녹색 채소의 영향일 수 있습니다.';
+            warningColor = '#00B37A'; warningBg = '#E6F7F2';
+        }
+        else if (category === 'status_brown') { 
+            btn.style.setProperty('background', '#B45309', 'important'); btn.style.setProperty('color', '#FFF', 'important'); statusTxt = '갈색'; 
+            if (isSolidFood) {
+                warningTxt = '🟢 건강한 갈색 변입니다!<br>어른처럼 변이 짙어지는 자연스러운 과정입니다.';
+                warningColor = '#00B37A'; warningBg = '#E6F7F2';
+            } else {
+                warningTxt = '⚠️ 수분 부족 / 변비 의심!<br>모유/분유만 먹는데 짙은 갈색에 딱딱하다면 수분 부족일 수 있습니다.';
+                warningColor = '#D32F2F'; warningBg = '#FFF0F1';
+            }
+        }
+        else if (category === 'status_white') { 
+            btn.style.setProperty('background', '#F2F5F8', 'important'); btn.style.setProperty('color', '#191F28', 'important'); statusTxt = '흰/회색';
+            warningTxt = '🚨 소아과 방문 요망! 담도폐쇄증이 의심될 수 있는 색상입니다.';
+            warningColor = '#D32F2F'; warningBg = '#FFF0F1';
+        }
+        else if (category === 'status_red') { 
+            btn.style.setProperty('background', '#EF4444', 'important'); btn.style.setProperty('color', '#FFF', 'important'); statusTxt = '붉은색';
+            warningTxt = '🚨 혈변 주의! 피가 섞여 나왔을 수 있습니다. 사진을 찍고 소아과 진료를 권장합니다.';
+            warningColor = '#D32F2F'; warningBg = '#FFF0F1';
+        }
+        else if (category === 'status_black') { 
+            btn.style.setProperty('background', '#1F2937', 'important'); btn.style.setProperty('color', '#FFF', 'important'); statusTxt = '검은색';
+            warningTxt = '🚨 위장 출혈 의심! 위나 장 위쪽 출혈로 검게 변했을 수 있습니다.';
+            warningColor = '#D32F2F'; warningBg = '#FFF0F1';
+        }
+        
+        window.trackerState.status = statusTxt;
+        if(warningArea) {
+            warningArea.innerHTML = warningTxt; warningArea.style.color = warningColor;
+            warningArea.style.background = warningBg; warningArea.style.padding = '10px 14px';
+            warningArea.style.borderRadius = '12px'; warningArea.style.marginTop = '16px';
+        }
+        return; 
+    }
+
+    // 4. 일반 카테고리 버튼들 초기화 (소프트 UI)
+    const siblings = btn.parentElement.children;
+    for(let i=0; i<siblings.length; i++) {
+        siblings[i].style.setProperty('background', 'var(--bg-sub)', 'important');
+        siblings[i].style.setProperty('color', '#8B95A1', 'important');
+        siblings[i].style.setProperty('border', 'none', 'important');
+        siblings[i].style.setProperty('font-weight', '700', 'important');
+        siblings[i].removeAttribute('data-theme-src'); // 🚨 핵심 패치
+    }
+
+    // 활성화된 버튼 색상 입히기 (테두리 없음!)
+    if (category.includes('feed') || category.includes('breast') || category.includes('diaper_pee')) {
+        btn.style.setProperty('background', '#EBF4FF', 'important');
+        btn.style.setProperty('color', '#3182F6', 'important');
+    } else if (category.includes('diaper_poop')) {
+        btn.style.setProperty('background', '#FFF0F1', 'important');
+        btn.style.setProperty('color', '#F04452', 'important');
+    } else if (category === 'diaper_both' || category === 'sleep_night') {
+        btn.style.setProperty('background', '#F3E8FF', 'important');
+        btn.style.setProperty('color', '#7C3AED', 'important');
+    } else if (category === 'sleep_day') {
+        btn.style.setProperty('background', '#FFF9E6', 'important');
+        btn.style.setProperty('color', '#B78103', 'important');
+    }
+    btn.style.setProperty('border', 'none', 'important');
+    btn.style.setProperty('font-weight', '900', 'important');
+    btn.removeAttribute('data-theme-src'); // 🚨 핵심 패치
+
+    if (category === 'feed') {
+        const rawText = btn.innerText.replace(/[^가-힣]/g, ''); 
+        if (rawText.includes('모유')) window.trackerState.subType = '모유';
+        else if (rawText.includes('분유')) window.trackerState.subType = '분유';
+        else if (rawText.includes('유축')) window.trackerState.subType = '유축';
+        else window.trackerState.subType = rawText;
+
+        const mlArea = document.getElementById('feed-ml-area');
+        const breastArea = document.getElementById('feed-breast-area');
+        
+        if (window.trackerState.subType === '모유') {
+            if(mlArea) mlArea.style.display = 'none';
+            if(breastArea) breastArea.style.display = 'block';
+        } else {
+            if(mlArea) mlArea.style.display = 'block';
+            if(breastArea) breastArea.style.display = 'none';
+            window.trackerState.status = '';
+        }
+    } else if (category === 'breast_left') window.trackerState.status = '왼쪽';
+    else if (category === 'breast_right') window.trackerState.status = '오른쪽';
+    else if (category === 'diaper_pee') {
+        window.trackerState.subType = '소변';
+        const statusArea = document.getElementById('diaper-status-area');
+        if(statusArea) statusArea.style.display = 'none';
+    } else if (category === 'diaper_poop') {
+        window.trackerState.subType = '대변';
+        const statusArea = document.getElementById('diaper-status-area');
+        if(statusArea) statusArea.style.display = 'block';
+    } else if (category === 'diaper_both') {
+        window.trackerState.subType = '소변+대변';
+        const statusArea = document.getElementById('diaper-status-area');
+        if(statusArea) statusArea.style.display = 'block';
+    }
+    else if (category === 'sleep_day') window.trackerState.subType = '낮잠';
+    else if (category === 'sleep_night') window.trackerState.subType = '밤잠';
+};
+
+window.clearMedButtons = function() {
+    document.querySelectorAll('button[onclick*="med_"]').forEach(btn => {
+        btn.style.setProperty('background', 'var(--bg-sub)', 'important');
+        btn.style.setProperty('color', '#8B95A1', 'important');
+        btn.style.setProperty('border', 'none', 'important');
+        btn.style.setProperty('font-weight', '700', 'important');
+        btn.removeAttribute('data-theme-src'); // 🚨 핵심 패치
+    });
+    window.trackerState.subType = ''; 
 };
 
 // 💡 [이유식 패치] 이유식 용량 미세 조절 버튼 (+10, -10)
@@ -6003,80 +6203,160 @@ window.closeEmergencyModalForce = function() { document.getElementById('emergenc
 window.closeEmergencyModal = function(e) { if(e.target.id === 'emergency-modal') window.closeEmergencyModalForce(); };
 
 // ==========================================
-// 🧾 영수증 띄우기 (데이터 0 방어 + 외부 파일 랜덤 연동 완료!)
+// 🧾 영수증 띄우기 (성수동 힙스터 카페 찐 영수증 감성 최종판 💯)
 // ==========================================
 window.openReceiptModal = function() {
     const today = new Date();
-    document.getElementById('receipt-date').innerText = `${today.getFullYear()}. ${today.getMonth()+1}. ${today.getDate()}`;
     
+    // 영수증 발행일시 
+    const yyyy = today.getFullYear();
+    const mm = String(today.getMonth() + 1).padStart(2, '0');
+    const dd = String(today.getDate()).padStart(2, '0');
+    const hh = String(today.getHours()).padStart(2, '0');
+    const min = String(today.getMinutes()).padStart(2, '0');
+    const dateStr = `${yyyy}-${mm}-${dd} ${hh}:${min}`;
+    const orderNo = Math.floor(Math.random() * 8999) + 1000; // 랜덤 주문번호
+    
+    const babyName = localStorage.getItem('tosil_babyName') || '우리아기';
     const startOfToday = new Date(today.getFullYear(), today.getMonth(), today.getDate()).getTime();
     let records = JSON.parse(localStorage.getItem('tosil_tracker_records')) || [];
 
-    let totalMilk = 0;
-    let totalPoop = 0;
+    let totalMilk = 0; let totalFood = 0;
+    let totalPoop = 0; let totalPee = 0;
     let totalSleepMins = 0;
 
     records.forEach(record => {
         if (record.timestamp >= startOfToday) {
-            if (record.type === 'feed' && record.amount) {
-                totalMilk += parseInt(record.amount);
+            if (record.type === 'feed') {
+                if (record.subType === '이유식') totalFood += parseInt(record.amount) || 0;
+                else totalMilk += parseInt(record.amount) || 0;
             } 
-            else if (record.type === 'diaper' && record.subType && record.subType.includes('대변')) {
-                totalPoop += 1;
+            else if (record.type === 'diaper') {
+                if (record.subType === '소변') totalPee += 1;
+                else if (record.subType === '대변') totalPoop += 1;
+                else if (record.subType === '둘 다' || record.subType === '소변+대변') { totalPee += 1; totalPoop += 1; }
             } 
-            else if (record.type === 'sleep' && record.amount) {
-                totalSleepMins += parseInt(record.amount);
+            else if (record.type === 'sleep') {
+                totalSleepMins += parseInt(record.amount) || 0;
             }
         }
     });
 
-    let totalSleepHours = (totalSleepMins / 60).toFixed(1); 
-    if (totalSleepHours.endsWith('.0')) totalSleepHours = parseInt(totalSleepHours);
+    let sleepH = Math.floor(totalSleepMins / 60);
+    let sleepM = totalSleepMins % 60;
+    let sleepStr = sleepH > 0 ? `${sleepH}H ${sleepM}M` : `${sleepM}M`;
 
-    document.getElementById('receipt-milk').innerText = `${totalMilk} ml`;
-    document.getElementById('receipt-poop').innerText = `${totalPoop} 회`;
-    document.getElementById('receipt-sleep').innerText = `${totalSleepHours} 시간`;
+    let isEmpty = (totalMilk === 0 && totalFood === 0 && totalPoop === 0 && totalPee === 0 && totalSleepMins === 0);
 
-    // 🌟 [핵심 패치] 엄마/아빠 역할에 따라 단어 치환 로직!
-    const role = localStorage.getItem('user_role') || 'mom';
-    const myTitle = role === 'dad' ? '아빠' : '엄마';
-    const partnerTitle = role === 'dad' ? '엄마' : '아빠';
+    const contentDiv = document.getElementById('receipt-content');
+    
+    // 감열지 질감 및 잉크 번짐 스타일
+    contentDiv.style.cssText = `
+        background: #F4F4F0 !important; 
+        padding: 0 !important;
+        box-shadow: 0 20px 40px rgba(0,0,0,0.2) !important;
+        font-family: 'Courier New', Courier, monospace !important;
+        color: #111 !important;
+        width: 100% !important;
+        box-sizing: border-box !important;
+        border: none !important;
+        position: relative;
+        text-transform: uppercase;
+    `;
 
-    const pickRandom = (array) => {
-        let text = array[Math.floor(Math.random() * array.length)];
-        // {me}는 내 역할로, {partner}는 짝꿍 역할로 바꿔치기
-        return text.replace(/{me}/g, myTitle).replace(/{partner}/g, partnerTitle);
-    };
+    const customStyle = `
+        <style>
+            .rcpt-wrap {
+                padding: 40px 24px;
+                background: #F4F4F0;
+                position: relative;
+                text-shadow: 0.5px 0.5px 0px rgba(0,0,0,0.3);
+            }
+            .rcpt-dash { border-top: 1.5px dashed #333; margin: 16px 0; opacity: 0.6; }
+            .rcpt-bold-line { border-top: 2px solid #111; margin: 16px 0; opacity: 0.9; }
+            
+            .rcpt-item { display: flex; align-items: flex-end; margin-bottom: 4px; font-size: 13.5px; font-weight: 900; color: #111; }
+            .rcpt-item .dots { flex-grow: 1; border-bottom: 1.5px dotted #666; margin: 0 8px; position: relative; top: -4px; opacity: 0.5; }
+            .rcpt-ko { font-size: 11px; color: #555; font-family: 'Pretendard', sans-serif; font-weight: 600; text-transform: none; margin-bottom: 16px; letter-spacing: -0.3px; }
+            
+            .barcode-strip { width: 100%; height: 60px; background: repeating-linear-gradient(90deg, #111 0, #111 2px, transparent 2px, transparent 4px, #111 4px, #111 5px, transparent 5px, transparent 8px, #111 8px, #111 12px, transparent 12px, transparent 15px, #111 15px, #111 16px, transparent 16px, transparent 19px, #111 19px, #111 22px); margin: 0 auto; mix-blend-mode: multiply; opacity: 0.85; }
+        </style>
+    `;
 
-   let diaryText = "";
+    const makeItem = (en, ko, val) => `
+        <div class="rcpt-item"><span>${en}</span><div class="dots"></div><span>${val}</span></div>
+        <div class="rcpt-ko">${ko}</div>
+    `;
 
-    // 편지함에 저장된 그날의 편지를 그대로 인화한다 (목소리는 하나)
-    if (typeof window.getTodayLetter === 'function') diaryText = window.getTodayLetter();
+    let html = customStyle + `
+        <div class="rcpt-wrap">
+            <!-- 헤더 (서울 탈출 및 와이파이 감성 추가) -->
+            <div style="text-align: center; margin-bottom: 24px;">
+                <div style="font-weight: 900; font-size: 28px; letter-spacing: 2px; margin-bottom: 6px;">TOSIL CAFE</div>
+                <div style="font-size: 11px; font-weight: 700; letter-spacing: 1px; color: #444;">BABY CARE ROASTERS</div>
+                <div style="font-size: 10.5px; font-weight: 700; letter-spacing: 1px; color: #666; margin-top: 4px;">HOME SWEET HOME, KOREA</div>
+                <div style="font-size: 10px; font-weight: 800; color: #3182F6; margin-top: 8px; font-family: 'Pretendard', sans-serif; text-transform: none;">📶 WI-FI: LOVE0303*#</div>
+            </div>
 
-    if (diaryText) {
-        // 편지가 있으면 아래 조립 로직은 건너뛴다
-    } else if (totalMilk === 0 && totalPoop === 0 && totalSleepMins === 0) {
-        diaryText = `아직 오늘 기록된 데이터가 없어요! 😅\n우리아기가 오늘 얼마나 먹고 잤는지 트래커에 먼저 기록해 주세요 ✍️🤍`;
-    } else {
-        diaryText += pickRandom(receiptData.intro);
-        if (totalSleepHours >= 3) diaryText += pickRandom(receiptData.sleepGood);
-        else diaryText += pickRandom(receiptData.sleepBad);
+            <div class="rcpt-dash"></div>
 
-        if (totalMilk >= 700) diaryText += pickRandom(receiptData.feedMuch);
-        else if (totalMilk > 0) diaryText += pickRandom(receiptData.feedLittle);
-        else diaryText += pickRandom(receiptData.feedZero);
+            <!-- 주문 정보 -->
+            <div style="font-size: 12px; font-weight: 800; line-height: 1.6; margin-bottom: 8px; color: #222;">
+                <div style="display:flex; justify-content:space-between;"><span>ORDER #${orderNo}</span><span>${dateStr}</span></div>
+                <div style="display:flex; justify-content:space-between;"><span>CUST.</span><span>${babyName} [V.I.P]</span></div>
+                <div style="display:flex; justify-content:space-between;"><span>SRVR.</span><span>MOM & DAD</span></div>
+            </div>
 
-        if (totalPoop > 0) diaryText += pickRandom(receiptData.poopMuch);
-        else diaryText += pickRandom(receiptData.poopZero);
+            <div class="rcpt-dash"></div>
 
-        diaryText += pickRandom(receiptData.outro);
-    }
+            <!-- 내역 타이틀 -->
+            <div style="font-size: 13px; font-weight: 900; margin-bottom: 20px; text-align: center; letter-spacing: 2px;">
+                [ ORDER DETAILS ]
+            </div>
 
-    document.getElementById('receipt-diary').innerText = diaryText;
+            <!-- 아이템 리스트 -->
+            ${totalMilk > 0 ? makeItem('Formula Latte', '라떼 (분유/모유)', `${totalMilk} ml`) : ''}
+            ${totalFood > 0 ? makeItem("Chef's Puree", '오마카세 (이유식)', `${totalFood} g`) : ''}
+            ${totalPoop > 0 ? makeItem('Golden Drop', '황금 응가', `${totalPoop} EA`) : ''}
+            ${totalPee > 0 ? makeItem('Water Drop', '쉬야', `${totalPee} EA`) : ''}
+            ${totalSleepMins > 0 ? makeItem('Sweet Dream', '꿀잠 충전소', sleepStr) : ''}
+            
+            ${isEmpty ? `<div style="text-align:center; font-size:12px; padding: 20px 0; color:#555; font-family:'Pretendard',sans-serif; text-transform:none;">오늘 영업 내역이 없습니다 🥲</div>` : ''}
+
+            <div class="rcpt-dash"></div>
+
+            <!-- 결제 금액부 -->
+            <div style="font-size: 13px; font-weight: 800; margin-bottom: 4px; color: #111;">
+                <div style="display:flex; justify-content:space-between; margin-bottom:6px;"><span>SUBTOTAL</span><span>ENDLESS</span></div>
+                <div style="display:flex; justify-content:space-between; margin-bottom:6px;"><span>TAX (CUTENESS)</span><span>100%</span></div>
+            </div>
+            
+            <div class="rcpt-bold-line"></div>
+
+            <div style="display:flex; justify-content:space-between; align-items:flex-end; margin-bottom: 32px;">
+                <span style="font-size: 20px; font-weight: 900; color: #000;">TOTAL</span>
+                <span style="font-size: 26px; font-weight: 900; letter-spacing: -1px; color: #000;">∞ LOVE</span>
+            </div>
+
+            <!-- 하단 푸터 (바코드) -->
+            <div style="text-align: center; font-size: 12px; font-weight: 800; margin-bottom: 24px; line-height: 1.6; color: #444;">
+                <div>PAID BY: PARENTS SOUL</div>
+                <div>CARD: ****-****-****-0303</div>
+                <div>AUTH CODE: 77777777</div>
+            </div>
+
+            <div class="barcode-strip"></div>
+            <div style="text-align: center; font-size: 12px; margin-top: 12px; letter-spacing: 5px; font-weight: 900; color: #111;">
+                0303-TOSIL-BABY
+            </div>
+        </div>
+    `;
+
+    contentDiv.innerHTML = html;
     document.getElementById('receipt-modal').style.display = 'flex';
 }
 
-// 닫기 버튼
+// 닫기 버튼 유지
 window.closeReceiptModal = function() {
     document.getElementById('receipt-modal').style.display = 'none';
 }
@@ -7872,11 +8152,12 @@ window.getMateLevelInfo = function() {
     let currentLevelExp = totalExp % 100; 
     let percent = currentLevelExp; 
 
-    let title = "👶 신입 육아 요원"; let color = "#94A3B8";
-    if (level >= 10) { title = "👑 육아의 신"; color = "#F59E0B"; }
-    else if (level >= 7) { title = "💎 베테랑 요원"; color = "#8B5CF6"; }
-    else if (level >= 4) { title = "⚔️ 정예 요원"; color = "#3182F6"; }
-    else if (level >= 2) { title = "🛡️ 일병 아빠"; color = "#2DD4BF"; }
+    // 🚨 [패치] 하드코딩된 헥스코드를 모두 CSS 변수로 교체 (깜빡임 완벽 차단)
+    let title = "👶 신입 육아 요원"; let color = "var(--text-sub)";
+    if (level >= 10) { title = "👑 육아의 신"; color = "var(--accent)"; }
+    else if (level >= 7) { title = "💎 베테랑 요원"; color = "var(--primary)"; }
+    else if (level >= 4) { title = "⚔️ 정예 요원"; color = "var(--primary)"; }
+    else if (level >= 2) { title = "🛡️ 일병 아빠"; color = "var(--accent)"; }
 
     return { totalExp, level, currentLevelExp, percent, title, color };
 };
@@ -7937,44 +8218,26 @@ window.renderDadQuests = function() {
         if(!lastSleep && r.type === 'sleep') lastSleep = r;
     });
 
-    let babyStatusHtml = "";
-    let feedDiff = lastFeed ? Math.floor((now - lastFeed.timestamp) / 60000) : 0;
-    let diaperDiff = lastDiaper ? Math.floor((now - lastDiaper.timestamp) / 60000) : 0;
-    const feedInterval = parseInt(localStorage.getItem('tosil_feed_interval')) || 180;
-    
-    // 🚨 맘마/기저귀 텍스트 1줄 최적화 (자간 축소 및 워딩 다이어트)
-    if (feedDiff >= feedInterval - 30) {
-        babyStatusHtml += `<div style="display:flex; align-items:center; gap:8px; margin-bottom:8px;"><div style="font-size:20px;">🚨</div><div style="font-size:13px; 	color:#F04452; font-weight:800; letter-spacing:-0.5px;">맘마 먹은지 ${Math.floor(feedDiff/60)}시간 ${feedDiff%60}분째!<br><span style="font-size:11.5px; color:#8B95A1;">집에 가자마자 분유를 타주세요!</span></div></div>`;
-    } else {
-        babyStatusHtml += `<div style="display:flex; align-items:center; gap:8px; margin-bottom:8px;"><div style="font-size:20px;">🍼</div><div style="font-size:13px; 	color:#191F28; font-weight:800; letter-spacing:-0.5px; white-space:nowrap;">마지막 수유: ${feedDiff >= 60 ? Math.floor(feedDiff/60)+'시간 ' : ''}${feedDiff%60}분 전</div></div>`;
-    }
-
-    if (diaperDiff >= 180) {
-        babyStatusHtml += `<div style="display:flex; align-items:center; gap:8px;"><div style="font-size:20px;">💩</div><div style="font-size:13px; 	color:#F04452; font-weight:800; letter-spacing:-0.5px;">기저귀 안 간지 ${Math.floor(diaperDiff/60)}시간 경과!<br><span style="font-size:11.5px; color:#8B95A1;">엉덩이 발진 주의! 확인 요망</span></div></div>`;
-    } else {
-        babyStatusHtml += `<div style="display:flex; align-items:center; gap:8px;"><div style="font-size:20px;">✨</div><div style="font-size:13px; color:#E2E8F0; font-weight:800; letter-spacing:-0.5px; white-space:nowrap;">기저귀 뽀송 (마지막: ${diaperDiff}분 전)</div></div>`;
-    }
-
     let momHpText = ""; let momHpColor = "";
     
     if (todayFever) {
-        momHpText = "🚨 멘탈 붕괴 직전 (아기가 아파요! 칼퇴 요망)"; momHpColor = "#EF4444";
+        momHpText = "🚨 멘탈 붕괴 직전 (아기가 아파요! 칼퇴 요망)"; momHpColor = "var(--danger, #EF4444)";
     } else if (todayEvents >= 15) { 
-        momHpText = "극도 피로 🥵 (디저트 포장 강력 추천!)"; momHpColor = "#F87171"; 
+        momHpText = "극도 피로 🥵 (디저트 포장 강력 추천!)"; momHpColor = "var(--danger, #EF4444)"; 
     } else if (todayEvents >= 8) { 
-        momHpText = "지침 😮‍💨 (따뜻한 말 한마디 필수)"; momHpColor = "#FBBF24"; 
+        momHpText = "지침 😮‍💨 (따뜻한 말 한마디 필수)"; momHpColor = "var(--accent, #B98A2E)"; 
     } else { 
-        momHpText = "보통 🙂 (퇴근 후 육아 교대는 필수!)"; momHpColor = "#34D399"; 
+        momHpText = "보통 🙂 (퇴근 후 육아 교대는 필수!)"; momHpColor = "var(--success, #B98A2E)"; 
     }
 
     const isHeroToday = localStorage.getItem('tosil_hero_mode_date') === new Date().toDateString();
 
-    // 🎨 평상시엔 흰 카드, 발열 상황에서만 빨간 경고톤
-    const boardBg = todayFever ? '#FFF5F5' : '#FFFFFF';
+    // 🚨 [패치] 평상시 바탕/경고톤 역시 CSS 변수로 강제 고정하여 theme.js의 개입을 원천 차단!
+    const boardBg = todayFever ? 'rgba(239, 68, 68, 0.05)' : 'var(--bg-card)';
     const boardShadow = todayFever ? '0 4px 16px rgba(239,68,68,0.12)' : '0 2px 8px rgba(0,0,0,0.04)';
-    const boardBorder = todayFever ? '1px solid #FCA5A5' : '1px solid #EDF0F3';
-    const txtMain = todayFever ? '#B91C1C' : '#191F28';
-    const txtSub  = todayFever ? '#DC2626' : '#8B95A1';
+    const boardBorder = todayFever ? '1px solid var(--danger, #EF4444)' : '1px solid var(--border)';
+    const txtMain = todayFever ? 'var(--danger, #EF4444)' : 'var(--text-m)';
+    const txtSub  = todayFever ? 'var(--danger, #EF4444)' : 'var(--text-s)';
 
     let html = `
         <div style="background: ${boardBg}; border: ${boardBorder}; border-radius: 20px; padding: 20px; color: ${txtMain}; box-shadow: ${boardShadow}; position: relative; margin-bottom: 16px; transition: 0.3s;">
@@ -7982,17 +8245,16 @@ window.renderDadQuests = function() {
             <div onclick="window.toggleDadDashboard()" style="display: flex; justify-content: space-between; align-items: center; gap: 12px; cursor: pointer; position: relative; z-index: 2;">
                 <div style="flex: 1; min-width: 0; text-align: left;">
                     <div style="font-size: 12px; color: ${txtSub}; font-weight: 800; margin-bottom: 6px;">${todayFever ? '🚨 비상사태 발령' : '👨‍🍼 아빠 작전 상황판'}</div>
-                    <!-- 🚨 타이틀 잘림(...) 현상 원천 차단! (white-space: nowrap 제거, line-height 추가) -->
                     <div style="font-size: 16px; font-weight: 900; color: ${txtMain}; line-height: 1.3; word-break: keep-all; letter-spacing: -0.5px;">
-                         Lv.${levelInfo.level} <span style="color: ${todayFever ? '#B91C1C' : levelInfo.color};">${levelInfo.title}</span>
+                         Lv.${levelInfo.level} <span style="color: ${todayFever ? 'var(--danger, #EF4444)' : levelInfo.color};">${levelInfo.title}</span>
                     </div>
                 </div>
                 
                 <div style="display: flex; align-items: center; gap: 8px; flex-shrink: 0;">
-                    <div style="font-size: 12px; font-weight: 900; color: #38BDF8; background: rgba(56, 189, 248, 0.15); border: 1px solid rgba(56, 189, 248, 0.2); padding: 6px 10px; border-radius: 12px; white-space: nowrap;">
+                    <div style="font-size: 12px; font-weight: 900; color: var(--accent, #B98A2E); background: rgba(185, 138, 46, 0.15); border: 1px solid rgba(185, 138, 46, 0.2); padding: 6px 10px; border-radius: 12px; white-space: nowrap;">
                         ${levelInfo.totalExp} EXP
                     </div>
-                    <div style="width: 28px; height: 28px; background: #F2F4F6; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 11px; color: ${txtSub}; transform: rotate(${isCollapsed ? '180deg' : '0deg'}); transition: transform 0.3s;">
+                    <div style="width: 28px; height: 28px; background: var(--bg-sub); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 11px; color: ${txtSub}; transform: rotate(${isCollapsed ? '180deg' : '0deg'}); transition: transform 0.3s;">
                         ▲
                     </div>
                 </div>
@@ -8002,8 +8264,8 @@ window.renderDadQuests = function() {
     if (!isCollapsed) {
         html += `
             <div style="margin-top: 16px; margin-bottom: 24px;">
-                 <div style="background: #EDF0F3; height: 10px; border-radius: 5px; overflow: hidden;">
-                    <div style="width: ${levelInfo.percent}%; height: 100%; background: ${todayFever ? '#EF4444' : levelInfo.color}; border-radius: 5px; transition: width 0.5s;"></div>
+                 <div style="background: var(--bg-sub); height: 10px; border-radius: 5px; overflow: hidden;">
+                    <div style="width: ${levelInfo.percent}%; height: 100%; background: ${todayFever ? 'var(--danger, #EF4444)' : levelInfo.color}; border-radius: 5px; transition: width 0.5s;"></div>
                 </div>
                 <div style="text-align: right; font-size: 11px; color: ${txtSub}; margin-top: 6px;">다음 승급까지 ${100 - levelInfo.currentLevelExp} EXP</div>
             </div>
@@ -8014,18 +8276,17 @@ window.renderDadQuests = function() {
                 </div>
             ` : ''}
 
-            <div style="background: #F8F9FA; border-radius: 16px; padding: 16px; margin-bottom: 20px; border: 1px solid #EDF0F3;">
+            <div style="background: var(--bg-main); border-radius: 16px; padding: 16px; margin-bottom: 20px; border: 1px solid var(--border);">
                 <div style="font-size: 12px; font-weight: 800; color: ${txtSub}; margin-bottom: 6px;">💬 오늘 이것만 해도 충분해요</div>
                 <div style="font-size: 14px; font-weight: 800; color: ${momHpColor}; line-height:1.5; word-break:keep-all;">${momHpText}</div>
             </div>
             ${isHeroToday ? `
-                <div style="text-align:center; padding:16px; background:rgba(16, 185, 129, 0.15); border-radius:16px; border:1px solid rgba(16, 185, 129, 0.3);">
+                <div style="text-align:center; padding:16px; background:rgba(185, 138, 46, 0.15); border-radius:16px; border:1px solid rgba(185, 138, 46, 0.3);">
                     <div style="font-size:24px; margin-bottom:4px;">👨‍🍼</div>
-                    <div style="font-size:14px; font-weight:900; color:#34D399;">오늘의 메인 육아 참전 완료!</div>
+                    <div style="font-size:14px; font-weight:900; color:var(--accent, #B98A2E);">오늘의 메인 육아 참전 완료!</div>
                 </div>
             ` : `
-                <!-- 🚨 퇴근 완료 버튼 1줄 고정 패치! (폰트 사이즈 조정, 자간 축소, nowrap 적용) -->
-                <button onclick="window.activateHeroMode()" style="width:100%; padding:16px 10px; border-radius:16px; background:${todayFever ? '#EF4444' : '#3182F6'}; color:#fff; font-size:14.5px; font-weight:900; border:none; cursor:pointer; box-shadow:0 4px 15px rgba(${todayFever ? '239,68,68' : '49,130,246'},0.4); display:flex; align-items:center; justify-content:center; gap:6px; letter-spacing:-0.5px; white-space:nowrap;">
+                <button onclick="window.activateHeroMode()" style="width:100%; padding:16px 10px; border-radius:16px; background:${todayFever ? 'var(--danger, #EF4444)' : 'var(--primary, #7F77DD)'}; color:var(--bg-main, #fff); font-size:14.5px; font-weight:900; border:none; cursor:pointer; box-shadow:0 4px 15px rgba(${todayFever ? '239,68,68' : '127,119,221'},0.4); display:flex; align-items:center; justify-content:center; gap:6px; letter-spacing:-0.5px; white-space:nowrap;">
                     <span>👨‍🍼</span> ${todayFever ? '긴급 투입! 당장 퇴근하겠습니다' : '퇴근 완료! 이제 내가 전담할게'}
                 </button>
             `}
@@ -8125,24 +8386,23 @@ window.updateDadBriefing = function() {
     // ==========================================
     // 💡 1. 초압축 카피라이팅: 아내 HP 편
     // ==========================================
- let hpBg = "#34D399"; 
+    let hpBg = "var(--success, #B98A2E)"; 
     let hpMsg = "가서 아기랑 30분만 놀아주면 충분해요 🌿";
     const totalLabor = todayFeedCount + todayDiaperCount; 
     if (totalLabor >= 12 || todayDiaperCount >= 7) {
-        hpBg = "#FBBF24"; 
+        hpBg = "var(--danger, #F04452)"; 
         hpMsg = "오늘 많이 바빴어요. 1시간만 봐주면 충분 🛋️"; 
     } else if (totalLabor >= 8 || todayFeedCount >= 5) {
-        hpBg = "#60A5FA"; 
+        hpBg = "var(--accent, #B98A2E)"; 
         hpMsg = "평범하게 바쁜 하루. 커피 한 잔 어때요 ☕"; 
     }
 
-  // ==========================================
+    // ==========================================
     // 💡 2. 초압축 카피라이팅: 1순위 미션 편 (감성 & 1줄 강제 고정)
     // ==========================================
-    let missionBg = "#3182F6"; 
+    let missionBg = "var(--primary, #7F77DD)"; 
     let missionMsg = "";
     
-    // 👇 날아갔던 '수면 체크 로직' 복구 완료! 👇
     let sleepStartTime = localStorage.getItem('tosil_sleep_start');
     
     if (sleepStartTime && lastSleep && lastSleep.amount > 0) {
@@ -8154,10 +8414,9 @@ window.updateDadBriefing = function() {
         }
     }
     const isSleeping = sleepStartTime || (lastSleep && lastSleep.amount === 0);
-    // 👆 여기까지 👆
 
     if (isSleeping) {
-        missionBg = "#A855F7"; 
+        missionBg = "var(--primary, #7F77DD)"; 
         missionMsg = "쉿! 아기 꿀잠 중, 까치발 입장 "; 
     } else {
         const nowTime = now.getTime();
@@ -8166,13 +8425,13 @@ window.updateDadBriefing = function() {
         const feedInterval = parseInt(localStorage.getItem('tosil_feed_interval')) || 180;
 
         if (lastFeed && feedDiffMins >= feedInterval - 30) {
-            missionBg = "#3182F6"; 
+            missionBg = "var(--primary, #7F77DD)"; 
             missionMsg = "옷 벗기 전, 젖병부터 세팅하기 "; 
         } else if (lastDiaper && diaperDiffMins >= 180) {
-            missionBg = "#F04452"; 
+            missionBg = "var(--danger, #F04452)"; 
             missionMsg = "현관문 열자마자 기저귀 갈아주기 "; 
         } else {
-            missionBg = "#00B37A"; 
+            missionBg = "var(--accent, #B98A2E)"; 
             
             // 🔥 감성 한 스푼 넣은 초압축 1줄 평화 미션!
             const fallbackMissions = [
@@ -8191,8 +8450,6 @@ window.updateDadBriefing = function() {
     let isCleared = false;
     try {
         const clearedData = JSON.parse(localStorage.getItem('tosil_cleared_mission'));
-        // 저장된 미션 텍스트와 현재 미션 텍스트가 똑같고, 완료한 지 2시간(7200000ms)이 안 지났다면?
-        // -> 이미 완료한 미션으로 렌더링!
         if (clearedData && clearedData.text === missionMsg && (Date.now() - clearedData.timestamp < 7200000)) {
             isCleared = true;
         }
@@ -8204,17 +8461,17 @@ window.updateDadBriefing = function() {
         const parentDiv = msgEl.parentElement;
         parentDiv.style.background = "var(--bg-card)";
         parentDiv.style.border = "1px solid var(--border)";
-        parentDiv.style.borderRadius = "20px"; // 모서리를 더 부드럽게
-        parentDiv.style.padding = "20px"; // 여백 확대
+        parentDiv.style.borderRadius = "20px";
+        parentDiv.style.padding = "20px";
         parentDiv.style.flexDirection = "column"; 
         parentDiv.style.alignItems = "stretch"; 
-        parentDiv.style.gap = "0"; // 갭을 없애고 라인으로 구분
+        parentDiv.style.gap = "0"; 
         parentDiv.style.boxShadow = "0 4px 16px rgba(0,0,0,0.03)"; 
-const actionButtonHtml = isCleared 
-            ? `<button disabled style="background: #F0FDF4; border: 1px solid #BBF7D0; color: #059669; padding: 10px 16px; border-radius: 12px; font-size: 13px; font-weight: 900; cursor: not-allowed; flex-shrink: 0;">완수 👏</button>`
-            : `<button onclick="window.completeTopMission(this, '${missionMsg.replace(/'/g, "\\'")}')" style="background: #191F28; color: #FFFFFF; border: none; padding: 10px 16px; border-radius: 12px; font-size: 13px; font-weight: 900; cursor: pointer; flex-shrink: 0; box-shadow: 0 4px 10px rgba(0,0,0,0.1); transition: 0.2s;">완료하기</button>`;
 
-        // 🌟 [최종 UI 패치] 뚱뚱한 색상 배지를 없애고, 토스/애플 스타일의 세련된 '도트(점)' 인디케이터로 변경!
+        const actionButtonHtml = isCleared 
+            ? `<button disabled style="background: var(--bg-sub); border: 1px solid var(--border); color: var(--text-s); padding: 10px 16px; border-radius: 12px; font-size: 13px; font-weight: 900; cursor: not-allowed; flex-shrink: 0;">완수 👏</button>`
+            : `<button onclick="window.completeTopMission(this, '${missionMsg.replace(/'/g, "\\'")}')" style="background: var(--text-m); color: var(--bg-main); border: none; padding: 10px 16px; border-radius: 12px; font-size: 13px; font-weight: 900; cursor: pointer; flex-shrink: 0; box-shadow: 0 4px 10px rgba(0,0,0,0.1); transition: 0.2s;">완료하기</button>`;
+
         parentDiv.innerHTML = `
             <!-- 아내 상태 영역 -->
             <div style="padding-bottom: 16px; border-bottom: 1px solid var(--border);">
