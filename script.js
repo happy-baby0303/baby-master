@@ -3330,191 +3330,6 @@ window.setTrackerDateOffset = function(offset) {
 };
 
 // ==========================================
-// 💡 투약/기저귀/수면 버튼 컬러 토글 엔진 (소프트 UI 보더리스 패치)
-// ==========================================
-window.selectTrackerBtn = function(btn, category) {
-    // 1. 모유 양쪽 버튼 로직
-    if (category === 'breast_both') {
-        const siblings = btn.parentElement.children;
-        for(let i=0; i<siblings.length; i++) {
-            siblings[i].style.setProperty('background', 'var(--bg-sub)', 'important');
-            siblings[i].style.setProperty('color', 'var(--text-sub)', 'important');
-            siblings[i].style.setProperty('border', 'none', 'important');
-            siblings[i].style.setProperty('font-weight', '700', 'important');
-        }
-        btn.style.setProperty('background', 'rgba(127, 119, 221, 0.15)', 'important');
-        btn.style.setProperty('color', 'var(--primary)', 'important');
-        btn.style.setProperty('border', 'none', 'important');
-        btn.style.setProperty('font-weight', '900', 'important');
-        window.trackerState.status = '양쪽';
-        return;
-    }
-    
-    // 2. 투약 (약/비타민) 버튼 로직
-    if (category.includes('med_')) {
-        const siblings = btn.parentElement.children;
-        for(let i=0; i<siblings.length; i++) {
-            siblings[i].style.setProperty('background', 'var(--bg-sub)', 'important');
-            siblings[i].style.setProperty('color', 'var(--text-sub)', 'important');
-            siblings[i].style.setProperty('border', 'none', 'important');
-            siblings[i].style.setProperty('font-weight', '700', 'important');
-        }
-        btn.style.setProperty('background', 'rgba(185, 138, 46, 0.15)', 'important'); 
-        btn.style.setProperty('color', 'var(--accent)', 'important');
-        btn.style.setProperty('border', 'none', 'important');
-        btn.style.setProperty('font-weight', '900', 'important');
-        
-        window.trackerState.subType = btn.innerText;
-        const customInput = document.getElementById('v-med-custom');
-        if(customInput) customInput.value = ''; 
-        return;
-    }
-
-    // 3. 똥 색깔 버튼 로직
-    if (category.includes('status_')) {
-        const siblings = btn.parentElement.children;
-        const warningArea = document.getElementById('poop-warning-msg');
-        
-        for(let i=0; i<siblings.length; i++) {
-            siblings[i].style.setProperty('transform', 'scale(1)', 'important');
-            siblings[i].style.setProperty('box-shadow', 'none', 'important');
-            siblings[i].style.setProperty('opacity', '0.35', 'important');
-            siblings[i].style.setProperty('filter', 'grayscale(100%)', 'important');
-            siblings[i].style.setProperty('border', 'none', 'important'); 
-        }
-        
-        btn.style.setProperty('transform', 'scale(1.05)', 'important');
-        btn.style.setProperty('box-shadow', '0 4px 12px rgba(0,0,0,0.2)', 'important');
-        btn.style.setProperty('opacity', '1', 'important');
-        btn.style.setProperty('filter', 'grayscale(0%)', 'important');
-        btn.style.setProperty('border', '2px solid rgba(74, 65, 60, 1)', 'important'); // --text-m color
-
-        let statusTxt = '';
-        let warningTxt = '🚨 단순 참고용: 평소와 다르다면 반드시 전문의의 진료를 받으세요.';
-        let warningColor = 'var(--text-sub)'; let warningBg = 'transparent';
-
-        const feedingStage = localStorage.getItem('tosil_feedingStage') || '모유/분유';
-        const isSolidFood = feedingStage.includes('이유식') || feedingStage.includes('유아식');
-
-        if (category === 'status_golden') { 
-            btn.style.setProperty('background', 'var(--accent)', 'important'); btn.style.setProperty('color', 'rgba(255,255,255,1)', 'important'); statusTxt = '황금색'; 
-            warningTxt = '🟢 완벽한 황금 변입니다!<br>아기의 소화 상태가 아주 훌륭하네요.';
-            warningColor = 'var(--accent)'; warningBg = 'rgba(185, 138, 46, 0.1)';
-        }
-        else if (category === 'status_green') { 
-            btn.style.setProperty('background', 'var(--accent)', 'important'); btn.style.setProperty('color', 'rgba(255,255,255,1)', 'important'); statusTxt = '녹색'; 
-            warningTxt = '🟢 지극히 정상입니다!<br>담즙, 철분 분유 또는 녹색 채소의 영향일 수 있습니다.';
-            warningColor = 'var(--accent)'; warningBg = 'rgba(185, 138, 46, 0.1)';
-        }
-        else if (category === 'status_brown') { 
-            btn.style.setProperty('background', 'rgba(160, 119, 34, 1)', 'important'); btn.style.setProperty('color', 'rgba(255,255,255,1)', 'important'); statusTxt = '갈색'; 
-            if (isSolidFood) {
-                warningTxt = '🟢 건강한 갈색 변입니다!<br>어른처럼 변이 짙어지는 자연스러운 과정입니다.';
-                warningColor = 'var(--accent)'; warningBg = 'rgba(185, 138, 46, 0.1)';
-            } else {
-                warningTxt = '⚠️ 수분 부족 / 변비 의심!<br>모유/분유만 먹는데 짙은 갈색에 딱딱하다면 수분 부족일 수 있습니다.';
-                warningColor = 'rgba(240, 68, 82, 1)'; warningBg = 'rgba(240, 68, 82, 0.1)';
-            }
-        }
-        else if (category === 'status_white') { 
-            btn.style.setProperty('background', 'var(--bg-sub)', 'important'); btn.style.setProperty('color', 'var(--text-m)', 'important'); statusTxt = '흰/회색';
-            warningTxt = '🚨 소아과 방문 요망! 담도폐쇄증이 의심될 수 있는 색상입니다.';
-            warningColor = 'rgba(240, 68, 82, 1)'; warningBg = 'rgba(240, 68, 82, 0.1)';
-        }
-        else if (category === 'status_red') { 
-            btn.style.setProperty('background', 'rgba(240, 68, 82, 1)', 'important'); btn.style.setProperty('color', 'rgba(255,255,255,1)', 'important'); statusTxt = '붉은색';
-            warningTxt = '🚨 혈변 주의! 피가 섞여 나왔을 수 있습니다. 사진을 찍고 소아과 진료를 권장합니다.';
-            warningColor = 'rgba(240, 68, 82, 1)'; warningBg = 'rgba(240, 68, 82, 0.1)';
-        }
-        else if (category === 'status_black') { 
-            btn.style.setProperty('background', 'rgba(59, 50, 44, 1)', 'important'); btn.style.setProperty('color', 'rgba(255,255,255,1)', 'important'); statusTxt = '검은색';
-            warningTxt = '🚨 위장 출혈 의심! 위나 장 위쪽 출혈로 검게 변했을 수 있습니다.';
-            warningColor = 'rgba(240, 68, 82, 1)'; warningBg = 'rgba(240, 68, 82, 0.1)';
-        }
-        
-        window.trackerState.status = statusTxt;
-        if(warningArea) {
-            warningArea.innerHTML = warningTxt; warningArea.style.color = warningColor;
-            warningArea.style.background = warningBg; warningArea.style.padding = '10px 14px';
-            warningArea.style.borderRadius = '12px'; warningArea.style.marginTop = '16px';
-        }
-        return; 
-    }
-
-    // 4. 일반 카테고리 버튼들 초기화 (소프트 UI)
-    const siblings = btn.parentElement.children;
-    for(let i=0; i<siblings.length; i++) {
-        siblings[i].style.setProperty('background', 'var(--bg-sub)', 'important');
-        siblings[i].style.setProperty('color', 'var(--text-sub)', 'important');
-        siblings[i].style.setProperty('border', 'none', 'important');
-        siblings[i].style.setProperty('font-weight', '700', 'important');
-    }
-
-    // 🚨 활성화된 버튼 색상 입히기 (테마 엔진이 간섭할 수 없게 처음부터 보라색/테마색으로 렌더링!)
-    if (category.includes('feed') || category.includes('breast') || category.includes('diaper_pee')) {
-        btn.style.setProperty('background', 'rgba(127, 119, 221, 0.15)', 'important');
-        btn.style.setProperty('color', 'var(--primary)', 'important');
-    } else if (category.includes('diaper_poop')) {
-        btn.style.setProperty('background', 'rgba(240, 68, 82, 0.1)', 'important');
-        btn.style.setProperty('color', 'rgba(240, 68, 82, 1)', 'important');
-    } else if (category === 'diaper_both' || category === 'sleep_night') {
-        btn.style.setProperty('background', 'rgba(106, 97, 206, 0.15)', 'important');
-        btn.style.setProperty('color', 'rgba(106, 97, 206, 1)', 'important');
-    } else if (category === 'sleep_day') {
-        btn.style.setProperty('background', 'rgba(185, 138, 46, 0.15)', 'important');
-        btn.style.setProperty('color', 'var(--accent)', 'important');
-    }
-    btn.style.setProperty('border', 'none', 'important');
-    btn.style.setProperty('font-weight', '900', 'important');
-
-    if (category === 'feed') {
-        const rawText = btn.innerText.replace(/[^가-힣]/g, ''); 
-        if (rawText.includes('모유')) window.trackerState.subType = '모유';
-        else if (rawText.includes('분유')) window.trackerState.subType = '분유';
-        else if (rawText.includes('유축')) window.trackerState.subType = '유축';
-        else window.trackerState.subType = rawText;
-
-        const mlArea = document.getElementById('feed-ml-area');
-        const breastArea = document.getElementById('feed-breast-area');
-        
-        if (window.trackerState.subType === '모유') {
-            if(mlArea) mlArea.style.display = 'none';
-            if(breastArea) breastArea.style.display = 'block';
-        } else {
-            if(mlArea) mlArea.style.display = 'block';
-            if(breastArea) breastArea.style.display = 'none';
-            window.trackerState.status = '';
-        }
-    } else if (category === 'breast_left') window.trackerState.status = '왼쪽';
-    else if (category === 'breast_right') window.trackerState.status = '오른쪽';
-    else if (category === 'diaper_pee') {
-        window.trackerState.subType = '소변';
-        const statusArea = document.getElementById('diaper-status-area');
-        if(statusArea) statusArea.style.display = 'none';
-    } else if (category === 'diaper_poop') {
-        window.trackerState.subType = '대변';
-        const statusArea = document.getElementById('diaper-status-area');
-        if(statusArea) statusArea.style.display = 'block';
-    } else if (category === 'diaper_both') {
-        window.trackerState.subType = '소변+대변';
-        const statusArea = document.getElementById('diaper-status-area');
-        if(statusArea) statusArea.style.display = 'block';
-    }
-    else if (category === 'sleep_day') window.trackerState.subType = '낮잠';
-    else if (category === 'sleep_night') window.trackerState.subType = '밤잠';
-};
-
-window.clearMedButtons = function() {
-    document.querySelectorAll('button[onclick*="med_"]').forEach(btn => {
-        btn.style.setProperty('background', 'var(--bg-sub)', 'important');
-        btn.style.setProperty('color', 'var(--text-sub)', 'important');
-        btn.style.setProperty('border', 'none', 'important');
-        btn.style.setProperty('font-weight', '700', 'important');
-    });
-    window.trackerState.subType = ''; 
-};
-
-// ==========================================
 // 📱 원터치 육아 트래커 엔진 (타이머 & 투약 랜덤 팁 패치)
 // ==========================================
 window.openTrackerSheet = function(type, editId = null, preSelect = null) {
@@ -3689,10 +3504,12 @@ window.openTrackerSheet = function(type, editId = null, preSelect = null) {
         let quickButtonsHtml = '';
         if (uniqueAmounts.length > 0) {
             uniqueAmounts.forEach(amt => {
-                quickButtonsHtml += `<button type="button" class="quick-btn active" onclick="window.setFeedAmount(${amt})" style="flex-shrink: 0; padding: 10px 14px; background: #EBF4FF; color: #3182F6; border: none; border-radius: 12px; font-weight: 900; font-size: 13.5px; cursor: pointer;">🍼 ${amt}ml</button>`;
+                // 🚨 파란색 ➔ 보라색으로 변경 완료!
+                quickButtonsHtml += `<button type="button" class="quick-btn active" onclick="window.setFeedAmount(${amt})" style="flex-shrink: 0; padding: 10px 14px; background: rgba(127, 119, 221, 0.15); color: var(--primary); border: none; border-radius: 12px; font-weight: 900; font-size: 13.5px; cursor: pointer;">🍼 ${amt}ml</button>`;
             });
         } else {
-            quickButtonsHtml = `<button type="button" class="quick-btn active" onclick="window.setFeedAmount(160)" style="flex-shrink: 0; padding: 10px 14px; background: #EBF4FF; color: #3182F6; border: none; border-radius: 12px; font-weight: 900; font-size: 13.5px; cursor: pointer;">🍼 160ml</button>`;
+            // 🚨 파란색 ➔ 보라색으로 변경 완료!
+            quickButtonsHtml += `<button type="button" class="quick-btn active" onclick="window.setFeedAmount(160)" style="flex-shrink: 0; padding: 10px 14px; background: rgba(127, 119, 221, 0.15); color: var(--primary); border: none; border-radius: 12px; font-weight: 900; font-size: 13.5px; cursor: pointer;">🍼 160ml</button>`;
         }
 
         let foodRecords = records.filter(r => r.type === 'feed' && r.subType === '이유식' && r.amount > 0);
@@ -3763,8 +3580,8 @@ window.openTrackerSheet = function(type, editId = null, preSelect = null) {
 
         body.innerHTML = baseTimeInputHtml + `
             <div style="display: flex; align-items: center; justify-content: center; background: var(--bg-sub); border-radius: 18px; padding: 4px; margin-bottom: 24px; border: none; box-sizing: border-box; height: 54px;">
-                <button id="tab-btn-milk" class="btn-main" onclick="window.toggleMammaTab('milk')" style="flex: 1; height: 46px; display: flex; align-items: center; justify-content: center; margin: 0; background: var(--bg-card); color: var(--text-m); border: none; border-radius: 14px; font-size: 15px; font-weight: 900; cursor: pointer; box-shadow: 0 2px 8px rgba(0,0,0,0.04); transition: 0.2s;">🍼 수유</button>
-                <button id="tab-btn-food" class="btn-main" onclick="window.toggleMammaTab('food')" style="flex: 1; height: 46px; display: flex; align-items: center; justify-content: center; margin: 0; background: transparent; color: var(--text-s); border: none; border-radius: 14px; font-size: 15px; font-weight: 800; cursor: pointer; transition: 0.2s;">🥄 이유식</button>
+                <button id="tab-btn-milk" class="btn-main" onclick="window.toggleMammaTab('milk')" style="flex: 1; height: 46px; display: flex; align-items: center; justify-content: center; margin: 0; background: rgba(127, 119, 221, 0.15); color: var(--primary); border: none; border-radius: 14px; font-size: 15px; font-weight: 900; cursor: pointer; box-shadow: none; transition: 0.2s;">🍼 수유</button>
+                <button id="tab-btn-food" class="btn-main" onclick="window.toggleMammaTab('food')" style="flex: 1; height: 46px; display: flex; align-items: center; justify-content: center; margin: 0; background: transparent; color: #8B95A1; border: none; border-radius: 14px; font-size: 15px; font-weight: 700; cursor: pointer; transition: 0.2s;">🥄 이유식</button>
             </div>
             ${milkHtml}
             ${foodHtml}
@@ -4169,13 +3986,12 @@ window.openTrackerSheet = function(type, editId = null, preSelect = null) {
 };
 
 // ==========================================
-// 💡 [이유식 패치] 토글 버튼 누를 때 화면 바뀌게 해주는 엔진 (버튼 색상 변경 포함)
+// 💡 [이유식 패치] 토글 버튼 누를 때 화면 바뀌게 해주는 엔진 (보라색 테마 완벽 통일 💜)
 // ==========================================
 window.toggleMammaTab = function(type) {
     const milkArea = document.getElementById('milk-input-area');
     const foodArea = document.getElementById('food-input-area');
     
-    // 버튼 2개 가져오기
     const btnMilk = document.getElementById('tab-btn-milk');
     const btnFood = document.getElementById('tab-btn-food');
     
@@ -4187,19 +4003,19 @@ window.toggleMammaTab = function(type) {
         if (foodArea) foodArea.style.display = 'block';
         window.trackerState.subType = '이유식'; 
         
-        // 🚨 버튼 색깔 스위칭 (!important 강제 주입으로 완벽 고정)
+        // 🚨 버튼 색깔 스위칭 (보라색으로 통일!)
         if (btnFood && btnMilk) {
-            btnFood.style.setProperty('background', 'var(--bg-card)', 'important');
-            btnFood.style.setProperty('color', 'var(--text-m)', 'important');
+            btnFood.style.setProperty('background', 'rgba(127, 119, 221, 0.15)', 'important');
+            btnFood.style.setProperty('color', 'var(--primary)', 'important');
             btnFood.style.setProperty('font-weight', '900', 'important');
-            btnFood.style.setProperty('box-shadow', '0 2px 6px rgba(0,0,0,0.04)', 'important');
-            btnFood.removeAttribute('data-theme-src'); // 메모장 초기화
+            btnFood.style.setProperty('box-shadow', 'none', 'important');
+            btnFood.removeAttribute('data-theme-src'); 
             
             btnMilk.style.setProperty('background', 'transparent', 'important');
-            btnMilk.style.setProperty('color', 'var(--text-s)', 'important');
-            btnMilk.style.setProperty('font-weight', '800', 'important');
+            btnMilk.style.setProperty('color', '#8B95A1', 'important');
+            btnMilk.style.setProperty('font-weight', '700', 'important');
             btnMilk.style.setProperty('box-shadow', 'none', 'important');
-            btnMilk.removeAttribute('data-theme-src'); // 메모장 초기화
+            btnMilk.removeAttribute('data-theme-src'); 
         }
     } else {
         // UI 변경
@@ -4209,170 +4025,106 @@ window.toggleMammaTab = function(type) {
         const feedBtns = document.querySelectorAll('#milk-input-area .btn-main');
         if(feedBtns.length > 0) window.selectTrackerBtn(feedBtns[0], 'feed'); 
         
-        // 🚨 버튼 색깔 스위칭 (!important 강제 주입으로 완벽 고정)
+        // 🚨 버튼 색깔 스위칭 (보라색으로 통일!)
         if (btnFood && btnMilk) {
-            btnMilk.style.setProperty('background', 'var(--bg-card)', 'important');
-            btnMilk.style.setProperty('color', 'var(--text-m)', 'important');
+            btnMilk.style.setProperty('background', 'rgba(127, 119, 221, 0.15)', 'important');
+            btnMilk.style.setProperty('color', 'var(--primary)', 'important');
             btnMilk.style.setProperty('font-weight', '900', 'important');
-            btnMilk.style.setProperty('box-shadow', '0 2px 6px rgba(0,0,0,0.04)', 'important');
-            btnMilk.removeAttribute('data-theme-src'); // 메모장 초기화
+            btnMilk.style.setProperty('box-shadow', 'none', 'important');
+            btnMilk.removeAttribute('data-theme-src'); 
             
             btnFood.style.setProperty('background', 'transparent', 'important');
-            btnFood.style.setProperty('color', 'var(--text-s)', 'important');
-            btnFood.style.setProperty('font-weight', '800', 'important');
+            btnFood.style.setProperty('color', '#8B95A1', 'important');
+            btnFood.style.setProperty('font-weight', '700', 'important');
             btnFood.style.setProperty('box-shadow', 'none', 'important');
-            btnFood.removeAttribute('data-theme-src'); // 메모장 초기화
+            btnFood.removeAttribute('data-theme-src'); 
         }
     }
 };
 
 // ==========================================
-// 💡 투약/기저귀/수면 버튼 컬러 토글 엔진 (소프트 UI 보더리스 패치)
+// 💡 트래커 버튼 컬러 통일 엔진 (모든 탭 보라색 💜 - 대변도 예외 없음!)
 // ==========================================
 window.selectTrackerBtn = function(btn, category) {
-    // 1. 모유 양쪽 버튼 로직
-    if (category === 'breast_both') {
-        const siblings = btn.parentElement.children;
-        for(let i=0; i<siblings.length; i++) {
-            siblings[i].style.setProperty('background', 'var(--bg-sub)', 'important');
-            siblings[i].style.setProperty('color', '#8B95A1', 'important');
-            siblings[i].style.setProperty('border', 'none', 'important');
-            siblings[i].style.setProperty('font-weight', '700', 'important');
-            siblings[i].removeAttribute('data-theme-src'); // 🚨 핵심 패치
-        }
-        btn.style.setProperty('background', '#EBF4FF', 'important');
-        btn.style.setProperty('color', '#3182F6', 'important');
-        btn.style.setProperty('border', 'none', 'important');
-        btn.style.setProperty('font-weight', '900', 'important');
-        btn.removeAttribute('data-theme-src'); // 🚨 핵심 패치
-        window.trackerState.status = '양쪽';
-        return;
-    }
-    
-    // 2. 투약 (약/비타민) 버튼 로직
-    if (category.includes('med_')) {
-        const siblings = btn.parentElement.children;
-        for(let i=0; i<siblings.length; i++) {
-            siblings[i].style.setProperty('background', 'var(--bg-sub)', 'important');
-            siblings[i].style.setProperty('color', '#8B95A1', 'important');
-            siblings[i].style.setProperty('border', 'none', 'important');
-            siblings[i].style.setProperty('font-weight', '700', 'important');
-            siblings[i].removeAttribute('data-theme-src'); // 🚨 핵심 패치
-        }
-        btn.style.setProperty('background', '#ECFDF5', 'important'); 
-        btn.style.setProperty('color', '#059669', 'important');
-        btn.style.setProperty('border', 'none', 'important');
-        btn.style.setProperty('font-weight', '900', 'important');
-        btn.removeAttribute('data-theme-src'); // 🚨 핵심 패치
-        
-        window.trackerState.subType = btn.innerText;
-        const customInput = document.getElementById('v-med-custom');
-        if(customInput) customInput.value = ''; 
-        return;
+    const siblings = btn.parentElement.children;
+
+    // 1. 모든 버튼 초기화 (회색으로 끄기)
+    for(let i=0; i<siblings.length; i++) {
+        siblings[i].style.setProperty('background', 'var(--bg-sub)', 'important');
+        siblings[i].style.setProperty('color', 'var(--text-sub)', 'important');
+        siblings[i].style.setProperty('border', 'none', 'important');
+        siblings[i].style.setProperty('font-weight', '700', 'important');
+        siblings[i].style.setProperty('transform', 'scale(1)', 'important');
+        siblings[i].style.setProperty('box-shadow', 'none', 'important');
+        siblings[i].style.setProperty('opacity', '1', 'important'); 
+        siblings[i].style.setProperty('filter', 'grayscale(0%)', 'important'); 
+        siblings[i].removeAttribute('data-theme-src'); 
     }
 
-    // 3. 똥 색깔 버튼 로직
+    // 2. 기본 활성화 색상 셋팅 (무조건 보라색 💜)
+    let activeBg = 'rgba(127, 119, 221, 0.15)'; // 연보라 배경
+    let activeColor = 'var(--primary)'; // 진보라 글씨
+    let activeBorder = 'none';
+
+    // 3. 예외 케이스 (아래쪽의 똥 색깔 선택 버튼들만 고유 색상 유지)
     if (category.includes('status_')) {
-        const siblings = btn.parentElement.children;
-        const warningArea = document.getElementById('poop-warning-msg');
-        
         for(let i=0; i<siblings.length; i++) {
-            siblings[i].style.setProperty('transform', 'scale(1)', 'important');
-            siblings[i].style.setProperty('box-shadow', 'none', 'important');
             siblings[i].style.setProperty('opacity', '0.35', 'important');
             siblings[i].style.setProperty('filter', 'grayscale(100%)', 'important');
-            siblings[i].style.setProperty('border', 'none', 'important'); 
-            siblings[i].removeAttribute('data-theme-src'); // 🚨 핵심 패치
         }
-        
         btn.style.setProperty('transform', 'scale(1.05)', 'important');
         btn.style.setProperty('box-shadow', '0 4px 12px rgba(0,0,0,0.2)', 'important');
         btn.style.setProperty('opacity', '1', 'important');
         btn.style.setProperty('filter', 'grayscale(0%)', 'important');
-        btn.style.setProperty('border', '2px solid #191F28', 'important'); 
-        btn.removeAttribute('data-theme-src'); // 🚨 핵심 패치
+        activeBorder = '2px solid var(--text-m)';
 
-        let statusTxt = '';
-        let warningTxt = '🚨 단순 참고용: 평소와 다르다면 반드시 전문의의 진료를 받으세요.';
-        let warningColor = '#8B95A1'; let warningBg = 'transparent';
-
-        const feedingStage = localStorage.getItem('tosil_feedingStage') || '모유/분유';
-        const isSolidFood = feedingStage.includes('이유식') || feedingStage.includes('유아식');
+        let warningTxt = ''; let warningColor = ''; let warningBg = '';
+        const isSolidFood = (localStorage.getItem('tosil_feedingStage') || '').includes('이유식');
 
         if (category === 'status_golden') { 
-            btn.style.setProperty('background', '#FBBF24', 'important'); btn.style.setProperty('color', '#000', 'important'); statusTxt = '황금색'; 
-            warningTxt = '🟢 완벽한 황금 변입니다!<br>아기의 소화 상태가 아주 훌륭하네요.';
-            warningColor = '#00B37A'; warningBg = '#E6F7F2';
+            activeBg = '#FBBF24'; activeColor = '#000'; window.trackerState.status = '황금색'; 
+            warningTxt = '🟢 완벽한 황금 변입니다!<br>아기의 소화 상태가 아주 훌륭하네요.'; warningColor = 'var(--success)'; warningBg = 'rgba(185, 138, 46, 0.1)';
+        } else if (category === 'status_green') { 
+            activeBg = '#4ADE80'; activeColor = '#FFF'; window.trackerState.status = '녹색'; 
+            warningTxt = '🟢 지극히 정상입니다!<br>담즙, 철분 분유 또는 녹색 채소의 영향일 수 있습니다.'; warningColor = 'var(--success)'; warningBg = 'rgba(185, 138, 46, 0.1)';
+        } else if (category === 'status_brown') { 
+            activeBg = '#B45309'; activeColor = '#FFF'; window.trackerState.status = '갈색'; 
+            if (isSolidFood) { warningTxt = '🟢 건강한 갈색 변입니다!'; warningColor = 'var(--success)'; warningBg = 'rgba(185, 138, 46, 0.1)'; }
+            else { warningTxt = '⚠️ 수분 부족 / 변비 의심!'; warningColor = 'var(--danger)'; warningBg = 'rgba(240, 68, 82, 0.1)'; }
+        } else if (category === 'status_white') { 
+            activeBg = 'var(--bg-sub)'; activeColor = 'var(--text-m)'; window.trackerState.status = '흰/회색';
+            warningTxt = '🚨 소아과 방문 요망! 담도폐쇄증 의심'; warningColor = 'var(--danger)'; warningBg = 'rgba(240, 68, 82, 0.1)';
+        } else if (category === 'status_red') { 
+            activeBg = 'var(--danger)'; activeColor = '#FFF'; window.trackerState.status = '붉은색';
+            warningTxt = '🚨 혈변 주의! 소아과 진료 권장'; warningColor = 'var(--danger)'; warningBg = 'rgba(240, 68, 82, 0.1)';
+        } else if (category === 'status_black') { 
+            activeBg = '#1F2937'; activeColor = '#FFF'; window.trackerState.status = '검은색';
+            warningTxt = '🚨 위장 출혈 의심! 진료 권장'; warningColor = 'var(--danger)'; warningBg = 'rgba(240, 68, 82, 0.1)';
         }
-        else if (category === 'status_green') { 
-            btn.style.setProperty('background', '#4ADE80', 'important'); btn.style.setProperty('color', '#FFF', 'important'); statusTxt = '녹색'; 
-            warningTxt = '🟢 지극히 정상입니다!<br>담즙, 철분 분유 또는 녹색 채소의 영향일 수 있습니다.';
-            warningColor = '#00B37A'; warningBg = '#E6F7F2';
-        }
-        else if (category === 'status_brown') { 
-            btn.style.setProperty('background', '#B45309', 'important'); btn.style.setProperty('color', '#FFF', 'important'); statusTxt = '갈색'; 
-            if (isSolidFood) {
-                warningTxt = '🟢 건강한 갈색 변입니다!<br>어른처럼 변이 짙어지는 자연스러운 과정입니다.';
-                warningColor = '#00B37A'; warningBg = '#E6F7F2';
-            } else {
-                warningTxt = '⚠️ 수분 부족 / 변비 의심!<br>모유/분유만 먹는데 짙은 갈색에 딱딱하다면 수분 부족일 수 있습니다.';
-                warningColor = '#D32F2F'; warningBg = '#FFF0F1';
-            }
-        }
-        else if (category === 'status_white') { 
-            btn.style.setProperty('background', '#F2F5F8', 'important'); btn.style.setProperty('color', '#191F28', 'important'); statusTxt = '흰/회색';
-            warningTxt = '🚨 소아과 방문 요망! 담도폐쇄증이 의심될 수 있는 색상입니다.';
-            warningColor = '#D32F2F'; warningBg = '#FFF0F1';
-        }
-        else if (category === 'status_red') { 
-            btn.style.setProperty('background', '#EF4444', 'important'); btn.style.setProperty('color', '#FFF', 'important'); statusTxt = '붉은색';
-            warningTxt = '🚨 혈변 주의! 피가 섞여 나왔을 수 있습니다. 사진을 찍고 소아과 진료를 권장합니다.';
-            warningColor = '#D32F2F'; warningBg = '#FFF0F1';
-        }
-        else if (category === 'status_black') { 
-            btn.style.setProperty('background', '#1F2937', 'important'); btn.style.setProperty('color', '#FFF', 'important'); statusTxt = '검은색';
-            warningTxt = '🚨 위장 출혈 의심! 위나 장 위쪽 출혈로 검게 변했을 수 있습니다.';
-            warningColor = '#D32F2F'; warningBg = '#FFF0F1';
-        }
-        
-        window.trackerState.status = statusTxt;
+        const warningArea = document.getElementById('poop-warning-msg');
         if(warningArea) {
             warningArea.innerHTML = warningTxt; warningArea.style.color = warningColor;
             warningArea.style.background = warningBg; warningArea.style.padding = '10px 14px';
             warningArea.style.borderRadius = '12px'; warningArea.style.marginTop = '16px';
         }
-        return; 
     }
 
-    // 4. 일반 카테고리 버튼들 초기화 (소프트 UI)
-    const siblings = btn.parentElement.children;
-    for(let i=0; i<siblings.length; i++) {
-        siblings[i].style.setProperty('background', 'var(--bg-sub)', 'important');
-        siblings[i].style.setProperty('color', '#8B95A1', 'important');
-        siblings[i].style.setProperty('border', 'none', 'important');
-        siblings[i].style.setProperty('font-weight', '700', 'important');
-        siblings[i].removeAttribute('data-theme-src'); // 🚨 핵심 패치
-    }
-
-    // 활성화된 버튼 색상 입히기 (테두리 없음!)
-    if (category.includes('feed') || category.includes('breast') || category.includes('diaper_pee')) {
-        btn.style.setProperty('background', '#EBF4FF', 'important');
-        btn.style.setProperty('color', '#3182F6', 'important');
-    } else if (category.includes('diaper_poop')) {
-        btn.style.setProperty('background', '#FFF0F1', 'important');
-        btn.style.setProperty('color', '#F04452', 'important');
-    } else if (category === 'diaper_both' || category === 'sleep_night') {
-        btn.style.setProperty('background', '#F3E8FF', 'important');
-        btn.style.setProperty('color', '#7C3AED', 'important');
-    } else if (category === 'sleep_day') {
-        btn.style.setProperty('background', '#FFF9E6', 'important');
-        btn.style.setProperty('color', '#B78103', 'important');
-    }
-    btn.style.setProperty('border', 'none', 'important');
+    // 4. 최종 색상 강제 입히기 (소변, 대변, 둘다 예외 없이 모두 보라색으로 덮어쓰기!)
+    btn.style.setProperty('background', activeBg, 'important');
+    btn.style.setProperty('color', activeColor, 'important');
+    btn.style.setProperty('border', activeBorder, 'important');
     btn.style.setProperty('font-weight', '900', 'important');
-    btn.removeAttribute('data-theme-src'); // 🚨 핵심 패치
+    btn.removeAttribute('data-theme-src'); // 번역기 개입 차단
 
-    if (category === 'feed') {
+    // 5. 트래커 상태값 업데이트 로직
+    if (category === 'breast_both') window.trackerState.status = '양쪽';
+    else if (category === 'breast_left') window.trackerState.status = '왼쪽';
+    else if (category === 'breast_right') window.trackerState.status = '오른쪽';
+    else if (category.includes('med_')) {
+        window.trackerState.subType = btn.innerText;
+        const customInput = document.getElementById('v-med-custom');
+        if(customInput) customInput.value = '';
+    } else if (category === 'feed') {
         const rawText = btn.innerText.replace(/[^가-힣]/g, ''); 
         if (rawText.includes('모유')) window.trackerState.subType = '모유';
         else if (rawText.includes('분유')) window.trackerState.subType = '분유';
@@ -4381,7 +4133,6 @@ window.selectTrackerBtn = function(btn, category) {
 
         const mlArea = document.getElementById('feed-ml-area');
         const breastArea = document.getElementById('feed-breast-area');
-        
         if (window.trackerState.subType === '모유') {
             if(mlArea) mlArea.style.display = 'none';
             if(breastArea) breastArea.style.display = 'block';
@@ -4390,9 +4141,7 @@ window.selectTrackerBtn = function(btn, category) {
             if(breastArea) breastArea.style.display = 'none';
             window.trackerState.status = '';
         }
-    } else if (category === 'breast_left') window.trackerState.status = '왼쪽';
-    else if (category === 'breast_right') window.trackerState.status = '오른쪽';
-    else if (category === 'diaper_pee') {
+    } else if (category === 'diaper_pee') {
         window.trackerState.subType = '소변';
         const statusArea = document.getElementById('diaper-status-area');
         if(statusArea) statusArea.style.display = 'none';
@@ -4404,18 +4153,17 @@ window.selectTrackerBtn = function(btn, category) {
         window.trackerState.subType = '소변+대변';
         const statusArea = document.getElementById('diaper-status-area');
         if(statusArea) statusArea.style.display = 'block';
-    }
-    else if (category === 'sleep_day') window.trackerState.subType = '낮잠';
+    } else if (category === 'sleep_day') window.trackerState.subType = '낮잠';
     else if (category === 'sleep_night') window.trackerState.subType = '밤잠';
 };
 
 window.clearMedButtons = function() {
     document.querySelectorAll('button[onclick*="med_"]').forEach(btn => {
         btn.style.setProperty('background', 'var(--bg-sub)', 'important');
-        btn.style.setProperty('color', '#8B95A1', 'important');
+        btn.style.setProperty('color', 'var(--text-sub)', 'important');
         btn.style.setProperty('border', 'none', 'important');
         btn.style.setProperty('font-weight', '700', 'important');
-        btn.removeAttribute('data-theme-src'); // 🚨 핵심 패치
+        btn.removeAttribute('data-theme-src'); 
     });
     window.trackerState.subType = ''; 
 };
@@ -5533,7 +5281,9 @@ window.getSafeDateStr = function(ts) {
 // 🚨 오늘 날짜만 뽑는 전용 함수
 window.getSafeTodayStr = function() { return window.getSafeDateStr(); };
 
-// 2. 데일리 루틴 렌더링 엔진 (하이엔드 디자인 패치)
+// ==========================================
+// 💊 데일리 루틴 렌더링 엔진 (파란색 깜빡임 근본 원인 제거 완료!)
+// ==========================================
 window.renderRoutineChecklist = function() {
     const container = document.getElementById('routine-checklist-container');
     if(!container) return;
@@ -5551,15 +5301,17 @@ window.renderRoutineChecklist = function() {
 
     const createBtn = (id, label) => {
         const isChecked = routineData[id];
-        const bg = isChecked ? '#3182F6' : 'var(--bg-sub)';
+        
+        // 🚨 [근본 해결] #3182F6(파란색) 하드코딩 삭제! 처음부터 var(--primary)로 렌더링!
+        const bg = isChecked ? 'var(--primary)' : 'var(--bg-sub)';
         const color = isChecked ? '#FFFFFF' : 'var(--text-s)';
-        const border = isChecked ? '1px solid #3182F6' : '1px solid var(--border)';
-        const shadow = isChecked ? '0 4px 10px rgba(49,130,246,0.2)' : 'none';
+        const border = isChecked ? '1px solid var(--primary)' : '1px solid var(--border)';
+        const shadow = isChecked ? '0 4px 10px rgba(127, 119, 221, 0.25)' : 'none'; // 그림자도 보라색 톤으로 고정
 
-        return `<button onclick="window.toggleRoutine('${id}')" style="flex:1; padding:16px 0; border-radius:14px; background:${bg} !important; color:${color} !important; font-size:13.5px; font-weight:800; border:${border} !important; box-shadow:${shadow} !important; cursor:pointer; transition:all 0.2s ease-in-out; outline:none; margin:0; word-break:keep-all;">${label}</button>`;
+        // theme.js가 건드리지 못하게(또는 건드릴 필요 없게) 깔끔하게 세팅
+        return `<button onclick="window.toggleRoutine('${id}')" style="flex:1; padding:16px 0; border-radius:14px; background:${bg} !important; color:${color} !important; font-size:13.5px; font-weight:800; border:${border} !important; box-shadow:${shadow} !important; cursor:pointer; transition:all 0.1s ease-in-out; outline:none; margin:0; word-break:keep-all;">${label}</button>`;
     };
 
-    // 🚨 [핵심 패치] 전체 투명 망토(hide-on-senior)를 지우고, '⚙️ 편집' 버튼에만 씌웠습니다!
     container.innerHTML = `
         <div style="background: var(--bg-card); border: 1px solid var(--border); border-radius: 20px; padding: 20px; box-shadow: 0 4px 12px rgba(0,0,0,0.02);">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
@@ -7659,7 +7411,7 @@ document.addEventListener("DOMContentLoaded", () => {
 });
 
 // ==========================================
-// ⚙️ [설정 탭] 전체 UI 렌더링 엔진 (육아 감성 200% 충전 완료 🤍)
+// ⚙️ [설정 탭] 전체 UI 렌더링 엔진 (버튼 색상 딜레이 완벽 제거 💜)
 // ==========================================
 window.renderSettingsTab = function() {
     const container = document.getElementById('tab-settings');
@@ -7702,7 +7454,7 @@ window.renderSettingsTab = function() {
         `;
     }
 
-  // 🌟 2. 가족 연동 섹션 (딱딱한 IT 감성 -> 다정한 육아 감성으로 전면 교체 🤍)
+  // 🌟 2. 가족 연동 섹션 (🚨 여기서 파란색 번쩍임 근본 제거 완료!)
     const syncCode = localStorage.getItem('family_sync_code');
     let syncHtml = '';
 
@@ -7711,14 +7463,14 @@ window.renderSettingsTab = function() {
             <div style="background: var(--bg-card); border: 1px solid var(--border); border-radius: 16px; padding: 20px; margin-bottom: 32px; box-shadow: 0 2px 8px rgba(0,0,0,0.02); box-sizing: border-box; width: 100%;">
                 <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px;">
                     <div style="font-size: 14.5px; font-weight: 900; color: var(--text-m);">☁️ 우리 가족 안심 클라우드</div>
-                    <span style="background: #EBF4FF; color: #3182F6; font-size: 11px; font-weight: 900; padding: 4px 8px; border-radius: 8px;">기록 보호중 ✨</span>
+                    <!-- 🚨 뱃지 배경색 파란색(#EBF4FF) ➔ 연보라색으로 변경! -->
+                    <span style="background: rgba(127, 119, 221, 0.15); color: var(--primary); font-size: 11px; font-weight: 900; padding: 4px 8px; border-radius: 8px;">기록 보호중 ✨</span>
                 </div>
-                <!-- 🚨 안내 문구: 폰트 축소(11.5px), 자간 축소, 단어 쪼개짐 방지 패치 -->
                 <div style="font-size: 11.5px; color: var(--text-s); font-weight: 600; margin-bottom: 16px; line-height: 1.5; letter-spacing: -0.3px; word-break: keep-all;">소중한 육아 기록이 서버에 안전하게 보관되고 있어요.<br>초대장을 보내 짝꿍과 함께 육아의 기쁨을 나눠볼까요? </div>
                 
                 <div style="display: flex; gap: 8px;">
-                    <!-- 🚨 버튼: 폰트 축소(13px), 자간 축소, 강제 한 줄 고정(nowrap) 패치 -->
-                    <button onclick="window.showSyncCode()" style="flex: 1; padding: 12px 0; border-radius: 12px; background: #3182F6; color: #FFF; font-size: 13px; font-weight: 800; border: none; cursor: pointer; box-shadow: 0 4px 10px rgba(49,130,246,0.2); white-space: nowrap; letter-spacing: -0.5px;">
+                    <!-- 🚨 초대장 버튼 파란색(#3182F6) ➔ 보라색(var(--primary))으로 변경! -->
+                    <button onclick="window.showSyncCode()" style="flex: 1; padding: 12px 0; border-radius: 12px; background: var(--primary); color: #FFF; font-size: 13px; font-weight: 800; border: none; cursor: pointer; box-shadow: 0 4px 10px rgba(127,119,221,0.25); white-space: nowrap; letter-spacing: -0.5px;">
                         💌 가족 초대장 열기
                     </button>
                     <button onclick="window.safeUnlinkFamilySync()" style="flex: 1; padding: 12px 0; border-radius: 12px; background: #FFF0F1; color: #F04452; font-size: 13px; font-weight: 900; border: 1px solid #FFE5E8; cursor: pointer; white-space: nowrap; letter-spacing: -0.5px;">
@@ -7731,11 +7483,9 @@ window.renderSettingsTab = function() {
         syncHtml = `
             <div style="background: var(--bg-card); border: 1px solid var(--border); border-radius: 16px; padding: 20px; margin-bottom: 32px; box-shadow: 0 2px 8px rgba(0,0,0,0.02); box-sizing: border-box; width: 100%;">
                 <div style="font-size: 14.5px; font-weight: 900; color: var(--text-m); margin-bottom: 8px;">👨‍👩‍👧 우리 아기 함께 키우기</div>
-                <!-- 🚨 안내 문구 패치 -->
                 <div style="font-size: 11.5px; color: var(--text-s); font-weight: 600; margin-bottom: 16px; line-height: 1.5; letter-spacing: -0.3px; word-break: keep-all;">혼자 하는 육아는 너무 힘들어요.<br>아빠, 할머니, 이모님을 초대해서 기록을 공유하세요!</div>
                 
                 <div style="display: flex; flex-direction: column; gap: 8px;">
-                    <!-- 🚨 버튼 패치 -->
                     <button onclick="window.sendKakaoInvite()" style="width: 100%; padding: 14px; border-radius: 12px; background: #FEE500; color: #191F28; font-size: 13.5px; font-weight: 900; border: none; cursor: pointer; display: flex; justify-content: center; align-items: center; gap: 8px; letter-spacing: -0.5px; white-space: nowrap;">
                         💬 카카오톡으로 초대장 보내기
                     </button>
@@ -8049,7 +7799,7 @@ window.calcSleepToNow = function() {
 };
 
 // ==========================================
-// 🍼 수유 퀵버튼 (타이핑 제로) 자동 입력 엔진
+// 🍼 수유 퀵버튼 (타이핑 제로) 자동 입력 엔진 (보라색 애니메이션 💜)
 // ==========================================
 
 // 1. 고정 용량 셋팅 (예: 160ml)
@@ -8058,12 +7808,11 @@ window.setFeedAmount = function(amount) {
     if(inputEl) {
         inputEl.value = amount;
         
-        // 폰에서 미세한 진동 손맛 제공 (안드로이드)
         if (navigator.vibrate) navigator.vibrate(20); 
         
-        // 시각적 피드백: 숫자가 띠용~ 하고 커졌다 돌아옴
+        // 🚨 시각적 피드백 색상 파란색 ➔ 보라색으로 변경!
         inputEl.style.transform = 'scale(1.2)';
-        inputEl.style.color = '#3182F6';
+        inputEl.style.color = 'var(--primary)';
         setTimeout(() => { 
             inputEl.style.transform = 'scale(1)'; 
             inputEl.style.color = 'var(--text-m)';
@@ -14456,3 +14205,4 @@ window.openSettingsTab = function() {
     if (typeof window.renderSettingsTab === 'function') window.renderSettingsTab();
     window.scrollTo({ top: 0 });
 };
+

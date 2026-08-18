@@ -629,9 +629,9 @@
 
         // 🌟 [추가됨] 방문 횟수에 따른 훈장 수여식
         var gradeMsg = '';
-        if (today.care >= 20) gradeMsg = "✨ 오늘 하루 '1분 대기조' 명예 훈장을 드려요.";
-        else if (today.dawn >= 3) gradeMsg = "🦉 '새벽의 수호자' 임명장 쾅쾅!";
-        else if (today.care <= 5) gradeMsg = "🕊️ 오늘은 우리 서로 조금 여유로웠네요.";
+        if (today.care >= 20) gradeMsg = "오늘 하루 '1분 대기조' 명예 훈장을 드려요.";
+        else if (today.dawn >= 3) gradeMsg = "새벽의 수호자' 임명장 쾅쾅!";
+        else if (today.care <= 5) gradeMsg = "오늘은 우리 서로 조금 여유로웠네요.";
 
         var sub = '';
         if (today.dawn > 0) sub = '그중 ' + today.dawn + '번은 모두가 잠든 새벽이었고요.';
