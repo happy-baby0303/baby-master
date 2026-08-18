@@ -5985,7 +5985,7 @@ window.closeEmergencyModalForce = function() { document.getElementById('emergenc
 window.closeEmergencyModal = function(e) { if(e.target.id === 'emergency-modal') window.closeEmergencyModalForce(); };
 
 // ==========================================
-// 🧾 영수증 띄우기 (성수동 힙스터 카페 찐 영수증 감성 최종판 💯)
+// 🧾 영수증 띄우기 (모바일 화면 잘림 방지 + 위아래 스크롤 💯)
 // ==========================================
 window.openReceiptModal = function() {
     const today = new Date();
@@ -6032,7 +6032,7 @@ window.openReceiptModal = function() {
 
     const contentDiv = document.getElementById('receipt-content');
     
-    // 감열지 질감 및 잉크 번짐 스타일
+    // 🚨 1번 문제 해결: 모바일에서 위아래 안 잘리게 max-height 와 스크롤 추가!
     contentDiv.style.cssText = `
         background: #F4F4F0 !important; 
         padding: 0 !important;
@@ -6040,14 +6040,21 @@ window.openReceiptModal = function() {
         font-family: 'Courier New', Courier, monospace !important;
         color: #111 !important;
         width: 100% !important;
+        max-height: 80vh !important; /* 👈 화면 밖으로 안 나가게 가둠 */
+        overflow-y: auto !important; /* 👈 내용이 길면 스크롤 바 생성 */
         box-sizing: border-box !important;
         border: none !important;
+        border-radius: 4px !important;
         position: relative;
         text-transform: uppercase;
     `;
 
     const customStyle = `
         <style>
+            /* 🚨 영수증 스크롤바 얇게/투명하게 깎기 */
+            #receipt-content::-webkit-scrollbar { width: 4px; }
+            #receipt-content::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.1); border-radius: 4px; }
+            
             .rcpt-wrap {
                 padding: 40px 24px;
                 background: #F4F4F0;
@@ -6072,7 +6079,10 @@ window.openReceiptModal = function() {
 
     let html = customStyle + `
         <div class="rcpt-wrap">
-            <!-- 헤더 (서울 탈출 및 와이파이 감성 추가) -->
+            <!-- 🚨 상단 X 닫기 버튼 추가 (터치 안 될까봐 우측 상단에 배치) -->
+            <div onclick="window.closeReceiptModal()" style="position: absolute; top: 16px; right: 20px; font-size: 28px; color: #111; font-family: sans-serif; font-weight: 300; cursor: pointer; z-index: 10;">✕</div>
+
+            <!-- 헤더 -->
             <div style="text-align: center; margin-bottom: 24px;">
                 <div style="font-weight: 900; font-size: 28px; letter-spacing: 2px; margin-bottom: 6px;">TOSIL CAFE</div>
                 <div style="font-size: 11px; font-weight: 700; letter-spacing: 1px; color: #444;">BABY CARE ROASTERS</div>
@@ -6130,6 +6140,13 @@ window.openReceiptModal = function() {
             <div class="barcode-strip"></div>
             <div style="text-align: center; font-size: 12px; margin-top: 12px; letter-spacing: 5px; font-weight: 900; color: #111;">
                 0303-TOSIL-BABY
+            </div>
+
+            <!-- 🚨 하단 닫기 버튼 추가 (스크롤 다 내린 후 편하게 터치) -->
+            <div style="text-align: center; margin-top: 32px; padding-top: 16px; border-top: 1.5px dashed #ccc;">
+                <button onclick="window.closeReceiptModal()" style="background: #111; color: #FFF; padding: 12px 30px; border-radius: 8px; font-weight: 900; font-size: 14px; font-family: 'Pretendard', sans-serif; border: none; cursor: pointer; box-shadow: 0 4px 12px rgba(0,0,0,0.15);">
+                    닫기
+                </button>
             </div>
         </div>
     `;
@@ -6192,7 +6209,7 @@ window.downloadReceipt = function() {
 };
 
 // ==========================================
-// 👁️ 영수증 버튼 숨기기/보여주기 검사관 (최종본)
+// 👁️ 영수증 버튼 숨기기/보여주기 검사관 (편지 ➔ 영수증 텍스트 패치 완료!)
 // ==========================================
 window.checkReceiptVisibility = function() {
     const today = new Date();
@@ -6204,15 +6221,29 @@ window.checkReceiptVisibility = function() {
     const receiptBtn = document.getElementById('receipt-banner-btn');
     if (!receiptBtn) return;
 
-    // 🚨 조건 수정: 기록이 3개 이상 '이면서(AND)' 저녁 8시가 넘었을 때만!
+    // 🚨 기존 "오늘 편지 다시 읽기" HTML을 "영수증 발급" 감성으로 완벽하게 강제 덮어쓰기!
+    receiptBtn.innerHTML = `
+        <div style="font-size: 28px; margin-bottom: 8px;">🧾</div>
+        <div style="font-size: 16px; font-weight: 900; color: var(--text-m); margin-bottom: 4px;">오늘의 육아 영수증 발급</div>
+        <div style="font-size: 13px; font-weight: 600; color: var(--text-s);">오늘 하루도 정말 고생 많으셨어요 🤍</div>
+    `;
+    
+    // 버튼 자체의 레이아웃을 쾌적하게 꽉 잡아줍니다
+    receiptBtn.style.display = 'flex';
+    receiptBtn.style.flexDirection = 'column';
+    receiptBtn.style.alignItems = 'center';
+    receiptBtn.style.justifyContent = 'center';
+    receiptBtn.style.padding = '24px 20px';
+
+    // 조건: 기록이 3개 이상 '이면서(AND)' 저녁 8시가 넘었을 때만 노출!
     if (todayRecordsCount >= 3 && today.getHours() >= 20) {
         receiptBtn.style.display = 'flex'; // 보여주기
     } else {
         receiptBtn.style.display = 'none'; // 숨기기
     }
-}
+};
 
-// 앱이 켜질 때 & 기록이 저장/삭제될 때마다 검사
+// 앱이 켜질 때 & 기록이 저장/삭제될 때마다 검사 (🚨 절대 지우면 안 되는 스위치!)
 window.addEventListener('load', function() {
     window.checkReceiptVisibility();
 });
