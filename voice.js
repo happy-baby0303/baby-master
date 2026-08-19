@@ -662,6 +662,9 @@
         return n >= 0 ? "D+" + n + "일" : "";
     }
 
+    // ==========================================
+// 🎙️ 소리함 렌더링 (카드 겹침 해결 + 음성 저장 버튼 추가 픽스!)
+// ==========================================
     window.openVoiceBox = function () {
         var idx = loadIndex();
         var keys = Object.keys(idx).sort().reverse();
@@ -704,15 +707,23 @@
                             '</div>' +
                         '</div>' +
                         wave(v, k, 40) +
+                        
+                        // 🚨 니치 깎기: 파형엽서 / 음성저장 / 빼기 버튼을 예쁜 비율로 나란히 배치!
                         '<div style="display:flex; gap:7px; margin-top:10px;">' +
                             (typeof window.downloadWaveCard === "function"
                                 ? '<span onclick="window.downloadWaveCard(\'' + k + '\',\'' + esc(v.id) + '\')" ' +
-                                  'style="flex:1; text-align:center; padding:9px; border-radius:11px; background:rgba(185,138,46,0.12); ' +
-                                  'font-size:11px; font-weight:800; color:#B98A2E; cursor:pointer;">🎵 파형 엽서로 저장</span>' : '') +
+                                  'style="flex:1.5; text-align:center; padding:9px; border-radius:11px; background:rgba(185,138,46,0.12); ' +
+                                  'font-size:11px; font-weight:800; color:#B98A2E; cursor:pointer;">🎵 파형 엽서</span>' : '') +
+                            
+                            // 👇 신규 추가: 실제 오디오 파일 저장 버튼!
+                            '<span onclick="window.downloadVoiceAudio(\'' + k + '\',\'' + esc(v.id) + '\')" ' +
+                                  'style="flex:1.5; text-align:center; padding:9px; border-radius:11px; background:#E8F3FF; font-size:11px; font-weight:800; color:#3182F6; cursor:pointer;">💾 음성 저장</span>' +
+
                             '<span onclick="window.removeVoice(\'' + k + '\',\'' + esc(v.id) + '\'); window.openVoiceBox();" ' +
-                                'style="padding:9px 14px; border-radius:11px; background:var(--bg-sub); font-size:11px; font-weight:700; color:var(--text-sub); cursor:pointer;">빼기</span>' +
+                                'style="flex:1; text-align:center; padding:9px; border-radius:11px; background:var(--bg-sub); font-size:11px; font-weight:700; color:var(--text-sub); cursor:pointer;">빼기</span>' +
+                        '</div>' + 
                         (isMs && v.note ? '<div style="font-family:\'Nanum Pen Script\',cursive; font-size:19px; color:var(--text-s); margin-top:10px; padding-left:55px; line-height:1.4;">' + esc(v.note) + '</div>' : '') +
-                    '</div>';
+                    '</div>'; // 🚨 해결 1: 누락되었던 닫기 태그(</div>) 복구 완료!
                 });
             });
         }
@@ -776,3 +787,44 @@
         return loadIndex();
     };
 })();
+
+// ==========================================
+// 💾 [신규] 실제 음성 파일(오디오) 모바일 다운로드 엔진
+// ==========================================
+window.downloadVoiceAudio = async function(key, id) {
+    var v = window.getDayVoices(key).filter(function (x) { return x.id === id; })[0];
+    if (!v || !v.url) return toast("저장할 소리 파일을 찾지 못했어요.");
+
+    toast("음성 파일을 가져오는 중이에요...");
+    try {
+        // 모바일 브라우저에서 바로 재생되지 않고 '강제 다운로드' 되도록 Blob 변환
+        const response = await fetch(v.url);
+        const blob = await response.blob();
+        const blobUrl = window.URL.createObjectURL(blob);
+
+        const a = document.createElement("a");
+        a.style.display = 'none';
+        a.href = blobUrl;
+        
+        // 파일명 생성 (예: 지선이_목소리_20260817.webm)
+        const bName = localStorage.getItem("tosil_babyName") || "우리아기";
+        const dateStr = key.replace(/-/g, "");
+        const ext = v.url.includes('.m4a') || (v.path && v.path.includes('.m4a')) ? 'm4a' : 'webm';
+        a.download = bName + "_목소리_" + dateStr + "." + ext;
+        
+        document.body.appendChild(a);
+        a.click();
+        
+        setTimeout(() => {
+            document.body.removeChild(a);
+            window.URL.revokeObjectURL(blobUrl);
+        }, 100);
+        
+        toast("💾 아기의 목소리가 내 폰에 저장되었습니다!");
+    } catch (e) {
+        console.error("[음성 다운로드 에러]", e);
+        // 다운로드 차단 시 강제로 새 창을 열어 재생/저장 유도
+        window.open(v.url, '_blank');
+        toast("보안 설정으로 인해 새 창에서 엽니다.");
+    }
+};
