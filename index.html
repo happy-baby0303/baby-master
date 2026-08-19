@@ -2398,7 +2398,8 @@ div[style*="border-radius: 8px"] {
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
     // 👇 1. 여기에 3가지 단어(initializeFirestore, persistentLocalCache, persistentMultipleTabManager)가 추가되었습니다!
     import { getFirestore, initializeFirestore, persistentLocalCache, persistentMultipleTabManager, doc, setDoc, getDoc, onSnapshot, collection, deleteDoc, query, orderBy, limit, updateDoc, arrayUnion } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
-    import { getAuth, OAuthProvider, signInWithPopup, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+    import { getAuth, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+    import { getFunctions, httpsCallable } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-functions.js";
     import { getStorage, ref, uploadString, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-storage.js";
 
     const firebaseConfig = {
@@ -2448,35 +2449,69 @@ div[style*="border-radius: 8px"] {
         window.history.replaceState({}, document.title, window.location.pathname);
     }
 
- // 💛 [카카오 로그인 엔진]
-   const auth = getAuth(app);
- window.auth = auth; // 👈 이 한 줄이 모든 권한 문제를 해결합니다!
- const kakaoProvider = new OAuthProvider('oidc.kakao');
+// 💛 [카카오 로그인 엔진] (클라우드 펑션 우회 무료 모드)
+ const auth = getAuth(app);
+ window.auth = auth; 
+ const functions = getFunctions(app); // 방금 만든 구글 서버 연결!
 
-    window.loginWithKakao = () => {
-        signInWithPopup(auth, kakaoProvider)
-            .then((result) => {
-                const user = result.user;
-                
-                // 🚨 [패치 1] 카카오의 진짜 고유 번호를 추출해서 함께 저장!
-                const kakaoSub = user.providerData?.[0]?.uid || user.uid;
-                
-                localStorage.setItem('firebase_uid', user.uid);
-                localStorage.setItem('kakao_id', kakaoSub); // 👈 부활!
-                localStorage.setItem('kakao_nickname', user.displayName || '육아동지');
-                localStorage.setItem('kakao_profile_image', user.photoURL || '');
-                
-                const pendingCode = localStorage.getItem('pending_invite_code');
-                if (!pendingCode) {
-                    document.getElementById('onboarding-step-0').style.display = 'none';
-                    document.getElementById('onboarding-step-1').style.display = 'flex';
-                }
-            })
-            .catch((error) => {
-                console.error("❌ 카카오 로그인 실패: ", error);
-                alert("카카오 로그인 중 문제가 발생했습니다.");
-            });
-    };
+ // 카카오 SDK 초기화 (대표님 찐 앱키 자동 세팅 완료!)
+ if (!Kakao.isInitialized()) {
+     Kakao.init('68bca10ddfe2ec67112b07eb9a08da2b'); 
+ }
+
+ window.loginWithKakao = () => {
+     // 1. 카카오 본사에 직접 로그인해서 무료 티켓(토큰) 받아오기
+     Kakao.Auth.login({
+         success: function(authObj) {
+             const kakaoToken = authObj.access_token;
+             
+             // 로딩 화면 띄우기
+             document.getElementById('onboarding-step-0').style.display = 'none';
+             document.getElementById('onboarding-step-loading').style.display = 'flex';
+
+             // 2. 방금 만든 '육아메이트 우회 서버'로 티켓 보내기
+             const kakaoCustomAuth = httpsCallable(functions, 'kakaoCustomAuth');
+             
+             kakaoCustomAuth({ token: kakaoToken })
+                 .then((result) => {
+                     // 3. 서버가 확인 후 보내준 파이어베이스 전용 무료 통과 토큰!
+                     const firebaseToken = result.data.customToken;
+                     
+                     // 4. 이 토큰으로 파이어베이스 로그인 (과금 안 됨!)
+                     signInWithCustomToken(auth, firebaseToken)
+                         .then((userCredential) => {
+                             const user = userCredential.user;
+                             
+                             localStorage.setItem('firebase_uid', user.uid);
+                             localStorage.setItem('kakao_id', user.uid); 
+                             localStorage.setItem('kakao_nickname', '육아동지'); // 닉네임 기본값
+                             
+                             const pendingCode = localStorage.getItem('pending_invite_code');
+                             if (!pendingCode) {
+                                 document.getElementById('onboarding-step-loading').style.display = 'none';
+                                 document.getElementById('onboarding-step-1').style.display = 'flex';
+                             }
+                         })
+                         .catch((error) => {
+                             console.error("Firebase Auth Error:", error);
+                             alert("로그인 처리 중 에러가 발생했습니다.");
+                             document.getElementById('onboarding-step-loading').style.display = 'none';
+                             document.getElementById('onboarding-step-0').style.display = 'flex';
+                         });
+                 })
+                 .catch((error) => {
+                     console.error("Cloud Function Error:", error);
+                     alert("서버 연결에 실패했습니다.");
+                     document.getElementById('onboarding-step-loading').style.display = 'none';
+                     document.getElementById('onboarding-step-0').style.display = 'flex';
+                 });
+         },
+         fail: function(err) {
+             console.error("Kakao SDK Login Fail:", err);
+             alert("카카오 로그인 창을 여는 데 실패했습니다.");
+         }
+     });
+ };
 
 // 🤝 [로그인 감지 & 안전한 연동]
     onAuthStateChanged(auth, async (user) => {
@@ -2643,6 +2678,7 @@ div[style*="border-radius: 8px"] {
 <script src="./photos.js"></script>
 <script src="./voice.js"></script>
 <script src="./waveform.js"></script>
+<script src="./milestonebook.js"></script>
 <script src="./data.js"></script>
 <script src="./notes.js"></script>
 <script src="./sealed.js"></script>
