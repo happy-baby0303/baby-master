@@ -202,8 +202,8 @@
         var read = isRead();
         btn.innerHTML =
             '<span style="font-size:16px; font-weight:800; letter-spacing:-0.5px;">' +
-                (read ? "오늘 편지 다시 읽기"
-                      : esc(babyName()) + "가 편지를 두고 갔어요") +
+                (read ? "오늘 영수증 다시 보기"
+                      : esc(babyName()) + "가 영수증을 두고 갔어요") +
             '</span>' +
             '<span style="font-size:12px; font-weight:600; opacity:0.62;">' +
                 (read ? arrivedAt() + "에 도착했어요"
