@@ -68,14 +68,6 @@ body.dark-mode .bottom-nav { background: rgba(31, 41, 55, 0.85) !important; bord
 .app-desc { font-size: 13.5px; color: var(--text-s); margin-bottom: 24px; }
 .btn-main { display: block; width: 100%; padding: 18px; border-radius: 14px; font-size: 16px; font-weight: 800; cursor: pointer; margin-top: 16px; text-align: center; text-decoration: none !important; transition: 0.15s; }
 
-/* 툴박스 아이콘 그리드 */
-.toolbox-grid { display: grid !important; grid-template-columns: repeat(4, 1fr) !important; gap: 8px; margin-bottom: 24px; }
-.tool-chip { background: var(--bg-card); border: 1px solid var(--border); border-radius: 16px; padding: 18px 8px; text-align: center; cursor: pointer; }
-.tool-chip .t-icon { font-size: 22px; display: block; margin-bottom: 6px; }
-.tool-chip .t-label { font-size: 12px; font-weight: 800; color: var(--text-s); }
-.tool-chip.active { background: var(--primary) !important; border-color: var(--primary) !important; }
-.tool-chip.active .t-label { color: #FFF !important; }
-
 /* 🚀 나들이 탭 전용 레이아웃 */
 .segment-control { display: flex; background: var(--bg-sub); padding: 4px; border-radius: 14px; margin-bottom: 24px; border: 1px solid var(--border); }
 .segment-btn { flex: 1; padding: 12px; background: transparent; border-radius: 10px; font-size: 14px; font-weight: 800; color: var(--text-s); cursor: pointer; border: none !important; }
@@ -562,12 +554,14 @@ body.dark-mode #smart-banner-container > div span[style*="background: #F59E0B"] 
     transition: 0.2s !important;
     box-shadow: 0 4px 10px rgba(0,0,0,0.03) !important; 
 }
+/* 🚨 까만색 삭제! 따뜻하고 맑은 수채화 블루 톤으로 변경 */
 .tool-chip.active {
-    background: #3182F6 !important; 
-    color: #FFFFFF !important; 
-    border: 1px solid #3182F6 !important;
-    box-shadow: 0 4px 12px rgba(49,130,246,0.2) !important; 
+    background: #F0F5FC !important; 
+    color: #5B8ACA !important; 
+    border: 1px solid #D5E2F2 !important;
+    box-shadow: 0 4px 12px rgba(91,138,202,0.15) !important; 
 }
+
 .tool-chip .t-icon { font-size: 26px !important; line-height: 1 !important; margin-bottom: 2px !important;}
 .tool-chip .t-label { font-size: 13px !important; font-weight: 800 !important; }
 .tool-chip.active .t-label { color: #FFFFFF !important; }
@@ -1373,4 +1367,64 @@ body.dark-mode .category-chip:not(.active) {
     border: none !important;
     border-radius: 24px !important;
     box-shadow: 0 6px 20px rgba(120, 115, 160, 0.07) !important;
+}
+
+/* ==========================================
+   🚨 데일리 케어 버튼 '터치 깜빡임(색상 덮어쓰기)' 완벽 제거
+========================================== */
+#routine-checklist-container button,
+#routine-checklist-container div {
+    -webkit-tap-highlight-color: transparent !important;
+    outline: none !important;
+}
+
+#routine-checklist-container button:active,
+#routine-checklist-container div:active {
+    opacity: 1 !important; 
+}
+
+#routine-checklist-container button {
+    transition: transform 0.1s cubic-bezier(0.4, 0, 0.2, 1) !important;
+}
+
+/* ==========================================
+   🧰 툴박스 아이콘 그리드 & 버튼 디자인 (통합본)
+   ========================================== */
+.toolbox-grid { 
+    display: grid !important; 
+    grid-template-columns: repeat(4, 1fr) !important; 
+    gap: 8px; 
+    margin-bottom: 24px; 
+}
+
+.tool-chip {
+    background: #FFFFFF !important; 
+    color: #8B95A1 !important; /* 👈 선택 안 된 버튼은 회색 글씨 */
+    border: 1px solid #F2F5F8 !important; 
+    border-radius: 18px !important; 
+    padding: 16px 0 !important; 
+    display: flex !important; 
+    flex-direction: column !important; 
+    align-items: center !important; 
+    justify-content: center !important; 
+    gap: 8px !important; 
+    cursor: pointer !important; 
+    transition: 0.2s !important;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.02) !important; 
+}
+
+.tool-chip .t-icon { font-size: 26px !important; line-height: 1 !important; margin-bottom: 2px !important;}
+.tool-chip .t-label { font-size: 13px !important; font-weight: 800 !important; }
+
+/* 🚨 활성화(클릭) 상태 - 수채화 블루톤 배경 */
+.tool-chip.active {
+    background: #F0F5FC !important; 
+    border: 1px solid #D5E2F2 !important;
+    box-shadow: 0 4px 12px rgba(91,138,202,0.15) !important; 
+}
+
+/* 🚨 [핵심 해결] 활성화되었을 때 하얀색 글씨 찌꺼기 삭제! 진한 파란색으로 뚜렷하게! */
+.tool-chip.active,
+.tool-chip.active .t-label { 
+    color: #5B8ACA !important; 
 }
