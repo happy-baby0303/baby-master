@@ -5984,7 +5984,7 @@ window.closeEmergencyModalForce = function() { document.getElementById('emergenc
 window.closeEmergencyModal = function(e) { if(e.target.id === 'emergency-modal') window.closeEmergencyModalForce(); };
 
 // ==========================================
-// 🧾 영수증 띄우기 (모바일 화면 잘림 방지 + 위아래 스크롤 💯)
+// 🧾 영수증 띄우기 (중복 닫기 버튼 삭제 + 초강력 다이어트 💯)
 // ==========================================
 window.openReceiptModal = function() {
     const today = new Date();
@@ -6031,7 +6031,6 @@ window.openReceiptModal = function() {
 
     const contentDiv = document.getElementById('receipt-content');
     
-    // 🚨 1번 문제 해결: 모바일에서 위아래 안 잘리게 max-height 와 스크롤 추가!
     contentDiv.style.cssText = `
         background: #F4F4F0 !important; 
         padding: 0 !important;
@@ -6039,35 +6038,34 @@ window.openReceiptModal = function() {
         font-family: 'Courier New', Courier, monospace !important;
         color: #111 !important;
         width: 100% !important;
-        max-height: 80vh !important; /* 👈 화면 밖으로 안 나가게 가둠 */
-        overflow-y: auto !important; /* 👈 내용이 길면 스크롤 바 생성 */
+        max-height: 85vh !important;
+        overflow-y: auto !important;
         box-sizing: border-box !important;
         border: none !important;
-        border-radius: 4px !important;
+        border-radius: 8px !important;
         position: relative;
         text-transform: uppercase;
     `;
 
     const customStyle = `
         <style>
-            /* 🚨 영수증 스크롤바 얇게/투명하게 깎기 */
             #receipt-content::-webkit-scrollbar { width: 4px; }
             #receipt-content::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.1); border-radius: 4px; }
             
             .rcpt-wrap {
-                padding: 40px 24px;
+                padding: 24px 20px;
                 background: #F4F4F0;
                 position: relative;
                 text-shadow: 0.5px 0.5px 0px rgba(0,0,0,0.3);
             }
-            .rcpt-dash { border-top: 1.5px dashed #333; margin: 16px 0; opacity: 0.6; }
-            .rcpt-bold-line { border-top: 2px solid #111; margin: 16px 0; opacity: 0.9; }
+            .rcpt-dash { border-top: 1.5px dashed #333; margin: 10px 0; opacity: 0.6; }
+            .rcpt-bold-line { border-top: 2px solid #111; margin: 10px 0; opacity: 0.9; }
             
-            .rcpt-item { display: flex; align-items: flex-end; margin-bottom: 4px; font-size: 13.5px; font-weight: 900; color: #111; }
+            .rcpt-item { display: flex; align-items: flex-end; margin-bottom: 2px; font-size: 13px; font-weight: 900; color: #111; }
             .rcpt-item .dots { flex-grow: 1; border-bottom: 1.5px dotted #666; margin: 0 8px; position: relative; top: -4px; opacity: 0.5; }
-            .rcpt-ko { font-size: 11px; color: #555; font-family: 'Pretendard', sans-serif; font-weight: 600; text-transform: none; margin-bottom: 16px; letter-spacing: -0.3px; }
+            .rcpt-ko { font-size: 11px; color: #555; font-family: 'Pretendard', sans-serif; font-weight: 600; text-transform: none; margin-bottom: 8px; letter-spacing: -0.3px; }
             
-            .barcode-strip { width: 100%; height: 60px; background: repeating-linear-gradient(90deg, #111 0, #111 2px, transparent 2px, transparent 4px, #111 4px, #111 5px, transparent 5px, transparent 8px, #111 8px, #111 12px, transparent 12px, transparent 15px, #111 15px, #111 16px, transparent 16px, transparent 19px, #111 19px, #111 22px); margin: 0 auto; mix-blend-mode: multiply; opacity: 0.85; }
+            .barcode-strip { width: 100%; height: 36px; background: repeating-linear-gradient(90deg, #111 0, #111 2px, transparent 2px, transparent 4px, #111 4px, #111 5px, transparent 5px, transparent 8px, #111 8px, #111 12px, transparent 12px, transparent 15px, #111 15px, #111 16px, transparent 16px, transparent 19px, #111 19px, #111 22px); margin: 0 auto; mix-blend-mode: multiply; opacity: 0.85; }
         </style>
     `;
 
@@ -6078,21 +6076,20 @@ window.openReceiptModal = function() {
 
     let html = customStyle + `
         <div class="rcpt-wrap">
-            <!-- 🚨 상단 X 닫기 버튼 추가 (터치 안 될까봐 우측 상단에 배치) -->
-            <div onclick="window.closeReceiptModal()" style="position: absolute; top: 16px; right: 20px; font-size: 28px; color: #111; font-family: sans-serif; font-weight: 300; cursor: pointer; z-index: 10;">✕</div>
+            <div onclick="window.closeReceiptModal()" style="position: absolute; top: 12px; right: 16px; font-size: 24px; color: #111; font-family: sans-serif; font-weight: 300; cursor: pointer; z-index: 10; padding: 4px;">✕</div>
 
             <!-- 헤더 -->
-            <div style="text-align: center; margin-bottom: 24px;">
-                <div style="font-weight: 900; font-size: 28px; letter-spacing: 2px; margin-bottom: 6px;">TOSIL CAFE</div>
-                <div style="font-size: 11px; font-weight: 700; letter-spacing: 1px; color: #444;">BABY CARE ROASTERS</div>
-                <div style="font-size: 10.5px; font-weight: 700; letter-spacing: 1px; color: #666; margin-top: 4px;">HOME SWEET HOME, KOREA</div>
-                <div style="font-size: 10px; font-weight: 800; color: #3182F6; margin-top: 8px; font-family: 'Pretendard', sans-serif; text-transform: none;">📶 WI-FI: LOVE0303*#</div>
+            <div style="text-align: center; margin-bottom: 12px;">
+                <div style="font-weight: 900; font-size: 24px; letter-spacing: 2px; margin-bottom: 4px;">TOSIL CAFE</div>
+                <div style="font-size: 10.5px; font-weight: 700; letter-spacing: 1px; color: #444;">BABY CARE ROASTERS</div>
+                <div style="font-size: 10px; font-weight: 700; letter-spacing: 1px; color: #666; margin-top: 2px;">HOME SWEET HOME, KOREA</div>
+                <div style="font-size: 10px; font-weight: 800; color: #3182F6; margin-top: 4px; font-family: 'Pretendard', sans-serif; text-transform: none;">📶 WI-FI: LOVE0303*#</div>
             </div>
 
             <div class="rcpt-dash"></div>
 
             <!-- 주문 정보 -->
-            <div style="font-size: 12px; font-weight: 800; line-height: 1.6; margin-bottom: 8px; color: #222;">
+            <div style="font-size: 11px; font-weight: 800; line-height: 1.5; margin-bottom: 4px; color: #222;">
                 <div style="display:flex; justify-content:space-between;"><span>ORDER #${orderNo}</span><span>${dateStr}</span></div>
                 <div style="display:flex; justify-content:space-between;"><span>CUST.</span><span>${babyName} [V.I.P]</span></div>
                 <div style="display:flex; justify-content:space-between;"><span>SRVR.</span><span>MOM & DAD</span></div>
@@ -6101,7 +6098,7 @@ window.openReceiptModal = function() {
             <div class="rcpt-dash"></div>
 
             <!-- 내역 타이틀 -->
-            <div style="font-size: 13px; font-weight: 900; margin-bottom: 20px; text-align: center; letter-spacing: 2px;">
+            <div style="font-size: 12px; font-weight: 900; margin-bottom: 12px; text-align: center; letter-spacing: 2px;">
                 [ ORDER DETAILS ]
             </div>
 
@@ -6112,47 +6109,43 @@ window.openReceiptModal = function() {
             ${totalPee > 0 ? makeItem('Water Drop', '쉬야', `${totalPee} EA`) : ''}
             ${totalSleepMins > 0 ? makeItem('Sweet Dream', '꿀잠 충전소', sleepStr) : ''}
             
-            ${isEmpty ? `<div style="text-align:center; font-size:12px; padding: 20px 0; color:#555; font-family:'Pretendard',sans-serif; text-transform:none;">오늘 영업 내역이 없습니다 🥲</div>` : ''}
+            ${isEmpty ? `<div style="text-align:center; font-size:12px; padding: 12px 0; color:#555; font-family:'Pretendard',sans-serif; text-transform:none;">오늘 영업 내역이 없습니다 🥲</div>` : ''}
 
             <div class="rcpt-dash"></div>
 
             <!-- 결제 금액부 -->
-            <div style="font-size: 13px; font-weight: 800; margin-bottom: 4px; color: #111;">
-                <div style="display:flex; justify-content:space-between; margin-bottom:6px;"><span>SUBTOTAL</span><span>ENDLESS</span></div>
-                <div style="display:flex; justify-content:space-between; margin-bottom:6px;"><span>TAX (CUTENESS)</span><span>100%</span></div>
+            <div style="font-size: 12px; font-weight: 800; margin-bottom: 2px; color: #111;">
+                <div style="display:flex; justify-content:space-between; margin-bottom:4px;"><span>SUBTOTAL</span><span>ENDLESS</span></div>
+                <div style="display:flex; justify-content:space-between; margin-bottom:4px;"><span>TAX (CUTENESS)</span><span>100%</span></div>
             </div>
             
             <div class="rcpt-bold-line"></div>
 
-            <div style="display:flex; justify-content:space-between; align-items:flex-end; margin-bottom: 32px;">
-                <span style="font-size: 20px; font-weight: 900; color: #000;">TOTAL</span>
-                <span style="font-size: 26px; font-weight: 900; letter-spacing: -1px; color: #000;">∞ LOVE</span>
+            <!-- 하단 간격 축소 -->
+            <div style="display:flex; justify-content:space-between; align-items:flex-end; margin-bottom: 16px;">
+                <span style="font-size: 18px; font-weight: 900; color: #000;">TOTAL</span>
+                <span style="font-size: 22px; font-weight: 900; letter-spacing: -1px; color: #000;">∞ LOVE</span>
             </div>
 
             <!-- 하단 푸터 (바코드) -->
-            <div style="text-align: center; font-size: 12px; font-weight: 800; margin-bottom: 24px; line-height: 1.6; color: #444;">
+            <div style="text-align: center; font-size: 11px; font-weight: 800; margin-bottom: 12px; line-height: 1.5; color: #444;">
                 <div>PAID BY: PARENTS SOUL</div>
                 <div>CARD: ****-****-****-0303</div>
                 <div>AUTH CODE: 77777777</div>
             </div>
 
             <div class="barcode-strip"></div>
-            <div style="text-align: center; font-size: 12px; margin-top: 12px; letter-spacing: 5px; font-weight: 900; color: #111;">
+            <div style="text-align: center; font-size: 10px; margin-top: 8px; letter-spacing: 5px; font-weight: 900; color: #111;">
                 0303-TOSIL-BABY
             </div>
-
-            <!-- 🚨 하단 닫기 버튼 추가 (스크롤 다 내린 후 편하게 터치) -->
-            <div style="text-align: center; margin-top: 32px; padding-top: 16px; border-top: 1.5px dashed #ccc;">
-                <button onclick="window.closeReceiptModal()" style="background: #111; color: #FFF; padding: 12px 30px; border-radius: 8px; font-weight: 900; font-size: 14px; font-family: 'Pretendard', sans-serif; border: none; cursor: pointer; box-shadow: 0 4px 12px rgba(0,0,0,0.15);">
-                    닫기
-                </button>
-            </div>
+            
+            <!-- 🚨 여기에 있던 쓸데없는 까만색 닫기 버튼 삭제 완료! -->
         </div>
     `;
 
     contentDiv.innerHTML = html;
     document.getElementById('receipt-modal').style.display = 'flex';
-}
+};
 
 // 닫기 버튼 유지
 window.closeReceiptModal = function() {
