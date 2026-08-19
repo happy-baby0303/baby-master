@@ -222,7 +222,7 @@
         if (localStorage.getItem(k)) return;
         try { localStorage.setItem(k, "1"); } catch (e) {}
         if (typeof window.showToast === "function") {
-            window.showToast("💌 " + babyName() + "가 오늘 편지를 두고 갔어요");
+            window.showToast("🧾 " + babyName() + "의 오늘 하루, 정산 완료 🌙");
         }
     }
 
