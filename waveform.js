@@ -153,7 +153,7 @@
         }, 60);
     };
 
-    /* ---------- 파형 엽서 ---------- */
+    /* ---------- 파형 엽서 (모바일 다운로드/공유 완벽 호환 패치 🚀) ---------- */
 
     window.downloadWaveCard = async function (key, id) {
         if (typeof html2canvas === "undefined") return toast("이미지 저장 도구를 불러오지 못했어요");
@@ -162,7 +162,7 @@
             ? window.getDayVoices(key).filter(function (x) { return x.id === id; })[0] : null;
         if (!v) return toast("소리를 찾지 못했어요");
 
-        toast("파형을 그리는 중이에요…");
+        toast("파형을 그리는 중이에요… 🎨");
         var peaks = await window.voicePeaks(key, id);
         if (!peaks) return toast("파형을 만들지 못했어요");
 
@@ -219,12 +219,38 @@
         setTimeout(function () {
             html2canvas(stage, { scale: 1, backgroundColor: "#F8F6F4", useCORS: true, logging: false })
             .then(function (canvas) {
-                var a = document.createElement("a");
-                a.download = babyName() + "_" + title + "_소리엽서.png";
-                a.href = canvas.toDataURL("image/png");
-                document.body.appendChild(a); a.click(); document.body.removeChild(a);
-                stage.remove();
-                toast("🎵 저장했어요");
+                // 🚨 캔버스를 덩어리(Blob)로 변환해서 모바일 브라우저 공유 기능에 태움
+                canvas.toBlob(function(blob) {
+                    var fileName = babyName() + "_" + title + "_소리엽서.png";
+                    var isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+                    var file = new File([blob], fileName, { type: "image/png" });
+                    
+                    // 🚨 모바일 공유 기능(Web Share API) 지원 여부 확인
+                    if (navigator.canShare && navigator.canShare({ files: [file] })) {
+                        if (typeof window.showConfirm === "function") {
+                            window.showConfirm(
+                                isIOS 
+                                ? "엽서가 완성되었어요!<br><span style='font-size:12px;color:#8B95A1;'>아이폰은 창이 뜨면 '이미지 저장'을 눌러주세요.</span>"
+                                : "엽서가 완성되었습니다!<br><span style='font-size:12px;color:#8B95A1;'>가족들에게 바로 공유하시겠어요?</span>",
+                                function() {
+                                    navigator.share({ files: [file], title: '우리아기 소리 엽서' }).catch(function(){});
+                                }, "💌", "저장 및 공유하기", "#B98A2E" // 골드 색상으로 럭셔리하게
+                            );
+                        } else {
+                            navigator.share({ files: [file], title: '우리아기 소리 엽서' }).catch(function(){});
+                        }
+                    } else {
+                        // PC나 구형 브라우저를 위한 기존 다운로드 방식 유지
+                        var a = document.createElement("a");
+                        a.download = fileName;
+                        a.href = canvas.toDataURL("image/png");
+                        document.body.appendChild(a); 
+                        a.click(); 
+                        document.body.removeChild(a);
+                        toast("🎵 갤러리에 저장했어요");
+                    }
+                    stage.remove(); // 다 썼으면 청소
+                });
             })
             .catch(function (e) {
                 console.error("[파형 엽서] 실패", e);
