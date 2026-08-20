@@ -14285,3 +14285,48 @@ window.openSettingsTab = function() {
     window.scrollTo({ top: 0 });
 };
 
+
+// ==========================================
+// 🔔 [알림 켜기 카드] 설정 탭 맨 위에 자동으로 붙습니다
+// ==========================================
+(function () {
+    const _origin = window.renderSettingsTab;
+    window.renderSettingsTab = function () {
+        if (typeof _origin === 'function') _origin.apply(this, arguments);
+
+        const container = document.getElementById('tab-settings');
+        if (!container || document.getElementById('push-permission-card')) return;
+        if (!('Notification' in window)) return;
+
+        const granted = Notification.permission === 'granted';
+        const denied  = Notification.permission === 'denied';
+
+        const card = document.createElement('div');
+        card.id = 'push-permission-card';
+        card.style.cssText = 'display:flex; align-items:center; gap:14px; background:var(--bg-card); padding:18px 20px; border-radius:16px; border:1px solid var(--border); margin-bottom:16px; box-sizing:border-box; width:100%;';
+        card.innerHTML = `
+            <div style="font-size:22px;">🔔</div>
+            <div style="flex:1; min-width:0;">
+                <div style="font-size:15px; font-weight:900; color:var(--text-m);">짝꿍 알림 받기</div>
+                <div style="font-size:12px; font-weight:600; color:var(--text-s); margin-top:2px;">
+                    ${granted ? '알림이 켜져 있어요 💛' : denied ? '차단되어 있어요. 브라우저 설정에서 허용해주세요' : '바통터치 요청을 바로 받아보세요'}
+                </div>
+            </div>
+            ${granted || denied ? '' : `<button id="btn-push-on" style="padding:9px 16px; border-radius:10px; background:#3182F6; color:#fff; font-size:12.5px; font-weight:800; border:none; cursor:pointer; flex-shrink:0;">켜기</button>`}
+        `;
+        container.prepend(card);
+
+        const btn = document.getElementById('btn-push-on');
+        if (btn) btn.onclick = async () => {
+            btn.disabled = true;
+            btn.textContent = '설정 중...';
+            const ok = await window.requestPushPermission();
+            if (typeof window.showToast === 'function') {
+                window.showToast(ok ? '🔔 알림이 켜졌어요!' : '⚠️ 알림 권한이 필요해요. 브라우저 설정을 확인해주세요.');
+            }
+            const old = document.getElementById('push-permission-card');
+            if (old) old.remove();
+            window.renderSettingsTab();
+        };
+    };
+})();

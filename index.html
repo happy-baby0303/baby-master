@@ -2418,42 +2418,73 @@ div[style*="border-radius: 8px"] {
     try {
         window.messaging = getMessaging(app);
         window.onMessage = onMessage;
-        
+
+        // ✅ [추가] 앱을 켜두고 있을 때 오는 알림 처리
+        //    이게 없으면 앱을 보고 있는 동안엔 알림이 아예 안 뜹니다!
+        onMessage(window.messaging, (payload) => {
+            const t = payload?.notification?.title || '육아메이트';
+            const b = payload?.notification?.body || '';
+            if (typeof window.showToast === 'function') window.showToast(`${t}\n${b}`);
+            else alert(`${t}\n${b}`);
+        });
+
         window.requestPushPermission = async () => {
             try {
-                const permission = await Notification.requestPermission();
-                if (permission === 'granted') {
-                    
-                    // 👇 이 줄이 핵심! (우리 앱의 sw.js를 파이어베이스에 강제로 연결해 줍니다)
-                    const registration = await navigator.serviceWorker.ready;
-                    
-                    // 🚨 대표님의 찐 VAPID 키 세팅 완료!
-                    const token = await getToken(window.messaging, { 
-                        vapidKey: 'BNDHmOKzsbHE8M65bZWNpGOZ7ijelfwfSsGvwCYHCrBkXDSh8jw1rq7R5uqNlXpMalZsM8yvqB7aDRS0YPnJKyk',
-                        serviceWorkerRegistration: registration // 👈 연결고리 장착!
-                    });
-                    
-                    if (token) {
-                        console.log('✅ 푸시 토큰 발급 성공:', token);
-                        localStorage.setItem('fcm_token', token);
-                        
-                        // 🌟 [추가] 서버(users 폴더)에 내 푸시 주소록 등록하기!
-                        const myKakaoId = localStorage.getItem('kakao_id');
-                        const myUid = window.auth?.currentUser?.uid || localStorage.getItem('firebase_uid'); // 👈 여기 추가됨!
-                        
-                        if (myKakaoId && myUid && window.db && window.setDoc && window.doc) {
-                            window.setDoc(window.doc(window.db, "users", String(myKakaoId)), {
-                                fcm_token: token,
-                                firebase_uid: myUid // 👈 서버가 주소를 정확히 찾을 수 있게 이름표 부착!
-                            }, { merge: true }).catch(e => console.error("토큰 저장 실패", e));
-                        }
-                    }
-                } else {
-                    console.log('❌ 푸시 알림 권한이 거부되었습니다.');
+                // ✅ [추가] 알림 자체를 지원 안 하는 브라우저 걸러내기
+                if (!('Notification' in window)) {
+                    console.warn('[푸시] 이 브라우저는 알림을 지원하지 않습니다.');
+                    return false;
                 }
+
+                const permission = await Notification.requestPermission();
+                if (permission !== 'granted') {
+                    console.log('[푸시] ❌ 권한 거부됨:', permission);
+                    return false;
+                }
+
+                const registration = await navigator.serviceWorker.ready;
+
+                const token = await getToken(window.messaging, {
+                    vapidKey: 'BNDHmOKzsbHE8M65bZWNpGOZ7ijelfwfSsGvwCYHCrBkXDSh8jw1rq7R5uqNlXpMalZsM8yvqB7aDRS0YPnJKyk',
+                    serviceWorkerRegistration: registration
+                });
+
+                if (!token) {
+                    console.warn('[푸시] 토큰 발급 실패 (VAPID 키를 확인하세요)');
+                    return false;
+                }
+
+                console.log('[푸시] ✅ 토큰 발급:', token.slice(0, 20) + '...');
+                localStorage.setItem('fcm_token', token);
+
+                const myUid = window.auth?.currentUser?.uid || localStorage.getItem('firebase_uid');
+                const myKakaoId = localStorage.getItem('kakao_id') || myUid;
+
+                // ✅ [수정] 로그인 전이면 그냥 넘어가지 말고, 이유를 로그로 남김
+                if (!myUid) {
+                    console.warn('[푸시] 아직 로그인 전이라 토큰 저장을 보류합니다.');
+                    return false;
+                }
+
+                await window.setDoc(window.doc(window.db, "users", String(myKakaoId)), {
+                    fcm_token: token,
+                    firebase_uid: myUid,
+                    token_updated_at: Date.now()
+                }, { merge: true });
+
+                console.log('[푸시] ✅ 서버에 토큰 저장 완료');
+                return true;
             } catch (error) {
-                console.error('푸시 권한 요청 에러:', error);
+                console.error('[푸시] 권한/토큰 에러:', error);
+                return false;
             }
+        };
+
+        // ✅ [추가] 이미 알림을 켠 사람은 앱 켤 때마다 조용히 토큰 갱신
+        //    (푸시 토큰은 시간이 지나면 바뀌기 때문에 꼭 필요합니다)
+        window.syncPushToken = async () => {
+            if (!('Notification' in window) || Notification.permission !== 'granted') return;
+            await window.requestPushPermission();
         };
     } catch (e) {
         console.warn("푸시 알림을 지원하지 않는 브라우저입니다.", e);
@@ -2498,9 +2529,11 @@ div[style*="border-radius: 8px"] {
 // 💛 [카카오 로그인 엔진] (클라우드 펑션 우회 무료 모드)
  const auth = getAuth(app);
  window.auth = auth; 
- const functions = getFunctions(app); // 방금 만든 구글 서버 연결!
- window.functions = functions;        // 👈 추가! (앱 전체에서 서버를 부를 수 있게 허용)
- window.httpsCallable = httpsCallable; // 👈 추가!
+ const functions = getFunctions(app); // 카카오 로그인용 (미국 서버 = us-central1)
+ const functionsSeoul = getFunctions(app, "asia-northeast3"); // 👈 추가! 알림/탈퇴용 (서울 서버)
+ window.functions = functionsSeoul;   // 👈 수정! 앱이 부르는 건 이제 서울 서버
+ window.functionsUS = functions;      // 👈 추가! (혹시 몰라 남겨두는 미국 서버)
+ window.httpsCallable = httpsCallable;
 
  // 카카오 SDK 초기화 (대표님 찐 앱키 자동 세팅 완료!)
  if (!Kakao.isInitialized()) {
@@ -2570,8 +2603,11 @@ div[style*="border-radius: 8px"] {
         console.log("✅ 현재 로그인된 유저 UID:", user.uid);
         console.log("✅ 카카오 고유 ID (admin 대조용):", kakaoSub);
         
-        localStorage.setItem('firebase_uid', user.uid); 
-        localStorage.setItem('kakao_id', kakaoSub); // 👈 부활!
+                localStorage.setItem('firebase_uid', user.uid); 
+                     localStorage.setItem('kakao_id', kakaoSub); // 👈 부활!
+
+        // ✅ [추가] 로그인이 확인되면 푸시 토큰을 서버에 저장/갱신
+        setTimeout(() => window.syncPushToken && window.syncPushToken(), 1500);
 
         // 1. 초대 링크(딥링크)로 들어온 경우 우선 처리
         const pendingCode = localStorage.getItem('pending_invite_code');

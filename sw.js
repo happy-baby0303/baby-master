@@ -38,7 +38,7 @@ self.addEventListener('notificationclick', function(event) {
 
 
 // 💾 기존 PWA 오프라인 캐시 엔진
-const CACHE = 'yukamate-v3';   // 🔄 푸시 기능 추가로 버전 업!
+const CACHE = 'yukamate-v4';   // 🔄 알림 수정 반영으로 버전 업!
 
 const ASSETS = [
     './',
