@@ -2758,17 +2758,29 @@ async function addCustomBaton() {
     }
 }
 
-// 💌 바통터치 생성 (토스트 적용)
+// 💌 바통터치 생성 (토스트 적용 + 🔔 푸시알림 발송)
 async function createBatonTask(text, reward) {
     let records = JSON.parse(localStorage.getItem('tosil_baton_records')) || [];
     
     const isDuplicate = records.some(r => r.text === text);
-    if (isDuplicate) return showToast("🚨 이미 똑같은 부탁이 대기 중입니다!"); // 👈 교체
+    if (isDuplicate) return showToast("🚨 이미 똑같은 부탁이 대기 중입니다!"); 
 
     const now = new Date(), timeStr = `${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`;
     records.unshift({ id: "baton_"+now.getTime(), text, reward, time: timeStr, status: "requested" });
     await saveBatonToFirebase(records);
-    showToast("💌 바통터치 요청이 성공적으로 전달되었습니다!"); // 👈 추가
+    showToast("💌 바통터치 요청이 성공적으로 전달되었습니다!"); 
+
+    // 🌟 [자동 알림 우체부 호출] 아빠한테 진짜 푸시 알림 쏘기!
+    const syncCode = window.getSyncCode ? window.getSyncCode() : localStorage.getItem('family_sync_code');
+    if (syncCode && window.functions && window.httpsCallable) {
+        const sendFamilyPush = window.httpsCallable(window.functions, 'sendFamilyPush');
+        const myName = localStorage.getItem('kakao_nickname') || '육아메이트';
+        sendFamilyPush({
+            syncCode: syncCode,
+            title: "💌 아내의 바통터치 SOS",
+            body: `[${myName}] ${text}`
+        }).catch(e => console.error("푸시 발송 에러", e));
+    }
 }
 
 async function acceptBaton(id) {
@@ -2777,26 +2789,6 @@ async function acceptBaton(id) {
     if (idx === -1) return;
     records[idx].status = "accepted";
     await saveBatonToFirebase(records);
-}
-
-// 💌 바통터치 완료 (토스트 적용 + 🎮 경험치 획득 추가!)
-async function completeBaton(id) {
-    let records = JSON.parse(localStorage.getItem('tosil_baton_records')) || [];
-    const idx = records.findIndex(r => r.id === id);
-    if (idx === -1) return;
-    
-    const reward = records[idx].reward; 
-    records.splice(idx, 1); 
-    await saveBatonToFirebase(records);
-
-    if (reward && reward !== "없음") {
-        showToast(`🎉 미션 해결!\n약속된 보상 [${reward}]을(를) 당당하게 요구하세요! 👍`);
-    } else {
-        showToast("🎉 미션 해결 완료! 든든한 육아메이트 최고입니다 👍");
-    }
-
-    // 👇 이 마법의 한 줄이 남편의 경험치를 20만큼 올려줍니다!
-    if(typeof gainDadExp === 'function') gainDadExp(20); 
 }
 
 // 💌 바통터치 취소 (모달 적용)
@@ -7331,7 +7323,7 @@ function gainMateExp(amount) {
 document.addEventListener("DOMContentLoaded", () => { updateMateLevelUI(); });
 
 // ==========================================
-// 💌 바통터치 완료 (차등 경험치 + 이스터에그)
+// 💌 바통터치 완료 (차등 경험치 + 이스터에그 + 🔔 완료 푸시알림 발송)
 // ==========================================
 async function completeBaton(id) {
     let records = JSON.parse(localStorage.getItem('tosil_baton_records')) || [];
@@ -7369,6 +7361,18 @@ async function completeBaton(id) {
 
     // 경험치 지급 쏴라!
     gainMateExp(earnedExp); 
+
+    // 🌟 [자동 알림 우체부 호출] 아내에게 해결 완료 푸시 알림 쏘기!
+    const syncCode = window.getSyncCode ? window.getSyncCode() : localStorage.getItem('family_sync_code');
+    if (syncCode && window.functions && window.httpsCallable) {
+        const sendFamilyPush = window.httpsCallable(window.functions, 'sendFamilyPush');
+        const myName = localStorage.getItem('kakao_nickname') || '짝꿍';
+        sendFamilyPush({
+            syncCode: syncCode,
+            title: "✅ 바통터치 미션 클리어!",
+            body: `${myName}님이 미션을 완료했습니다. 든든하죠?`
+        }).catch(e => console.error("푸시 발송 에러", e));
+    }
 }
 
 // ==========================================
