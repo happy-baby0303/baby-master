@@ -13,16 +13,10 @@ firebase.initializeApp({
 
 const messaging = firebase.messaging();
 
+// 🚨 여기를 수정했습니다! (중복 알림 방지)
 messaging.onBackgroundMessage((payload) => {
-    console.log('[SW] 백그라운드 푸시 수신:', payload);
-    const notificationTitle = payload.notification.title;
-    const notificationOptions = {
-        body: payload.notification.body,
-        icon: './icon-192x192.png',
-        badge: './icon-192x192.png', // 안드로이드 상단바 작은 아이콘
-        data: payload.data
-    };
-    self.registration.showNotification(notificationTitle, notificationOptions);
+    // 구글 파이어베이스가 알아서 알림을 띄우므로 우렁각시는 조용히 로그만 남깁니다!
+    console.log('[SW] 백그라운드 푸시 수신 성공!');
 });
 
 // 🔔 알림을 터치하면 육아메이트 앱이 짠! 하고 열리게 해주는 마법
