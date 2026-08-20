@@ -2399,8 +2399,9 @@ div[style*="border-radius: 8px"] {
     // 👇 1. 여기에 3가지 단어(initializeFirestore, persistentLocalCache, persistentMultipleTabManager)가 추가되었습니다!
     import { getFirestore, initializeFirestore, persistentLocalCache, persistentMultipleTabManager, doc, setDoc, getDoc, onSnapshot, collection, deleteDoc, query, orderBy, limit, updateDoc, arrayUnion } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
     import { getAuth, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
-    import { getFunctions, httpsCallable } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-functions.js";
-    import { getStorage, ref, uploadString, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-storage.js";
+      import { getFunctions, httpsCallable } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-functions.js";
+      import { getStorage, ref, uploadString, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-storage.js";
+     import { getMessaging, getToken, onMessage } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-messaging.js";
 
     const firebaseConfig = {
         apiKey: "AIzaSyDyXVAf-uiqutmfCd5Bhh34bQmbnFynpas",
@@ -2412,7 +2413,35 @@ div[style*="border-radius: 8px"] {
     };
 
     const app = initializeApp(firebaseConfig);
-    
+
+    // 🔔 [푸시 알림 엔진 초기화]
+    try {
+        window.messaging = getMessaging(app);
+        window.onMessage = onMessage;
+        
+        window.requestPushPermission = async () => {
+            try {
+                const permission = await Notification.requestPermission();
+                if (permission === 'granted') {
+                    // 🚨 대표님의 찐 VAPID 키 세팅 완료!
+                    const token = await getToken(window.messaging, { 
+                        vapidKey: 'BNDHmOKzsbHE8M65bZWNpGOZ7ijelfwfSsGvwCYHCrBkXDSh8jw1rq7R5uqNlXpMalZsM8yvqB7aDRS0YPnJKyk' 
+                    });
+                    if (token) {
+                        console.log('✅ 푸시 토큰 발급 성공:', token);
+                        localStorage.setItem('fcm_token', token);
+                    }
+                } else {
+                    console.log('❌ 푸시 알림 권한이 거부되었습니다.');
+                }
+            } catch (error) {
+                console.error('푸시 권한 요청 에러:', error);
+            }
+        };
+    } catch (e) {
+        console.warn("푸시 알림을 지원하지 않는 브라우저입니다.", e);
+    }
+
     // 👇 2. 오프라인 캐시 적용 (서버비 1/6 절감 패치)
     try {
         window.db = initializeFirestore(app, {
