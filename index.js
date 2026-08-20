@@ -83,3 +83,27 @@ exports.sendFamilyPush = functions.region("asia-northeast3").https.onCall(async 
         return { success: false, error: error.message };
     }
 });
+
+// 🧹 3. [신규 추가] 완벽한 회원 탈퇴 (애플 심사용 청소부)
+exports.deleteUserAccount = functions.region("asia-northeast3").https.onCall(async (data, context) => {
+    // 1. 로그인된 유저인지 확인
+    if (!context.auth) return { success: false, error: "권한이 없습니다." };
+    
+    const uid = context.auth.uid;
+    const kakaoId = data.kakaoId;
+
+    try {
+        // 2. users 명부에서 내 정보 삭제
+        if (kakaoId) {
+            await admin.firestore().collection("users").doc(String(kakaoId)).delete();
+        }
+
+        // 3. 파이어베이스 Auth(인증) 시스템에서 계정 영구 삭제
+        await admin.auth().deleteUser(uid);
+        
+        return { success: true, message: "계정이 완벽하게 삭제되었습니다." };
+    } catch (error) {
+        console.error("회원 탈퇴 에러:", error);
+        return { success: false, error: error.message };
+    }
+});
