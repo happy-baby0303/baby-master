@@ -10200,12 +10200,25 @@ window.logoutKakao = function() {
     }, "👋", "로그아웃", "#8B95A1");
 };
 
-// 💔 카카오 회원 탈퇴
+// 💔 카카오 회원 탈퇴 (서버 데이터까지 완벽 파기)
 window.unlinkKakao = function() {
-    window.showConfirm("정말 회원 탈퇴를 진행하시겠습니까?<br><span style='font-size:12px; color:#8B95A1;'>모든 데이터가 삭제되며 복구할 수 없습니다.</span>", function() {
+    window.showConfirm("정말 회원 탈퇴를 진행하시겠습니까?<br><span style='font-size:12px; color:#8B95A1;'>모든 데이터가 삭제되며 복구할 수 없습니다.</span>", async function() {
         const answer = prompt("탈퇴하시려면 아래 입력창에 '탈퇴'라고 정확히 적어주세요.");
         if (answer === '탈퇴') {
-            // 카카오 연결 끊기 요청
+            
+            // 🚨 1. 파이어베이스 서버 청소부 호출! (계정 및 명부 삭제)
+            if (window.functions && window.httpsCallable) {
+                try {
+                    const deleteUserAccount = window.httpsCallable(window.functions, 'deleteUserAccount');
+                    const myKakaoId = localStorage.getItem('kakao_id');
+                    await deleteUserAccount({ kakaoId: myKakaoId });
+                    console.log("✅ 서버 계정 삭제 완료");
+                } catch(e) {
+                    console.error("서버 계정 삭제 실패:", e);
+                }
+            }
+
+            // 2. 카카오 연결 끊기 요청
             if (typeof Kakao !== 'undefined' && Kakao.Auth.getAccessToken()) {
                 Kakao.API.request({
                     url: '/v1/user/unlink',
@@ -10214,11 +10227,12 @@ window.unlinkKakao = function() {
                 });
             }
 
-            // 🚨 앱 데이터 및 계정 정보 완전 초기화
-            window.wipeAllRecordsSafely();
-            localStorage.removeItem('kakao_nickname');
-            localStorage.removeItem('kakao_id');
-            localStorage.removeItem('family_sync_code');
+            // 3. 앱 로컬 데이터 완전 초기화
+            if (typeof window.wipeAllRecordsSafely === 'function') {
+                window.wipeAllRecordsSafely();
+            } else {
+                localStorage.clear();
+            }
             
             window.showToast("💔 회원 탈퇴가 완료되었습니다. 그동안 감사했습니다!");
             setTimeout(() => location.reload(), 1500);
