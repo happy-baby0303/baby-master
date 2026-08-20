@@ -2436,6 +2436,17 @@ div[style*="border-radius: 8px"] {
                     if (token) {
                         console.log('✅ 푸시 토큰 발급 성공:', token);
                         localStorage.setItem('fcm_token', token);
+                        
+                        // 🌟 [추가] 서버(users 폴더)에 내 푸시 주소록 등록하기!
+                        const myKakaoId = localStorage.getItem('kakao_id');
+                        const myUid = window.auth?.currentUser?.uid || localStorage.getItem('firebase_uid'); // 👈 여기 추가됨!
+                        
+                        if (myKakaoId && myUid && window.db && window.setDoc && window.doc) {
+                            window.setDoc(window.doc(window.db, "users", String(myKakaoId)), {
+                                fcm_token: token,
+                                firebase_uid: myUid // 👈 서버가 주소를 정확히 찾을 수 있게 이름표 부착!
+                            }, { merge: true }).catch(e => console.error("토큰 저장 실패", e));
+                        }
                     }
                 } else {
                     console.log('❌ 푸시 알림 권한이 거부되었습니다.');
@@ -2488,6 +2499,8 @@ div[style*="border-radius: 8px"] {
  const auth = getAuth(app);
  window.auth = auth; 
  const functions = getFunctions(app); // 방금 만든 구글 서버 연결!
+ window.functions = functions;        // 👈 추가! (앱 전체에서 서버를 부를 수 있게 허용)
+ window.httpsCallable = httpsCallable; // 👈 추가!
 
  // 카카오 SDK 초기화 (대표님 찐 앱키 자동 세팅 완료!)
  if (!Kakao.isInitialized()) {

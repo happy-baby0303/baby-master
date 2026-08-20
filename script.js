@@ -8742,7 +8742,7 @@ window.showComingSoon = function(feature) {
 };
 
 // ==========================================
-// 🍞 무적의 토스트 알람 마스터 (CSS 씹힘 100% 차단)
+// 🍞 무적의 토스트 알람 마스터 (글자 잘림 완벽 해결!)
 // ==========================================
 window.showToast = function(message) {
     const oldToast = document.getElementById('super-toast-msg');
@@ -8760,14 +8760,21 @@ window.showToast = function(message) {
         background: rgba(49, 51, 63, 0.95);
         color: #ffffff;
         padding: 14px 24px;
-        border-radius: 30px;
+        border-radius: 20px;
         font-size: 14px;
         font-weight: 800;
         box-shadow: 0 8px 24px rgba(0,0,0,0.2);
         z-index: 9999999;
         opacity: 0;
         transition: opacity 0.3s ease, bottom 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-        white-space: nowrap;
+        
+        /* 🚨 글자 잘림 방지 마법 */
+        width: 85%; 
+        max-width: 400px;
+        white-space: pre-wrap; /* 줄바꿈 허용 */
+        word-break: keep-all; /* 단어 단위로 예쁘게 줄바꿈 */
+        line-height: 1.5; /* 줄 간격 여유 */
+        text-align: center;
         pointer-events: none;
     `;
     document.body.appendChild(toast);
@@ -8777,11 +8784,12 @@ window.showToast = function(message) {
         toast.style.bottom = '100px'; 
     }, 10);
 
+    // 글이 기니까 읽을 시간을 위해 2.5초 -> 3.5초로 연장
     setTimeout(() => {
         toast.style.opacity = '0';
         toast.style.bottom = '-50px';
         setTimeout(() => { toast.remove(); }, 300);
-    }, 2500);
+    }, 3500); 
 };
 
 // ==========================================
