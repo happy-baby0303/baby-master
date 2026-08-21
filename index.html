@@ -1452,35 +1452,46 @@ div[style*="border-radius: 8px"] {
                 </div>
                 <!-- ▲▲▲ 경험치 바 끝 ▲▲▲ -->
 
-                <div class="box-main" style="border-radius: 20px; padding: 20px; box-shadow: 0 4px 12px rgba(0,0,0,0.03); margin-bottom: 24px;">
-                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 16px;"><div style="font-size: 15px; font-weight: 800; color: var(--text-m);">🚨 부부 바통 터치 (SOS 심부름)</div></div>
+                <div class="box-main" style="border-radius: 20px; padding: 20px; box-shadow: 0 4px 12px rgba(0,0,0,0.03); margin-bottom: 24px;" data-theme-src="">
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 16px;">
+                        <div style="font-size: 15px; font-weight: 900; color: var(--text-m); letter-spacing: -0.5px;">🚨 부부 바통 터치 (SOS 심부름)</div>
+                    </div>
+                    
                     <div style="margin-bottom: 16px;">
                         <label style="font-size:12.5px; font-weight:800; color:var(--primary); display:block; margin-bottom:8px;">🎁 미션 완료 보상 (선택)</label>
-                        <select id="baton-reward" class="box-sub" onchange="var customInput = document.getElementById('baton-reward-custom'); if(this.value === 'custom') { customInput.style.display = 'block'; customInput.focus(); } else { customInput.style.display = 'none'; customInput.value = ''; }" style="width: 100%; box-sizing: border-box; padding: 12px; border-radius: 12px; font-weight: 800; font-size: 13.5px; margin-bottom:8px; outline:none;">
-                            <option value="없음">선택 안 함 (순수한 사랑으로 해줌 🫶)</option>
-                            <option value="💋 진한 뽀뽀 1회">💋 진한 뽀뽀 1회</option>
-                            <option value="🎮 게임 2시간 자유이용권">🎮 게임 2시간 자유이용권</option>
-                            <option value="🍻 시원한 맥주 & 안주 세팅">🍻 시원한 맥주 & 안주 세팅</option>
-                            <option value="💆‍♂️ 전신 안마 15분">💆‍♂️ 전신 안마 15분</option>
-                            <option value="💳 자유 용돈 1만원 적립">💳 자유 용돈 1만원 적립</option>
-                            <option value="☕ 내일 모닝커피 쏘기">☕ 내일 모닝커피 쏘기</option>
-                            <option value="custom" style="color: var(--primary);">✍️ 직접 입력하기...</option>
+                        
+                        <!-- 🚨 폰트 강제 적용 (font-family: inherit;) 및 글씨색상 추가! -->
+                        <select id="baton-reward" class="box-sub" onchange="var customInput = document.getElementById('baton-reward-custom'); if(this.value === 'custom') { customInput.style.display = 'block'; customInput.focus(); } else { customInput.style.display = 'none'; customInput.value = ''; }" style="width: 100%; box-sizing: border-box; padding: 12px; border-radius: 12px; font-weight: 800; font-size: 13.5px; margin-bottom:8px; outline:none; border:1px solid var(--border); font-family: 'Pretendard', sans-serif; color: var(--text-m);">
+                            <option value="없음">선택 안 함 (순수한 사랑으로 해줌 )</option>
+                            <option value="진한 뽀뽀 1회">진한 뽀뽀 1회</option>
+                            <option value="게임 2시간 자유이용권">게임 2시간 자유이용권</option>
+                            <option value="시원한 맥주 & 안주 세팅">시원한 맥주 & 안주 세팅</option>
+                            <option value="전신 안마 15분">전신 안마 15분</option>
+                            <option value="자유 용돈 1만원 적립">자유 용돈 1만원 적립</option>
+                            <option value="내일 모닝커피 쏘기">내일 모닝커피 쏘기</option>
+                            <option value="custom" style="color: var(--primary);">직접 입력하기...</option>
                         </select>
-                        <input type="text" id="baton-reward-custom" class="box-tint-blue" placeholder="원하는 보상을 당당하게 적어보세요!" style="display:none; width:100%; min-width:0; box-sizing: border-box; padding:12px; border-radius:12px; font-size: 13.5px; font-weight: 600; outline:none;">
+                        
+                        <!-- 🚨 직접 입력창에도 폰트 강제 적용 -->
+                        <input type="text" id="baton-reward-custom" class="box-tint-blue" placeholder="원하는 보상을 당당하게 적어보세요!" style="display:none; width:100%; min-width:0; box-sizing: border-box; padding:12px; border-radius:12px; font-size: 13.5px; font-weight: 600; outline:none; border: 1px solid var(--border); font-family: 'Pretendard', sans-serif;">
                     </div>
+
+                    <!-- 🚨 [수정됨] 텍스트 다이어트: 이모지 및 불필요한 서술어 삭제! -->
                     <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 16px;">
-                        <button class="box-main" onclick="addQuickBaton('🍼 새벽 수유 턴 대타 요청합니다!')" style="padding: 11px; border-radius: 12px; font-size: 12px; font-weight: 800; cursor: pointer; transition: 0.2s;">🍼 새벽 수유 대타</button>
-                        <button class="box-main" onclick="addQuickBaton('🛒 퇴근길에 아기 기저귀/위생용품 장보기!')" style="padding: 11px; border-radius: 12px; font-size: 12px; font-weight: 800; cursor: pointer; transition: 0.2s;">🛒 퇴근길 장보기</button>
-                        <button class="box-main" onclick="addQuickBaton('💩 하윤이 응가 폭탄! 기저귀 처리반 SOS!')" style="padding: 11px; border-radius: 12px; font-size: 12px; font-weight: 800; cursor: pointer; transition: 0.2s;">💩 기저귀 SOS</button>
-                        <button class="box-main" onclick="addQuickBaton('😴 아기 재우기 턴 교대합시다! 엄빠체인지!')" style="padding: 11px; border-radius: 12px; font-size: 12px; font-weight: 800; cursor: pointer; transition: 0.2s;">😴 아기 재우기</button>
+                        <button class="box-main" onclick="addQuickBaton('새벽 수유 요청합니다')" style="padding: 12px; border-radius: 12px; font-size: 13px; font-weight: 800; cursor: pointer; transition: 0.2s; border:1px solid var(--border);">새벽 수유 대타</button>
+                        <button class="box-main" onclick="addQuickBaton('퇴근길 장보기')" style="padding: 12px; border-radius: 12px; font-size: 13px; font-weight: 800; cursor: pointer; transition: 0.2s; border:1px solid var(--border);">퇴근길 장보기</button>
+                        <button class="box-main" onclick="addQuickBaton('기저귀 처리반 SOS')" style="padding: 12px; border-radius: 12px; font-size: 13px; font-weight: 800; cursor: pointer; transition: 0.2s; border:1px solid var(--border);">기저귀 SOS</button>
+                        <button class="box-main" onclick="addQuickBaton('아기 재우기 교대')" style="padding: 12px; border-radius: 12px; font-size: 13px; font-weight: 800; cursor: pointer; transition: 0.2s; border:1px solid var(--border);">아기 재우기</button>
                     </div>
-                    <div style="display: flex; gap: 8px; width: 100%;">
-                        <input type="text" id="baton-text" class="box-main" placeholder="세부 미션을 입력하세요..." style="flex:1; min-width:0; box-sizing: border-box; padding:12px; border-radius:12px; font-size: 13px; font-weight: 600; outline:none;">
-                        <button onclick="addCustomBaton()" style="flex-shrink: 0; box-sizing: border-box; padding:12px 18px; background:var(--primary); color:#FFF; border:none; border-radius:12px; font-weight:800; font-size: 13px; cursor:pointer; white-space: nowrap;">부탁하기</button>
+
+                    <div style="display:flex; gap:8px;">
+                        <input type="text" id="baton-text" placeholder="세부 미션을 입력하세요.." style="flex:1; min-width:0; border:1px solid var(--border); border-radius:12px; padding:14px; font-size:14px; font-weight:800; background:var(--bg-main); color:var(--text-m); outline:none;">
+                        <!-- 🚨 버튼을 보라색(#7F77DD)으로 고정! -->
+                        <button onclick="addCustomBaton()" style="background:var(--primary); color:#FFF; border:none; border-radius:12px; padding:0 20px; font-weight:900; font-size:14px; cursor:pointer; flex-shrink:0; white-space:nowrap; box-shadow:0 4px 12px rgba(127,119,221,0.3);">부탁하기</button>
                     </div>
                 </div>
                 <!-- ✨ 다크모드 강제 테두리/배경색 방어용 투명 쉴드 추가! -->
-<div style="font-size: 14px; font-weight: 800; margin-bottom: 12px; padding: 0 4px; color: var(--text-s); border: none !important; background: transparent !important;">📋 실시간 바통터치 미션 보드</div>
+<div style="font-size: 13.5px; font-weight: 800; color: var(--text-s); margin-top: 8px; margin-bottom: 12px;">📋 실시간 바통터치 미션 보드</div>
 <div id="baton-list-container" style="display:flex; flex-direction:column; gap:10px; border: none !important; background: transparent !important;"></div>
             </div> <!-- panel-baton 닫기 -->
 

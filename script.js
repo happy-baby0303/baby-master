@@ -2816,12 +2816,15 @@ window.createBatonTask = createBatonTask;
 window.completeBaton = completeBaton;
 window.cancelBaton = cancelBaton;
 
+// ==========================================
+// 💌 1. 툴박스용 바통터치 미션 보드 렌더링 (1줄 짤림 방지 + 이모지 완전 삭제)
+// ==========================================
 function renderBatonTasks() {
     const container = document.getElementById('baton-list-container');
     if (!container) return;
     let records = JSON.parse(localStorage.getItem('tosil_baton_records')) || [];
     
-if (records.length === 0) {
+    if (records.length === 0) {
         container.innerHTML = `
             <div style="display: flex; align-items: center; justify-content: center; min-height: 110px; text-align: center; padding: 20px; background: var(--bg-sub); border-radius: 16px; border: 1px dashed var(--border);">
                 <div style="font-size: 14px; font-weight: 800; color: var(--text-s); line-height: 1.5;">현재 대기 중인 SOS 요청이 없습니다.<br>평화로운 공동 육아 중! 🤍</div>
@@ -2834,29 +2837,34 @@ if (records.length === 0) {
         let statusHtml = '';
         let actionBtn = '';
         
+        // 🚨 테마 간섭 회피용 RGB 코드 + 이모지 삭제
         if (r.status === 'requested') {
-            statusHtml = `<span style="background:#FFF0F1; color:#F04452; font-size:11px; font-weight:800; padding:4px 8px; border-radius:6px; border:1px solid #F04452; white-space:nowrap; display:inline-block; flex-shrink:0;">⏳ 요청중</span>`;
-            actionBtn = `<button onclick="acceptBaton('${r.id}')" style="padding:10px 14px; background:#3182F6; color:#FFF; border:none; border-radius:10px; font-size:12.5px; font-weight:800; cursor:pointer; flex-shrink:0; white-space:nowrap;">🫡 미션접수</button>`;
+            statusHtml = `<span style="background:rgb(255, 240, 241) !important; color:rgb(240, 68, 82) !important; font-size:11.5px; font-weight:900; padding:4px 8px; border-radius:6px; border:1px solid rgb(255, 227, 227) !important; white-space:nowrap; display:inline-block; flex-shrink:0;">요청중</span>`;
+            actionBtn = `<button onclick="acceptBaton('${r.id}')" style="padding:14px; background:rgb(127, 119, 221) !important; color:#FFF !important; border:none; border-radius:12px; font-size:13.5px; font-weight:900; cursor:pointer; flex-shrink:0; white-space:nowrap; box-shadow:0 4px 12px rgba(127,119,221,0.3);">미션접수</button>`;
         } else if (r.status === 'accepted') {
-            statusHtml = `<span style="background:#EBF4FF; color:#3182F6; font-size:11px; font-weight:800; padding:4px 8px; border-radius:6px; border:1px solid #3182F6; white-space:nowrap; display:inline-block; flex-shrink:0;">🏃‍♂️ 처리중</span>`;
-            actionBtn = `<button onclick="completeBaton('${r.id}')" style="padding:10px 14px; background:#00B37A; color:#FFF; border:none; border-radius:10px; font-size:12.5px; font-weight:800; cursor:pointer; flex-shrink:0; white-space:nowrap;">✅ 해결완료</button>`;
+            statusHtml = `<span style="background:rgb(235, 244, 255) !important; color:rgb(49, 130, 246) !important; font-size:11.5px; font-weight:900; padding:4px 8px; border-radius:6px; border:1px solid rgb(177, 214, 255) !important; white-space:nowrap; display:inline-block; flex-shrink:0;">처리중</span>`;
+            actionBtn = `<button onclick="completeBaton('${r.id}')" style="padding:14px; background:rgb(0, 179, 122) !important; color:#FFF !important; border:none; border-radius:12px; font-size:13.5px; font-weight:900; cursor:pointer; flex-shrink:0; white-space:nowrap; box-shadow:0 4px 12px rgba(0,179,122,0.3);">해결완료</button>`;
         }
 
-        let cancelBtn = `<button onclick="cancelBaton('${r.id}')" style="padding:10px 12px; background:#F2F5F8; color:#8B95A1; border:none; border-radius:10px; font-size:12.5px; font-weight:800; cursor:pointer; flex-shrink:0; white-space:nowrap; margin-right:6px;">취소</button>`;
-        let rewardHtml = (r.reward && r.reward !== "없음") ? `<div style="display:inline-block; margin-top:8px; background:#FFF9E6; color:#B78103; font-size:11.5px; font-weight:800; padding:5px 10px; border-radius:8px; border:1px solid #FFE58F;">🎁 약속된 보상: ${r.reward}</div>` : '';
+        let cancelBtn = `<button onclick="cancelBaton('${r.id}')" style="padding:14px; background:var(--bg-sub) !important; color:rgb(139, 149, 161) !important; border:none; border-radius:12px; font-size:13.5px; font-weight:800; cursor:pointer; flex-shrink:0; white-space:nowrap; margin-right:8px;">취소</button>`;
+        
+        // 보상 텍스트에서 이모지 제거 (✨, 🎁 등 제거)
+        let cleanReward = r.reward ? r.reward.replace(/[✨🎁]/g, '').trim() : '';
+        let rewardHtml = (cleanReward && cleanReward !== "없음") ? `<div style="display:inline-block; margin-top:8px; background:rgb(255, 249, 230) !important; color:rgb(183, 129, 3) !important; font-size:11.5px; font-weight:800; padding:5px 10px; border-radius:8px; border:1px solid rgb(255, 229, 143) !important;">보상: ${cleanReward}</div>` : '';
 
+        // 🚨 글자 잘림 방지 (word-break:keep-all, line-height 조절)
         html += `
-        <div class="timeline-item" style="background:#FFFFFF; border:1px solid var(--border); padding:16px; border-radius:16px; display:flex; justify-content:space-between; align-items:center; box-shadow:0 2px 8px rgba(0,0,0,0.01); margin-bottom:8px;">
-            <div style="display:flex; align-items:center; gap:12px; flex:1;">
-                <div style="flex:1;">
-                    <div style="font-size:14.5px; font-weight:800; color:var(--text-m); margin-bottom:6px; line-height:1.4;">${r.text}</div>
-                    <div style="display:flex; align-items:center; gap:6px; font-size:12px; color:var(--text-s);">
-                        ${statusHtml} <span style="opacity:0.6; white-space:nowrap;">⏱️ ${r.time}</span>
+        <div class="timeline-item" style="background:#FFFFFF; border:1px solid var(--border); padding:16px; border-radius:16px; display:flex; justify-content:space-between; align-items:center; box-shadow:0 2px 8px rgba(0,0,0,0.01); margin-bottom:8px;" data-theme-src="">
+            <div style="display:flex; align-items:center; gap:12px; flex:1; min-width:0;">
+                <div style="flex:1; min-width:0;">
+                    <div style="font-size:15px; font-weight:900; color:var(--text-m); margin-bottom:6px; line-height:1.4; word-break:keep-all;">${r.text}</div>
+                    <div style="display:flex; align-items:center; gap:6px; font-size:12px; color:var(--text-s); font-weight:600;">
+                        ${statusHtml} <span style="margin-left:2px;">${r.time}</span>
                     </div>
                     ${rewardHtml}
                 </div>
             </div>
-            <div style="margin-left:12px; display:flex; align-items:center;">
+            <div style="margin-left:12px; display:flex; align-items:center; flex-shrink:0;">
                 ${cancelBtn}
                 ${actionBtn}
             </div>
@@ -6205,7 +6213,7 @@ window.downloadReceipt = function() {
 };
 
 // ==========================================
-// 👁️ 영수증 버튼 숨기기/보여주기 검사관 (편지 ➔ 영수증 텍스트 패치 완료!)
+// 👁️ 영수증 버튼 숨기기/보여주기 검사관 (가로형 다이어트 원페이지 패치!)
 // ==========================================
 window.checkReceiptVisibility = function() {
     const today = new Date();
@@ -6217,19 +6225,30 @@ window.checkReceiptVisibility = function() {
     const receiptBtn = document.getElementById('receipt-banner-btn');
     if (!receiptBtn) return;
 
-    // 🚨 기존 "오늘 편지 다시 읽기" HTML을 "영수증 발급" 감성으로 완벽하게 강제 덮어쓰기!
+    // 🚨 뚱뚱했던 세로형 영수증을 날씬한 가로형 띠 배너로 다이어트! (스크롤 원천 차단)
     receiptBtn.innerHTML = `
-        <div style="font-size: 28px; margin-bottom: 8px;">🧾</div>
-        <div style="font-size: 16px; font-weight: 900; color: var(--text-m); margin-bottom: 4px;">오늘의 육아 영수증 발급</div>
-        <div style="font-size: 13px; font-weight: 600; color: var(--text-s);">오늘 하루도 정말 고생 많으셨어요 🤍</div>
+        <div style="display:flex; align-items:center; justify-content:space-between; width:100%;">
+            <div style="display:flex; align-items:center; gap:14px;">
+                <div style="font-size: 26px;">🧾</div>
+                <div style="text-align:left;">
+                    <div style="font-size: 14.5px; font-weight: 900; color: var(--text-m); margin-bottom: 2px;">오늘의 육아 영수증 발급</div>
+                    <div style="font-size: 11.5px; font-weight: 600; color: var(--text-s);">오늘 하루도 정말 고생 많으셨어요 🤍</div>
+                </div>
+            </div>
+            <div style="color:var(--text-sub); font-size:15px; font-weight:900; padding-right:4px;">〉</div>
+        </div>
     `;
     
-    // 버튼 자체의 레이아웃을 쾌적하게 꽉 잡아줍니다
+    // 버튼 자체의 레이아웃을 가로 배열로 강제 조정 및 패딩 축소
     receiptBtn.style.display = 'flex';
-    receiptBtn.style.flexDirection = 'column';
+    receiptBtn.style.flexDirection = 'row';
     receiptBtn.style.alignItems = 'center';
     receiptBtn.style.justifyContent = 'center';
-    receiptBtn.style.padding = '24px 20px';
+    receiptBtn.style.padding = '18px 20px';
+    receiptBtn.style.borderRadius = '20px';
+    receiptBtn.style.background = 'var(--bg-card)';
+    receiptBtn.style.border = '1px solid var(--border)';
+    receiptBtn.style.boxShadow = '0 4px 12px rgba(0,0,0,0.03)';
 
     // 조건: 기록이 3개 이상 '이면서(AND)' 저녁 8시가 넘었을 때만 노출!
     if (todayRecordsCount >= 3 && today.getHours() >= 20) {
@@ -8324,25 +8343,22 @@ window.updateDadBriefing = function() {
 }; // 🚨 여기가 window.updateDadBriefing 함수를 끝내는 진짜 괄호입니다! 절대 지워지면 안 됩니다!
 
 
-// 5. 아빠 모드: 홈 화면용 바통터치 리스트 렌더링
+// ==========================================
+// 💌 2. 아빠 모드: 홈 화면용 바통터치 리스트 렌더링 (1줄 짤림 방지 + 이모지 완전 삭제)
+// ==========================================
 window.renderHomeBatonList = function() {
     const container = document.getElementById('home-dad-baton-list');
     if (!container) return;
     
-        let records = JSON.parse(localStorage.getItem('tosil_baton_records')) || [];
-
-    // 홈은 "짝꿍이 나에게 부탁한 것"만 보여준다.
-    // 내가 보낸 건 툴박스 미션보드에서 취소만 할 수 있으면 된다.
-    const myUid = (window.auth && window.auth.currentUser) ? window.auth.currentUser.uid
-                : (localStorage.getItem('firebase_uid') || '');
+    let records = JSON.parse(localStorage.getItem('tosil_baton_records')) || [];
+    const myUid = (window.auth && window.auth.currentUser) ? window.auth.currentUser.uid : (localStorage.getItem('firebase_uid') || '');
 
     let activeRecords = records.filter(r =>
         (r.status === 'requested' || r.status === 'accepted') &&
-        (!r.by || r.by !== myUid)          // by 가 없는 옛날 기록은 그대로 보여준다
+        (!r.by || r.by !== myUid)
     );
 
-if (activeRecords.length === 0) {
-        // 🌟 [니치 패치] 촌스러운 점선(dashed) 테두리 삭제! 은은한 회색 배경에 이모지 크기 조정
+    if (activeRecords.length === 0) {
         container.innerHTML = `
             <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 32px 20px; background: var(--bg-sub); border-radius: 20px; border: none; text-align: center;">
                 <div style="font-size: 32px; margin-bottom: 12px; filter: grayscale(20%);">🤍</div>
@@ -8354,25 +8370,28 @@ if (activeRecords.length === 0) {
 
     let html = '';
     activeRecords.forEach(r => {
+        // 🚨 테마 간섭 회피용 RGB 코드 + 이모지 삭제
         let statusHtml = r.status === 'requested' 
-            ? `<span style="background:#FFF0F1; color:#F04452; font-size:11px; font-weight:800; padding:4px 8px; border-radius:6px; border:1px solid #F04452;">⏳ 요청중</span>`
-            : `<span style="background:#EBF4FF; color:#3182F6; font-size:11px; font-weight:800; padding:4px 8px; border-radius:6px; border:1px solid #3182F6;">🏃‍♂️ 처리중</span>`;
+            ? `<span style="background:rgb(255, 240, 241) !important; color:rgb(240, 68, 82) !important; font-size:11.5px; font-weight:900; padding:4px 8px; border-radius:6px; border:1px solid rgb(255, 227, 227) !important;">요청중</span>`
+            : `<span style="background:rgb(235, 244, 255) !important; color:rgb(49, 130, 246) !important; font-size:11.5px; font-weight:900; padding:4px 8px; border-radius:6px; border:1px solid rgb(177, 214, 255) !important;">처리중</span>`;
             
         let actionBtn = r.status === 'requested'
-            ? `<button onclick="acceptBaton('${r.id}'); renderHomeBatonList(); if(typeof renderBatonTasks==='function') renderBatonTasks();" style="padding:10px 14px; background:#3182F6; color:#FFF; border:none; border-radius:10px; font-size:12.5px; font-weight:800; cursor:pointer;">🫡 미션접수</button>`
-            : `<button onclick="completeBaton('${r.id}'); renderHomeBatonList(); if(typeof renderBatonTasks==='function') renderBatonTasks(); window.updateDadBriefing();" style="padding:10px 14px; background:#00B37A; color:#FFF; border:none; border-radius:10px; font-size:12.5px; font-weight:800; cursor:pointer;">✅ 해결완료</button>`;
+            ? `<button onclick="acceptBaton('${r.id}'); renderHomeBatonList(); if(typeof renderBatonTasks==='function') renderBatonTasks();" style="padding:14px; background:rgb(127, 119, 221) !important; color:#FFF !important; border:none; border-radius:12px; font-size:13.5px; font-weight:900; cursor:pointer; box-shadow:0 4px 12px rgba(127,119,221,0.3);">미션접수</button>`
+            : `<button onclick="completeBaton('${r.id}'); renderHomeBatonList(); if(typeof renderBatonTasks==='function') renderBatonTasks(); window.updateDadBriefing();" style="padding:14px; background:rgb(0, 179, 122) !important; color:#FFF !important; border:none; border-radius:12px; font-size:13.5px; font-weight:900; cursor:pointer; box-shadow:0 4px 12px rgba(0,179,122,0.3);">해결완료</button>`;
 
-        let rewardHtml = (r.reward && r.reward !== "없음") ? `<div style="margin-top:6px; color:#B78103; font-size:11.5px; font-weight:800;">🎁 보상: ${r.reward}</div>` : '';
+        let cleanReward = r.reward ? r.reward.replace(/[✨🎁]/g, '').trim() : '';
+        let rewardHtml = (cleanReward && cleanReward !== "없음") ? `<div style="margin-top:6px; color:rgb(183, 129, 3) !important; font-size:11.5px; font-weight:800; background:rgb(255, 249, 230) !important; padding:4px 8px; border-radius:6px; display:inline-block; border:1px solid rgb(255, 229, 143) !important;">보상: ${cleanReward}</div>` : '';
 
-               html += `
-        <div style="background:var(--bg-card); border:1px solid var(--border); border-radius:16px; padding:15px 16px; margin-bottom:10px;">
-            <div style="font-size:14px; font-weight:800; color:var(--text-m); line-height:1.45; word-break:keep-all; margin-bottom:9px;">${r.text}</div>
+        // 🚨 글자 잘림 방지 (word-break:keep-all, line-height 조절)
+        html += `
+        <div style="background:var(--bg-card); border:1px solid var(--border); border-radius:16px; padding:15px 16px; margin-bottom:10px;" data-theme-src="">
+            <div style="font-size:15px; font-weight:900; color:var(--text-m); margin-bottom:9px; line-height:1.4; word-break:keep-all;">${r.text}</div>
             ${rewardHtml}
-            <div style="display:flex; align-items:center; justify-content:space-between; gap:10px; margin-top:10px;">
-                <div style="display:flex; align-items:center; gap:7px; font-size:11.5px; font-weight:700; color:var(--text-sub); min-width:0;">
-                    ${statusHtml}<span style="white-space:nowrap;">⏱️ ${r.time}</span>
+            <div style="display:flex; justify-content:space-between; align-items:center; gap:8px; margin-top:16px;">
+                <div style="display:flex; align-items:center; gap:6px; font-size:11.5px; font-weight:700; color:var(--text-sub); min-width:0;">
+                    ${statusHtml}<span style="margin-left:2px; font-weight:600;">${r.time}</span>
                 </div>
-                <div style="flex-shrink:0;">${actionBtn}</div>
+                <div style="display:flex; gap:8px; align-items:center;"><button onclick="cancelBaton('${r.id}')" style="padding:14px; background:var(--bg-sub) !important; color:rgb(139, 149, 161) !important; border:none; border-radius:12px; font-size:13.5px; font-weight:800; cursor:pointer; flex-shrink:0;">거절</button>${actionBtn}</div>
             </div>
         </div>`;
     });
