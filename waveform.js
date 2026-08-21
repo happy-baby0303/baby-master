@@ -220,7 +220,8 @@
             html2canvas(stage, { scale: 1, backgroundColor: "#F8F6F4", useCORS: true, logging: false })
             .then(function (canvas) {
                 // 🚨 캔버스를 덩어리(Blob)로 변환해서 모바일 브라우저 공유 기능에 태움
-                canvas.toBlob(function(blob) {
+                    canvas.toBlob(function(blob) {
+                    if (!blob) { stage.remove(); return toast("저장 중 문제가 생겼어요"); }   // 👈 추가
                     var fileName = babyName() + "_" + title + "_소리엽서.png";
                     var isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
                     var file = new File([blob], fileName, { type: "image/png" });

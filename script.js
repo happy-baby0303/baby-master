@@ -10223,7 +10223,19 @@ window.unlinkKakao = function() {
                 try {
                     const deleteUserAccount = window.httpsCallable(window.functions, 'deleteUserAccount');
                     const myKakaoId = localStorage.getItem('kakao_id');
-                    await deleteUserAccount({ kakaoId: myKakaoId });
+
+                    // 짝꿍이 있으면, 내가 올린 사진까지 지울지 물어본다.
+                    // 지우면 짝꿍의 배냇함에서도 사라진다.
+                    let purgeUploads = false;
+                    if (localStorage.getItem('family_sync_code')) {
+                        purgeUploads = confirm(
+                            "내가 올린 사진과 목소리도 함께 지울까요?\n\n" +
+                            "[확인]  전부 삭제합니다 (짝꿍의 배냇함에서도 사라져요)\n" +
+                            "[취소]  짝꿍의 배냇함에는 남겨둡니다"
+                        );
+                    }
+
+                    await deleteUserAccount({ kakaoId: myKakaoId, purgeUploads: purgeUploads });
                     console.log("✅ 서버 계정 삭제 완료");
                 } catch(e) {
                     console.error("서버 계정 삭제 실패:", e);

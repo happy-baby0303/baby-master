@@ -143,7 +143,10 @@
         var code = syncCode();
         if (!code || !window.db || typeof window.setDoc !== "function") return;
         try {
-            await window.setDoc(window.doc(window.db, "notes_" + code + suffix(), "status"), { days: loadIndex() });
+                await window.setDoc(window.doc(window.db, "notes_" + code + suffix(), "status"), {
+                days: loadIndex(),
+                deleted: (window.Grave ? window.Grave.list("note") : {})   // 👈 지운 목록도 같이
+            });
         } catch (e) { console.warn("[한 줄] 동기화 실패", e); }
     };
 
@@ -155,7 +158,9 @@
 
         var u = window.onSnapshot(window.doc(window.db, "notes_" + code + suffix(), "status"), function (snap) {
             if (!snap.exists()) return;
-            var remote = (snap.data() || {}).days || {};
+            var data = snap.data() || {};
+            var remote = data.days || {};
+            if (window.Grave) window.Grave.merge("note", data.deleted);   // 👈 짝꿍이 지운 것 받아오기
             var local = loadIndex(), merged = {};
 
             Object.keys(local).concat(Object.keys(remote)).forEach(function (k) {
@@ -163,6 +168,7 @@
                 var seen = {}, out = [];
                 (local[k] || []).concat(remote[k] || []).forEach(function (n) {
                     if (!n || !n.id) return;
+                    if (window.Grave && window.Grave.has("note", n.id)) return;   // 👈 지운 건 되살리지 않기
                     // 같은 글이 양쪽에 있으면 나중에 고친 쪽을 남긴다
                     if (seen[n.id]) {
                         if ((n.ts || 0) > (seen[n.id].ts || 0)) {
@@ -272,7 +278,8 @@
     window.deleteNote = function () {
         var k = editing.key, id = editing.id;
         if (!id) return;
-        var go = function () {
+            var go = function () {
+            if (window.Grave) window.Grave.add("note", id);   // 👈 묘비 세우기
             dropNote(k, id);
             window.syncNotesToFirebase();
             window.closeNoteSheet();

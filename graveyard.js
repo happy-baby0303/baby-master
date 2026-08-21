@@ -86,7 +86,7 @@
 
         /* ---------- 점검용 ---------- */
         debug: function () {
-            ["photo", "voice", "seal"].forEach(function (k) {
+                       ["photo", "voice", "seal", "note", "word"].forEach(function (k) {
                 var o = load(k);
                 console.log("[묘비] " + k + ": " + Object.keys(o).length + "개");
             });

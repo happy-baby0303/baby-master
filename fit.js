@@ -22,10 +22,11 @@
         "[data-fit]"
     ];
 
-    function fit(el) {
+      function fit(el) {
         if (!el || !el.parentNode) return;
 
-        // 원래 상태로 되돌린 뒤 다시 잰다 (안 그러면 한 번 줄어든 채로 굳는다)
+        el.setAttribute("data-theme-applied", "true");   // 👈 추가: theme.js야 이건 무시해
+
         el.style.whiteSpace = "nowrap";
         el.style.display = el.style.display || "block";
         el.style.transformOrigin = "center center";
@@ -37,11 +38,11 @@
 
         var k = room / need;
         if (k < MIN) {
-            // 너무 작아질 바엔 줄바꿈을 허용한다
             el.style.whiteSpace = "";
             el.style.transform = "";
             return;
         }
+        el.setAttribute("data-theme-applied", "true");   // 👈 추가 (두 번째 쓰기 전)
         el.style.transform = "scale(" + (Math.floor(k * 100) / 100) + ")";
     }
 
