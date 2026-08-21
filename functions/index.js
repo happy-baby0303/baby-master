@@ -1,5 +1,5 @@
 /**
- * 육아메이트 Cloud Functions — 전체 2세대(v2)
+ * 배냇함 Cloud Functions — 전체 2세대(v2)
  * ------------------------------------------------------------------
  * 📍 리전 배치
  *  - kakaoCustomAuth  : us-central1     (앱의 getFunctions(app) 와 짝)
@@ -80,8 +80,10 @@ exports.sendFamilyPush = onCall(SEOUL, async (request) => {
         .collection("users")
         .where("firebase_uid", "in", chunk)
         .get();
-      snap.forEach((doc) => {
-        const t = doc.data().fcm_token;
+           snap.forEach((doc) => {
+        const d = doc.data();
+        if (d.push_baton === false) return;   // 이 사람은 바통터치 알림을 껐다
+        const t = d.fcm_token;
         if (t) tokenMap.set(t, doc.id);
       });
     }
@@ -411,5 +413,18 @@ exports.bedtimeReminder = onSchedule(
     }
 
     logger.info("육퇴 알림 발송", { bucket, families: snap.size, sent });
+  }
+);
+
+const { onDocumentCreated } = require("firebase-functions/v2/firestore");
+
+/* 대기명단에 새 사람이 들어오면 카운터를 올린다 */
+exports.countWaitlist = onDocumentCreated(
+  { document: "waitlist/{docId}", region: "asia-northeast3" },
+  async () => {
+    await admin.firestore().collection("app_settings").doc("global_notice").set(
+      { waitlist_count: admin.firestore.FieldValue.increment(1) },
+      { merge: true }
+    );
   }
 );
