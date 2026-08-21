@@ -192,7 +192,10 @@
         var code = syncCode();
         if (!code || !window.db || typeof window.setDoc !== "function") return;
         try {
-            await window.setDoc(window.doc(window.db, "voices_" + code + suffix(), "status"), { days: loadIndex() });
+                await window.setDoc(window.doc(window.db, "voices_" + code + suffix(), "status"), {
+                days: loadIndex(),
+                deleted: (window.Grave ? window.Grave.list("voice") : {})   // 👈 지운 목록도 같이
+            });
         } catch (e) { console.warn("[목소리] 동기화 실패", e); }
     };
 
@@ -204,7 +207,9 @@
 
         var u = window.onSnapshot(window.doc(window.db, "voices_" + code + suffix(), "status"), function (snap) {
             if (!snap.exists()) return;
-            var remote = (snap.data() || {}).days || {};
+            var data = snap.data() || {};
+            var remote = data.days || {};
+            if (window.Grave) window.Grave.merge("voice", data.deleted);   // 👈 짝꿍이 지운 것 받아오기
             var local = loadIndex(), merged = {};
 
             Object.keys(local).concat(Object.keys(remote)).forEach(function (k) {
@@ -212,6 +217,7 @@
                 var seen = {}, out = [];
                 (local[k] || []).concat(remote[k] || []).forEach(function (v) {
                     if (!v || !v.id || seen[v.id]) return;
+                    if (window.Grave && window.Grave.has("voice", v.id)) return;   // 👈 지운 건 되살리지 않기
                     seen[v.id] = 1; out.push(v);
                 });
                 out.sort(function (a, b) { return (a.ts || 0) - (b.ts || 0); });
@@ -570,6 +576,7 @@
             if (v && window.deleteObject && window.storage && window.storageRef && v.path) {
                 try { window.deleteObject(window.storageRef(window.storage, v.path)); } catch (e) {}
             }
+            if (window.Grave) window.Grave.add("voice", id);   // 👈 묘비 세우기
             dropVoice(key, id);
             window.syncVoicesToFirebase();
             repaint();
@@ -789,42 +796,54 @@
 })();
 
 // ==========================================
-// 💾 [신규] 실제 음성 파일(오디오) 모바일 다운로드 엔진
+// 💾 [수정완료] 실제 음성 파일 모바일 다운로드 엔진 (아이폰 완벽 호환)
 // ==========================================
 window.downloadVoiceAudio = async function(key, id) {
     var v = window.getDayVoices(key).filter(function (x) { return x.id === id; })[0];
     if (!v || !v.url) return toast("저장할 소리 파일을 찾지 못했어요.");
 
-    toast("음성 파일을 가져오는 중이에요...");
+    toast("음성 파일을 준비 중이에요...");
     try {
-        // 모바일 브라우저에서 바로 재생되지 않고 '강제 다운로드' 되도록 Blob 변환
+        // 1. 파이어베이스에서 오디오 파일 가져오기
         const response = await fetch(v.url);
         const blob = await response.blob();
-        const blobUrl = window.URL.createObjectURL(blob);
 
-        const a = document.createElement("a");
-        a.style.display = 'none';
-        a.href = blobUrl;
-        
-        // 파일명 생성 (예: 지선이_목소리_20260817.webm)
+        // 2. 파일명 예쁘게 만들기
         const bName = localStorage.getItem("tosil_babyName") || "우리아기";
         const dateStr = key.replace(/-/g, "");
         const ext = v.url.includes('.m4a') || (v.path && v.path.includes('.m4a')) ? 'm4a' : 'webm';
-        a.download = bName + "_목소리_" + dateStr + "." + ext;
-        
-        document.body.appendChild(a);
-        a.click();
-        
-        setTimeout(() => {
-            document.body.removeChild(a);
-            window.URL.revokeObjectURL(blobUrl);
-        }, 100);
-        
-        toast("💾 아기의 목소리가 내 폰에 저장되었습니다!");
+        const fileName = `${bName}_목소리_${dateStr}.${ext}`;
+
+        // 3. 파일 객체로 변환
+        const file = new File([blob], fileName, { type: blob.type });
+
+        // 🚀 4. 아이폰/갤럭시 네이티브 공유창 띄우기 (이게 모바일 무적입니다)
+        if (navigator.canShare && navigator.canShare({ files: [file] })) {
+            await navigator.share({
+                files: [file],
+                title: '우리아기 옹알이',
+                text: '배냇함에 보관된 우리 아기 목소리예요 🤍'
+            });
+            toast("✅ 목소리 파일이 안전하게 저장/공유되었습니다!");
+        } else {
+            // PC나 구형 브라우저를 위한 강제 다운로드 (기존 방식 유지)
+            const blobUrl = window.URL.createObjectURL(blob);
+            const a = document.createElement("a");
+            a.style.display = 'none';
+            a.href = blobUrl;
+            a.download = fileName;
+            document.body.appendChild(a);
+            a.click();
+            setTimeout(() => {
+                document.body.removeChild(a);
+                window.URL.revokeObjectURL(blobUrl);
+            }, 100);
+            toast("💾 아기의 목소리가 다운로드 폴더에 저장되었습니다!");
+        }
     } catch (e) {
         console.error("[음성 다운로드 에러]", e);
-        // 다운로드 차단 시 강제로 새 창을 열어 재생/저장 유도
+        // CORS(보안)에 걸려 다운로드가 막히면, 최후의 수단으로 새 창에서 오디오를 틀어줍니다.
         window.open(v.url, '_blank');
-        toast("보안 설정으로 인해 새 창에서 엽니다.");
+        toast("보안 설정으로 인해 새 창에서 오디오를 엽니다.");
     }
 };

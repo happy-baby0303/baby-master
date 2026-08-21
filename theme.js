@@ -226,6 +226,7 @@ body.dark-mode select option { background: #221E1A; color: #EDE7E1; }
     function one(el) {
         if (!el || el.nodeType !== 1 || SKIP[el.tagName]) return;
         if (el.closest && el.closest("#mb-photo-viewer")) return;   // 사진 뷰어는 원래 어둡다
+        if (el.closest && el.closest("#premium-paywall-modal, #vip-modal-overlay")) return;   // 👈 결제 화면은 원래 색 그대로
 
         var src = el.getAttribute("data-theme-src");
         if (src === null) {
@@ -235,7 +236,11 @@ body.dark-mode select option { background: #221E1A; color: #EDE7E1; }
         }
 
         var next = convert(src);
-        if (next !== el.getAttribute("style")) el.setAttribute("style", next);
+        if (next !== el.getAttribute("style")) {
+            // 🚨 [추가됨] theme.js가 바꾼 색상이라는 꼬리표(마커) 달기
+            el.setAttribute("data-theme-applied", "true"); 
+            el.setAttribute("style", next);
+        }
     }
 
     function paint(root) {
@@ -261,7 +266,19 @@ body.dark-mode select option { background: #221E1A; color: #EDE7E1; }
             for (var i = 0; i < muts.length; i++) {
                 var m = muts[i];
                 if (m.type === "childList" && m.addedNodes.length) { schedule(); return; }
-                if (m.type === "attributes" && m.attributeName === "style") { schedule(); return; }
+                
+                // 🚨 [변경됨] 유저가 클릭해서 바뀐 색상이면 메모장(캐시)을 리셋하도록 수정!
+                if (m.type === "attributes" && m.attributeName === "style") {
+                    if (m.target.getAttribute("data-theme-applied") === "true") {
+                        // theme.js가 칠한 거면 마커만 지우고 무시 (무한루프 방지)
+                        m.target.removeAttribute("data-theme-applied");
+                    } else {
+                        // 외부 JS(유저 클릭)가 바꾼 거면 이전 메모장 삭제 후 새 색상 기억하기!
+                        m.target.removeAttribute("data-theme-src"); 
+                        schedule();
+                    }
+                    return;
+                }
             }
         }).observe(document.body, {
             childList: true, subtree: true,

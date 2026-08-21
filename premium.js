@@ -1,23 +1,29 @@
 /* ============================================================
-   육아메이트 — 프리미엄 (premium.js)
+   육아메이트 — 프리미엄 (premium.js)  [정책 통일본]
 
-   script.js 12974행에 window.isPremiumUser() 가 이미 있다.
-   여기서 판별을 새로 만들지 않는다. 그걸 그대로 쓴다.
+   고친 것 넷
+     1. 목소리 — 무료 3개. voice.js 와 말이 맞게 했다.
+        (예전엔 여기선 "프리미엄 전용", voice.js 에선 "무료 3개" 였다.
+         자물쇠를 보고 나간 사람은 공짜인 걸 끝내 몰랐다)
+     2. 가족 초대 — 무료로 연다. 짝꿍 연동은 매출이 아니라 유입이다.
+        막으면 바통터치 푸시가 통째로 죽는다.
+        대신 조부모(3인 이상)를 프리미엄으로 옮겼다.
+     3. 포토북 — 덮어쓰지 않고 감싼다.
+        photobook.js 가 먼저 로드되므로 예전 코드는 진짜 구현을 지우고 있었다.
+     4. 결제 화면 하나로 — startPremium 은 script.js 의 showPaywall 로 간다.
+        페이월이 셋이면 사용자는 값을 못 믿는다.
 
-   원칙 둘
-     1. 서버비가 사용량에 비례하는 건 팔지 않는다
-     2. 잠긴 건 미리 보여준다 — 눌러야 알게 되면 배신감이 든다
+   판별은 script.js 의 window.isPremiumUser() 하나만 쓴다.
 
-   무료로 여는 것 — 도감 100가지와 그 사진 100장.
-   그게 이 앱의 니치고, 채워질수록 앱을 못 지운다.
-
-   index.html 에서 photos.js 다음에 로드하세요.
+   index.html 에서 photobook.js 다음에 로드하세요.
    ============================================================ */
 (function () {
     'use strict';
 
-    var FREE_PER_DAY = 1;
-    var PRO_PER_DAY  = 3;
+    var FREE_PHOTO_PER_DAY = 1;
+    var PRO_PHOTO_PER_DAY  = 3;
+    var FREE_VOICE         = 3;    // ⚠️ voice.js 의 FREE_MAX 와 반드시 같아야 한다
+    var FREE_FAMILY        = 2;    // 부모 둘까지 무료
 
     var GOLD    = "#B98A2E";
     var GOLD_BG = "rgba(185,138,46,0.12)";
@@ -50,21 +56,26 @@
     };
 
     window.photoCapPerDay = function () {
-        return window.isPremium() ? PRO_PER_DAY : FREE_PER_DAY;
+        return window.isPremium() ? PRO_PHOTO_PER_DAY : FREE_PHOTO_PER_DAY;
     };
 
-    /* ---------- 잠긴 것들 ---------- */
+    window.voiceCapTotal = function () {
+        return window.isPremium() ? Infinity : FREE_VOICE;
+    };
+
+    /* ---------- 잠긴 것들 ----------
+       문구는 실제 동작과 한 글자도 어긋나면 안 된다. -------- */
 
     var FEATURES = {
         photo: {
             icon: "📷",
-            title: "하루 사진 " + PRO_PER_DAY + "장",
+            title: "하루 사진 " + PRO_PHOTO_PER_DAY + "장",
             line: "무료는 하루 한 장이에요. 프리미엄이면 세 장까지 담깁니다."
         },
         voice: {
             icon: "🎙️",
-            title: "목소리 담기",
-            line: "옹알이는 두 달이면 사라져요. 사진은 다들 남기는데 소리는 아무도 안 남깁니다."
+            title: "목소리 무제한",
+            line: "무료로 " + FREE_VOICE + "개까지 담을 수 있어요. 옹알이는 두 달이면 사라집니다."
         },
         book: {
             icon: "📖",
@@ -73,8 +84,8 @@
         },
         family: {
             icon: "👵",
-            title: "가족 초대",
-            line: "할머니 할아버지도 " + babyName() + "의 배냇함을 볼 수 있어요."
+            title: "조부모 초대",
+            line: "부모 두 분은 무료예요. 할머니 할아버지까지 " + babyName() + "의 배냇함을 볼 수 있어요."
         }
     };
 
@@ -130,18 +141,24 @@
             '</div>' +
             '<div style="background:var(--bg-sub); border-radius:18px; padding:6px 16px; margin-bottom:20px;">' + rows + '</div>' +
             '<div onclick="window.startPremium()" style="text-align:center; padding:16px; background:' + GOLD + '; color:#FFF; border-radius:15px; font-size:15px; font-weight:800; cursor:pointer;">프리미엄 보러가기</div>' +
-            '<div style="text-align:center; font-size:11.5px; font-weight:600; color:var(--text-sub); margin-top:12px; line-height:1.6;">도감 100가지와 그 사진은 무료로 계속 담을 수 있어요</div>' +
+            '<div style="text-align:center; font-size:11.5px; font-weight:600; color:var(--text-sub); margin-top:12px; line-height:1.6;">도감 100가지와 그 사진, 짝꿍 연동은 무료로 계속 쓸 수 있어요</div>' +
         '</div>';
 
         document.body.appendChild(wrap);
     };
 
-    // 기존 VIP 모달로 넘긴다. 결제 화면이 두 개면 안 된다.
+    /* ---------- 결제 화면은 하나 ----------
+       진입점은 여러 개여도 도착지는 하나여야 값을 믿는다. -------- */
+
     window.startPremium = function () {
         var s = document.getElementById("upsell-sheet");
         if (s) s.remove();
+
+        if (typeof window.showPaywall === "function") { window.showPaywall(); return; }
+
         var vip = document.getElementById("vip-modal-overlay");
         if (vip) { vip.style.display = "flex"; return; }
+
         toast("곧 열려요. 준비되면 가장 먼저 알려드릴게요");
     };
 
@@ -153,7 +170,7 @@
         var have = (typeof window.getLoosePhotos === "function") ? window.getLoosePhotos(k).length : 0;
         if (have >= window.photoCapPerDay()) {
             if (!window.isPremium()) return window.openUpsell("photo");
-            toast("이 날은 이미 " + PRO_PER_DAY + "장이 담겨 있어요");
+            toast("이 날은 이미 " + PRO_PHOTO_PER_DAY + "장이 담겨 있어요");
             return;
         }
         if (typeof origAddDay === "function") return origAddDay.apply(this, arguments);
@@ -177,35 +194,58 @@
 
     // 도감 사진은 잠그지 않는다. 그게 이 앱의 이유니까.
 
-    /* ---------- 아직 안 만든 것도 미리 막고 알린다 ---------- */
+    /* ---------- 포토북 : 덮어쓰지 않고 감싼다 ----------
+       photobook.js 가 먼저 로드된다. 예전 코드는 진짜 구현을 지우고 있었다. -------- */
 
-    window.addVoiceNote     = function () { window.requirePremium("voice"); };
-    window.exportMemoryBook = function () { window.requirePremium("book"); };
-    window.inviteFamily     = function () { window.requirePremium("family"); };
+    var origBook = window.exportMemoryBook;
+    window.exportMemoryBook = function () {
+        if (!window.requirePremium("book")) return;
+        if (typeof origBook === "function") return origBook.apply(this, arguments);
+        toast("포토북을 준비하고 있어요");
+    };
 
-    /* ---------- 배냇함에 두 자리 미리 만들어두기 ----------
+    /* ---------- 가족 : 부모 둘은 무료 ----------
+       짝꿍 연동을 막으면 바통터치 푸시가 통째로 죽는다.
+       초대는 매출이 아니라 유입이다. -------- */
+
+    window.familyCapTotal = function () {
+        return window.isPremium() ? 8 : FREE_FAMILY;
+    };
+
+    // 세 번째 사람부터만 프리미엄
+    window.requireFamilySlot = function (currentCount) {
+        var n = Number(currentCount) || 0;
+        if (n < window.familyCapTotal()) return true;
+        if (window.isPremium()) { toast("초대 인원이 가득 찼어요"); return false; }
+        window.openUpsell("family");
+        return false;
+    };
+
+    /* ---------- 배냇함에 두 자리 ----------
        "곧 나와요" 보다 "프리미엄이에요" 가 낫다.
-       전자는 기다리게 하고, 후자는 결제하게 한다. -------- */
+       전자는 기다리게 하고, 후자는 결제하게 한다.
+       단, 무료로 쓸 수 있는 만큼 남아 있으면 자물쇠를 걸지 않는다. -------- */
 
     window.renderPremiumRow = function () {
         var pro = window.isPremium();
-          var row = function (key, icon, label, sub) {
-            var act = key === "book"  ? "window.exportMemoryBook()"
-                    : key === "voice" ? "window.openVoiceSheet()"
-                    : "window.requirePremium('" + key + "')";
-            var f = FEATURES[key];
+        var voiceN = (typeof window.voiceCount === "function") ? window.voiceCount() : 0;
+        var voiceLocked = !pro && voiceN >= FREE_VOICE;
+
+        var tile = function (act, icon, label, sub, locked) {
             return '<div onclick="' + act + '" ' +
                 'style="flex:1; background:var(--bg-card); border:1px solid var(--border); border-radius:18px; ' +
-                'padding:15px 12px; text-align:center; cursor:pointer;' + (pro ? '' : ' opacity:0.88;') + '">' +
+                'padding:15px 12px; text-align:center; cursor:pointer;' + (locked ? ' opacity:0.88;' : '') + '">' +
                 '<div style="font-size:21px; margin-bottom:7px;">' + icon + '</div>' +
                 '<div style="font-size:12.5px; font-weight:800; color:var(--text-m); letter-spacing:-0.3px; margin-bottom:5px;">' + esc(label) + '</div>' +
-                (pro ? '<div style="font-size:10.5px; font-weight:700; color:var(--text-sub);">' + esc(sub) + '</div>'
-                     : window.lockChip("프리미엄")) +
+                (locked ? window.lockChip("프리미엄")
+                        : '<div style="font-size:10.5px; font-weight:700; color:var(--text-sub);">' + esc(sub) + '</div>') +
             '</div>';
         };
+
         return '<div style="display:flex; gap:10px; margin-bottom:14px;">' +
-            row("voice", "🎙️", "목소리", "옹알이 담기") +
-            row("book",  "📖", "포토북", "한 권으로 내보내기") +
+            tile("window.openVoiceSheet()", "🎙️", "목소리",
+                 pro ? "옹알이 담기" : (FREE_VOICE - voiceN) + "개 더 담을 수 있어요", voiceLocked) +
+            tile("window.exportMemoryBook()", "📖", "포토북", "한 권으로 내보내기", !pro) +
         '</div>';
     };
 
@@ -216,5 +256,7 @@
         console.log("  요금제 캐시:", localStorage.getItem("tosil_plan_cache"));
         console.log("  마스터:", localStorage.getItem("tosil_is_master"));
         console.log("하루 사진:", window.photoCapPerDay() + "장");
+        console.log("목소리 한도:", window.voiceCapTotal());
+        console.log("가족 인원:", window.familyCapTotal() + "명");
     };
 })();

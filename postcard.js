@@ -156,6 +156,12 @@
         '</div>';
     }
 
+    /* ---------- 굽기 ----------
+       예전에는 <a download> 하나로 끝냈다. PC 에서는 되지만
+       아이폰 사파리와 홈 화면 PWA 에서는 download 속성이 무시된다.
+       그래서 파형 엽서와 같은 방식으로 바꿨다 — 캔버스를 파일로 만들어
+       기기의 공유 시트에 태운다. 안 되는 기기에서만 예전 방식으로 내린다. -------- */
+
     function bake(o, filename) {
         if (typeof html2canvas === "undefined") {
             return toast("이미지 저장 라이브러리를 불러오지 못했어요");
@@ -172,16 +178,50 @@
         toast("엽서를 굽고 있어요…");
 
         setTimeout(function () {
-            html2canvas(stage, { scale: 1, backgroundColor: "#F8F6F4", useCORS: true })
+            html2canvas(stage, { scale: 1, backgroundColor: "#F8F6F4", useCORS: true, logging: false })
             .then(function (canvas) {
-                var link = document.createElement("a");
-                link.download = filename;
-                link.href = canvas.toDataURL("image/png");
-                document.body.appendChild(link);
-                link.click();
-                document.body.removeChild(link);
-                stage.remove();
-                toast("💌 저장했어요");
+
+                // 예전 방식 (PC · 구형 브라우저)
+                var fallback = function () {
+                    var link = document.createElement("a");
+                    link.download = filename;
+                    link.href = canvas.toDataURL("image/png");
+                    document.body.appendChild(link);
+                    link.click();
+                    document.body.removeChild(link);
+                    toast("💌 저장했어요");
+                };
+
+                if (!canvas.toBlob) { fallback(); stage.remove(); return; }
+
+                canvas.toBlob(function (blob) {
+                    try {
+                        if (!blob) { fallback(); return; }
+
+                        var isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) ||
+                                    (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+                        var file = new File([blob], filename, { type: "image/png" });
+
+                        if (navigator.canShare && navigator.canShare({ files: [file] })) {
+                            if (typeof window.showConfirm === "function") {
+                                window.showConfirm(
+                                    isIOS
+                                    ? "엽서가 완성되었어요!<br><span style='font-size:12px;color:#A3958A;'>아이폰은 창이 뜨면 \'이미지 저장\'을 눌러주세요.</span>"
+                                    : "엽서가 완성되었어요!<br><span style='font-size:12px;color:#A3958A;'>가족에게 바로 보낼 수 있어요.</span>",
+                                    function () {
+                                        navigator.share({ files: [file], title: babyName() + "의 추억 엽서" }).catch(function () {});
+                                    }, "💌", "저장 및 공유하기", "#B98A2E"
+                                );
+                            } else {
+                                navigator.share({ files: [file], title: babyName() + "의 추억 엽서" }).catch(function () {});
+                            }
+                        } else {
+                            fallback();
+                        }
+                    } finally {
+                        stage.remove();
+                    }
+                }, "image/png");
             })
             .catch(function (err) {
                 console.error("[엽서] 굽기 실패", err);

@@ -349,7 +349,10 @@
         var code = syncCode();
         if (!code || !window.db || typeof window.setDoc !== "function" || typeof window.doc !== "function") return;
         try {
-            await window.setDoc(window.doc(window.db, "photos_" + code + suffix(), "status"), { days: loadIndex() });
+                await window.setDoc(window.doc(window.db, "photos_" + code + suffix(), "status"), {
+                days: loadIndex(),
+                deleted: (window.Grave ? window.Grave.list("photo") : {})   // 👈 지운 목록도 같이
+            });
         } catch (e) { console.warn("[배냇함 사진] 동기화 실패", e); }
     };
 
@@ -362,7 +365,9 @@
         var ref = window.doc(window.db, "photos_" + code + suffix(), "status");
         var unsub = window.onSnapshot(ref, function (snap) {
             if (!snap.exists()) return;
-            var remote = (snap.data() || {}).days || {};
+            var data = snap.data() || {};
+            var remote = data.days || {};
+            if (window.Grave) window.Grave.merge("photo", data.deleted);   // 👈 짝꿍이 지운 것 받아오기
             var local = loadIndex();
             var merged = {};
 
@@ -371,6 +376,7 @@
                 var seen = {}, out = [];
                 (local[k] || []).concat(remote[k] || []).forEach(function (p) {
                     if (!p || !p.id || seen[p.id]) return;
+                    if (window.Grave && window.Grave.has("photo", p.id)) return;   // 👈 지운 건 되살리지 않기
                     seen[p.id] = 1;
                     out.push(p);
                 });
@@ -670,6 +676,7 @@
                 if (p.thumbPath) try { window.deleteObject(window.storageRef(window.storage, p.thumbPath)); } catch (e) {}
             }
             if (window.dropCachedPhotoData) window.dropCachedPhotoData(p.id);
+            if (window.Grave) window.Grave.add("photo", p.id);   // 👈 묘비 세우기
             dropPhoto(vKey, p.id);
             window.syncPhotosToFirebase();
             vList = vList.filter(function (x) { return x.id !== p.id; });
