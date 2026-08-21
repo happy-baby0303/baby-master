@@ -227,6 +227,7 @@ body.dark-mode select option { background: #221E1A; color: #EDE7E1; }
         if (!el || el.nodeType !== 1 || SKIP[el.tagName]) return;
         if (el.closest && el.closest("#mb-photo-viewer")) return;   // 사진 뷰어는 원래 어둡다
         if (el.closest && el.closest("#premium-paywall-modal, #vip-modal-overlay")) return;   // 👈 결제 화면은 원래 색 그대로
+        if (el.closest && el.closest("#kiosk-modal")) return;   // 👈 키오스크는 실제 매장과 같아야 연습이 된다
 
         var src = el.getAttribute("data-theme-src");
         if (src === null) {

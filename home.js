@@ -280,7 +280,12 @@
         mount();
         fixGrid();
         // 사진을 담거나 도감을 찍으면 홈도 같이 갱신되게
-        setInterval(function () { mount(); fixGrid(); }, 30000);
+              // 30초마다 통째로 다시 그리면 스크롤·터치 중에 화면이 튄다.
+        // 탭으로 돌아왔을 때와, 5분에 한 번만.
+        document.addEventListener('visibilitychange', function () {
+            if (!document.hidden) { mount(); fixGrid(); }
+        });
+        setInterval(function () { mount(); fixGrid(); }, 5 * 60000);
     }
 
     if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", boot);

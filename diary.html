@@ -2,13 +2,16 @@
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <title>💌 육아메이트 다이어리</title>
     <link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.8/dist/web/static/pretendard.css" />
     
     <script>
-        if (localStorage.getItem('darkMode') === 'true') {
+            if (localStorage.getItem('tosil_dark_mode') === 'on') {
             document.documentElement.classList.add('dark-mode');
+            document.addEventListener('DOMContentLoaded', function () {
+                document.body.classList.add('dark-mode');
+            });
         }
     </script>
 
@@ -374,6 +377,7 @@
 <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
     import { getFirestore, doc, setDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+    import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
     // 🚨 1. 다이어리용이 아닌, '메인 앱(happybaby)'의 파이어베이스 주소로 통일!
     const firebaseConfig = {
@@ -387,9 +391,17 @@
 
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app); 
-    
-    // 🚨 리뷰어 지적사항 해결: 보안 구멍이던 signInAnonymously(익명 로그인) 완전히 삭제!
-    // 이제 index.html에서 로그인한 카카오 인증 정보를 그대로 활용합니다.
+    const auth = getAuth(app);
+
+    // index.html 에서 로그인한 세션을 이 페이지가 물려받는다.
+    // Auth 모듈을 초기화하지 않으면 Firestore 가 토큰을 못 붙여서
+    // 규칙의 signedIn() 이 false 가 되고 permission-denied 가 난다.
+    const authReady = new Promise(function (resolve) {
+        const stop = onAuthStateChanged(auth, function (user) {
+            stop();
+            resolve(user);
+        });
+    });
 
     let unsubscribe = null;
 
@@ -397,23 +409,21 @@
         return parseInt(document.getElementById("diary-day").innerText.replace("DAY ", "")) || 1;
     };
 
-    // 🚨 2. 리뷰어 지적사항 해결: unlinked_local_diary(데이터 섞임 현상) 완전 파기!
+  // index.html 이 로그인 직후 TS-XXXXXXXX 코드를 발급하고
+    // families/{코드} 문서까지 만들어 둔다. 1인 유저도 이미 자기 방이 있다.
+    //
+    // 예전의 "personal_backup_" + kakaoId 는 오히려 독이었다.
+    // 규칙이 collectionId.split('_')[1] 로 가족 코드를 찾는데,
+    // diary_personal_backup_123 을 쪼개면 두 번째 조각이 'personal' 이라
+    // families/personal 을 찾다가 항상 거부당한다. 밑줄이 구조를 깨뜨렸다.
     function getSafeSyncCode() {
-        let syncCode = localStorage.getItem("family_sync_code");
-        if (!syncCode) {
-            const kakaoId = localStorage.getItem("kakao_id");
-            if (kakaoId) {
-                syncCode = "personal_backup_" + kakaoId; // 1인 유저용 안전한 개인 방
-            } else {
-                return null; // 카카오 로그인조차 안 한 상태면 null 반환 (서버 전송 차단)
-            }
-        }
-        return syncCode;
+        return localStorage.getItem("family_sync_code") || null;
     }
 
-    window.startFamilyNameSync = function() {
+     window.startFamilyNameSync = async function() {
         const syncCode = getSafeSyncCode();
         if (!syncCode) return; // 코드가 없으면 서버 통신 안 함
+        if (!(await authReady)) return; // 로그인 전이면 서버 통신 안 함
         
         const myKakaoName = localStorage.getItem("kakao_nickname");
         const myRole = localStorage.getItem("tosil_userRole"); 
@@ -432,7 +442,7 @@
         });
     };
 
-    window.startSync = function() {
+  window.startSync = async function() {
         window.startFamilyNameSync();
         
         const currentDay = window.getCurrentDay();
@@ -448,8 +458,9 @@
 
         window.renderCurrentCard(localData, currentRole);
 
-        // 코드가 없으면 서버에서 받아오는 리스너 작동 안 함 (로컬에서만 쾌적하게 작동)
+    // 코드가 없으면 서버에서 받아오는 리스너 작동 안 함 (로컬에서만 쾌적하게 작동)
         if (!syncCode) return;
+        if (!(await authReady)) return; // 로그인이 붙기 전엔 로컬만 쓴다
 
         const docRef = doc(db, "diary_" + syncCode, `day_${currentDay}`);
         if (unsubscribe) unsubscribe();

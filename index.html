@@ -18,7 +18,7 @@
     <meta name="naver-site-verification" content="ca4d9c6e9d67449206cd0c54313cc776aff61ce1" />
     <meta name="theme-color" media="(prefers-color-scheme: light)" content="#FFFFFF">
     <meta name="theme-color" media="(prefers-color-scheme: dark)" content="#111111">
-    <link rel="manifest" href="https://happy-baby0303.github.io/manifest.json">
+    <link rel="manifest" href="./manifest.json">
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -2667,9 +2667,11 @@ div[style*="border-radius: 8px"] {
     // 🔗 아래 함수들은 onAuthStateChanged 바깥쪽(독립된 공간)에 있어야 합니다!
     // ==========================================
 
-    window.createSyncCode = async () => {
+      window.createSyncCode = async () => {
         const existing = localStorage.getItem('family_sync_code');
         if (existing) {
+            // 코드를 꺼내 보는 건 곧 초대하겠다는 뜻이다. 30분짜리 창을 연다.
+            if (typeof window.openFamilyInvite === 'function') window.openFamilyInvite();
             const codeArea = document.getElementById('my-sync-code-area');
             if (codeArea) {
                 codeArea.style.display = 'block';
@@ -2729,32 +2731,47 @@ div[style*="border-radius: 8px"] {
             } else {
                 alert("❌ 서버에 등록되지 않은 코드입니다.");
             }
-        } catch (error) {
-            alert("🚨 권한이 없거나 코드가 틀렸습니다.");
+                } catch (error) {
             console.error(error);
+            alert(error && error.code === 'permission-denied'
+                ? "⏳ 초대 시간이 지났어요.\n\n짝꿍에게 앱에서 '가족 코드'를 다시 열어달라고 부탁한 뒤,\n30분 안에 다시 시도해주세요."
+                : "🚨 등록되지 않은 코드예요. 다시 확인해주세요.");
         }
     };
 
-    window.upgradeToEarlyBirdVIP = async () => {
-        const syncCode = localStorage.getItem('family_sync_code');
-        const myUid = localStorage.getItem('firebase_uid');
-        if (!syncCode || !myUid) return alert("🚨 연동을 먼저 완료해주세요!");
+     window.upgradeToEarlyBirdVIP = async () => {
+        // 캐시가 아니라 '지금 로그인된' UID 를 쓴다. 규칙이 이걸 대조한다.
+        const liveUid = (window.auth && window.auth.currentUser) ? window.auth.currentUser.uid : null;
+        if (!liveUid) return alert("🚨 먼저 카카오 로그인을 해주세요!");
+
+        // 연동은 필수가 아니다. 혼자 쓰는 사람도 얼리버드다.
+        const syncCode = localStorage.getItem('family_sync_code') || '';
+
         try {
-            await window.setDoc(window.doc(window.db, "waitlist", myUid), {
+            await window.setDoc(window.doc(window.db, "waitlist", liveUid), {
+                firebase_uid: liveUid,                      // 👈 이게 없어서 계속 거부당했다
+                kakaoId: localStorage.getItem('kakao_id') || '',
                 syncCode: syncCode,
                 nickname: localStorage.getItem('kakao_nickname') || '육아동지',
+                source: 'earlybird_vip',
                 requestedAt: new Date().toISOString()
-            });
-            alert("🎉얼리버드 신청 완료!\n\n승인되면 1년간 프리미엄 전 기능을 무료로 이용하실 수 있습니다");
+            }, { merge: true });
+
+            localStorage.setItem('tosil_premium_applied', 'true');
+            alert("🎉 얼리버드 신청 완료!\n\n승인되면 첫 1개월간 프리미엄 전 기능을 무료로 이용하실 수 있습니다");
             const modal = document.getElementById('vip-modal-overlay');
             if(modal) modal.style.display = 'none';
         } catch (error) {
-            alert("신청 중 문제가 발생했습니다.");
+            console.error("얼리버드 신청 실패:", error);
+            alert(error && error.code === 'permission-denied'
+                ? "로그인 세션이 만료됐어요. 앱을 새로고침하고 다시 시도해주세요."
+                : "신청 중 문제가 발생했습니다. 잠시 뒤 다시 시도해주세요.");
         }
     };
 </script>
 
 <script src="script.js?v=20260728"></script>
+<script src="./graveyard.js"></script>
 <script src="playdata.js"></script>
 <script src="receiptData.js"></script>
 <script src="./emotion.js"></script>
@@ -2773,7 +2790,12 @@ div[style*="border-radius: 8px"] {
 <script src="./anniversaries.js"></script>
 <script src="./home.js"></script>
 <script src="./postcard.js"></script>
+<script src="./export.js"></script>
 <script src="./bedtime.js"></script>
+<script src="./bedtime.js"></script>
+<script src="./remind.js"></script>      
+<script src="./memories.js"></script>    
+<script src="./firstwords.js"></script>  
 <script src="./theme.js"></script>
 <script src="./mobile.js"></script>
 <script src="./fit.js"></script>
@@ -3096,8 +3118,7 @@ div[style*="border-radius: 8px"] {
 </div>
 
 <!-- 🚨 영수증 생성을 위한 필수 라이브러리 및 폰트 🚨 -->
-    <script src="./html2canvas.min.js"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Nanum+Pen+Script&display=swap" rel="stylesheet">
+       <link href="https://fonts.googleapis.com/css2?family=Nanum+Pen+Script&display=swap" rel="stylesheet">
 
     <!-- 🧾 영수증 모달창 -->
 <div id="receipt-modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 9999; justify-content: center; align-items: center; padding: 20px; backdrop-filter: blur(3px);">
@@ -3523,8 +3544,11 @@ body { overflow-x: hidden !important; } /* 가로로 튀어나오는 모든 찌�
 <div id="kiosk-modal" style="display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: #F8F9FA; z-index: 9999999; flex-direction: column; overflow: hidden; font-family: 'Pretendard', sans-serif;">
     
     <!-- 🛑 헤더 -->
-    <div style="background: #191F28; color: white; padding: 16px 20px; display: flex; justify-content: space-between; align-items: center; z-index: 10;">
-        <div style="font-size: 20px; font-weight: 900;"> 육아메이트 휴게소 키오스크</div>
+        <div style="background: #191F28; color: white; padding: 16px 20px; display: flex; justify-content: space-between; align-items: center; z-index: 10;">
+        <div style="display: flex; align-items: center; gap: 8px; min-width: 0;">
+            <div style="font-size: 18px; font-weight: 900; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">육아메이트 휴게소 키오스크</div>
+            <span style="flex-shrink: 0; background: #FFE9A8; color: #7A5B12; font-size: 11px; font-weight: 900; padding: 4px 9px; border-radius: 999px;">연습</span>
+        </div>
         <button onclick="document.getElementById('kiosk-modal').style.display='none'" style="background: #F04452; color: white; border: none; padding: 8px 16px; border-radius: 8px; font-weight: 900; font-size: 13px; cursor: pointer;">연습 종료 ✕</button>
     </div>
 
@@ -3634,7 +3658,13 @@ body { overflow-x: hidden !important; } /* 가로로 튀어나오는 모든 찌�
     </div>
 
     <!-- 🛑 스텝 5: 혼란의 결제 수단 선택 (버튼 크기 2열로 큼직하게 변경!) -->
-    <div id="kiosk-step-5" style="display: none; flex: 1; flex-direction: column; align-items: center; justify-content: center; padding: 24px; background: #F2F4F6;">
+       <div id="kiosk-step-5" style="display: none; flex: 1; flex-direction: column; align-items: center; justify-content: center; padding: 24px; background: #F2F4F6;">
+        <div style="background:#FFF7E6; border:1px solid #F0DFB8; border-radius:14px; padding:14px 16px; margin-bottom:20px; text-align:center; max-width:450px; width:100%; box-sizing:border-box;">
+            <div style="font-size:13px; font-weight:900; color:#B98A2E; margin-bottom:4px;">🎓 연습 화면입니다</div>
+            <div style="font-size:12px; font-weight:600; color:#8C827A; line-height:1.6;">
+                실제로 결제되지 않아요. 마음 편히 눌러보세요.
+            </div>
+        </div>
         <h2 style="font-size: 24px; font-weight: 900; color: #191F28; margin-bottom: 30px;">결제 수단을 선택해 주세요</h2>
         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; width: 100%; max-width: 450px;">
             <button onclick="window.kioskProcessPayment('card')" style="background: white; border: 2px solid #191F28; border-radius: 16px; padding: 24px 10px; font-size: 15px; font-weight: 900; color: #191F28; display: flex; flex-direction: column; align-items: center; gap: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.05);">
@@ -3662,14 +3692,17 @@ body { overflow-x: hidden !important; } /* 가로로 튀어나오는 모든 찌�
     <div id="kiosk-step-6" style="display: none; flex: 1; flex-direction: column; align-items: center; justify-content: center; padding: 24px; background: rgba(0,0,0,0.85); color: white;">
         <div style="font-size: 80px; margin-bottom: 20px; animation: slideUp 0.5s infinite alternate;">💳</div>
         <h2 style="font-size: 26px; font-weight: 900; margin-bottom: 16px; text-align: center; line-height: 1.4;">신용카드를 투입구에<br><span style="color: #F04452;">끝까지</span> 밀어 넣어주세요.</h2>
-        <div style="font-size: 16px; font-weight: 700; color: #A1A1AA; margin-bottom: 40px;">(결제가 완료될 때까지 카드를 빼지 마세요)</div>
+               <div style="font-size: 16px; font-weight: 700; color: #A1A1AA; margin-bottom: 12px;">(결제가 완료될 때까지 카드를 빼지 마세요)</div>
+        <div style="font-size: 13px; font-weight: 800; color: #FFE9A8; margin-bottom: 40px;">🎓 연습이라 카드를 넣지 않으셔도 돼요</div>
         <div style="width: 50px; height: 50px; border: 5px solid rgba(255,255,255,0.2); border-top: 5px solid #3182F6; border-radius: 50%; animation: spin 1s linear infinite;"></div>
     </div>
 
     <!-- 🛑 스텝 7: 완료 -->
     <div id="kiosk-step-7" style="display: none; flex: 1; flex-direction: column; align-items: center; justify-content: center; padding: 24px; text-align: center; background: #FFFFFF;">
         <div style="font-size: 80px; margin-bottom: 20px; animation: popIn 0.5s;">🎉</div>
-        <h2 style="font-size: 28px; font-weight: 900; color: #00B37A; margin-bottom: 16px;">결제 성공!</h2>
+                <h2 style="font-size: 28px; font-weight: 900; color: #00B37A; margin-bottom: 8px;">결제 성공!</h2>
+
+        <div style="font-size: 13px; font-weight: 800; color: #8B95A1; margin-bottom: 16px;">🎓 연습이었어요. 실제 결제는 일어나지 않았습니다</div>
         <div style="font-size: 18px; font-weight: 800; color: #4E5968; line-height: 1.6; margin-bottom: 40px;">
             영수증과 주문번호표를 받아가세요.<br><span style="color:#3182F6;">할머니 할아버지 최고예요! 👏</span>
         </div>

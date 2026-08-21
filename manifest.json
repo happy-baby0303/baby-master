@@ -1,13 +1,61 @@
 {
+  "id": "/",
   "name": "토실이 육아메이트",
   "short_name": "육아메이트",
+  "description": "우리 아기의 처음들을 담아두는 곳. 수유·수면 기록부터 배냇함, 봉인 편지까지.",
+  "lang": "ko",
+  "dir": "ltr",
   "start_url": "./index.html",
+  "scope": "./",
   "display": "standalone",
-  "background_color": "#F2F4F6",
-  "theme_color": "#FFFFFF",
-"icons": [
+  "display_override": ["standalone", "minimal-ui"],
+  "orientation": "portrait",
+  "background_color": "#FAF7F2",
+  "theme_color": "#FAF7F2",
+  "categories": ["lifestyle", "health", "parenting"],
+  "prefer_related_applications": false,
+  "icons": [
     { "src": "icon-192x192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
     { "src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
-    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+    { "src": "icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ],
+  "shortcuts": [
+    {
+      "name": "오늘 사진 담기",
+      "short_name": "사진 담기",
+      "description": "오늘의 아기 얼굴을 배냇함에 담습니다",
+      "url": "./index.html?go=photo",
+      "icons": [{ "src": "icon-192x192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "배냇함 열기",
+      "short_name": "배냇함",
+      "description": "지금까지 담긴 것들을 봅니다",
+      "url": "./index.html?go=memorybox",
+      "icons": [{ "src": "icon-192x192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "바통터치 요청",
+      "short_name": "바통터치",
+      "description": "짝꿍에게 교대를 부탁합니다",
+      "url": "./index.html?go=baton",
+      "icons": [{ "src": "icon-192x192.png", "sizes": "192x192" }]
+    }
+  ],
+  "screenshots": [
+    {
+      "src": "screenshot-home.png",
+      "sizes": "1080x1920",
+      "type": "image/png",
+      "form_factor": "narrow",
+      "label": "홈 화면"
+    },
+    {
+      "src": "screenshot-memorybox.png",
+      "sizes": "1080x1920",
+      "type": "image/png",
+      "form_factor": "narrow",
+      "label": "배냇함"
+    }
   ]
 }

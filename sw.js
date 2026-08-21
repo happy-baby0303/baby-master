@@ -38,15 +38,51 @@ self.addEventListener('notificationclick', function(event) {
 
 
 // 💾 기존 PWA 오프라인 캐시 엔진
-const CACHE = 'yukamate-v4';   // 🔄 알림 수정 반영으로 버전 업!
+const CACHE = 'yukamate-v5';   // 🔄 리텐션 모듈 추가로 버전 업!
 
 const ASSETS = [
     './',
     './index.html',
+    './manifest.json',
     './style.css',
-    './script.js',
     './icon-512.png',
-    './icon-192x192.png'
+    './icon-192x192.png',
+
+    // 뼈대
+    './script.js',
+    './playdata.js',
+    './receiptData.js',
+
+    // 배냇함
+    './photos.js',
+    './voice.js',
+    './waveform.js',
+    './sealed.js',
+    './postcard.js',
+    './memorybox.js',
+    './milestonebook.js',
+    './photobook.js',
+
+    // 이번에 추가된 것들
+    './graveyard.js',
+    './export.js',
+    './remind.js',
+    './memories.js',
+    './firstwords.js',
+
+    // 나머지
+    './emotion.js',
+    './data.js',
+    './notes.js',
+    './diary.js',
+    './firstfill.js',
+    './premium.js',
+    './anniversaries.js',
+    './home.js',
+    './bedtime.js',
+    './theme.js',
+    './mobile.js',
+    './fit.js'
 ];
 
 self.addEventListener('install', (e) => {

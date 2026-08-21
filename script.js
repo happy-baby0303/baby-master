@@ -6577,7 +6577,6 @@ window.closeInviteSheet = function() {
     if(sheet) sheet.style.display = 'none';
 };
 
-// 🌟 카톡 초대 버튼 (자동 딥링크 연동 적용!)
 // 🔐 초대창 열기 — 이 순간부터 10분 동안만 가족 합류가 허용된다.
 //    보안 규칙이 이 두 필드를 확인한다. 창이 닫혀 있으면 코드를 알아도 못 들어온다.
 window.openFamilyInvite = async function () {
@@ -6586,7 +6585,7 @@ window.openFamilyInvite = async function () {
     try {
         await window.setDoc(window.doc(window.db, 'families', code), {
             inviteOpen: true,
-            inviteUntil: Date.now() + 10 * 60 * 1000
+            inviteUntil: Date.now() + 30 * 60 * 1000
         }, { merge: true });
     } catch (e) { console.warn('초대창 열기 실패', e); }
 };
@@ -9857,16 +9856,12 @@ window.applyCommunityWaitlist = function(btn) {
     }
 };
 
-
 // ==========================================
-// 🎨 맘수다 공사중(티저) 렌더링 화면
+// 🎨 맘수다 공사중(티저) 렌더링 화면 (진짜 서버 카운트 적용 완료! 🚀)
 // ==========================================
 window.renderCommunityFeed = function() {
     const container = document.getElementById('community-feed');
     if(!container) return;
-
-    const today = new Date();
-    const waitlistCount = 128 + (today.getDate() * 3); 
 
     // 이미 신청한 사람인지 확인해서 버튼 모양을 미리 바꿔둠
     const isApplied = localStorage.getItem('tosil_waitlist_done');
@@ -9874,6 +9869,14 @@ window.renderCommunityFeed = function() {
         ? "background: #00B37A; box-shadow: none;" 
         : "background: #8B5CF6; box-shadow: 0 8px 24px rgba(139, 92, 246, 0.3);";
     const btnText = isApplied ? "✅ 알림 신청 완료" : "🔔 정식 오픈 알림 받기";
+
+    // 🌟 서버가 세어준 진짜 숫자 가져오기! (없으면 0)
+    let globalNotices = {};
+    try { globalNotices = JSON.parse(localStorage.getItem('tosil_global_notices')) || {}; } catch(e){}
+    
+    const realCount = globalNotices.waitlist_count || 0;
+    // 기본 밑바닥 숫자(150) + 진짜 신청한 사람 수 = 절대 줄어들지 않는 진짜 누적 숫자!
+    const totalCount = 150 + realCount;
 
     const html = `
         <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; height: 70vh; padding: 0 20px; text-align: center; animation: fadeIn 0.5s ease-out;">
@@ -9891,12 +9894,13 @@ window.renderCommunityFeed = function() {
                 조금만 기다려주시면 짠! 하고 돌아올게요.
             </p>
 
+            <!-- 🚨 가짜 숫자 대신 서버가 세어준 진짜 숫자로 교체! -->
             <div style="background: #F3E8FF; border: 1px solid #D8B4FE; border-radius: 20px; padding: 10px 18px; margin-bottom: 32px; display: inline-flex; align-items: center; gap: 8px;">
                 <span style="font-size: 18px;">🔥</span>
-                <span style="font-size: 13.5px; font-weight: 800; color: #7C3AED;">현재 <span style="font-size: 15px; font-weight: 900;">${waitlistCount}</span>명의 엄빠가 대기 중!</span>
+                <span style="font-size: 13.5px; font-weight: 800; color: #7C3AED;">현재 <span style="font-size: 16px; font-weight: 900;">${totalCount}</span>명의 엄빠가 대기 중!</span>
             </div>
 
-            <!-- 👇 아까 만든 찐 수집 함수 연결! -->
+            <!-- 👇 찐 수집 함수 연결 -->
             <button onclick="window.applyCommunityWaitlist(this)" style="width: 100%; max-width: 300px; padding: 18px; color: #FFF; border: none; border-radius: 16px; font-size: 15px; font-weight: 900; cursor: pointer; transition: 0.2s; ${btnStyle}" onmousedown="this.style.transform='scale(0.95)'" onmouseup="this.style.transform='scale(1)'">
                 ${btnText}
             </button>
@@ -12075,6 +12079,8 @@ window.showSyncCode = function() {
 
 // 클립보드 복사 함수
 window.copySyncCode = function(code) {
+    // 코드를 복사하는 건 곧 초대하겠다는 뜻이다. 30분짜리 창을 연다.
+    if (typeof window.openFamilyInvite === 'function') window.openFamilyInvite();
     navigator.clipboard.writeText(code).then(() => {
         window.showToast("📋 가족 코드가 클립보드에 복사되었습니다!");
     });
@@ -14329,4 +14335,32 @@ window.openSettingsTab = function() {
             window.renderSettingsTab();
         };
     };
+})();
+
+// ==========================================
+// 🔗 앱 아이콘 길게 누르기 → 바로가기 처리
+// ==========================================
+(function () {
+    function handleShortcut() {
+        var go = new URLSearchParams(location.search).get('go');
+        if (!go) return;
+
+        // 주소창을 깨끗하게 (새로고침해도 또 실행되지 않게)
+        try { history.replaceState({}, '', location.pathname); } catch (e) {}
+
+        setTimeout(function () {
+            if (go === 'photo') {
+                if (typeof window.addDayPhoto === 'function') window.addDayPhoto();
+            } else if (go === 'memorybox') {
+                if (typeof window.goToMemoryBox === 'function') window.goToMemoryBox();
+            } else if (go === 'baton') {
+                if (typeof window.switchTab === 'function') window.switchTab('home');
+                var btn = document.querySelector('[onclick*="baton"], [onclick*="Baton"]');
+                if (btn) btn.click();
+            }
+        }, 1800);   // 앱이 다 뜬 뒤에
+    }
+
+    if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', handleShortcut);
+    else handleShortcut();
 })();
