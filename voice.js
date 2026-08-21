@@ -404,7 +404,17 @@
             toast("🎙️ " + babyName() + "의 목소리가 담겼어요");
             repaint();
         } catch (e) {
-            console.error("[목소리] 업로드 실패", e);
+                       console.error("[목소리] 업로드 실패", e);
+            // 실패를 삼키지 않는다. 무엇 때문인지 사용자도 알아야 한다.
+            var code = (e && e.code) || "";
+            if (code === "storage/unauthorized") {
+                draw("review");
+                return toast("⚠️ 저장 권한에 막혔어요 (storage/unauthorized)");
+            }
+            if (code === "storage/quota-exceeded") {
+                draw("review");
+                return toast("⚠️ 저장 공간이 가득 찼어요");
+            }
             if (window.queueUpload) {
                 // 사진은 다시 찍으면 되지만 옹알이는 다시 안 난다. 반드시 붙잡는다.
                 await window.queueUpload({

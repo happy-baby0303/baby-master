@@ -2345,6 +2345,8 @@ window.uploadPhoto = function(input) {
                         
                         // 무거운 사진 파일 자체가 아니라, 가벼운 서버 인터넷 주소(URL)만 로컬스토리지에 저장!
                         localStorage.setItem('tosil_baby_photo', downloadUrl); 
+                        // 짝꿍 폰에도 같은 얼굴이 뜨게 가족방에 주소를 적어둔다
+                        if(typeof window.shareBabyPhoto === 'function') window.shareBabyPhoto(downloadUrl);
                         if(typeof window.loadBabyPhoto === 'function') window.loadBabyPhoto(); 
                         if(typeof window.showToast === 'function') window.showToast("✅ 사진이 안전하게 저장되었습니다!");
                     } catch(err) {
@@ -2766,7 +2768,16 @@ async function createBatonTask(text, reward) {
     if (isDuplicate) return showToast("🚨 이미 똑같은 부탁이 대기 중입니다!"); 
 
     const now = new Date(), timeStr = `${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`;
-    records.unshift({ id: "baton_"+now.getTime(), text, reward, time: timeStr, status: "requested" });
+        // 누가 보냈는지 남긴다. 이게 없으면 내가 보낸 걸 내가 접수하게 된다.
+    const myUid  = (window.auth && window.auth.currentUser) ? window.auth.currentUser.uid
+                 : (localStorage.getItem('firebase_uid') || '');
+    const myRole = localStorage.getItem('user_role') === 'dad' ? '아빠' : '엄마';
+
+    records.unshift({
+        id: "baton_" + now.getTime(),
+        text, reward, time: timeStr, status: "requested",
+        by: myUid, byRole: myRole
+    });
     await saveBatonToFirebase(records);
     showToast("💌 바통터치 요청이 성공적으로 전달되었습니다!"); 
 
@@ -2774,10 +2785,11 @@ async function createBatonTask(text, reward) {
     const syncCode = window.getSyncCode ? window.getSyncCode() : localStorage.getItem('family_sync_code');
     if (syncCode && window.functions && window.httpsCallable) {
         const sendFamilyPush = window.httpsCallable(window.functions, 'sendFamilyPush');
-        const myName = localStorage.getItem('kakao_nickname') || '배냇함';
+                const myName = localStorage.getItem('kakao_nickname') || '짝꿍';
+        const roleWord = localStorage.getItem('user_role') === 'dad' ? '아빠' : '엄마';
         sendFamilyPush({
             syncCode: syncCode,
-            title: "💌 아내의 바통터치 SOS",
+            title: "💌 " + roleWord + "의 바통터치 SOS",
             body: `[${myName}] ${text}`
         }).catch(e => console.error("푸시 발송 에러", e));
     }
@@ -8317,8 +8329,17 @@ window.renderHomeBatonList = function() {
     const container = document.getElementById('home-dad-baton-list');
     if (!container) return;
     
-    let records = JSON.parse(localStorage.getItem('tosil_baton_records')) || [];
-    let activeRecords = records.filter(r => r.status === 'requested' || r.status === 'accepted');
+        let records = JSON.parse(localStorage.getItem('tosil_baton_records')) || [];
+
+    // 홈은 "짝꿍이 나에게 부탁한 것"만 보여준다.
+    // 내가 보낸 건 툴박스 미션보드에서 취소만 할 수 있으면 된다.
+    const myUid = (window.auth && window.auth.currentUser) ? window.auth.currentUser.uid
+                : (localStorage.getItem('firebase_uid') || '');
+
+    let activeRecords = records.filter(r =>
+        (r.status === 'requested' || r.status === 'accepted') &&
+        (!r.by || r.by !== myUid)          // by 가 없는 옛날 기록은 그대로 보여준다
+    );
 
 if (activeRecords.length === 0) {
         // 🌟 [니치 패치] 촌스러운 점선(dashed) 테두리 삭제! 은은한 회색 배경에 이모지 크기 조정
@@ -8343,16 +8364,16 @@ if (activeRecords.length === 0) {
 
         let rewardHtml = (r.reward && r.reward !== "없음") ? `<div style="margin-top:6px; color:#B78103; font-size:11.5px; font-weight:800;">🎁 보상: ${r.reward}</div>` : '';
 
-        html += `
-        <div style="background:#FFFFFF; border:1px solid var(--border); padding:16px; border-radius:16px; display:flex; justify-content:space-between; align-items:center; box-shadow:0 2px 8px rgba(0,0,0,0.01); margin-bottom:8px;">
-            <div>
-                <div style="font-size:14.5px; font-weight:800; color:var(--text-m); margin-bottom:6px;">${r.text}</div>
-                <div style="display:flex; align-items:center; gap:6px; font-size:12px; color:var(--text-s);">
-                    ${statusHtml} <span>⏱️ ${r.time}</span>
+               html += `
+        <div style="background:var(--bg-card); border:1px solid var(--border); border-radius:16px; padding:15px 16px; margin-bottom:10px;">
+            <div style="font-size:14px; font-weight:800; color:var(--text-m); line-height:1.45; word-break:keep-all; margin-bottom:9px;">${r.text}</div>
+            ${rewardHtml}
+            <div style="display:flex; align-items:center; justify-content:space-between; gap:10px; margin-top:10px;">
+                <div style="display:flex; align-items:center; gap:7px; font-size:11.5px; font-weight:700; color:var(--text-sub); min-width:0;">
+                    ${statusHtml}<span style="white-space:nowrap;">⏱️ ${r.time}</span>
                 </div>
-                ${rewardHtml}
+                <div style="flex-shrink:0;">${actionBtn}</div>
             </div>
-            <div style="margin-left:12px;">${actionBtn}</div>
         </div>`;
     });
     container.innerHTML = html;
@@ -14317,47 +14338,92 @@ window.openSettingsTab = function() {
 
 
 // ==========================================
-// 🔔 [알림 켜기 카드] 설정 탭 맨 위에 자동으로 붙습니다
+// 🔔 [바통터치 알림] 설정 탭 카드
+//    브라우저 권한은 코드로 못 끈다.
+//    대신 서버가 나에게 안 보내도록 표시해 둔다. 그게 진짜 끄기다.
 // ==========================================
 (function () {
-    const _origin = window.renderSettingsTab;
+    var OFF_KEY = 'tosil_baton_push_off';
+    var PURPLE  = '#7F77DD';
+
+    function perm() {
+        if (!('Notification' in window)) return 'unsupported';
+        return Notification.permission;              // granted | denied | default
+    }
+    function isOff() { return localStorage.getItem(OFF_KEY) === 'true'; }
+    function isOn()  { return perm() === 'granted' && !isOff(); }
+
+    // 서버에 "나한테 보내지 마세요 / 보내주세요" 를 적어둔다
+    async function tellServer(on) {
+        try {
+            var id = localStorage.getItem('kakao_id');
+            var uid = (window.auth && window.auth.currentUser) ? window.auth.currentUser.uid : null;
+            if (!id || !uid || !window.db || !window.setDoc) return;
+            await window.setDoc(window.doc(window.db, 'users', String(id)),
+                { push_baton: !!on, firebase_uid: uid }, { merge: true });
+        } catch (e) { console.warn('[알림] 설정 저장 실패', e); }
+    }
+
+    function inner() {
+        var p = perm(), on = isOn();
+        var sub =
+            p === 'unsupported' ? '이 브라우저는 알림을 지원하지 않아요'
+          : p === 'denied'      ? '브라우저에서 막혀 있어요. 눌러서 방법 보기'
+          : on                 ? '요청이 오면 바로 알려드려요'
+                               : '지금은 꺼져 있어요';
+
+        return '<div style="font-size:22px;">🔔</div>' +
+            '<div style="flex:1; min-width:0;">' +
+                '<div style="font-size:15px; font-weight:900; color:var(--text-m);">바통터치 알림</div>' +
+                '<div style="font-size:12px; font-weight:600; color:var(--text-sub); margin-top:2px; word-break:keep-all;">' + sub + '</div>' +
+            '</div>' +
+            '<div id="baton-push-toggle" style="width:46px; height:27px; border-radius:14px; flex-shrink:0; cursor:pointer; ' +
+                'background:' + (on ? PURPLE : 'var(--border)') + '; position:relative; transition:0.2s;' +
+                (p === 'denied' ? ' opacity:0.45;' : '') + '">' +
+                '<div style="position:absolute; top:3px; ' + (on ? 'left:22px' : 'left:3px') + '; width:21px; height:21px; ' +
+                    'border-radius:50%; background:#FFF; transition:0.2s; box-shadow:0 1px 3px rgba(0,0,0,0.2);"></div>' +
+            '</div>';
+    }
+
+    async function tap(card) {
+        var p = perm();
+
+        if (p === 'unsupported') return window.showToast('이 브라우저는 알림을 지원하지 않아요');
+        if (p === 'denied') {
+            return window.showToast('주소창 왼쪽 자물쇠 → 알림 → 허용으로 바꿔주세요');
+        }
+
+        if (isOn()) {
+            localStorage.setItem(OFF_KEY, 'true');
+            await tellServer(false);
+            window.showToast('알림을 껐어요');
+        } else {
+            if (p !== 'granted') {
+                var ok = await window.requestPushPermission();
+                if (!ok) return window.showToast('⚠️ 알림을 켜지 못했어요');
+            }
+            localStorage.setItem(OFF_KEY, 'false');
+            await tellServer(true);
+            window.showToast('🔔 요청이 오면 바로 알려드릴게요');
+        }
+        card.innerHTML = inner();
+    }
+
+    var _origin = window.renderSettingsTab;
     window.renderSettingsTab = function () {
         if (typeof _origin === 'function') _origin.apply(this, arguments);
 
-        const container = document.getElementById('tab-settings');
+        var container = document.getElementById('tab-settings');
         if (!container || document.getElementById('push-permission-card')) return;
         if (!('Notification' in window)) return;
 
-        const granted = Notification.permission === 'granted';
-        const denied  = Notification.permission === 'denied';
-
-        const card = document.createElement('div');
+        var card = document.createElement('div');
         card.id = 'push-permission-card';
-        card.style.cssText = 'display:flex; align-items:center; gap:14px; background:var(--bg-card); padding:18px 20px; border-radius:16px; border:1px solid var(--border); margin-bottom:16px; box-sizing:border-box; width:100%;';
-        card.innerHTML = `
-            <div style="font-size:22px;">🔔</div>
-            <div style="flex:1; min-width:0;">
-                <div style="font-size:15px; font-weight:900; color:var(--text-m);">짝꿍 알림 받기</div>
-                <div style="font-size:12px; font-weight:600; color:var(--text-s); margin-top:2px;">
-                    ${granted ? '알림이 켜져 있어요 💛' : denied ? '차단되어 있어요. 브라우저 설정에서 허용해주세요' : '바통터치 요청을 바로 받아보세요'}
-                </div>
-            </div>
-            ${granted || denied ? '' : `<button id="btn-push-on" style="padding:9px 16px; border-radius:10px; background:#3182F6; color:#fff; font-size:12.5px; font-weight:800; border:none; cursor:pointer; flex-shrink:0;">켜기</button>`}
-        `;
-        container.prepend(card);
+        card.style.cssText = 'display:flex; align-items:center; gap:14px; background:var(--bg-card); padding:18px 20px; border-radius:16px; border:1px solid var(--border); margin-bottom:12px; box-sizing:border-box; width:100%; cursor:pointer;';
+        card.innerHTML = inner();
+        card.onclick = function () { tap(card); };
 
-        const btn = document.getElementById('btn-push-on');
-        if (btn) btn.onclick = async () => {
-            btn.disabled = true;
-            btn.textContent = '설정 중...';
-            const ok = await window.requestPushPermission();
-            if (typeof window.showToast === 'function') {
-                window.showToast(ok ? '🔔 알림이 켜졌어요!' : '⚠️ 알림 권한이 필요해요. 브라우저 설정을 확인해주세요.');
-            }
-            const old = document.getElementById('push-permission-card');
-            if (old) old.remove();
-            window.renderSettingsTab();
-        };
+        container.prepend(card);
     };
 })();
 

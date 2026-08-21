@@ -132,7 +132,10 @@
     /* ---------- 3. 지금이 육퇴인가 ---------- */
 
     // 다른 파일에서도 쓸 수 있게 열어둔다 (emotion.js 의 LETTER_HOUR 대체용)
-    window.getBedtimeMinutes = function () {
+     window.getBedtimeMinutes = function () {
+        // 직접 정한 시각이 있으면 그게 이긴다
+        var manual = parseInt(localStorage.getItem("tosil_bedtime_manual"), 10);
+        if (isFinite(manual) && manual >= 0 && manual < 1440) return manual;
         var learned = learnedBedtime();
         return learned == null ? FALLBACK : learned;
     };

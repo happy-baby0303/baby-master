@@ -1,19 +1,18 @@
 /* ============================================================
-   배냇함 — 육퇴 알림 (remind.js)
+   배냇함 — 육퇴 알림 (remind.js) v2
 
    대형 육아앱은 저녁 8시에 전체 사용자에게 똑같이 쏜다.
    그 집 아이가 아직 안 잤으면 그 알림은 방해다.
 
-   우리는 bedtime.js 가 그 집 육퇴 시각을 14일치 중앙값으로 이미 배워뒀다.
-   거기에 방금 살린 푸시를 잇는다.
+   bedtime.js 가 그 집 육퇴 시각을 14일치 중앙값으로 배운다.
+   다만 배우려면 밤잠 기록이 3일치는 있어야 한다.
+   그 전까지는 저녁 8시로 둔다. 그래서 새 사용자에게는
+   "왜 8시야" 가 된다.
 
-     저녁 8시 40분 — 그 집이 조용해지는 시각
-     "오늘 하윤이 사진이 아직 배냇함에 없어요 🧺"
-
-   대형 앱이 흉내 못 낸다. 걔들은 그 집 시계를 모른다.
-
-   하는 일은 단순하다. 하루 한 번, 서버에 우리집 육퇴 시각을 적어둔다.
-   보내는 건 서버(bedtimeReminder)가 한다.
+   v2 에서 바뀐 것
+     · 시각을 직접 고를 수 있다 (설정 카드에서 탭)
+     · 직접 고른 값이 있으면 그걸 쓰고, 없으면 배운 값을 쓴다
+     · 카드가 지금 어느 쪽인지 말해준다 ("배우는 중" / "직접 정함")
 
    index.html 에서 bedtime.js 다음에 로드하세요.
    ============================================================ */
@@ -22,6 +21,7 @@
 
     var OFF_KEY    = "tosil_remind_off";
     var SYNCED_KEY = "tosil_remind_synced";
+    var MANUAL_KEY = "tosil_bedtime_manual";   // 분 단위 (예: 1230 = 20시 30분)
     var PURPLE     = "#7F77DD";
 
     function esc(s) {
@@ -40,30 +40,58 @@
     }
 
     function syncCode() { return localStorage.getItem("family_sync_code"); }
-
     function isOff() { return localStorage.getItem(OFF_KEY) === "true"; }
 
-    // 20시 40분 → "20:30" (15분 단위 칸)
-    function bucketOf(minutes) {
-        var m = Math.max(0, Math.min(24 * 60 - 1, Math.round(minutes)));
-        var h = Math.floor(m / 60);
-        var mm = Math.floor((m % 60) / 15) * 15;
-        return pad(h) + ":" + pad(mm);
+    /* ---------- 직접 정한 시각 ---------- */
+
+    window.getManualBedtime = function () {
+        var v = parseInt(localStorage.getItem(MANUAL_KEY), 10);
+        return (isFinite(v) && v >= 0 && v < 1440) ? v : null;
+    };
+
+    window.setManualBedtime = function (minutes) {
+        if (minutes === null) localStorage.removeItem(MANUAL_KEY);
+        else localStorage.setItem(MANUAL_KEY, String(minutes));
+        window.syncBedtimeReminder(true);
+        redrawCard();
+    };
+
+    // 실제로 쓰는 시각 — 직접 정한 게 있으면 그게 이긴다
+    function bedtimeMinutes() {
+        var m = window.getManualBedtime();
+        if (m !== null) return m;
+        if (typeof window.getBedtimeMinutes === "function") {
+            try { return window.getBedtimeMinutes(); } catch (e) {}
+        }
+        return 20 * 60;
+    }
+    window.effectiveBedtime = bedtimeMinutes;
+
+    // 배운 값이 있나 (표본이 모였나)
+    function isLearned() {
+        if (window.getManualBedtime() !== null) return false;
+        if (typeof window.getBedtimeMinutes !== "function") return false;
+        try { return window.getBedtimeMinutes() !== 20 * 60; } catch (e) { return false; }
     }
 
-    // 마지막으로 사진을 담은 날
+    // 20시 40분 → "20:30" (15분 칸)
+    function bucketOf(minutes) {
+        var m = Math.max(0, Math.min(24 * 60 - 1, Math.round(minutes)));
+        return pad(Math.floor(m / 60)) + ":" + pad(Math.floor((m % 60) / 15) * 15);
+    }
+
+    function hhmm(mins) {
+        var h = Math.floor(mins / 60), m = mins % 60;
+        var ap = h < 12 ? "오전" : "오후";
+        var hh = h % 12; if (hh === 0) hh = 12;
+        return ap + " " + hh + "시" + (m ? " " + m + "분" : "");
+    }
+
     function lastPhotoDay() {
         if (typeof window.photoDays !== "function") return "";
         var days = window.photoDays();
         if (!days || !days.length) return "";
         return days.slice().sort().pop();
-    }
-
-    function bedtimeMinutes() {
-        if (typeof window.getBedtimeMinutes === "function") {
-            try { return window.getBedtimeMinutes(); } catch (e) {}
-        }
-        return 20 * 60;   // 배운 게 없으면 저녁 8시
     }
 
     /* ---------- 서버에 우리집 시계 적어두기 ---------- */
@@ -94,8 +122,7 @@
         }
     };
 
-    /* ---------- 사진을 담으면 바로 알려준다 ----------
-       그래야 오늘 담은 사람에게는 알림이 안 간다. -------- */
+    /* ---------- 사진을 담으면 바로 알려준다 ---------- */
 
     var origSyncPhotos = window.syncPhotosToFirebase;
     window.syncPhotosToFirebase = async function () {
@@ -110,19 +137,90 @@
     window.setBedtimeReminder = async function (on) {
         localStorage.setItem(OFF_KEY, on ? "false" : "true");
         await window.syncBedtimeReminder(true);
-        toast(on ? "🔔 육퇴 시간에 살짝 알려드릴게요" : "알림을 껐어요");
-        var card = document.getElementById("remind-card");
-        if (card) { card.remove(); if (typeof window.renderSettingsTab === "function") window.renderSettingsTab(); }
+        toast(on ? "🌙 육퇴 시간에 살짝 알려드릴게요" : "알림을 껐어요");
+        redrawCard();
     };
 
-    function hhmm(mins) {
-        var h = Math.floor(mins / 60), m = mins % 60;
-        var ap = h < 12 ? "오전" : "오후";
-        var hh = h % 12; if (hh === 0) hh = 12;
-        return ap + " " + hh + "시" + (m ? " " + m + "분" : "");
-    }
+    /* ---------- 시각 고르기 시트 ---------- */
+
+    window.openBedtimeSheet = function () {
+        var old = document.getElementById("bedtime-sheet");
+        if (old) old.remove();
+
+        var cur = bedtimeMinutes();
+        var manual = window.getManualBedtime() !== null;
+
+        // 저녁 6시 ~ 자정 30분, 30분 간격
+        var opts = "";
+        for (var m = 18 * 60; m <= 23 * 60 + 30; m += 30) {
+            var on = Math.abs(m - cur) < 15;
+            opts += '<div onclick="window.setManualBedtime(' + m + '); document.getElementById(\'bedtime-sheet\').remove();" ' +
+                'style="padding:14px 10px; text-align:center; border-radius:13px; cursor:pointer; font-size:14px; font-weight:800; ' +
+                (on ? 'background:' + PURPLE + '; color:#FFF;' : 'background:var(--bg-sub); color:var(--text-m);') + '">' +
+                hhmm(m) + '</div>';
+        }
+
+        var wrap = document.createElement("div");
+        wrap.id = "bedtime-sheet";
+        wrap.setAttribute("style", "position:fixed; inset:0; z-index:100003; background:rgba(35,29,24,0.55); display:flex; align-items:flex-end; justify-content:center;");
+        wrap.onclick = function (e) { if (e.target === wrap) wrap.remove(); };
+
+        wrap.innerHTML =
+        '<div style="width:100%; max-width:480px; max-height:84vh; overflow-y:auto; background:var(--bg-card); border-radius:26px 26px 0 0; padding:22px 20px calc(30px + env(safe-area-inset-bottom, 0px));">' +
+            '<div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">' +
+                '<span style="font-size:16.5px; font-weight:900; color:var(--text-m); letter-spacing:-0.4px;">🌙 육퇴 시간 정하기</span>' +
+                '<span onclick="document.getElementById(\'bedtime-sheet\').remove()" style="font-size:22px; font-weight:300; color:var(--text-sub); cursor:pointer; line-height:1;">×</span>' +
+            '</div>' +
+            '<div style="font-size:12px; font-weight:600; color:var(--text-sub); line-height:1.7; margin-bottom:18px; word-break:keep-all;">' +
+                               '선택한 시간에 한 번 알려드려요.<br>' +
+                '오늘 사진을 이미 담았으면 알람을 보내지 않아요.</div>' +
+            '<div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:8px; margin-bottom:16px;">' + opts + '</div>' +
+             (manual
+                ? '<div onclick="window.setManualBedtime(null); document.getElementById(\'bedtime-sheet\').remove();" ' +
+                  'style="text-align:center; padding:14px; background:var(--bg-sub); color:var(--text-sub); border-radius:14px; font-size:13.5px; font-weight:800; cursor:pointer;">' +
+                  '정한 시간 지우기</div>'
+                : '<div style="text-align:center; font-size:11.5px; font-weight:600; color:var(--text-sub); line-height:1.6;">' +
+                  '고르지 않으면 수면 기록에 맞춰 조금씩 바뀌어요</div>') +
+        '</div>';
+
+        document.body.appendChild(wrap);
+    };
 
     /* ---------- 설정 탭 카드 ---------- */
+
+    function cardHTML() {
+        var on = !isOff();
+        var when = hhmm(bedtimeMinutes());
+         var mode = isLearned() ? "수면 기록 기준" : "";
+
+        return '<div style="font-size:22px;">🌙</div>' +
+            '<div style="flex:1; min-width:0;" onclick="window.openBedtimeSheet()">' +
+                '<div style="font-size:15px; font-weight:900; color:var(--text-m);">육퇴 알림</div>' +
+                '<div style="font-size:12px; font-weight:600; color:var(--text-sub); margin-top:2px; word-break:keep-all;">' +
+                  (on
+                        ? esc(when) + '에 알려드려요' + (mode ? ' · ' + esc(mode) : '') +
+                          '  <span style="color:' + PURPLE + '; font-weight:800;">바꾸기 〉</span>'
+                        : '지금은 꺼져 있어요') +
+                '</div>' +
+            '</div>' +
+            '<div id="remind-toggle" style="width:46px; height:27px; border-radius:14px; flex-shrink:0; cursor:pointer; ' +
+                'background:' + (on ? PURPLE : "var(--border)") + '; position:relative; transition:0.2s;">' +
+                '<div style="position:absolute; top:3px; ' + (on ? "left:22px" : "left:3px") + '; width:21px; height:21px; ' +
+                    'border-radius:50%; background:#FFF; transition:0.2s; box-shadow:0 1px 3px rgba(0,0,0,0.2);"></div>' +
+            '</div>';
+    }
+
+    function bindCard(card) {
+        var t = card.querySelector("#remind-toggle");
+        if (t) t.onclick = function (e) { e.stopPropagation(); window.setBedtimeReminder(isOff()); };
+    }
+
+    function redrawCard() {
+        var card = document.getElementById("remind-card");
+        if (!card) return;
+        card.innerHTML = cardHTML();
+        bindCard(card);
+    }
 
     (function mountCard() {
         var _origin = window.renderSettingsTab;
@@ -132,35 +230,17 @@
             var container = document.getElementById("tab-settings");
             if (!container || document.getElementById("remind-card")) return;
 
-            var on = !isOff();
-            var when = hhmm(bedtimeMinutes());
-
             var card = document.createElement("div");
             card.id = "remind-card";
-            card.style.cssText = "display:flex; align-items:center; gap:14px; background:var(--bg-card); padding:18px 20px; border-radius:16px; border:1px solid var(--border); margin-bottom:16px; box-sizing:border-box; width:100%;";
-            card.innerHTML =
-                '<div style="font-size:22px;">🌙</div>' +
-                '<div style="flex:1; min-width:0;">' +
-                    '<div style="font-size:15px; font-weight:900; color:var(--text-m);">육퇴 알림</div>' +
-                    '<div style="font-size:12px; font-weight:600; color:var(--text-sub); margin-top:2px; word-break:keep-all;">' +
-                        (on ? esc(when) + '쯤, 오늘 사진이 비어 있을 때만 살짝'
-                            : '지금은 꺼져 있어요') +
-                    '</div>' +
-                '</div>' +
-                '<div id="remind-toggle" style="width:46px; height:27px; border-radius:14px; flex-shrink:0; cursor:pointer; ' +
-                    'background:' + (on ? PURPLE : "var(--border)") + '; position:relative; transition:0.2s;">' +
-                    '<div style="position:absolute; top:3px; ' + (on ? "left:22px" : "left:3px") + '; width:21px; height:21px; ' +
-                        'border-radius:50%; background:#FFF; transition:0.2s; box-shadow:0 1px 3px rgba(0,0,0,0.2);"></div>' +
-                '</div>';
-
+            card.className = "bnh-settings-card";
+            card.style.cssText = "display:flex; align-items:center; gap:14px; background:var(--bg-card); padding:18px 20px; border-radius:16px; border:1px solid var(--border); margin-bottom:12px; box-sizing:border-box; width:100%; cursor:pointer;";
+            card.innerHTML = cardHTML();
             container.prepend(card);
-
-            var t = document.getElementById("remind-toggle");
-            if (t) t.onclick = function () { window.setBedtimeReminder(isOff()); };
+            bindCard(card);
         };
     })();
 
-    /* ---------- 앱이 자리를 잡으면 한 번 ---------- */
+    /* ---------- 시작 ---------- */
 
     function boot() {
         setTimeout(function () { window.syncBedtimeReminder(false); }, 4000);
@@ -172,7 +252,9 @@
     /* ---------- 점검용 ---------- */
     window.remindDebug = function () {
         console.log("알림 켜짐:", !isOff());
-        console.log("배운 육퇴 시각:", hhmm(bedtimeMinutes()), "→ 보낼 칸:", bucketOf(bedtimeMinutes()));
+        console.log("직접 정한 시각:", window.getManualBedtime() === null ? "없음" : hhmm(window.getManualBedtime()));
+        console.log("배운 시각:", typeof window.getBedtimeMinutes === "function" ? hhmm(window.getBedtimeMinutes()) : "-");
+        console.log("실제 쓰는 시각:", hhmm(bedtimeMinutes()), "→ 보낼 칸:", bucketOf(bedtimeMinutes()));
         console.log("마지막 사진 날짜:", lastPhotoDay() || "없음");
         console.log("오늘 등록 완료:", localStorage.getItem(SYNCED_KEY) === todayKey());
         console.log("가족 코드:", syncCode() || "없음");

@@ -466,11 +466,13 @@
                 '<span onclick="document.getElementById(\'export-sheet\').remove()" style="font-size:22px; font-weight:300; color:var(--text-sub); cursor:pointer; line-height:1;">×</span>' +
             '</div>' +
             '<div style="font-size:12.5px; font-weight:600; color:var(--text-sub); line-height:1.7; margin-bottom:18px; word-break:keep-all;">' +
-                '지금까지 담긴 사진 ' + pN + '장, 소리 ' + vN + '개, 편지 ' + lN + '통, 처음 해낸 일 ' + mN + '가지.<br>' +
-                '앱 없이도 열리는 폴더 하나로 만들어 드려요.' +
+                                '앱이 없어도 열리는 폴더 하나로 만들어 드려요.<br>' +
+                '어디에 두시든 이건 온전히 우리 아기 것입니다.' +
             '</div>' +
-            btn("window.exportMemoryBox(true)", "전부 담기", "사진과 소리까지" + (heavy ? " · 용량이 커서 와이파이를 권해요" : ""), true) +
-            btn("window.exportMemoryBox(false)", "기록만 담기", "편지 · 도감 · 목록만 · 아주 가벼워요") +
+                                   btn("window.exportMemoryBox(true)", "전부 받기",
+                "사진 " + pN + "장 · 소리 " + vN + "개 · 편지 " + lN + "통" + (heavy ? " · 와이파이에서 받으세요" : ""), true) +
+            btn("window.exportMemoryBox(false)", "사진 빼고 받기",
+                (lN ? "편지 " + lN + "통과 도감 " + mN + "가지만" : "편지와 도감 목록만")) +
             '<div style="text-align:center; font-size:11px; font-weight:600; color:var(--text-sub); margin-top:10px; line-height:1.6;">' +
                 '이 파일은 어디에도 올라가지 않아요. 이 기기에서 바로 만들어집니다.</div>' +
         '</div>';
