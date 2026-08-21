@@ -2774,7 +2774,7 @@ async function createBatonTask(text, reward) {
     const syncCode = window.getSyncCode ? window.getSyncCode() : localStorage.getItem('family_sync_code');
     if (syncCode && window.functions && window.httpsCallable) {
         const sendFamilyPush = window.httpsCallable(window.functions, 'sendFamilyPush');
-        const myName = localStorage.getItem('kakao_nickname') || '육아메이트';
+        const myName = localStorage.getItem('kakao_nickname') || '배냇함';
         sendFamilyPush({
             syncCode: syncCode,
             title: "💌 아내의 바통터치 SOS",
@@ -5210,10 +5210,10 @@ window.updateDiaryCard = function() {
 };
 
 window.pokePartner = function() {
-    const text = "[육아메이트] 오늘 하루도 정말 고생 많았어 🤍 육아 문답에 내 마음을 남겨뒀으니 얼른 와서 확인해봐!";
+    const text = "[배냇함] 오늘 하루도 정말 고생 많았어 🤍 육아 문답에 내 마음을 남겨뒀으니 얼른 와서 확인해봐!";
     const url = "https://happy-baby0303.github.io/"; 
     if (navigator.share) {
-        navigator.share({ title: '육아메이트의 따뜻한 초대', text: text, url: url }).catch(() => {});
+        navigator.share({ title: '배냇함의 따뜻한 초대', text: text, url: url }).catch(() => {});
     } else {
         prompt("아래 텍스트를 복사해서 카톡으로 보내주세요!", text + " " + url);
     }
@@ -6422,7 +6422,7 @@ window.showForcedLoginStep = function() {
         step0.innerHTML = `
             <div style="font-size: 60px; margin-bottom: 20px; animation: bounce 2s infinite;">🐥</div>
             <h2 style="font-size: 24px; font-weight: 900; color: #191F28; margin: 0 0 12px 0; letter-spacing: -0.5px; line-height: 1.4;">
-                우리 아기 육아메이트<br>환영합니다!
+                우리 아기 배냇함<br>환영합니다!
             </h2>
             <p style="font-size: 14.5px; font-weight: 600; color: #8B95A1; line-height: 1.5; margin: 0 0 40px 0; word-break: keep-all;">
                 소중한 육아 기록을 평생 안전하게 보관하고<br>
@@ -6492,7 +6492,7 @@ window.finishOnboarding = function(feedingStage) {
 
     // ⏱️ 2.4초 뒤: 세 번째 멘트
     setTimeout(() => {
-        loadingText.innerHTML = `[${feedingStage}]에 딱 맞는<br>육아메이트 세팅 완료! 🎉`;
+        loadingText.innerHTML = `[${feedingStage}]에 딱 맞는<br>배냇함 세팅 완료! 🎉`;
     }, 2400);
 
     // ⏱️ 3.5초 뒤: 마술이 끝나면 데이터 저장 및 서버 동기화 후 새로고침!
@@ -6624,8 +6624,8 @@ window.sendKakaoInvite = function() {
         Kakao.Share.sendDefault({
             objectType: 'feed',
             content: {
-                title: '💌 육아메이트 가족 초대장!',
-                description: `여보! 우리 아기 맞춤형 육아 비서 [육아메이트]로 나랑 같이 육아 기록 공유하자 🤍\n(아래 버튼을 누르면 자동으로 연동돼!)`,
+                title: '💌 배냇함 가족 초대장!',
+                description: `여보! 우리 아기 맞춤형 육아 비서 [배냇함]로 나랑 같이 육아 기록 공유하자 🤍\n(아래 버튼을 누르면 자동으로 연동돼!)`,
                 imageUrl: 'https://cdn-icons-png.flaticon.com/512/3135/3135715.png', // 앱 로고 이미지
                 link: {
                     mobileWebUrl: inviteUrl,
@@ -6646,7 +6646,7 @@ window.sendKakaoInvite = function() {
         // 카카오 실패 시 보험
         const text = `여보! 우리 아기 육아 기록 같이 공유하자 🤍 (초대코드: ${syncCode})`;
         if (navigator.share) {
-            navigator.share({ title: '육아메이트 초대장', text: text, url: inviteUrl })
+            navigator.share({ title: '배냇함 초대장', text: text, url: inviteUrl })
             .catch(console.error);
         } else {
             prompt("아래 초대장을 복사해서 카톡으로 보내주세요!", text + " " + inviteUrl);
@@ -7231,7 +7231,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
 // 1. 레벨별 요구 경험치, 공용 칭호, 그리고 🎁[레벨업 보상] 추가!
 const mateLevelData = [
-    { level: 1, reqExp: 0, title: "초보 육아메이트 🐣", reward: null },
+    { level: 1, reqExp: 0, title: "초보 배냇함 🐣", reward: null },
     { level: 2, reqExp: 100, title: "기저귀 교환 요정 🧚", reward: null },
     { level: 3, reqExp: 300, title: "분유 타기 장인 🍼", reward: "☕ 달콤한 커피 타임 (배우자 결제)" },
     { level: 4, reqExp: 600, title: "트림 유도 마스터 🌬️", reward: null },
@@ -7623,7 +7623,7 @@ window.renderSettingsTab = function() {
                     <div style="color: #8B95A1; font-size: 12px;">〉</div>
                 </div>
                 <div onclick="window.open('https://blog.naver.com/radiant_ly', '_blank')" style="display: flex; justify-content: space-between; align-items: center; padding: 18px 20px; border-bottom: 1px solid var(--border); cursor: pointer;">
-                    <div style="font-size: 14.5px; font-weight: 800; color: var(--text-m);">육아메이트 블로그 가기</div>
+                    <div style="font-size: 14.5px; font-weight: 800; color: var(--text-m);">배냇함 블로그 가기</div>
                     <div style="color: #8B95A1; font-size: 12px;">〉</div>
                 </div>
                 <div onclick="location.href='privacy.html'" style="display: flex; justify-content: space-between; align-items: center; padding: 18px 20px; border-bottom: 1px solid var(--border); cursor: pointer;">
@@ -7909,7 +7909,7 @@ window.showRoleOnboarding = function() {
     overlay.innerHTML = `
         <div style="background:var(--bg-card, #fff); width:100%; max-width:340px; border-radius:24px; padding:36px 24px; text-align:center; box-shadow:0 15px 35px rgba(0,0,0,0.25); animation: popIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);">
             <div style="font-size:45px; margin-bottom:16px; animation: bounce 2s infinite;">👋</div>
-            <div style="font-size:22px; font-weight:900; color:var(--text-m, #191f28); margin-bottom:10px;">반가워요, 육아메이트님</div>
+            <div style="font-size:22px; font-weight:900; color:var(--text-m, #191f28); margin-bottom:10px;">반가워요, 배냇함님</div>
             <div style="font-size:14px; font-weight:600; color:var(--text-s, #8b95a1); margin-bottom:32px; line-height:1.5;">최적화된 화면을 준비해 드릴게요.<br>어떤 역할을 맡고 계신가요?</div>
             
             <div style="display:flex; gap:12px;">
@@ -8521,7 +8521,7 @@ window.exportToExcel = function() {
     const todayStr = `${today.getFullYear()}${String(today.getMonth()+1).padStart(2,'0')}${String(today.getDate()).padStart(2,'0')}`;
     
     link.setAttribute("href", url);
-    link.setAttribute("download", `육아메이트_데이터백업_${todayStr}.csv`);
+    link.setAttribute("download", `배냇함_데이터백업_${todayStr}.csv`);
     link.style.visibility = 'hidden';
     document.body.appendChild(link);
     link.click();
@@ -8981,7 +8981,7 @@ window.submitPost = function(btnElement) {
     if (!content.trim()) { resetBtn(); return window.showToast('⚠️ 내용을 입력해주세요!'); }
 
     let posts = JSON.parse(localStorage.getItem('tosil_community_posts')) || [];
-    const myName = localStorage.getItem('community_nickname') || localStorage.getItem('kakao_nickname') || '육아메이트';
+    const myName = localStorage.getItem('community_nickname') || localStorage.getItem('kakao_nickname') || '배냇함';
     const authorName = isAnonymous ? '익명마미' : myName;
     const authorIcon = window.getCurrentUserProfileIcon(isAnonymous);
 
@@ -9235,7 +9235,7 @@ window.showPostOptions = async function() {
     const post = posts.find(p => p.id === postId);
     if (!post) return;
 
-    const myName = localStorage.getItem('community_nickname') || localStorage.getItem('kakao_nickname') || '육아메이트';
+    const myName = localStorage.getItem('community_nickname') || localStorage.getItem('kakao_nickname') || '배냇함';
     const isMyPost = (post.authorName === myName || post.authorName === '익명마미');
 
     let isMasterAdmin = false;
@@ -9255,7 +9255,7 @@ if(existing) existing.remove();
     // 👑 1. 관리자 모드
     if (isMasterAdmin) {
         menuHtml = `
-            <div style="padding: 0 0 16px 0; font-size: 13px; font-weight: 900; color: #3182F6; text-align: center;">👑 육아메이트 대표이사</div>
+            <div style="padding: 0 0 16px 0; font-size: 13px; font-weight: 900; color: #3182F6; text-align: center;">👑 배냇함 대표이사</div>
             <div onclick="window.editPost('${postId}')" style="padding: 16px 0; font-size: 16px; font-weight: 700; color: #333D4B; border-bottom: 1px solid #F2F4F6; cursor: pointer; display: flex; align-items: center; gap: 12px;">
                 <span style="font-size: 20px;">✏️</span> 글 강제 수정하기
             </div>
@@ -9383,7 +9383,7 @@ window.openMyActivity = function(type) {
     else if (type === 'scraps') titleEl.innerText = '스크랩한 글';
 
     let allPosts = JSON.parse(localStorage.getItem('tosil_community_posts')) || [];
-    let myNickname = localStorage.getItem('community_nickname') || localStorage.getItem('kakao_nickname') || '육아메이트'; 
+    let myNickname = localStorage.getItem('community_nickname') || localStorage.getItem('kakao_nickname') || '배냇함'; 
 
     let filtered = [];
     if (type === 'posts') filtered = allPosts.filter(p => p.authorName === myNickname);
@@ -9507,7 +9507,7 @@ window.openMyPage = function() {
     if (typeof window.switchTab === 'function') window.switchTab('mypage', null);
     
     const input = document.getElementById('comm-nickname-input');
-    if(input) input.value = localStorage.getItem('community_nickname') || localStorage.getItem('kakao_nickname') || '육아메이트';
+    if(input) input.value = localStorage.getItem('community_nickname') || localStorage.getItem('kakao_nickname') || '배냇함';
     window.scrollTo(0, 0);
 };
 
@@ -9534,7 +9534,7 @@ window.updateMyPageProfile = function() {
 
         // 대표님 화면(스크린샷)에 맞춰 텍스트 교체
         const userInfo = document.getElementById('mypage-user-info');
-        if (userInfo) userInfo.innerText = `${roleName} · 육아메이트와 함께하는 중!`;
+        if (userInfo) userInfo.innerText = `${roleName} · 배냇함와 함께하는 중!`;
         
         const profileCircle = document.getElementById('mypage-profile-icon');
         if(profileCircle && typeof window.getCurrentUserProfileIcon === 'function') {
@@ -9623,8 +9623,8 @@ window.changeNickname = function() {
     const isMaster = localStorage.getItem('tosil_is_master') === 'true';
     const isSubAdmin = localStorage.getItem('tosil_is_subadmin') === 'true';
 
-    // 관리자가 아니면 '육아메이트', '대표', '운영진' 등 절대 사용 불가
-    if (!isMaster && !isSubAdmin && (newName.includes('육아메이트') || newName.includes('대표') || newName.includes('관리자') || newName.includes('운영자') || newName.includes('운영진') || newName.includes('admin') || newName.includes('master'))) {
+    // 관리자가 아니면 '배냇함', '대표', '운영진' 등 절대 사용 불가
+    if (!isMaster && !isSubAdmin && (newName.includes('배냇함') || newName.includes('대표') || newName.includes('관리자') || newName.includes('운영자') || newName.includes('운영진') || newName.includes('admin') || newName.includes('master'))) {
         return window.showToast("🚨 해당 단어는 사칭 방지를 위해 사용할 수 없습니다.");
     }
     
@@ -9709,7 +9709,7 @@ window.openBlockedUsers = function() {
             <div style="text-align: center; padding-top: 100px;">
                 <div style="font-size: 40px; margin-bottom: 16px;">🌿</div>
                 <div style="font-size: 16px; font-weight: 800; color: var(--text-m); margin-bottom: 8px;">차단한 사용자가 없어요!</div>
-                <div style="font-size: 13.5px; color: var(--text-s);">클린한 육아메이트 커뮤니티입니다.</div>
+                <div style="font-size: 13.5px; color: var(--text-s);">클린한 배냇함 커뮤니티입니다.</div>
             </div>`;
     } else {
         let html = '';
@@ -9753,7 +9753,7 @@ window.inviteMamsudaFriend = function() {
             buttons: [{ title: '맘수다 놀러가기', link: { mobileWebUrl: url, webUrl: url } }]
         });
     } else if (navigator.share) {
-        navigator.share({ title: '육아메이트 맘수다 초대', text: text, url: url }).catch(() => {});
+        navigator.share({ title: '배냇함 맘수다 초대', text: text, url: url }).catch(() => {});
     } else {
         prompt("아래 텍스트를 복사해서 친구에게 보내주세요!", text + " " + url);
     }
@@ -9890,7 +9890,7 @@ window.renderCommunityFeed = function() {
             
             <p style="font-size: 14.5px; font-weight: 600; color: var(--text-sub); line-height: 1.6; word-break: keep-all; margin: 0 0 32px 0;">
                 더 쾌적하고 맘 편한 소통 공간을 만들기 위해<br>
-                육아메이트가 열심히 단장하고 있어요 🛠️<br>
+                배냇함이 열심히 단장하고 있어요 🛠️<br>
                 조금만 기다려주시면 짠! 하고 돌아올게요.
             </p>
 
@@ -10377,7 +10377,7 @@ window.closeWriteModal = function() {
 };
 
 // ==========================================
-// 👑 [Phase 2] 육아메이트 비밀 조종석 (관제센터) 엔진 (복구 완료!)
+// 👑 [Phase 2] 배냇함 비밀 조종석 (관제센터) 엔진 (복구 완료!)
 // ==========================================
 window.adminClickCount = 0;
 window.adminClickTimer = null;
@@ -10422,7 +10422,7 @@ window.openAdminDashboard = function() {
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:24px;">
                 <div>
                     <div style="font-size:12px; font-weight:800; color:#38BDF8; margin-bottom:4px;">Tosil Admin System</div>
-                    <div style="font-size:24px; font-weight:900; color:#FFFFFF;">👑 육아메이트 관제센터</div>
+                    <div style="font-size:24px; font-weight:900; color:#FFFFFF;">👑 배냇함 관제센터</div>
                 </div>
                 <button onclick="window.closeAdminDashboard()" style="background:rgba(255,255,255,0.1); border:none; width:36px; height:36px; border-radius:50%; color:#FFF; font-size:16px; cursor:pointer;">✕</button>
             </div>
@@ -10714,7 +10714,7 @@ window.showCommentOptions = async function(commentId, postId) {
     let comment = comments.find(c => c.id === commentId);
     if (!comment) return;
 
-    const myName = localStorage.getItem('community_nickname') || localStorage.getItem('kakao_nickname') || '육아메이트';
+    const myName = localStorage.getItem('community_nickname') || localStorage.getItem('kakao_nickname') || '배냇함';
     const isMyComment = (comment.authorName === myName || comment.authorName === '익명마미');
 
     let isMasterAdmin = localStorage.getItem('tosil_is_master') === 'true';
@@ -10726,7 +10726,7 @@ window.showCommentOptions = async function(commentId, postId) {
     
     if (isMasterAdmin) {
         menuHtml = `
-            <div style="padding: 0 0 16px 0; font-size: 13px; font-weight: 900; color: #3182F6; text-align: center;">👑 육아메이트 대표이사</div>
+            <div style="padding: 0 0 16px 0; font-size: 13px; font-weight: 900; color: #3182F6; text-align: center;">👑 배냇함 대표이사</div>
             <div onclick="window.deleteComment('${commentId}', '${postId}'); document.getElementById('comment-action-sheet').remove();" style="padding: 16px 0; font-size: 16px; font-weight: 700; color: #F04452; border-bottom: 1px solid #F2F4F6; cursor: pointer; display: flex; align-items: center; gap: 12px;">
                 <span style="font-size: 20px;">🗑️</span> 댓글 강제 삭제
             </div>
@@ -10812,7 +10812,7 @@ window.blockUser = function(id, type) {
         if (c) targetName = c.authorName;
     }
 
-    if (!targetName || targetName === '육아메이트' || targetName === '육아천재대표님') {
+    if (!targetName || targetName === '배냇함' || targetName === '육아천재대표님') {
         return window.showToast("🚨 최고 관리자는 차단할 수 없습니다.");
     }
     
@@ -10876,7 +10876,7 @@ window.addComment = function() {
         return;
     }
 
-    const myName = localStorage.getItem('community_nickname') || localStorage.getItem('kakao_nickname') || '육아메이트';
+    const myName = localStorage.getItem('community_nickname') || localStorage.getItem('kakao_nickname') || '배냇함';
     const myIcon = window.getCurrentUserProfileIcon(false);
     const timestamp = new Date().getTime();
 
@@ -11762,7 +11762,7 @@ window.__old_downloadMilestone_unused = function() {
                 <div style="display: flex; flex-direction: column; align-items: flex-end;">
                     <div style="font-size: 14px; font-weight: 600; color: #C4B5A9; letter-spacing: 3px; margin-bottom: 12px;">기록의 완성</div>
                     <div style="font-size: 28px; font-weight: 700; color: #7A6F68; letter-spacing: -1px; font-family: 'Gowun Batang', serif;">
-                        육아메이트
+                        배냇함
                     </div>
                 </div>
             </div>
@@ -12073,7 +12073,7 @@ window.showSyncCode = function() {
 
                     <div style="display: flex; justify-content: space-between; font-size: 11px; opacity: 0.7; font-weight: 600;">
                         <span>STATUS: LIVE SYNC</span>
-                        <span>육아메이트 🤍</span>
+                        <span>배냇함 🤍</span>
                     </div>
                 </div>
 
@@ -12116,7 +12116,7 @@ window.downloadSyncTicket = function() {
             if (navigator.canShare && navigator.canShare({ files: [file] })) {
                 navigator.share({
                     files: [file],
-                    title: '육아메이트 가족 티켓',
+                    title: '배냇함 가족 티켓',
                     text: '우리 아기 육아 기록 같이 공유하자 🤍 아래 링크를 눌러줘!'
                 }).then(() => {
                     window.showToast("🎉 티켓 전송 완료! 짝꿍에게 보내보세요 ✈️");
@@ -13068,7 +13068,7 @@ window.cancelBreastTimer = function() {
 };
 
 // ==========================================
-// 👑 [육아메이트 플러스] 프리미엄 판독 및 동기화 엔진
+// 👑 [배냇함 플러스] 프리미엄 판독 및 동기화 엔진
 // ==========================================
 
 // 1. 로그인/동기화 시 families 문서에서 plan(요금제) 읽어와서 캐시 저장
@@ -13383,7 +13383,7 @@ window.renderSettingsTab = function() {
         const existingRibbon = document.getElementById('vip-badge-ribbon');
         if (existingRibbon) existingRibbon.remove();
 
-        // 설정 탭 안에 있는 '육아메이트 VIP' 광고 배너도 대표님 눈에 안 보이게 숨김 처리!
+        // 설정 탭 안에 있는 '배냇함 VIP' 광고 배너도 대표님 눈에 안 보이게 숨김 처리!
         const container = document.getElementById('tab-settings');
         if (container) {
             const vipBanner = container.querySelector('div[style*="linear-gradient(135deg, #1e293b"]');
@@ -13575,7 +13575,7 @@ window.downloadPediatricianReport = function() {
         <div style="border-bottom: 4px solid #191F28; padding-bottom: 24px; margin-bottom: 40px; display:flex; justify-content:space-between; align-items:flex-end;">
             <div>
                 <div style="font-size:36px; font-weight:900; letter-spacing:-1.5px; color:#191F28;">소아과 진료 브리핑 차트</div>
-                <div style="font-size:16px; font-weight:700; color:#8B95A1; margin-top:8px;">육아메이트 프리미엄 의료 데이터 추출 시스템</div>
+                <div style="font-size:16px; font-weight:700; color:#8B95A1; margin-top:8px;">배냇함 프리미엄 의료 데이터 추출 시스템</div>
             </div>
             <div style="text-align:right;">
                 <div style="font-size:14px; font-weight:800; color:#4E5968; margin-bottom:4px;">발급일자</div>
@@ -13734,7 +13734,7 @@ window.downloadMonthlyGrowthCard = function() {
 
         <div style="display:flex; justify-content:space-between; align-items:center; border-top:2px solid rgba(0,0,0,0.05); padding-top:24px; margin-top:20px;">
             <div style="font-size:18px; font-weight:800; color:#8B95A1;">우리 가족 프라이빗 육아 기록실</div>
-            <div style="font-size:24px; font-weight:900; color:#191F28;">육아메이트 플러스</div>
+            <div style="font-size:24px; font-weight:900; color:#191F28;">배냇함 플러스</div>
         </div>
     `;
 
@@ -13835,7 +13835,7 @@ window.downloadPediatricianPDF = function() {
                 <div style="font-size:27px;font-weight:900;">소아과 진료 참고 자료</div>
             </div>
             <div style="text-align:right;font-size:11px;color:#8B95A1;font-weight:700;line-height:1.7;">
-                작성일 ${new Date().toISOString().split('T')[0]}<br>육아메이트
+                작성일 ${new Date().toISOString().split('T')[0]}<br>배냇함
             </div>
         </div>
 
@@ -13880,7 +13880,7 @@ window.downloadPediatricianPDF = function() {
         </div>`}
 
         <div style="border-top:1px solid #E5E8EB;padding-top:16px;font-size:10.5px;color:#8B95A1;line-height:1.6;">
-            본 자료는 보호자가 육아메이트 앱에 직접 기록한 내용을 정리한 참고용 문서이며, 의학적 진단을 대신하지 않습니다.
+            본 자료는 보호자가 배냇함 앱에 직접 기록한 내용을 정리한 참고용 문서이며, 의학적 진단을 대신하지 않습니다.
             실제 진단과 처방은 반드시 전문의의 판단에 따라주시기 바랍니다.
         </div>`;
 

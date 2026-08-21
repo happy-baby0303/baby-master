@@ -1,5 +1,5 @@
 /* ============================================================
-   육아메이트 — 배냇함 포토북 (photobook.js)
+   배냇함 — 배냇함 포토북 (photobook.js)
 
    서버비가 0원인 프리미엄. 브라우저에서 만들어 바로 내려받는다.
    파일도, 변환 서버도, 저장소도 안 쓴다.
@@ -196,7 +196,7 @@
 
             '<div style="font-size:24px; font-weight:500; color:' + INK_S + '; margin-top:38px; letter-spacing:-0.5px;">' + esc(span) + '</div>' +
 
-            '<div style="margin-top:auto; font-size:19px; font-weight:600; color:' + INK_L + '; letter-spacing:3px;">육아메이트</div>' +
+            '<div style="margin-top:auto; font-size:19px; font-weight:600; color:' + INK_L + '; letter-spacing:3px;">배냇함</div>' +
         '</div>';
     }
 
@@ -331,7 +331,7 @@
                 '<div style="width:1px; height:110px; background:' + LINE + '; margin:52px auto;"></div>' +
                 '<div style="font-size:23px; font-weight:400; color:' + INK_S + '; line-height:1.9;">' +
                     '다음 장은 아직 비어 있어요.<br>내일 또 한 줄이 쌓입니다.</div>' +
-                '<div style="margin-top:auto; font-size:19px; font-weight:600; color:' + INK_L + '; letter-spacing:3px;">육아메이트</div>' +
+                '<div style="margin-top:auto; font-size:19px; font-weight:600; color:' + INK_L + '; letter-spacing:3px;">배냇함</div>' +
             '</div>', ""
         );
     }

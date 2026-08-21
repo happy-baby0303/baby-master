@@ -1,5 +1,5 @@
 /* ============================================================
-   육아메이트 — 소리의 모양 (waveform.js)
+   배냇함 — 소리의 모양 (waveform.js)
 
    포토북 목소리 장에 이렇게 써뒀었다. "종이에는 담기지 않는 것".
    파형이 그 문장을 깬다.
@@ -209,7 +209,7 @@
                 '</div>' +
                 '<div style="text-align:right;">' +
                     '<div style="font-size:13px; font-weight:600; color:#C4B5A9; letter-spacing:3px; margin-bottom:10px;">소리의 모양</div>' +
-                    '<div style="font-size:27px; font-weight:700; color:#7A6F68; letter-spacing:-1px; font-family:\'Gowun Batang\',serif;">육아메이트</div>' +
+                    '<div style="font-size:27px; font-weight:700; color:#7A6F68; letter-spacing:-1px; font-family:\'Gowun Batang\',serif;">배냇함</div>' +
                 '</div>' +
             '</div>' +
         '</div>';

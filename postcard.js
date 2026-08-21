@@ -1,5 +1,5 @@
 /* ============================================================
-   육아메이트 — 추억 엽서 (postcard.js)
+   배냇함 — 추억 엽서 (postcard.js)
 
    기존 엽서는 가운데가 텅 비어 있었다.
    비어 있던 게 아니라, 거기가 사진 자리였다.
@@ -149,7 +149,7 @@
                 '</div>' +
                 '<div style="text-align:right;">' +
                     '<div style="font-size:13px; font-weight:600; color:#C4B5A9; letter-spacing:3px; margin-bottom:10px;">기록의 완성</div>' +
-                    '<div style="font-size:27px; font-weight:700; color:#7A6F68; letter-spacing:-1px; font-family:\'Gowun Batang\',serif;">육아메이트</div>' +
+                    '<div style="font-size:27px; font-weight:700; color:#7A6F68; letter-spacing:-1px; font-family:\'Gowun Batang\',serif;">배냇함</div>' +
                 '</div>' +
             '</div>' +
 

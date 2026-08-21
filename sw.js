@@ -19,7 +19,7 @@ messaging.onBackgroundMessage((payload) => {
     console.log('[SW] 백그라운드 푸시 수신 성공!');
 });
 
-// 🔔 알림을 터치하면 육아메이트 앱이 짠! 하고 열리게 해주는 마법
+// 🔔 알림을 터치하면 배냇함 앱이 짠! 하고 열리게 해주는 마법
 self.addEventListener('notificationclick', function(event) {
     event.notification.close();
     event.waitUntil(
@@ -38,7 +38,7 @@ self.addEventListener('notificationclick', function(event) {
 
 
 // 💾 기존 PWA 오프라인 캐시 엔진
-const CACHE = 'yukamate-v5';   // 🔄 리텐션 모듈 추가로 버전 업!
+const CACHE = 'baenaet-v1';   // 🔄 리텐션 모듈 추가로 버전 업!
 
 const ASSETS = [
     './',

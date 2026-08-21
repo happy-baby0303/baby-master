@@ -716,7 +716,7 @@ padding-bottom: 24px;      /* 하단 버튼이 폰 베젤에 씹히지 않게 �
             border: 1px solid var(--border) !important;
         }
 
-        /* 🌟 육아메이트 디자인 시스템 (색상 & 여백) */
+        /* 🌟 배냇함 디자인 시스템 (색상 & 여백) */
     :root {
         /* 브랜드 컬러 */
         --brand-primary: #3182F6; /* 신뢰감을 주는 모던 블루 */

@@ -1,5 +1,5 @@
 /* ============================================================
-   육아메이트 — 배냇함 내려받기 (export.js)
+   배냇함 — 배냇함 내려받기 (export.js)
 
    "스무 살에 열립니다" 는 이 앱에서 가장 무거운 약속이다.
    20년 뒤에 이 앱이 있을지 사용자는 모른다.
@@ -252,7 +252,7 @@
             })) +
             '<h2>사진 <small>' + d.photoN + '장</small></h2><ul><li>사진 폴더에 날짜순으로 들어 있어요</li></ul>' +
             '<h2>소리 <small>' + d.voiceN + '개</small></h2><ul><li>소리 폴더에 날짜순으로 들어 있어요</li></ul>' +
-            '<div class="box">이 폴더는 육아메이트 없이도 열립니다.<br>' +
+            '<div class="box">이 폴더는 배냇함 없이도 열립니다.<br>' +
             '기록.json 에는 모든 원본 데이터가 그대로 들어 있어요.<br>' +
             '어디에 두시든, 이건 온전히 ' + esc(babyName()) + ' 의 것입니다.</div>' +
             '</body></html>';
@@ -278,7 +278,7 @@
 
             var zip = new JSZip();
             var stamp = todayStr();
-            var rootName = "육아메이트_" + safe(babyName()) + "_배냇함_" + stamp;
+            var rootName = "배냇함_" + safe(babyName()) + "_배냇함_" + stamp;
             var root = zip.folder(rootName);
 
             var failed = [];
