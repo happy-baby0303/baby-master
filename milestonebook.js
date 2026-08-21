@@ -17,7 +17,7 @@
 (function () {
     'use strict';
 
-    var SLOT = 54;                 // 액자 한 변
+    var SLOT = 42;                 // 액자 한 변
     var MARK = "data-frame";       // 이미 끼운 줄 표시
 
     function esc(s) {
@@ -66,14 +66,14 @@
 
         var box = document.createElement("div");
         box.setAttribute(MARK, "1");
+        // 마진을 좌우로 예쁘게 분배하고 모서리를 살짝 더 둥글게!
         box.style.cssText = "position:relative; width:" + SLOT + "px; height:" + SLOT + "px; " +
-            "flex-shrink:0; margin-left:10px; border-radius:12px; overflow:hidden;";
+            "flex-shrink:0; margin:0 8px 0 auto; border-radius:14px; overflow:hidden; transition: 0.2s;";
 
         if (photo) {
             box.style.background = "var(--bg-sub)";
             box.innerHTML = '<img src="' + esc(thumbOf(photo.photo)) + '" loading="lazy" alt="" ' +
                 'style="width:100%; height:100%; object-fit:cover; display:block;">';
-            // addMilestonePhoto 는 사진이 이미 있으면 뷰어를 연다
             box.onclick = function (e) {
                 e.stopPropagation();
                 if (typeof window.addMilestonePhoto === "function") {
@@ -82,10 +82,10 @@
             };
 
         } else if (done) {
-            // 도장은 찍혔는데 사진이 없는 칸. 여기가 제일 일을 많이 한다.
-            box.style.cssText += "border:1px dashed rgba(190,18,60,0.35); background:rgba(255,255,255,0.5); " +
-                "display:flex; align-items:center; justify-content:center; cursor:pointer;";
-            box.innerHTML = '<span style="font-size:17px; font-weight:300; color:#BE123C; opacity:0.6; line-height:1;">+</span>';
+            // 도장은 찍혔는데 사진이 없는 칸. 디자인을 인스타 감성으로 몽글몽글하게!
+            box.style.cssText += "border:1.5px dashed rgba(255, 75, 108, 0.4); background:rgba(255, 255, 255, 0.8); " +
+                "display:flex; align-items:center; justify-content:center; cursor:pointer; box-shadow: inset 0 2px 4px rgba(255, 75, 108, 0.05);";
+            box.innerHTML = '<span style="font-size:22px; font-weight:300; color:#FF4B2B; line-height:1; margin-top:-2px;">+</span>';
             box.onclick = function (e) {
                 e.stopPropagation();
                 if (typeof window.addMilestonePhoto === "function") {

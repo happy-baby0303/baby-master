@@ -195,7 +195,7 @@
     function idb() {
         return new Promise(function (res, rej) {
             if (!window.indexedDB) return rej(new Error("no indexedDB"));
-            var req = indexedDB.open(DB_NAME, 1);
+            var req = indexedDB.open(DB_NAME, 2);
             req.onupgradeneeded = function () {
                 var db = req.result;
                 if (!db.objectStoreNames.contains(STORE)) db.createObjectStore(STORE);

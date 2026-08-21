@@ -11599,19 +11599,31 @@ let html = `
             ? `<div style="width: 30px; height: 30px; border-radius: 50%; background: linear-gradient(135deg, #FF4B2B 0%, #FF416C 100%); color: #FFF; display: flex; align-items: center; justify-content: center; font-size: 16px; font-weight: 900; box-shadow: 0 4px 12px rgba(255, 65, 108, 0.4); animation: popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);">✓</div>` 
             : `<div style="width: 28px; height: 28px; border-radius: 50%; border: 2px solid #E5E8EB; background: transparent; display: flex; align-items: center; justify-content: center;"></div>`;
 
+        // 💡 날짜가 비어있거나 길 때 너무 길게 나오던 텍스트를 아주 짧고 세련되게 압축!
+        let displayDate = doneDate;
+        if (doneDate.includes('기억해둘게요') || doneDate.includes('예전 기록')) {
+            displayDate = '날짜 기록';
+        }
+
         html += `
-            <div class="milestone-item ${isDone ? 'achieved' : ''}" onclick="window.toggleMilestone('${item.id}')" style="background: ${cardBg}; border: ${cardBorder}; padding: 18px 20px; margin-bottom: 12px; border-radius: 20px; display: flex; justify-content: space-between; align-items: center; cursor: pointer; transition: all 0.2s ease;">
-                <div style="display:flex; align-items:flex-start; gap: 16px; flex: 1;">
-                    <div style="width: 34px; height: 34px; background: ${numBg}; box-shadow: ${numShadow}; border-radius: 10px; font-size: 14px; font-weight: 900; color: ${numColor}; display: flex; align-items: center; justify-content: center; flex-shrink: 0; transition: 0.3s;">
-                        ${formattedNum}
-                    </div>
-                    <div style="flex: 1; padding-top: 2px;">
-                        <div style="font-size: 15.5px; font-weight: 900; color: ${titleColor}; margin-bottom: 4px; letter-spacing: -0.3px;">${item.title}</div>
-                        <div style="font-size: 13px; font-weight: 600; color: ${descColor}; word-break: keep-all; line-height: 1.4; margin-bottom: ${isDone ? '8px' : '0'};">${item.desc}</div>
-                        ${isDone ? `<div onclick="event.stopPropagation(); window.editMilestoneDate && window.editMilestoneDate('${item.id}')" style="font-size: 11px; font-weight: 800; color: #BE123C; display: inline-flex; align-items: center; gap: 4px; background: rgba(255,255,255,0.7); border: 1px solid rgba(225, 29, 72, 0.2); padding: 4px 10px; border-radius: 8px; cursor: pointer;">${doneDate} · 날짜 바꾸기</div>` : ``}
-                    </div>
+            <div class="milestone-item ${isDone ? 'achieved' : ''}" onclick="window.toggleMilestone('${item.id}')" style="background: ${cardBg}; border: ${cardBorder}; padding: 16px 14px; margin-bottom: 12px; border-radius: 18px; display: flex; align-items: center; cursor: pointer; transition: all 0.2s ease;">
+                
+                <!-- 왼쪽: 번호 뱃지 (크기 및 여백 다이어트) -->
+                <div style="width: 32px; height: 32px; background: ${numBg}; box-shadow: ${numShadow}; border-radius: 10px; font-size: 13px; font-weight: 900; color: ${numColor}; display: flex; align-items: center; justify-content: center; flex-shrink: 0; margin-right: 12px;">
+                    ${formattedNum}
                 </div>
-                <div style="flex-shrink: 0; margin-left: 12px; display: flex; align-items: center; justify-content: center; min-width: 30px;">
+                
+                <!-- 중앙: 텍스트 영역 (공간 쫙 펴주기) -->
+                <div style="flex: 1; min-width: 0; display: flex; flex-direction: column; justify-content: center; margin-right: 8px;">
+                    <div style="font-size: 15px; font-weight: 900; color: ${titleColor}; margin-bottom: 4px; letter-spacing: -0.3px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${item.title}</div>
+                    <div style="font-size: 12.5px; font-weight: 600; color: ${descColor}; line-height: 1.35; margin-bottom: ${isDone ? '8px' : '0'}; word-break: keep-all;">${item.desc}</div>
+                    
+                    <!-- 🚨 뚱뚱했던 날짜 수정 버튼을 작고 세련되게 압축! (한 줄 강제 고정) -->
+                    ${isDone ? `<div onclick="event.stopPropagation(); window.editMilestoneDate && window.editMilestoneDate('${item.id}')" style="font-size: 11px; font-weight: 800; color: #BE123C; display: inline-flex; align-items: center; background: rgba(255,255,255,0.9); border: 1px solid rgba(225, 29, 72, 0.25); padding: 5px 8px; border-radius: 6px; cursor: pointer; align-self: flex-start; white-space: nowrap;">📅 ${displayDate} ▾</div>` : ``}
+                </div>
+                
+                <!-- 우측: 도장 (milestonebook.js가 이 녀석 바로 앞에 빈 액자를 꽂아넣음) -->
+                <div style="flex-shrink: 0; display: flex; align-items: center; justify-content: center; min-width: 28px;">
                     ${stampHtml}
                 </div>
             </div>
