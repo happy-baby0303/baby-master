@@ -1,8 +1,0 @@
-[{
-  "relation": ["delegate_permission/common.handle_all_urls"],
-  "target": {
-    "namespace": "android_app",
-    "package_name": "com.baenaet.app",
-    "sha256_cert_fingerprints": ["C6:78:7A:3C:48:13:49:F2:F6:99:22:F4:97:66:41:14:00:B0:3C:8F:B8:5D:70:66:81:21:E1:29:B4:9E:92:19"]
-  }
-}]
