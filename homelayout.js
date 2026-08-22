@@ -26,8 +26,9 @@
        마음이 바뀌면 여기만 고치면 된다. -------- */
 
     var HIDE_BRIEFING   = true;   // TODAY'S BRIEFING 을 홈에서 내린다
-    var DAD_TO_BOTTOM   = true;   // 아빠 퀘스트를 맨 아래로
-    var COLLAPSE_DAD    = true;   // 아빠 퀘스트를 기본 접힘으로 (처음 한 번만)
+    var HIDE_DAD_QUEST  = true;   // 아빠 작전 상황판을 홈에서 내린다
+    var DAD_TO_BOTTOM   = false;  // (더 이상 안 씀 — 아예 내리므로)
+    var COLLAPSE_DAD    = false;
 
     /* 홈에 놓일 순서.
        id 가 없는 덩어리는 그 안에 있는 id 로 찾는다. */
@@ -67,10 +68,15 @@
        "아내 상태" 가 아빠 퀘스트 안의 "오늘 이것만 해도 충분해요" 와 같은 얘기다.
        같은 말이 두 번 나오면 화면이 지저분해진다. 지우진 않는다. 숨긴다. -------- */
 
-    function hideBriefing() {
-        if (!HIDE_BRIEFING) return;
-        var el = document.getElementById("dad-briefing-wrapper");
-        if (el && el.style.display !== "none") el.style.display = "none";
+       function hideBriefing() {
+        if (HIDE_BRIEFING) {
+            var el = document.getElementById("dad-briefing-wrapper");
+            if (el && el.style.display !== "none") el.style.display = "none";
+        }
+        if (HIDE_DAD_QUEST) {
+            var q = document.getElementById("dad-quest-container");
+            if (q && q.style.display !== "none") q.style.display = "none";
+        }
     }
 
     /* ---------- 2. 아빠 퀘스트는 접어둔다 ----------

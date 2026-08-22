@@ -1395,37 +1395,125 @@ async function sendHotdealToLedger(price, cat) {
 // ==========================================
 // 5. 스마트 해열제 타이머 엔진 (실시간 연동형 + 하이엔드 디테일)
 // ==========================================
+/* ==========================================================
+   해열제 안전 잠금
+   ----------------------------------------------------------
+   ⚠️ 이 숫자들은 아기 안전과 직결됩니다.
+      바꾸기 전에 반드시 약사·소아과에 확인하세요.
+
+   아세트아미노펜 (타이레놀 · 노랑/빨강 챔프)
+     · 생후 4개월부터
+     · 같은 약 최소 4시간
+     · 하루 최대 5회
+
+   이부프로펜 / 덱시부프로펜 (부루펜 · 파랑 챔프 · 맥시부펜)
+     · 생후 6개월부터
+     · 같은 약 최소 6시간
+     · 하루 최대 4회
+
+   다른 계열끼리 교차: 최소 2시간
+   ========================================================== */
+const PILL_RULES = {
+    red:  { label: '아세트아미노펜', gap: 240, maxPerDay: 5, minAgeMonths: 4 },
+    blue: { label: '이부프로펜 계열', gap: 360, maxPerDay: 4, minAgeMonths: 6 }
+};
+const CROSS_GAP_MINS = 120;
+
+function hhmmOf(ts) {
+    const d = new Date(ts);
+    return String(d.getHours()).padStart(2, '0') + ':' + String(d.getMinutes()).padStart(2, '0');
+}
+
+// 아기 개월 수 (생년월일이 없으면 null)
+function babyAgeMonths() {
+    const s = localStorage.getItem('tosil_startDate');
+    if (!s) return null;
+    const b = new Date(s + 'T00:00:00');
+    if (isNaN(b.getTime())) return null;
+    const now = new Date();
+    let m = (now.getFullYear() - b.getFullYear()) * 12 + (now.getMonth() - b.getMonth());
+    if (now.getDate() < b.getDate()) m--;
+    return Math.max(0, m);
+}
+window.babyAgeMonths = babyAgeMonths;
+
+/* 다음 투약 가능 시각과 이유를 한 번에 계산한다.
+   화면 표시와 저장 검사가 같은 답을 쓰도록 여기 하나로 모은다. */
+function doseStatus(type, atTime) {
+    const rule = PILL_RULES[type];
+    if (!rule) return { locked: false };
+
+    const now = atTime || Date.now();
+    const recs = JSON.parse(localStorage.getItem('tosil_fever_records')) || [];
+
+    const d0 = new Date(now); d0.setHours(0, 0, 0, 0);
+    const dayStart = d0.getTime();
+
+    // 배열 순서를 믿지 않고 전부 훑는다
+    let sameLast = null, anyLast = null, todayCount = 0;
+    for (let i = 0; i < recs.length; i++) {
+        const ts = Number(recs[i].timestamp);
+        if (!ts || ts > now) continue;
+        if (anyLast === null || ts > anyLast) anyLast = ts;
+        if (recs[i].type === type) {
+            if (sameLast === null || ts > sameLast) sameLast = ts;
+            if (ts >= dayStart) todayCount++;
+        }
+    }
+
+    // 1) 하루 최대 횟수
+    if (todayCount >= rule.maxPerDay) {
+        return {
+            locked: true, kind: 'daily', rule: rule,
+            todayCount: todayCount,
+            reason: `오늘 ${rule.label} ${todayCount}회 — 하루 권장(${rule.maxPerDay}회)을 채웠어요`,
+            advice: '더 필요하면 소아과에 연락하세요'
+        };
+    }
+
+    // 2) 같은 약 간격 / 3) 교차 간격 — 더 늦은 쪽이 이긴다
+    let until = 0, kind = '';
+    if (sameLast !== null && now - sameLast < rule.gap * 60000) {
+        until = sameLast + rule.gap * 60000; kind = 'same';
+    }
+    if (anyLast !== null && now - anyLast < CROSS_GAP_MINS * 60000) {
+        const u = anyLast + CROSS_GAP_MINS * 60000;
+        if (u > until) { until = u; kind = (kind === 'same') ? 'same' : 'cross'; }
+    }
+
+    if (until > now) {
+        const mins = Math.ceil((until - now) / 60000);
+        return {
+            locked: true, kind: kind, rule: rule, until: until, minsLeft: mins,
+            reason: kind === 'same'
+                ? `${rule.label}은 ${rule.gap / 60}시간 간격이 필요해요`
+                : '다른 계열이어도 최소 2시간은 띄워야 해요',
+            advice: `${hhmmOf(until)}부터 가능 (${Math.floor(mins / 60)}시간 ${mins % 60}분 남음)`
+        };
+    }
+
+    return { locked: false, rule: rule, todayCount: todayCount, sameLast: sameLast };
+}
+window.doseStatus = doseStatus;
+
+/* 연령 경고 — 막지는 않는다.
+   의사가 처방했을 수도 있고, 그때는 앱이 아니라 의사를 따라야 한다.
+   다만 모르고 주는 일은 없어야 한다. */
+function ageWarning(type) {
+    const rule = PILL_RULES[type];
+    const m = babyAgeMonths();
+    if (!rule || m === null) return null;
+    if (m >= rule.minAgeMonths) return null;
+    return `생후 ${m}개월이에요. ${rule.label}은 보통 ${rule.minAgeMonths}개월부터 씁니다.\n` +
+           `의사 처방이 아니라면 먼저 소아과에 확인하세요.`;
+}
+window.ageWarning = ageWarning;
+
+/* 기존 이름 유지 — 저장 검사에서 쓰던 모양 그대로 돌려준다 */
 function checkPillLock(type) {
-    let currentFeverRecords = JSON.parse(localStorage.getItem('tosil_fever_records')) || [];
-
-    if (currentFeverRecords.length === 0) {
-        return { locked: false, reason: "" };
-    }
-
-    const lastRecord = currentFeverRecords[0]; 
-    const lastTime = lastRecord.timestamp; 
-    const now = new Date().getTime();
-    let diffMinutes = Math.floor((now - lastTime) / (1000 * 60));
-
-    if (diffMinutes < 0) diffMinutes = 0;
-
-    let requiredWaitMins = 0;
-    if (lastRecord.type === type) {
-        requiredWaitMins = 240; // 🔴 같은 약 4시간
-    } else {
-        requiredWaitMins = 120; // 🔵 다른 약 2시간
-    }
-
-    if (diffMinutes < requiredWaitMins) {
-        // ✨ [니치 패치 1] '몇 분 남음'이 아니라 '몇 시 몇 분부터' 먹일 수 있는지 정확히 계산!
-        const unlockTime = new Date(lastTime + (requiredWaitMins * 60000));
-        const unlockHH = String(unlockTime.getHours()).padStart(2, '0');
-        const unlockMM = String(unlockTime.getMinutes()).padStart(2, '0');
-        
-        return { locked: true, reason: `투약 잠금\n(${unlockHH}:${unlockMM} 부터)` };
-    }
-
-    return { locked: false, reason: "" };
+    const st = doseStatus(type);
+    if (!st.locked) return { locked: false, reason: '' };
+    return { locked: true, reason: st.reason + '\n' + st.advice };
 }
 
 function selectPill(type) {
