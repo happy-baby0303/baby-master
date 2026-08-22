@@ -590,9 +590,26 @@
             dropVoice(key, id);
             window.syncVoicesToFirebase();
             repaint();
+            
+            // 🚨 핵심 픽스: 삭제 후 화면 즉시 갱신
+            if (document.getElementById("voice-box")) {
+                window.openVoiceBox(); 
+            }
         };
+        
         if (typeof window.showConfirm === "function") {
+            var okBtn = document.getElementById("btn-confirm-ok");
+            if (okBtn) {
+                // 🚨 [진짜 원인 해결] 0.2초 동안 서서히 색이 변하는 애니메이션을 강제로 끕니다!
+                okBtn.style.setProperty("transition", "none", "important");
+            }
+            
             window.showConfirm("이 목소리를 배냇함에서 빼낼까요?\n되돌릴 수 없어요.", go, "🎙️", "빼내기", "#F04452");
+            
+            // 색상이 0.001초 만에 즉시 빨간색으로 꽂힌 후, 다시 애니메이션 복구
+            setTimeout(function() {
+                if (okBtn) okBtn.style.removeProperty("transition");
+            }, 100);
         } else if (confirm("이 목소리를 빼낼까요?")) go();
     };
 
@@ -612,7 +629,7 @@
 
     function chip(v, key) {
         return '<div style="display:flex; align-items:center; gap:11px; background:var(--bg-sub); border-radius:15px; padding:12px 14px;">' +
-            '<div id="vplay-' + esc(v.id) + '" onclick="event.stopPropagation(); window.playVoice(\'' + key + '\',\'' + esc(v.id) + '\')" ' +
+            '<div id="vplay-' + esc(v.id) + '" onclick="window.playVoice(\'' + key + '\',\'' + esc(v.id) + '\')" ' +
                 'style="width:34px; height:34px; border-radius:50%; background:#7F77DD; color:#FFF; display:flex; align-items:center; justify-content:center; font-size:13px; cursor:pointer; flex-shrink:0;">▶</div>' +
             '<div style="flex:1; min-width:0;">' +
                 '<div style="font-size:13px; font-weight:800; color:var(--text-m); letter-spacing:-0.3px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">' +
@@ -621,7 +638,8 @@
                 '<div style="font-size:11px; font-weight:700; color:var(--text-sub); margin-top:2px;">' +
                     (v.sec || 0) + '초' + (v.msId && v.note ? "  ·  " + esc(v.note) : "") + '</div>' +
             '</div>' +
-            '<span onclick="event.stopPropagation(); window.removeVoice(\'' + key + '\',\'' + esc(v.id) + '\')" ' +
+            // 🚨 불량 코드 제거 완료!
+            '<span onclick="window.removeVoice(\'' + key + '\',\'' + esc(v.id) + '\')" ' +
                 'style="font-size:11px; font-weight:700; color:var(--text-sub); cursor:pointer; flex-shrink:0; padding:4px;">빼기</span>' +
         '</div>';
     }
@@ -679,8 +697,8 @@
         return n >= 0 ? "D+" + n + "일" : "";
     }
 
-    // ==========================================
-// 🎙️ 소리함 렌더링 (카드 겹침 해결 + 음성 저장 버튼 추가 픽스!)
+// ==========================================
+// 🎙️ 소리함 렌더링 (클릭 마비 버그 완벽 픽스!)
 // ==========================================
     window.openVoiceBox = function () {
         var idx = loadIndex();
@@ -725,22 +743,21 @@
                         '</div>' +
                         wave(v, k, 40) +
                         
-                        // 🚨 니치 깎기: 파형엽서 / 음성저장 / 빼기 버튼을 예쁜 비율로 나란히 배치!
                         '<div style="display:flex; gap:7px; margin-top:10px;">' +
                             (typeof window.downloadWaveCard === "function"
                                 ? '<span onclick="window.downloadWaveCard(\'' + k + '\',\'' + esc(v.id) + '\')" ' +
                                   'style="flex:1.5; text-align:center; padding:9px; border-radius:11px; background:rgba(185,138,46,0.12); ' +
                                   'font-size:11px; font-weight:800; color:#B98A2E; cursor:pointer;">🎵 파형 엽서</span>' : '') +
                             
-                            // 👇 신규 추가: 실제 오디오 파일 저장 버튼!
                             '<span onclick="window.downloadVoiceAudio(\'' + k + '\',\'' + esc(v.id) + '\')" ' +
                                   'style="flex:1.5; text-align:center; padding:9px; border-radius:11px; background:#E8F3FF; font-size:11px; font-weight:800; color:#3182F6; cursor:pointer;">💾 음성 저장</span>' +
 
-                            '<span onclick="window.removeVoice(\'' + k + '\',\'' + esc(v.id) + '\'); window.openVoiceBox();" ' +
+                            // 🚨 [불량 에러 유발자 삭제 완료! 이제 무조건 팝업 뜹니다!]
+                            '<span onclick="window.removeVoice(\'' + k + '\',\'' + esc(v.id) + '\');" ' +
                                 'style="flex:1; text-align:center; padding:9px; border-radius:11px; background:var(--bg-sub); font-size:11px; font-weight:700; color:var(--text-sub); cursor:pointer;">빼기</span>' +
                         '</div>' + 
                         (isMs && v.note ? '<div style="font-family:\'Nanum Pen Script\',cursive; font-size:19px; color:var(--text-s); margin-top:10px; padding-left:55px; line-height:1.4;">' + esc(v.note) + '</div>' : '') +
-                    '</div>'; // 🚨 해결 1: 누락되었던 닫기 태그(</div>) 복구 완료!
+                    '</div>'; 
                 });
             });
         }
@@ -810,9 +827,9 @@
 // ==========================================
 window.downloadVoiceAudio = async function(key, id) {
     var v = window.getDayVoices(key).filter(function (x) { return x.id === id; })[0];
-    if (!v || !v.url) return toast("저장할 소리 파일을 찾지 못했어요.");
+    if (!v || !v.url) return window.showToast("저장할 소리 파일을 찾지 못했어요.");
 
-    toast("음성 파일을 준비 중이에요...");
+    window.showToast("음성 파일을 준비 중이에요...");
     try {
         // 1. 파이어베이스에서 오디오 파일 가져오기
         const response = await fetch(v.url);
@@ -834,7 +851,7 @@ window.downloadVoiceAudio = async function(key, id) {
                 title: '우리아기 옹알이',
                 text: '배냇함에 보관된 우리 아기 목소리예요 🤍'
             });
-            toast("✅ 목소리 파일이 안전하게 저장/공유되었습니다!");
+            window.showToast("✅ 목소리 파일이 안전하게 저장/공유되었습니다!");
         } else {
             // PC나 구형 브라우저를 위한 강제 다운로드 (기존 방식 유지)
             const blobUrl = window.URL.createObjectURL(blob);
@@ -848,12 +865,12 @@ window.downloadVoiceAudio = async function(key, id) {
                 document.body.removeChild(a);
                 window.URL.revokeObjectURL(blobUrl);
             }, 100);
-            toast("💾 아기의 목소리가 다운로드 폴더에 저장되었습니다!");
+            window.showToast("💾 아기의 목소리가 다운로드 폴더에 저장되었습니다!");
         }
     } catch (e) {
         console.error("[음성 다운로드 에러]", e);
         // CORS(보안)에 걸려 다운로드가 막히면, 최후의 수단으로 새 창에서 오디오를 틀어줍니다.
         window.open(v.url, '_blank');
-        toast("보안 설정으로 인해 새 창에서 오디오를 엽니다.");
+        window.showToast("보안 설정으로 인해 새 창에서 오디오를 엽니다.");
     }
 };
