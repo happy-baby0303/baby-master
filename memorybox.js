@@ -174,7 +174,7 @@
         document.body.style.overflow = "";
     };
 
-    /* ---------- 흩어진 기록을 하루 단위로 모은다 ---------- */
+   /* ---------- 흩어진 기록을 하루 단위로 모은다 ---------- */
 
     function buildTimeline() {
         var days = {};
@@ -185,9 +185,6 @@
         };
 
         // 1. 첫 순간 (도감 달성일)
-        //    저장 방식이 두 가지라 둘 다 읽는다.
-        //    (가) tosil_milestones 가 [{id, date}] 객체 배열인 경우
-        //    (나) tosil_milestone_dates 에 { id: timestamp } 로 따로 쌓인 경우
         var list = milestoneList();
         var findTitle = function (id) {
             for (var i = 0; i < list.length; i++) if (list[i].id === id) return list[i];
@@ -245,36 +242,34 @@
             touch(g.date).growth = g;
         });
 
-        // 5. 그날의 사진 (photos.js 가 있을 때만)
-        //    기록이 하나도 없는 날이라도 사진만 있으면 연대기에 올라온다.
+        // 5. 그날의 사진
         if (typeof window.photoDays === "function") {
             window.photoDays().forEach(function (k) {
                 touch(k).photos = window.getDayPhotos(k);
             });
         }
 
-        // 6. 기념일 (anniversaries.js 가 있을 때만)
-        //    아무 기록이 없어도 백일과 첫 명절은 연대기에 놓인다.
-        // 부부가 둘 다 답한 문답이 있는 날도 연대기에 놓인다
+        // 6. 문답, 한 줄, 소리, 기념일
         if (typeof window.diaryDays === "function") {
             window.diaryDays().forEach(function (k) { touch(k); });
         }
-
-        // 한 줄만 남긴 날도 연대기에 놓인다
         if (typeof window.noteDays === "function") {
             window.noteDays().forEach(function (k) { touch(k); });
         }
-
-        // 소리만 담긴 날도 연대기에 놓인다
         if (typeof window.voiceDays === "function") {
             window.voiceDays().forEach(function (k) { touch(k); });
         }
-
         if (typeof window.anniversaryDays === "function") {
             window.anniversaryDays().forEach(function (k) { touch(k); });
         }
 
-        return Object.keys(days).sort().reverse().map(function (k) { return days[k]; });
+        // 🚨 [CTO 근본 패치] NaN 유령 데이터 완벽 차단!
+        // 저장소에 찌꺼기(NaN, undefined 등)가 들어와도, YYYY-MM-DD 형식이 아니면 아예 화면에 그리지 못하게 폐기 처분합니다!
+        return Object.keys(days)
+            .filter(function (k) { return k && /^\d{4}-\d{2}-\d{2}$/.test(k); })
+            .sort()
+            .reverse()
+            .map(function (k) { return days[k]; });
     }
 
     /* ---------- 요약 숫자 ---------- */

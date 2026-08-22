@@ -560,24 +560,80 @@
     window.voiceRetry = function () { resetRec(); draw("idle"); };
     window.voiceSave  = upload;
 
-    /* ---------- 재생 ---------- */
+  /* ---------- 재생 ---------- */
 
     var playing = null;
+    var playingId = null;
+    var playTimer = null;
 
     window.playVoice = function (key, id) {
         var v = window.getDayVoices(key).filter(function (x) { return x.id === id; })[0];
         if (!v) return;
 
-        if (playing) { try { playing.pause(); } catch (e) {} playing = null; }
+        var btns = document.querySelectorAll("#vplay-" + id);
+        var timerEls = document.querySelectorAll("#vtimer-" + id);
+        var totalSec = v.sec || 0;
+
+        // 🚨 폰트 안 타는 무결점 CSS 도형 아이콘! (찌그러짐 완벽 방지)
+        var playIcon = '<div style="width:0; height:0; border-top:7px solid transparent; border-bottom:7px solid transparent; border-left:12px solid #fff; margin-left:4px;"></div>';
+        var pauseIcon = '<div style="display:flex; gap:4px;"><div style="width:4px; height:14px; background:#fff; border-radius:1px;"></div><div style="width:4px; height:14px; background:#fff; border-radius:1px;"></div></div>';
+
+        // 1. 같은 버튼을 다시 눌렀을 때 (일시정지/재개 토글 기능)
+        if (playingId === id && playing) {
+            if (!playing.paused) {
+                playing.pause();
+                btns.forEach(function(btn) { btn.innerHTML = playIcon; });
+                return;
+            } else {
+                playing.play();
+                btns.forEach(function(btn) { btn.innerHTML = pauseIcon; });
+                return;
+            }
+        }
+
+        // 2. 다른 곡을 재생 중이었다면 이전 곡 정지 및 타이머 원상복구
+        if (playing) {
+            playing.pause();
+            document.querySelectorAll("#vplay-" + playingId).forEach(function(btn) { btn.innerHTML = playIcon; });
+            document.querySelectorAll("#vtimer-" + playingId).forEach(function(el) {
+                el.textContent = el.getAttribute("data-sec") + "초";
+            });
+            if (playTimer) clearInterval(playTimer);
+        }
+
+        // 3. 새 곡 재생 시작
         var a = new Audio(v.url);
         playing = a;
-        a.play().catch(function () { toast("소리를 재생하지 못했어요"); });
+        playingId = id;
 
-        var btn = document.getElementById("vplay-" + id);
-        if (btn) {
-            btn.textContent = "❚❚";
-            a.onended = a.onpause = function () { if (btn) btn.textContent = "▶"; };
-        }
+        timerEls.forEach(function(el) {
+            if (!el.getAttribute("data-sec")) el.setAttribute("data-sec", totalSec);
+            el.textContent = "0:00 / " + mmss(totalSec); // 즉시 0초로 표시
+        });
+        btns.forEach(function(btn) { btn.innerHTML = pauseIcon; }); 
+
+        a.play().catch(function () {
+            if (typeof window.showToast === "function") window.showToast("소리를 재생하지 못했어요");
+        });
+
+        // 4. 실시간 타이머 업데이트
+        if (playTimer) clearInterval(playTimer);
+        playTimer = setInterval(function() {
+            if (!playing || playing.paused) return;
+            var cur = Math.floor(playing.currentTime);
+            timerEls.forEach(function(el) {
+                el.textContent = mmss(cur) + " / " + mmss(totalSec);
+            });
+        }, 250);
+
+        // 5. 재생이 완전히 끝났을 때 처음 상태로 원상복구
+        a.onended = function () {
+            btns.forEach(function(btn) { btn.innerHTML = playIcon; });
+            timerEls.forEach(function(el) { el.textContent = totalSec + "초"; });
+            clearInterval(playTimer);
+            playing = null;
+            playingId = null;
+        };
     };
 
     window.removeVoice = function (key, id) {
@@ -628,17 +684,22 @@
     }
 
     function chip(v, key) {
+        var playIcon = '<div style="width:0; height:0; border-top:7px solid transparent; border-bottom:7px solid transparent; border-left:12px solid #fff; margin-left:4px;"></div>';
+        
         return '<div style="display:flex; align-items:center; gap:11px; background:var(--bg-sub); border-radius:15px; padding:12px 14px;">' +
             '<div id="vplay-' + esc(v.id) + '" onclick="window.playVoice(\'' + key + '\',\'' + esc(v.id) + '\')" ' +
-                'style="width:34px; height:34px; border-radius:50%; background:#7F77DD; color:#FFF; display:flex; align-items:center; justify-content:center; font-size:13px; cursor:pointer; flex-shrink:0;">▶</div>' +
+                'style="width:38px; height:38px; border-radius:50%; background:#7F77DD; display:flex; align-items:center; justify-content:center; cursor:pointer; flex-shrink:0;">' + playIcon + '</div>' +
             '<div style="flex:1; min-width:0;">' +
                 '<div style="font-size:13px; font-weight:800; color:var(--text-m); letter-spacing:-0.3px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">' +
                     (v.msId ? esc(msTitle(v.msId) || "목소리") : (v.note ? esc(v.note) : "그날의 소리")) + '</div>' +
                 wave(v, key, 26) +
-                '<div style="font-size:11px; font-weight:700; color:var(--text-sub); margin-top:2px;">' +
-                    (v.sec || 0) + '초' + (v.msId && v.note ? "  ·  " + esc(v.note) : "") + '</div>' +
+                
+                // 🚨 꿀렁임 완벽 차단: 타이머를 오른쪽 끝으로 고정시켜서 텍스트가 아무리 길어져도 2줄로 안 넘어가게 설계!
+                '<div style="display:flex; justify-content:space-between; align-items:center; font-size:11px; font-weight:700; color:var(--text-sub); margin-top:3px;">' +
+                    '<span style="white-space:nowrap; overflow:hidden; text-overflow:ellipsis; padding-right:8px;">' + (v.msId && v.note ? esc(v.note) : "") + '</span>' +
+                    '<span id="vtimer-' + esc(v.id) + '" data-sec="' + (v.sec || 0) + '" style="flex-shrink:0; color:#7F77DD; font-weight:800;">' + (v.sec || 0) + '초</span>' + 
+                '</div>' +
             '</div>' +
-            // 🚨 불량 코드 제거 완료!
             '<span onclick="window.removeVoice(\'' + key + '\',\'' + esc(v.id) + '\')" ' +
                 'style="font-size:11px; font-weight:700; color:var(--text-sub); cursor:pointer; flex-shrink:0; padding:4px;">빼기</span>' +
         '</div>';
@@ -698,7 +759,7 @@
     }
 
 // ==========================================
-// 🎙️ 소리함 렌더링 (클릭 마비 버그 완벽 픽스!)
+// 🎙️ 소리함 렌더링 (꿀렁임 차단 & 예쁜 재생 아이콘 적용)
 // ==========================================
     window.openVoiceBox = function () {
         var idx = loadIndex();
@@ -713,6 +774,8 @@
         wrap.setAttribute("style", "position:fixed; inset:0; z-index:100002; background:var(--bg-main); overflow-y:auto; -webkit-overflow-scrolling:touch;");
 
         var body = "";
+        var playIcon = '<div style="width:0; height:0; border-top:7px solid transparent; border-bottom:7px solid transparent; border-left:12px solid #fff; margin-left:4px;"></div>';
+
         if (!total) {
             body = '<div style="text-align:center; padding:80px 24px;">' +
                 '<div style="font-family:\'Nanum Pen Script\', cursive; font-size:26px; color:var(--text-sub); line-height:1.6;">' +
@@ -732,13 +795,17 @@
                     '<div style="background:var(--bg-card); border:1px solid var(--border); border-radius:18px; padding:16px 17px; margin-bottom:9px;">' +
                         '<div style="display:flex; align-items:center; gap:13px;">' +
                             '<div id="vplay-' + esc(v.id) + '" onclick="window.playVoice(\'' + k + '\',\'' + esc(v.id) + '\')" ' +
-                                'style="width:42px; height:42px; border-radius:50%; background:' + (isMs ? '#B98A2E' : '#7F77DD') + '; color:#FFF; display:flex; align-items:center; justify-content:center; font-size:15px; cursor:pointer; flex-shrink:0;">▶</div>' +
+                                'style="width:48px; height:48px; border-radius:50%; background:' + (isMs ? '#B98A2E' : '#7F77DD') + '; display:flex; align-items:center; justify-content:center; cursor:pointer; flex-shrink:0;">' + playIcon + '</div>' +
                             '<div style="flex:1; min-width:0;">' +
                                 (isMs ? '<div style="font-size:9.5px; font-weight:800; color:#B98A2E; letter-spacing:1.5px; margin-bottom:3px;">처음 해낸 일</div>' : '') +
                                 '<div style="font-size:14.5px; font-weight:800; color:var(--text-m); letter-spacing:-0.3px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">' +
                                     (isMs ? esc(msTitle(v.msId) || "목소리") : (v.note ? esc(v.note) : "그날의 소리")) + '</div>' +
-                                '<div style="font-size:11.5px; font-weight:700; color:var(--text-sub); margin-top:3px;">' +
-                                    esc(prettyKey(k)) + '  ·  ' + esc(ddayOf(k)) + '  ·  ' + (v.sec || 0) + '초</div>' +
+                                
+                                // 🚨 꿀렁임 완벽 차단!
+                                '<div style="display:flex; justify-content:space-between; align-items:center; font-size:11.5px; font-weight:700; color:var(--text-sub); margin-top:4px;">' +
+                                    '<span style="white-space:nowrap; overflow:hidden; text-overflow:ellipsis; padding-right:8px;">' + esc(prettyKey(k)) + '  ·  ' + esc(ddayOf(k)) + '</span>' +
+                                    '<span id="vtimer-' + esc(v.id) + '" data-sec="' + (v.sec || 0) + '" style="flex-shrink:0; color:' + (isMs ? '#B98A2E' : '#7F77DD') + '; font-weight:800;">' + (v.sec || 0) + '초</span>' +
+                                '</div>' +
                             '</div>' +
                         '</div>' +
                         wave(v, k, 40) +
@@ -752,8 +819,7 @@
                             '<span onclick="window.downloadVoiceAudio(\'' + k + '\',\'' + esc(v.id) + '\')" ' +
                                   'style="flex:1.5; text-align:center; padding:9px; border-radius:11px; background:#E8F3FF; font-size:11px; font-weight:800; color:#3182F6; cursor:pointer;">💾 음성 저장</span>' +
 
-                            // 🚨 [불량 에러 유발자 삭제 완료! 이제 무조건 팝업 뜹니다!]
-                            '<span onclick="window.removeVoice(\'' + k + '\',\'' + esc(v.id) + '\');" ' +
+                            '<span onclick="event.stopPropagation(); window.removeVoice(\'' + k + '\',\'' + esc(v.id) + '\');" ' +
                                 'style="flex:1; text-align:center; padding:9px; border-radius:11px; background:var(--bg-sub); font-size:11px; font-weight:700; color:var(--text-sub); cursor:pointer;">빼기</span>' +
                         '</div>' + 
                         (isMs && v.note ? '<div style="font-family:\'Nanum Pen Script\',cursive; font-size:19px; color:var(--text-s); margin-top:10px; padding-left:55px; line-height:1.4;">' + esc(v.note) + '</div>' : '') +
