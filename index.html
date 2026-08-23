@@ -428,6 +428,236 @@ div[style*="border-radius: 8px"] {
     display: none;
 }
 
+    @keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
+    @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+    .ai-poop-btn { flex: 1; min-width: 45px; padding: 10px 0; border-radius: 10px; border: none; font-weight: 800; font-size: 13px; cursor: pointer; transition: 0.2s; }
+    @keyframes toastFadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+    @keyframes toastFadeOut { from { opacity: 1; transform: translateY(0); } to { opacity: 0; transform: translateY(-20px); } }
+    @keyframes popIn { from { opacity: 0; transform: scale(0.9); } to { opacity: 1; transform: scale(1); } }
+    
+    .toast-msg {
+        background: rgba(25, 31, 40, 0.85);
+        color: #FFF;
+        padding: 12px 24px;
+        border-radius: 100px;
+        font-size: 13.5px;
+        font-weight: 800;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        backdrop-filter: blur(8px);
+        animation: toastFadeIn 0.3s ease-out forwards;
+        text-align: center;
+        white-space: nowrap;
+    }
+        /* ========================================== */
+        /* 🌙 1단계: 고집불통 인라인 스타일까지 씹어먹는 강력 다크모드 (최종완성) */
+        /* ========================================== */
+        body.dark-mode {
+            background-color: #000000 !important;
+            color: #F9FAFB !important;
+        }
+        body.dark-mode .wrapper {
+            background-color: #000000 !important;
+            box-shadow: none !important;
+        }
+
+        /* 1. 하얀색 베이스 카드들을 다크 그레이로 반전 */
+        body.dark-mode .box-main,
+        body.dark-mode .panel-block > div, 
+        body.dark-mode .home-hero-card,
+        body.dark-mode .modal-content,
+        body.dark-mode .sos-content-box,
+        body.dark-mode .diary-card,
+        body.dark-mode .ai-matrix-container,
+        body.dark-mode #tab-hotplace > div > div {
+            background-color: #191F28 !important;
+            border: 1px solid #333D4B !important;
+            box-shadow: none !important;
+        }
+
+       /* 2. 연한 회색 배경을 더 어두운 색으로 반전 */
+        body.dark-mode [style*="background: #F9FAFB"],
+        body.dark-mode [style*="background:#F9FAFB"],
+        body.dark-mode [style*="background: #F8F9FA"],
+        body.dark-mode [style*="background:#F8F9FA"],
+        body.dark-mode [style*="background: #F2F5F8"],
+        body.dark-mode [style*="background:#F2F5F8"] {
+            background-color: #202632 !important;
+            border-color: #333D4B !important;
+        }
+
+        /* 🌟 [추가] 맘마 퀵버튼(원클릭) 다크모드 글씨/배경 강제 보호 */
+        body.dark-mode button.quick-btn.active,
+        body.dark-mode [style*="background: #EBF4FF"],
+        body.dark-mode [style*="background:#EBF4FF"] {
+            background-color: #3182F6 !important;
+            color: #FFFFFF !important;
+            border: none !important;
+        }
+        body.dark-mode button.quick-btn:not(.active) {
+            background-color: #333D4B !important;
+            color: #E5E8EB !important;
+            border: 1px solid #4E5968 !important;
+        }
+
+        /* 🌟 [추가] 수면 중 배너(꿀잠 타임) 다크모드 가독성 완벽 대응 */
+        body.dark-mode [style*="background:linear-gradient(135deg, #F3F0FF, #EDE9FE)"],
+        body.dark-mode [style*="background: linear-gradient(135deg, #F3F0FF, #EDE9FE)"] {
+            background: linear-gradient(135deg, #2D2440, #1E162B) !important;
+            border-color: #4C3A73 !important;
+        }
+        body.dark-mode [style*="background:linear-gradient(135deg, #F3F0FF, #EDE9FE)"] *,
+        body.dark-mode [style*="background: linear-gradient(135deg, #F3F0FF, #EDE9FE)"] * {
+            color: #E0D4FF !important;
+        }
+        body.dark-mode [style*="background:linear-gradient(135deg, #F3F0FF, #EDE9FE)"] [style*="color:#7C3AED"],
+        body.dark-mode [style*="background: linear-gradient(135deg, #F3F0FF, #EDE9FE)"] [style*="color: #7C3AED"] {
+            color: #B28BFF !important;
+        }
+   
+
+  /* 3. 강제로 하얗게 칠해진 버튼들 & 툴박스 아이콘 반전 */
+        body.dark-mode .pill-btn,
+        body.dark-mode .sym-btn,
+        body.dark-mode .checklist-main-btn,
+        body.dark-mode .filter-btn:not(.active),
+        body.dark-mode .tool-chip, 
+        body.dark-mode [style*="background: #FFFFFF"]:not(.quick-btn),
+        body.dark-mode [style*="background:#FFFFFF"]:not(.quick-btn),
+        body.dark-mode [style*="background: white"]:not(.quick-btn) {
+            background-color: #202632 !important;
+            color: #E5E8EB !important;
+            border: 1px solid #333D4B !important;
+            box-shadow: none !important;
+        }
+
+        /* 🌟 [수정] 맘마 퀵버튼(원클릭) 전용 다크모드 스타일 */
+        body.dark-mode .quick-btn.active {
+            background-color: #EBF4FF !important; /* 원래대로 옅은 파란색 유지 */
+            color: #111111 !important; /* 👈 글씨를 짙은 검은색으로 강제 변경해서 눈에 확 띄게! */
+            border: none !important;
+        }
+        body.dark-mode .quick-btn:not(.active) {
+            background-color: #333D4B !important; /* 선택 안 된 건 다크그레이 */
+            color: #E5E8EB !important;
+        }
+
+        /* 4. 입력창 (Input, Select) 배경 투명화 및 글자 하얗게 */
+        body.dark-mode input,
+        body.dark-mode select {
+            background-color: transparent !important;
+            color: #F9FAFB !important;
+        }
+        body.dark-mode input::placeholder { color: #8B95A1 !important; }
+
+        /* 5. 진한 검은색 글씨를 하얀색으로 강제 반전 */
+        body.dark-mode [style*="color: #191F28"],
+        body.dark-mode [style*="color:#191F28"],
+        body.dark-mode [style*="color: var(--text-m)"] {
+            color: #F9FAFB !important;
+        }
+        
+        /* 6. 중간 회색 글씨 밝게 반전 */
+        body.dark-mode [style*="color: #4E5968"],
+        body.dark-mode [style*="color:#4E5968"] {
+            color: #B0B8C1 !important;
+        }
+
+     /* 7. 홈 화면 노란색 그라데이션 배너 (놀이 처방전) 확실한 다크모드 제어 */
+        body.dark-mode #play-banner-card {
+            background: linear-gradient(135deg, #2D2513 0%, #3B2E15 100%) !important;
+            border-color: #5C4300 !important;
+        }
+        body.dark-mode #play-banner-card:hover,
+        body.dark-mode #play-banner-card:active {
+            background: linear-gradient(135deg, #3B2E15 0%, #4D3C1C 100%) !important;
+        }
+        body.dark-mode #play-banner-card * {
+            color: #F9FAFB !important; /* 배너 안 글씨 하얗게 */
+        }
+        body.dark-mode #play-banner-card [style*="color: #D97706"],
+        body.dark-mode #play-banner-card [style*="color:#D97706"] { 
+            color: #FBBF24 !important; 
+        }
+        body.dark-mode #play-banner-card [style*="color: #E32636"],
+        body.dark-mode #play-banner-card [style*="color:#E32636"] { 
+            color: #FCA5A5 !important; 
+        }
+        body.dark-mode #play-banner-card [style*="background: #FFF2F2"],
+        body.dark-mode #play-banner-card [style*="background:#FFF2F2"] { 
+            background: #3F1D1D !important; 
+        }
+       
+        /* 놀이 배너 안의 까만 글씨들을 싹 다 하얗게 강제 변환 */
+        body.dark-mode [style*="background: linear-gradient(135deg, #FFFBEB 0%, #FEF3C7 100%)"] * {
+            color: #F9FAFB !important;
+        }
+        /* 놀이 배너 포인트 컬러 조정 (가독성 UP) */
+        body.dark-mode [style*="background: linear-gradient(135deg, #FFFBEB 0%, #FEF3C7 100%)"] [style*="color: #D97706"] { color: #FBBF24 !important; }
+        body.dark-mode [style*="background: linear-gradient(135deg, #FFFBEB 0%, #FEF3C7 100%)"] [style*="color: #E32636"] { color: #FCA5A5 !important; }
+        body.dark-mode [style*="background: linear-gradient(135deg, #FFFBEB 0%, #FEF3C7 100%)"] [style*="background: #FFF2F2"] { background: #3F1D1D !important; }
+        
+        /* 8. 하단 영수증 그라데이션 배너 다크모드 */
+        body.dark-mode [style*="background: linear-gradient(135deg, #FFF9F0, #FFF3E0)"] {
+            background: linear-gradient(135deg, #3B2912 0%, #291C09 100%) !important;
+            border-color: #5C4300 !important;
+            color: #FFB74D !important;
+        }
+
+        /* 9. 헤더 및 하단 네비게이션 */
+        body.dark-mode .global-header { background-color: #000000 !important; border-bottom: 1px solid #333D4B !important; }
+        body.dark-mode .bottom-nav { background-color: #191F28 !important; border-top: 1px solid #333D4B !important; }
+
+/* ========================================== */
+        /* 🌙 1-2단계: 다크모드 디테일 버그 픽스 (스티커 버튼 & 호버 눈뽕 방지) */
+        /* ========================================== */
+
+        /* 1. 스티커 붙이기 등 검은색 배경(#191F28) 버튼이 투명해지는 현상 방지 */
+        body.dark-mode [style*="background: #191F28"],
+        body.dark-mode [style*="background:#191F28"] {
+            background-color: #333D4B !important; /* 배경색과 분리되도록 밝은 회색으로 변경 */
+            color: #FFFFFF !important;
+            border: 1px solid #4E5968 !important;
+        }
+
+        /* 2. 놀이 처방전 배너에 마우스 올리거나 터치할 때 색깔 돌아오는 현상 차단 */
+        body.dark-mode [style*="background: linear-gradient(135deg, #FFFBEB"]:hover,
+        body.dark-mode [style*="background: linear-gradient(135deg, #FFFBEB"]:active,
+        body.dark-mode [style*="background: linear-gradient(135deg, #FFFBEB"]:focus {
+            background: linear-gradient(135deg, #3B2E15 0%, #4D3C1C 100%) !important; /* 터치 시 눈 안 아프게 살짝만 밝아짐 */
+            border-color: #5C4300 !important;
+        }
+
+/* ========================================== */
+        /* 🌙 1-3단계: 다크모드 완벽 마감 공사 (가계부 버튼 & 찌꺼기 선 제거) */
+        /* ========================================== */
+
+        /* 1. 가계부 "분석 리포트 확인" 버튼 등 강제 하얀 버튼 반전 */
+        body.dark-mode .btn-main[style*="background:var(--text-m)"],
+        body.dark-mode .btn-main[style*="background: var(--text-m)"] {
+            background-color: #333D4B !important; /* 배경을 다크그레이로 */
+            color: #F9FAFB !important; /* 글씨를 하얗게 */
+            box-shadow: none !important;
+            border: 1px solid #4E5968 !important;
+        }
+
+        /* 2. 가계부 "월간 지출 진단", "열어보기", "기록보기" 뱃지 반전 */
+        body.dark-mode .stat-badge,
+        body.dark-mode .box-tint-blue[style*="color:var(--primary)"],
+        body.dark-mode .box-sub[style*="border-radius:8px"] {
+            background-color: #202632 !important;
+            color: #B0B8C1 !important;
+            border: 1px solid #333D4B !important;
+        }
+
+        /* 3. 생존 처방전(ai-matrix-card) 및 각종 리스트의 하얀 구분선(border) 어둡게 처리 */
+        body.dark-mode .ai-matrix-card,
+        body.dark-mode .lib-item,
+        body.dark-mode .timeline-item,
+        body.dark-mode .history-item {
+            border-bottom-color: #333D4B !important; /* 하얀색 테두리를 어두운 회색으로 */
+            border-color: #333D4B !important;
+        }
+
 /* ========================================================================= */
 /* CSS 패치 끝 */
 /* ========================================================================= */
@@ -1070,7 +1300,7 @@ div[style*="border-radius: 8px"] {
             </div>
         </div>
 
-        <button class="btn-main" onclick="calcFever()" style="width: 100%; padding: 18px; font-size: 16px; font-weight: 800; border-radius: 14px; border: none; background:var(--danger); color: white; box-shadow: 0 4px 12px rgba(253, 104, 104, 0.25); cursor: pointer;">안전 투약 한계 용량 산출</button>
+        <button class="btn-main" onclick="calcFever()" style="width: 100%; padding: 18px; font-size: 16px; font-weight: 800; border-radius: 14px; border: none; background:var(--danger); color: white; box-shadow: 0 4px 12px rgba(253, 104, 104, 0.25); cursor: pointer;">몸무게 저장하고 확인하기</button>
 
         <div id="fever-result" style="display:none; margin-top:24px; border-top: 1px solid #F2F5F8; padding-top:24px;">
             <div class="pill-card box-tint-red" style="border-radius:16px; padding:18px; margin-bottom:12px; text-align:center;">
@@ -1481,7 +1711,8 @@ div[style*="border-radius: 8px"] {
                         <button class="box-main" onclick="addQuickBaton('새벽 수유 요청합니다')" style="padding: 12px; border-radius: 12px; font-size: 13px; font-weight: 800; cursor: pointer; transition: 0.2s; border:1px solid var(--border);">새벽 수유 대타</button>
                         <button class="box-main" onclick="addQuickBaton('퇴근길 장보기')" style="padding: 12px; border-radius: 12px; font-size: 13px; font-weight: 800; cursor: pointer; transition: 0.2s; border:1px solid var(--border);">퇴근길 장보기</button>
                         <button class="box-main" onclick="addQuickBaton('기저귀 처리반 SOS')" style="padding: 12px; border-radius: 12px; font-size: 13px; font-weight: 800; cursor: pointer; transition: 0.2s; border:1px solid var(--border);">기저귀 SOS</button>
-                        <button class="box-main" onclick="addQuickBaton('아기 재우기 교대')" style="padding: 12px; border-radius: 12px; font-size: 13px; font-weight: 800; cursor: pointer; transition: 0.2s; border:1px solid var(--border);">아기 재우기</button>
+                                               <button class="box-main" onclick="addQuickBaton('아기 재우기 교대')" style="padding: 12px; border-radius: 12px; font-size: 13px; font-weight: 800; cursor: pointer; transition: 0.2s; border:1px solid var(--border);">아기 재우기</button>
+                        <button class="box-main" onclick="addQuickBaton('퇴근 완료, 이제 내가 볼게요')" style="grid-column: span 2; padding: 12px; border-radius: 12px; font-size: 13px; font-weight: 800; cursor: pointer; transition: 0.2s; border:1px solid var(--border);">퇴근 완료, 이제 내가 볼게요</button>
                     </div>
 
                     <div style="display:flex; gap:8px;">
@@ -2813,6 +3044,8 @@ div[style*="border-radius: 8px"] {
 <script src="./babytab.js"></script> 
 <script src="./homelayout.js"></script>
 <script src="./settingscards.js"></script>
+<script src="./emoji.js"></script>
+<script src="./feverguard.js"></script> 
 <script src="./mobile.js"></script>
 <script src="./fit.js"></script>
 
@@ -2853,241 +3086,6 @@ div[style*="border-radius: 8px"] {
         </div>
     </div>
 </div>
-
-<style>
-    @keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
-    @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-    .ai-poop-btn { flex: 1; min-width: 45px; padding: 10px 0; border-radius: 10px; border: none; font-weight: 800; font-size: 13px; cursor: pointer; transition: 0.2s; }
-    @keyframes toastFadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
-    @keyframes toastFadeOut { from { opacity: 1; transform: translateY(0); } to { opacity: 0; transform: translateY(-20px); } }
-    @keyframes popIn { from { opacity: 0; transform: scale(0.9); } to { opacity: 1; transform: scale(1); } }
-    
-    .toast-msg {
-        background: rgba(25, 31, 40, 0.85);
-        color: #FFF;
-        padding: 12px 24px;
-        border-radius: 100px;
-        font-size: 13.5px;
-        font-weight: 800;
-        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-        backdrop-filter: blur(8px);
-        animation: toastFadeIn 0.3s ease-out forwards;
-        text-align: center;
-        white-space: nowrap;
-    }
-        /* ========================================== */
-        /* 🌙 1단계: 고집불통 인라인 스타일까지 씹어먹는 강력 다크모드 (최종완성) */
-        /* ========================================== */
-        body.dark-mode {
-            background-color: #000000 !important;
-            color: #F9FAFB !important;
-        }
-        body.dark-mode .wrapper {
-            background-color: #000000 !important;
-            box-shadow: none !important;
-        }
-
-        /* 1. 하얀색 베이스 카드들을 다크 그레이로 반전 */
-        body.dark-mode .box-main,
-        body.dark-mode .panel-block > div, 
-        body.dark-mode .home-hero-card,
-        body.dark-mode .modal-content,
-        body.dark-mode .sos-content-box,
-        body.dark-mode .diary-card,
-        body.dark-mode .ai-matrix-container,
-        body.dark-mode #tab-hotplace > div > div {
-            background-color: #191F28 !important;
-            border: 1px solid #333D4B !important;
-            box-shadow: none !important;
-        }
-
-       /* 2. 연한 회색 배경을 더 어두운 색으로 반전 */
-        body.dark-mode [style*="background: #F9FAFB"],
-        body.dark-mode [style*="background:#F9FAFB"],
-        body.dark-mode [style*="background: #F8F9FA"],
-        body.dark-mode [style*="background:#F8F9FA"],
-        body.dark-mode [style*="background: #F2F5F8"],
-        body.dark-mode [style*="background:#F2F5F8"] {
-            background-color: #202632 !important;
-            border-color: #333D4B !important;
-        }
-
-        /* 🌟 [추가] 맘마 퀵버튼(원클릭) 다크모드 글씨/배경 강제 보호 */
-        body.dark-mode button.quick-btn.active,
-        body.dark-mode [style*="background: #EBF4FF"],
-        body.dark-mode [style*="background:#EBF4FF"] {
-            background-color: #3182F6 !important;
-            color: #FFFFFF !important;
-            border: none !important;
-        }
-        body.dark-mode button.quick-btn:not(.active) {
-            background-color: #333D4B !important;
-            color: #E5E8EB !important;
-            border: 1px solid #4E5968 !important;
-        }
-
-        /* 🌟 [추가] 수면 중 배너(꿀잠 타임) 다크모드 가독성 완벽 대응 */
-        body.dark-mode [style*="background:linear-gradient(135deg, #F3F0FF, #EDE9FE)"],
-        body.dark-mode [style*="background: linear-gradient(135deg, #F3F0FF, #EDE9FE)"] {
-            background: linear-gradient(135deg, #2D2440, #1E162B) !important;
-            border-color: #4C3A73 !important;
-        }
-        body.dark-mode [style*="background:linear-gradient(135deg, #F3F0FF, #EDE9FE)"] *,
-        body.dark-mode [style*="background: linear-gradient(135deg, #F3F0FF, #EDE9FE)"] * {
-            color: #E0D4FF !important;
-        }
-        body.dark-mode [style*="background:linear-gradient(135deg, #F3F0FF, #EDE9FE)"] [style*="color:#7C3AED"],
-        body.dark-mode [style*="background: linear-gradient(135deg, #F3F0FF, #EDE9FE)"] [style*="color: #7C3AED"] {
-            color: #B28BFF !important;
-        }
-   
-
-  /* 3. 강제로 하얗게 칠해진 버튼들 & 툴박스 아이콘 반전 */
-        body.dark-mode .pill-btn,
-        body.dark-mode .sym-btn,
-        body.dark-mode .checklist-main-btn,
-        body.dark-mode .filter-btn:not(.active),
-        body.dark-mode .tool-chip, 
-        body.dark-mode [style*="background: #FFFFFF"]:not(.quick-btn),
-        body.dark-mode [style*="background:#FFFFFF"]:not(.quick-btn),
-        body.dark-mode [style*="background: white"]:not(.quick-btn) {
-            background-color: #202632 !important;
-            color: #E5E8EB !important;
-            border: 1px solid #333D4B !important;
-            box-shadow: none !important;
-        }
-
-        /* 🌟 [수정] 맘마 퀵버튼(원클릭) 전용 다크모드 스타일 */
-        body.dark-mode .quick-btn.active {
-            background-color: #EBF4FF !important; /* 원래대로 옅은 파란색 유지 */
-            color: #111111 !important; /* 👈 글씨를 짙은 검은색으로 강제 변경해서 눈에 확 띄게! */
-            border: none !important;
-        }
-        body.dark-mode .quick-btn:not(.active) {
-            background-color: #333D4B !important; /* 선택 안 된 건 다크그레이 */
-            color: #E5E8EB !important;
-        }
-
-        /* 4. 입력창 (Input, Select) 배경 투명화 및 글자 하얗게 */
-        body.dark-mode input,
-        body.dark-mode select {
-            background-color: transparent !important;
-            color: #F9FAFB !important;
-        }
-        body.dark-mode input::placeholder { color: #8B95A1 !important; }
-
-        /* 5. 진한 검은색 글씨를 하얀색으로 강제 반전 */
-        body.dark-mode [style*="color: #191F28"],
-        body.dark-mode [style*="color:#191F28"],
-        body.dark-mode [style*="color: var(--text-m)"] {
-            color: #F9FAFB !important;
-        }
-        
-        /* 6. 중간 회색 글씨 밝게 반전 */
-        body.dark-mode [style*="color: #4E5968"],
-        body.dark-mode [style*="color:#4E5968"] {
-            color: #B0B8C1 !important;
-        }
-
-     /* 7. 홈 화면 노란색 그라데이션 배너 (놀이 처방전) 확실한 다크모드 제어 */
-        body.dark-mode #play-banner-card {
-            background: linear-gradient(135deg, #2D2513 0%, #3B2E15 100%) !important;
-            border-color: #5C4300 !important;
-        }
-        body.dark-mode #play-banner-card:hover,
-        body.dark-mode #play-banner-card:active {
-            background: linear-gradient(135deg, #3B2E15 0%, #4D3C1C 100%) !important;
-        }
-        body.dark-mode #play-banner-card * {
-            color: #F9FAFB !important; /* 배너 안 글씨 하얗게 */
-        }
-        body.dark-mode #play-banner-card [style*="color: #D97706"],
-        body.dark-mode #play-banner-card [style*="color:#D97706"] { 
-            color: #FBBF24 !important; 
-        }
-        body.dark-mode #play-banner-card [style*="color: #E32636"],
-        body.dark-mode #play-banner-card [style*="color:#E32636"] { 
-            color: #FCA5A5 !important; 
-        }
-        body.dark-mode #play-banner-card [style*="background: #FFF2F2"],
-        body.dark-mode #play-banner-card [style*="background:#FFF2F2"] { 
-            background: #3F1D1D !important; 
-        }
-       
-        /* 놀이 배너 안의 까만 글씨들을 싹 다 하얗게 강제 변환 */
-        body.dark-mode [style*="background: linear-gradient(135deg, #FFFBEB 0%, #FEF3C7 100%)"] * {
-            color: #F9FAFB !important;
-        }
-        /* 놀이 배너 포인트 컬러 조정 (가독성 UP) */
-        body.dark-mode [style*="background: linear-gradient(135deg, #FFFBEB 0%, #FEF3C7 100%)"] [style*="color: #D97706"] { color: #FBBF24 !important; }
-        body.dark-mode [style*="background: linear-gradient(135deg, #FFFBEB 0%, #FEF3C7 100%)"] [style*="color: #E32636"] { color: #FCA5A5 !important; }
-        body.dark-mode [style*="background: linear-gradient(135deg, #FFFBEB 0%, #FEF3C7 100%)"] [style*="background: #FFF2F2"] { background: #3F1D1D !important; }
-        
-        /* 8. 하단 영수증 그라데이션 배너 다크모드 */
-        body.dark-mode [style*="background: linear-gradient(135deg, #FFF9F0, #FFF3E0)"] {
-            background: linear-gradient(135deg, #3B2912 0%, #291C09 100%) !important;
-            border-color: #5C4300 !important;
-            color: #FFB74D !important;
-        }
-
-        /* 9. 헤더 및 하단 네비게이션 */
-        body.dark-mode .global-header { background-color: #000000 !important; border-bottom: 1px solid #333D4B !important; }
-        body.dark-mode .bottom-nav { background-color: #191F28 !important; border-top: 1px solid #333D4B !important; }
-
-/* ========================================== */
-        /* 🌙 1-2단계: 다크모드 디테일 버그 픽스 (스티커 버튼 & 호버 눈뽕 방지) */
-        /* ========================================== */
-
-        /* 1. 스티커 붙이기 등 검은색 배경(#191F28) 버튼이 투명해지는 현상 방지 */
-        body.dark-mode [style*="background: #191F28"],
-        body.dark-mode [style*="background:#191F28"] {
-            background-color: #333D4B !important; /* 배경색과 분리되도록 밝은 회색으로 변경 */
-            color: #FFFFFF !important;
-            border: 1px solid #4E5968 !important;
-        }
-
-        /* 2. 놀이 처방전 배너에 마우스 올리거나 터치할 때 색깔 돌아오는 현상 차단 */
-        body.dark-mode [style*="background: linear-gradient(135deg, #FFFBEB"]:hover,
-        body.dark-mode [style*="background: linear-gradient(135deg, #FFFBEB"]:active,
-        body.dark-mode [style*="background: linear-gradient(135deg, #FFFBEB"]:focus {
-            background: linear-gradient(135deg, #3B2E15 0%, #4D3C1C 100%) !important; /* 터치 시 눈 안 아프게 살짝만 밝아짐 */
-            border-color: #5C4300 !important;
-        }
-
-/* ========================================== */
-        /* 🌙 1-3단계: 다크모드 완벽 마감 공사 (가계부 버튼 & 찌꺼기 선 제거) */
-        /* ========================================== */
-
-        /* 1. 가계부 "분석 리포트 확인" 버튼 등 강제 하얀 버튼 반전 */
-        body.dark-mode .btn-main[style*="background:var(--text-m)"],
-        body.dark-mode .btn-main[style*="background: var(--text-m)"] {
-            background-color: #333D4B !important; /* 배경을 다크그레이로 */
-            color: #F9FAFB !important; /* 글씨를 하얗게 */
-            box-shadow: none !important;
-            border: 1px solid #4E5968 !important;
-        }
-
-        /* 2. 가계부 "월간 지출 진단", "열어보기", "기록보기" 뱃지 반전 */
-        body.dark-mode .stat-badge,
-        body.dark-mode .box-tint-blue[style*="color:var(--primary)"],
-        body.dark-mode .box-sub[style*="border-radius:8px"] {
-            background-color: #202632 !important;
-            color: #B0B8C1 !important;
-            border: 1px solid #333D4B !important;
-        }
-
-        /* 3. 생존 처방전(ai-matrix-card) 및 각종 리스트의 하얀 구분선(border) 어둡게 처리 */
-        body.dark-mode .ai-matrix-card,
-        body.dark-mode .lib-item,
-        body.dark-mode .timeline-item,
-        body.dark-mode .history-item {
-            border-bottom-color: #333D4B !important; /* 하얀색 테두리를 어두운 회색으로 */
-            border-color: #333D4B !important;
-        }
-
-      
-
-</style>
 
 <div id="routine-settings-modal" class="modal-overlay" style="z-index: 6500; display:none; justify-content:center; align-items:center;" onclick="window.closeRoutineSettings(event)">
     
