@@ -236,13 +236,25 @@ body.dark-mode select option { background: #221E1A; color: #EDE7E1; }
             el.setAttribute("data-theme-src", src);
         }
 
-        var next = convert(src);
+                var next = convert(src);
+
+        // 👇 display 는 화면 로직의 것이다. 색만 바꾸고 이건 그대로 둔다.
+        //    안 그러면 display:block 으로 연 화면을 기억해둔 display:none 으로 덮어버린다.
+        var live = el.getAttribute("style") || "";
+        var dm = live.match(/(^|;)\s*display\s*:\s*([^;]+)/i);
+        if (dm) {
+            var d = dm[2].trim();
+            if (/(^|;)\s*display\s*:/i.test(next)) {
+                next = next.replace(/(^|;)(\s*)display\s*:\s*[^;]+/i, "$1$2display:" + d);
+            } else {
+                next = next.replace(/;\s*$/, "") + "; display:" + d;
+            }
+        }
+
         if (next !== el.getAttribute("style")) {
-            // 🚨 [추가됨] theme.js가 바꾼 색상이라는 꼬리표(마커) 달기
             el.setAttribute("data-theme-applied", "true"); 
             el.setAttribute("style", next);
         }
-    }
 
     function paint(root) {
         root = root || document.body;
@@ -263,24 +275,30 @@ body.dark-mode select option { background: #221E1A; color: #EDE7E1; }
     function watch() {
         if (!window.MutationObserver) return;
 
-        new MutationObserver(function (muts) {
+            new MutationObserver(function (muts) {
+            // 👇 return 으로 빠져나가면 나머지 변경을 통째로 놓친다.
+            //    다른 모듈이 DOM 을 먼저 건드리면 스타일 변경이 묻혀서
+            //    캐시가 안 지워지고, 옛 스타일로 덮어쓰는 사고가 난다.
+            var need = false;
+
             for (var i = 0; i < muts.length; i++) {
                 var m = muts[i];
-                if (m.type === "childList" && m.addedNodes.length) { schedule(); return; }
-                
-                // 🚨 [변경됨] 유저가 클릭해서 바뀐 색상이면 메모장(캐시)을 리셋하도록 수정!
+
+                if (m.type === "childList" && m.addedNodes.length) { need = true; continue; }
+
                 if (m.type === "attributes" && m.attributeName === "style") {
                     if (m.target.getAttribute("data-theme-applied") === "true") {
-                        // theme.js가 칠한 거면 마커만 지우고 무시 (무한루프 방지)
+                        // theme.js가 칠한 거면 마커만 지운다 (무한루프 방지)
                         m.target.removeAttribute("data-theme-applied");
                     } else {
-                        // 외부 JS(유저 클릭)가 바꾼 거면 이전 메모장 삭제 후 새 색상 기억하기!
-                        m.target.removeAttribute("data-theme-src"); 
-                        schedule();
+                        // 외부 JS가 바꾼 거면 캐시를 버리고 새 값을 기억한다
+                        m.target.removeAttribute("data-theme-src");
+                        need = true;
                     }
-                    return;
                 }
             }
+
+            if (need) schedule();
         }).observe(document.body, {
             childList: true, subtree: true,
             attributes: true, attributeFilter: ["style"]
@@ -292,8 +310,13 @@ body.dark-mode select option { background: #221E1A; color: #EDE7E1; }
         }).observe(document.body, { attributes: true, attributeFilter: ["class"] });
     }
 
-    function boot() {
+       function boot() {
         paint();
+
+        // 👇 첫 덧칠이 끝났다. 이제 애니메이션을 풀어준다.
+        //    이 줄이 없으면 파란색이 보라색으로 물드는 게 그대로 보인다.
+        document.documentElement.classList.remove("theme-booting");
+
         watch();
         setTimeout(paint, 800);      // script.js 가 늦게 그리는 화면들
         setTimeout(paint, 2500);
