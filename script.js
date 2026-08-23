@@ -1573,8 +1573,7 @@ function toggleCheck(e) { if(e.target.tagName !== 'INPUT') { const cb = document
    용량은 약 상자의 몸무게별 표가 정확합니다.
    ========================================================== */
 function calcFever() {
-    const agreeCb = document.getElementById('agree-check');
-    if(agreeCb && !agreeCb.checked) return window.showToast("위험 고지 및 면책조항 동의 확인이 필요합니다.");
+    // 🚨 체크박스 검사 로직 완전히 걷어냈습니다!
     const w = Number(document.getElementById('v-weight').value);
     if(!w) return window.showToast("체중을 입력해주세요.");
     if(w < 1 || w > 40) return window.showToast("체중을 다시 확인해주세요.");
@@ -1582,8 +1581,8 @@ function calcFever() {
     // 소아과 리포트에서 쓰는 최신 체중은 그대로 저장한다
     localStorage.setItem('tosil_latest_weight', w);
 
-    const name = localStorage.getItem('tosil_babyName') || '우리 아기';
-    const guide = '<span style="font-size:15px; font-weight:800;">약 상자의 <b>' + w + 'kg</b> 줄을 보세요</span>';
+    // 🚨 안내 멘트를 "계산"이 아닌 "상자 확인"으로 변경
+    const guide = '<span style="font-size:15px; font-weight:800;">약 상자의 <b>' + w + 'kg</b> 줄을 확인하세요</span>';
 
     const red = document.getElementById('dose-red');
     const blue = document.getElementById('dose-blue');
@@ -1595,37 +1594,19 @@ function calcFever() {
         el.style.display = 'none';
     });
 
-    // 안내문은 한 번만 붙인다
-    if (!document.getElementById('fever-dose-note')) {
-        const note = document.createElement('div');
-        note.id = 'fever-dose-note';
-        note.style.cssText = 'margin-top:12px; padding:14px 15px; background:#FDF9EE; ' +
-            'border:1px solid #F0DFB8; border-radius:14px; line-height:1.7; word-break:keep-all;';
-        note.innerHTML =
-            '<div style="font-size:13px; font-weight:900; color:#7A5B12; margin-bottom:6px;">용량은 약 상자를 보세요</div>' +
-            '<div style="font-size:12.5px; font-weight:600; color:#8C7434;">' +
-                '제품마다 농도가 달라서 앱이 대신 계산하지 않습니다.<br>' +
-                '<b>' + name + ' ' + w + 'kg</b> 에 맞는 양은 상자와 설명서에 표로 적혀 있어요.<br>' +
-                '헷갈리면 약사님이나 소아과에 물어보세요.' +
-            '</div>';
-        const box = document.getElementById('fever-result');
-        if (box) box.appendChild(note);
-    }
+    // 🚨 불필요한 노란색 안내문(fever-dose-note) 생성 로직 삭제! (HTML 면책 조항으로 대체됨)
 
     const fRes = document.getElementById('fever-result'); if(fRes) fRes.style.display = 'block';
     if (typeof window.refreshFeverGuard === 'function') window.refreshFeverGuard();
 }
 
 async function addFeverRecord() {
-    // 🚨 1. 하단 투약 기록 시에도 무조건 동의 박스 체크 확인!
-    const agreeCb = document.getElementById('agree-check');
-    if(agreeCb && !agreeCb.checked) {
-        return showToast("⚠️ 투약 기록을 저장하려면 상단의 위험 고지 및 면책조항에 동의해주세요!");
-    }
+    // 🚨 투약 기록 시 체크박스 깐깐하게 검사하는 로직 삭제 완료!
 
     const temp = parseFloat(document.getElementById('v-temp').value);
-    if(!temp || !selectedPillType) return showToast('⚠️ 체온과 약 종류를 명확히 지정해주세요!');
-      /* 기록을 막지 않는다.
+    if(!temp || !selectedPillType) return window.showToast('⚠️ 체온과 약 종류를 명확히 지정해주세요!');
+    
+    /* 기록을 막지 않는다.
        이미 먹였는데 앱이 거부하면 '마지막 투약 시각'이 틀리게 남고,
        그러면 두 시간 뒤에 앱이 초록불을 켠다. 그게 진짜 사고 지점이다.
        대신 크게 경고하고, 확인을 받고, 사실대로 남긴다. */
@@ -1642,7 +1623,7 @@ async function addFeverRecord() {
 
     // 연령 경고 — 막지 않고 알리기만 한다
     const aw = window.ageWarning(selectedPillType);
-    if (aw) showToast('⚠️ ' + aw.split('\n')[0]);
+    if (aw) window.showToast('⚠️ ' + aw.split('\n')[0]);
     
     const symptoms = [
         document.getElementById('sym-cough').checked ? '🤧기침' : '', 
@@ -1657,9 +1638,9 @@ async function addFeverRecord() {
     let records = JSON.parse(localStorage.getItem('tosil_fever_records')) || [];
     records.unshift(record); if(records.length > 10) records.pop(); 
     
+    // 🚨 [다둥이 패치] 등 서버 연동 로직 100% 무사히 보존 완료!
     if (typeof db !== 'undefined' && typeof setDoc === 'function') {
         const syncCode = window.getSyncCode(); if (!syncCode) return;
-        // 🚨 [다둥이 패치] 해열제 저장 경로 분리
         const docRef = doc(db, "fever_" + syncCode + window.currentBabySuffix, "status");
         try { await setDoc(docRef, { records: records }, { merge: true }); } catch (e) {}
     }
@@ -1691,7 +1672,7 @@ async function addFeverRecord() {
     renderFeverTimeline(); 
     setTimeout(updateHomeDashboard, 100); 
     
-    showToast("💊 투약 기록이 안전하게 저장되었습니다!");
+    window.showToast("💊 투약 기록이 안전하게 저장되었습니다!");
 }
 
 function renderFeverTimeline() {

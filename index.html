@@ -1,6 +1,33 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
+         <!-- 🎨 색 덧칠이 끝나기 전에는 애니메이션을 잠근다.
+         HTML(파란 기본색) → style.css(0.2초 전환) → theme.js(보라 덧칠)
+         이 셋이 부딪히면서 파란 버튼이 스르륵 보라로 물드는 게 보였다. -->
+      <style id="theme-boot-css">
+        html.theme-booting *,
+        html.theme-booting *::before,
+        html.theme-booting *::after {
+            transition: none !important;
+            animation: none !important;
+        }
+        /* 깜빡임까지 완전히 없애려면 아래 한 줄의 주석을 푸세요.
+           대신 첫 화면이 0.1초 정도 늦게 뜹니다. */
+        /* html.theme-booting body { visibility: hidden; } */
+
+        /* 👇 아빠 작전 상황판과 브리핑은 홈에서 내렸다.
+              JS로 숨기면 이미 그려진 뒤라 한 번 번쩍인다.
+              CSS로 처음부터 안 그리게 한다. */
+        #dad-quest-container,
+        #dad-briefing-wrapper { display: none !important; }
+    </style>
+    <script>
+        document.documentElement.classList.add('theme-booting');
+        // theme.js 가 죽어도 화면은 반드시 뜬다
+        setTimeout(function () {
+            document.documentElement.classList.remove('theme-booting');
+        }, 1500);
+    </script>
     <!-- 카카오톡 SDK (이게 있어야 카톡이 뜹니다!) -->
     <script src="https://t1.kakaocdn.net/kakao_js_sdk/1.43.1/kakao.min.js"></script>
     <script async src="https://www.googletagmanager.com/gtag/js?id=G-N8JZ91ZQHR"></script>
@@ -1275,33 +1302,34 @@ div[style*="border-radius: 8px"] {
 
             <div id="panel-fever" class="panel-block" style="display:none; padding-top:24px; padding-bottom: 24px;">
             
-    <!-- 💊 첫 번째 카드: 투약 용량 계산 -->
+<!-- 💊 첫 번째 카드: 몸무게 기록 및 투약 가이드 -->
     <div style="background: #FFFFFF; border-radius: 20px; padding: 24px; box-shadow: 0 4px 12px rgba(0,0,0,0.03); margin-bottom: 24px;">
-        <!-- 빨간 선(border-bottom) 삭제, 예쁜 타이틀로 변경 -->
-        <h2 style="font-size: 20px; font-weight: 900; margin: 0 0 20px 0; color: #191F28; letter-spacing: -0.5px;">🌡️ 투약 용량 안전 계측</h2>
         
-        <div class="disclaimer-box box-tint-red" style="border-radius: 14px; padding: 18px; margin-bottom: 16px;">
-            <p style="color:var(--danger); font-size:13.5px; font-weight:800; margin-bottom:6px;">🚨 [법적 책임 부인 및 소아과 의사 지시 우선]</p>
-            <p style="font-size:12.5px; color:var(--text-s); line-height:1.5;">본 계산기는 일반적인 소아 약전 기준(체중당 10~15mg)을 반영한 단순 참고용입니다.</p>
+        <h2 style="font-size: 20px; font-weight: 900; margin: 0 0 20px 0; color: #191F28; letter-spacing: -0.5px;">🌡️ 해열제 복용 가이드</h2>
+        
+        <!-- 🚨 면책 조항 (초압축 2줄 다이어트 완료!) -->
+        <div class="disclaimer-box box-tint-red" style="border-radius: 14px; padding: 16px; margin-bottom: 24px;">
+            <p style="color:var(--danger); font-size:13px; font-weight:900; margin-bottom:4px; margin-top:0;">🚨 투약 용량 확인 의무</p>
+            <p style="font-size:12px; color:var(--danger); line-height:1.45; opacity: 0.9; word-break: keep-all; margin: 0;">
+                약마다 농도가 달라 앱에서 임의로 용량을 계산하지 않습니다.<br>
+                반드시 <strong>약 상자 뒷면의 [몸무게별 권장표]</strong>를 확인해 주세요.
+            </p>
         </div>
 
-        <!-- 체크박스 영역 (연한 회색 배경으로 정돈) -->
-        <div class="checkbox-area" style="display: flex; gap: 12px; align-items:flex-start; cursor: pointer; padding: 16px; border-radius: 14px; margin-bottom: 24px; background: #F9FAFB; border: 1px solid #F2F5F8;" onclick="toggleCheck(event)">
-            <input type="checkbox" id="agree-check" style="width: 22px; height: 22px; accent-color: var(--danger); margin-top:2px;">
-            <label style="font-size:13px; font-weight:800; color:var(--danger); line-height:1.45;">상기 기술된 의료 리스크 및 예외 고지를 완벽히 숙지하였으며, 본인 판단하에 참고용으로만 사용하겠습니다.</label>
-        </div>
+        <!-- 👇 체크박스는 깔끔하게 삭제되었습니다! 바로 체중 입력이 나옵니다 👇 -->
 
-        <!-- 체중 입력 (밑줄 대신 둥근 박스형 입력칸으로 변경) -->
+        <!-- 체중 입력 -->
         <div class="input-group" style="margin-bottom: 24px;">
-            <label style="font-size:14px; font-weight:800; display:block; margin-bottom:10px; color:var(--text-m);">계측 질량 체중 입력 (kg)</label>
+            <label style="font-size:14px; font-weight:800; display:block; margin-bottom:10px; color:var(--text-m);">현재 아기 체중 입력 (kg)</label>
             <div class="input-wrapper" style="background: #F9FAFB; border: 1px solid #F2F5F8; border-radius: 14px; padding: 16px; position:relative;">
                 <input type="number" id="v-weight" placeholder="0.0" step="0.1" style="text-align:left; font-size:22px; font-weight:800; border:none; outline:none; background:transparent; color:var(--text-m); width:100%;">
                 <span class="unit-label" style="position:absolute; right:16px; top:50%; transform:translateY(-50%); font-size:18px; font-weight:800; color:var(--text-s);">kg</span>
             </div>
         </div>
 
-        <button class="btn-main" onclick="calcFever()" style="width: 100%; padding: 18px; font-size: 16px; font-weight: 800; border-radius: 14px; border: none; background:var(--danger); color: white; box-shadow: 0 4px 12px rgba(253, 104, 104, 0.25); cursor: pointer;">몸무게 저장하고 확인하기</button>
+        <button class="btn-main" onclick="calcFever()" style="width: 100%; padding: 18px; font-size: 16px; font-weight: 800; border-radius: 14px; border: none; background:var(--danger); color: white; box-shadow: 0 4px 12px rgba(253, 104, 104, 0.25); cursor: pointer;">몸무게 저장하고 가이드 확인</button>
 
+        <!-- 결과 출력 박스 (JS에서 제어됨) -->
         <div id="fever-result" style="display:none; margin-top:24px; border-top: 1px solid #F2F5F8; padding-top:24px;">
             <div class="pill-card box-tint-red" style="border-radius:16px; padding:18px; margin-bottom:12px; text-align:center;">
                 <div class="pill-title" style="font-size:15px; font-weight:800; color:var(--danger);">🔴 아세트아미노펜 계열 <span style="font-weight:600; font-size:12.5px; color:var(--text-s);">(빨강 챔프 등)</span></div>
@@ -1641,9 +1669,9 @@ div[style*="border-radius: 8px"] {
             </div>
         </div>
         
-        <button class="btn-main" onclick="addCubeRecord()" style="width:100%; box-sizing: border-box; padding:18px; background:#3182F6; color:#FFF; border:none; border-radius:14px; font-weight:900; font-size: 16px; cursor:pointer; box-shadow:0 4px 12px rgba(49,130,246,0.25); margin:0; transition: 0.2s;">
-            ❄️ 냉동실 보관 시작
-        </button>
+        <button class="btn-main" onclick="addCubeRecord()" style="width:100%; box-sizing: border-box; padding:18px; background: rgb(127, 119, 221) !important; color: #FFFFFF !important; border:none; border-radius:14px; font-weight:900; font-size: 16px; cursor:pointer; box-shadow:0 4px 12px rgba(127, 119, 221, 0.25) !important; margin:0; transition: 0.2s;">
+    ❄️ 냉동실 보관 시작
+</button>
     </div>
     
     <!-- 📋 두 번째 카드: 현재 보관 중인 큐브 리스트 -->
@@ -1749,7 +1777,7 @@ div[style*="border-radius: 8px"] {
                             </div>
                         </div>
                     </div>
-                    <button class="btn-main" onclick="calcFormulaAmount()" style="width: 100%; padding: 16px; font-size: 15px; font-weight: 800; border-radius: 14px; border: none; background: #3182F6; color: white; cursor: pointer;">권장량 계산하기</button>
+                    <button class="btn-main" onclick="calcFormulaAmount()" style="width: 100%; padding: 16px; font-size: 15px; font-weight: 800; border-radius: 14px; border: none; background: rgb(127, 119, 221) !important; color: #FFFFFF !important; cursor: pointer; box-shadow: 0 4px 12px rgba(127, 119, 221, 0.25) !important;">권장량 계산하기</button>
                     
                     <div id="formula-amount-result" style="display: none; margin-top: 20px; background: #F9FAFB; padding: 20px; border-radius: 20px; border: 1px solid #E5E8EB; text-align: center;">
                         <div style="font-size: 13.5px; font-weight: 800; color: #8B95A1; margin-bottom: 12px;">적정 수유량 (참고용 범위)</div>

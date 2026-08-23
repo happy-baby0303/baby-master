@@ -238,14 +238,15 @@
         '</div>';
     }
 
-    function cardHTML() {
+function cardHTML() {
         return '<div style="font-size:12px; font-weight:900; color:var(--text-sub); margin:0 2px 8px;">지금 줘도 되나요</div>' +
             '<div style="display:flex; gap:8px;">' + row("red") + row("blue") + '</div>' +
-            '<div style="font-size:10.5px; font-weight:600; color:var(--text-sub); line-height:1.6; ' +
-                'margin-top:9px; padding:9px 11px; background:var(--bg-sub); border-radius:10px; word-break:keep-all;">' +
-                '용량은 아세트아미노펜 ' + RULE.red.syrup + ', 이부프로펜 ' + RULE.blue.syrup + ' 시럽 기준이에요. ' +
-                '가지고 계신 약병의 농도가 다르면 그대로 쓰지 마세요.<br>' +
-                '<b>맥시부펜 같은 덱시부프로펜은 성분이 달라 이 계산이 맞지 않습니다.</b> 약사에게 확인해주세요.' +
+            '<div style="font-size:12.5px; font-weight:600; color:var(--text-sub); line-height:1.6; ' +
+                'margin-top:9px; padding:14px 16px; background:var(--bg-sub); border-radius:12px; word-break:keep-all;">' +
+                '<span style="font-weight:900; color:var(--text-m); font-size:13px;">💡 열이 안 떨어질 때 (교차 복용 팁)</span><br>' +
+                '• <b>같은 성분(색깔)의 약</b>은 최소 4~6시간 간격을 두어야 합니다.<br>' +
+                '• <b>다른 성분(색깔)의 약</b>을 교차 복용할 때는 <b>최소 2시간 간격</b>은 필수입니다.<br>' +
+                '<div style="margin-top:8px; color:var(--danger); font-weight:800;">※ 투약 전, 약 상자의 몸무게별 권장 용량을 꼭 확인하세요!</div>' +
             '</div>';
     }
 
