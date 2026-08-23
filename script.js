@@ -1708,59 +1708,90 @@ function renderFeverTimeline() {
 }
 
 // ==========================================
-// ✨ [UX 패치] 스마트 해열제 타이머 (교차 복용 넛지 & 흑백 잠금)
+// ✨ [UX 패치] 스마트 해열제 타이머 (월령 버그 픽스 & 배지 디자인 가독성 압축)
 // ==========================================
-function updateFeverTimer(records) {
-    const redBtn = document.getElementById('btn-pill-red'), blueBtn = document.getElementById('btn-pill-blue');
-    const timerRedEl = document.getElementById('timer-red'), timerBlueEl = document.getElementById('timer-blue');
+window.updateFeverTimer = function(records) {
+    const redBtn = document.getElementById('btn-pill-red');
+    const blueBtn = document.getElementById('btn-pill-blue');
+    const timerRedEl = document.getElementById('timer-red');
+    const timerBlueEl = document.getElementById('timer-blue');
     
-    // 1. 기록 없을 때 완벽 초기화
+    // 💡 헬퍼: 상태 판별 및 배지 디자인 자동 생성기
+    const getStatusHtml = (type) => {
+        // 1. 하드 락 (월령 제한, 하루 상한선 초과 등 최우선 검사!)
+        const hardCheck = window.feverCheck(type);
+        if (!hardCheck.ok && hardCheck.hard) {
+            // 🚨 핵심: [1]이 아니라 [0]으로 바꿔서 첫 번째 줄 텍스트를 가져옵니다!
+            let msg = hardCheck.why.split('\n')[0]; 
+            msg = msg.replace(/[\(\)]/g, ''); // 괄호 깔끔하게 제거
+            return { 
+                html: `<div style="background:#F2F5F8; color:#4E5968; padding:5px 8px; border-radius:8px; font-size:11.5px; font-weight:800; white-space:nowrap; letter-spacing:-0.5px;">🚫 불가 (${msg})</div>`, 
+                locked: true 
+            };
+        }
+
+        // 2. 시간 락 (최근 복용으로 인한 쿨타임)
+        const timeCheck = window.doseStatus(type);
+        if (timeCheck.locked) {
+            let match = timeCheck.advice.match(/(.*)부터 가능 \((.*) 남음\)/);
+            let shortText = timeCheck.advice;
+            if (match) { 
+                // 🚨 "4시간 0분" -> "4시간", "0시간 30분" -> "30분" 처럼 쓸데없는 글자 압축
+                let timeStr = match[2].replace(' 0분', '').replace('0시간 ', '');
+                shortText = `🔒 ${match[1]}부터 <span style="opacity:0.75; font-size:11px; margin-left:2px;">(${timeStr})</span>`;
+            }
+            return { 
+                html: `<div style="background:#FFF0F1; color:#F04452; padding:5px 8px; border-radius:8px; font-size:11.5px; font-weight:800; white-space:nowrap; letter-spacing:-0.5px;">${shortText}</div>`, 
+                locked: true 
+            };
+        }
+
+        // 3. 진짜 교차 복용 가능 여부 판별
+        const lastPill = records && records.length > 0 ? records[0] : null;
+        if (lastPill && lastPill.type !== type) {
+            const otherType = type === 'red' ? 'blue' : 'red';
+            const otherTimeCheck = window.doseStatus(otherType);
+            if (otherTimeCheck.locked) {
+                return {
+                    html: `<div style="background:#EBF4FF; color:#3182F6; padding:5px 8px; border-radius:8px; font-size:11.5px; font-weight:800; white-space:nowrap; letter-spacing:-0.5px; animation:pulseSOS 1.5s infinite;">💡 교차 복용 가능</div>`,
+                    locked: false
+                };
+            }
+        }
+
+        // 4. 즉시 복용 가능
+        return {
+            html: `<div style="background:#E6F7F2; color:#00B37A; padding:5px 8px; border-radius:8px; font-size:11.5px; font-weight:800; white-space:nowrap; letter-spacing:-0.5px;">✅ 복용 가능</div>`,
+            locked: false
+        };
+    };
+
+    // 💡 화면에 색깔 및 디자인 쏴주는 함수
+    const applyStatus = (timerEl, btnEl, status) => {
+        if (timerEl) timerEl.innerHTML = status.html;
+        if (btnEl) {
+            if (status.locked) {
+                btnEl.style.cursor = 'not-allowed'; 
+                btnEl.style.opacity = '0.3'; 
+                btnEl.style.filter = 'grayscale(100%)'; 
+            } else {
+                btnEl.style.cursor = 'pointer'; 
+                btnEl.style.opacity = '1'; 
+                btnEl.style.filter = 'none'; 
+            }
+        }
+    };
+
     if (!records || records.length === 0) {
-        if (timerRedEl) { timerRedEl.innerHTML = "✅ 즉시 복용 가능"; timerRedEl.style.color = "#2ECC71"; }
-        if (timerBlueEl) { timerBlueEl.innerHTML = "✅ 즉시 복용 가능"; timerBlueEl.style.color = "#2ECC71"; }
-        if (redBtn) { redBtn.style.cursor = 'pointer'; redBtn.style.opacity = '1'; redBtn.style.filter = 'none'; }
-        if (blueBtn) { blueBtn.style.cursor = 'pointer'; blueBtn.style.opacity = '1'; blueBtn.style.filter = 'none'; }
+        applyStatus(timerRedEl, redBtn, { html: `<div style="background:#E6F7F2; color:#00B37A; padding:5px 8px; border-radius:8px; font-size:11.5px; font-weight:800; white-space:nowrap; letter-spacing:-0.5px;">✅ 즉시 복용 가능</div>`, locked: false });
+        applyStatus(timerBlueEl, blueBtn, { html: `<div style="background:#E6F7F2; color:#00B37A; padding:5px 8px; border-radius:8px; font-size:11.5px; font-weight:800; white-space:nowrap; letter-spacing:-0.5px;">✅ 즉시 복용 가능</div>`, locked: false });
         return;
     }
 
-    const redLock = checkPillLock('red'), blueLock = checkPillLock('blue');
-
-    // 🔴 2. 빨간약(아세트) 상태 매직
-    if (redLock.locked) {
-        if (timerRedEl) { timerRedEl.innerHTML = `🔒 ${redLock.reason.split('\n')[1]}`; timerRedEl.style.color = "var(--danger)"; }
-        // 잠기면 흑백으로 죽여버리기!
-        if (redBtn) { redBtn.style.cursor = 'not-allowed'; redBtn.style.opacity = '0.3'; redBtn.style.filter = 'grayscale(100%)'; }
-    } else {
-        if (timerRedEl) {
-            // 파란약은 잠겼는데 빨간약이 풀렸다면 -> 교차 복용 골든 타임! 💡
-            if (blueLock.locked) {
-                timerRedEl.innerHTML = `<span style="background:#FFF0F1; color:#F04452; padding:4px 8px; border-radius:8px; font-size:11.5px; font-weight:900; box-shadow:0 2px 6px rgba(240,68,82,0.2); display:inline-block; animation:pulseSOS 1.5s infinite;">💡 교차 복용 가능</span>`;
-            } else {
-                timerRedEl.innerHTML = "✅ 즉시 복용 가능";
-                timerRedEl.style.color = "#2ECC71";
-            }
-        }
-        if (redBtn) { redBtn.style.cursor = 'pointer'; redBtn.style.opacity = '1'; redBtn.style.filter = 'none'; }
-    }
-
-    // 🔵 3. 파란약(이부) 상태 매직
-    if (blueLock.locked) {
-        if (timerBlueEl) { timerBlueEl.innerHTML = `🔒 ${blueLock.reason.split('\n')[1]}`; timerBlueEl.style.color = "var(--danger)"; }
-        // 잠기면 흑백으로 죽여버리기!
-        if (blueBtn) { blueBtn.style.cursor = 'not-allowed'; blueBtn.style.opacity = '0.3'; blueBtn.style.filter = 'grayscale(100%)'; }
-    } else {
-        if (timerBlueEl) {
-            // 빨간약은 잠겼는데 파란약이 풀렸다면 -> 교차 복용 골든 타임! 💡
-            if (redLock.locked) {
-                timerBlueEl.innerHTML = `<span style="background:#EBF4FF; color:#3182F6; padding:4px 8px; border-radius:8px; font-size:11.5px; font-weight:900; box-shadow:0 2px 6px rgba(49,130,246,0.2); display:inline-block; animation:pulseSOS 1.5s infinite;">💡 교차 복용 가능</span>`;
-            } else {
-                timerBlueEl.innerHTML = "✅ 즉시 복용 가능";
-                timerBlueEl.style.color = "#2ECC71";
-            }
-        }
-        if (blueBtn) { blueBtn.style.cursor = 'pointer'; blueBtn.style.opacity = '1'; blueBtn.style.filter = 'none'; }
-    }
-}
+    // 빨간약, 파란약 동시 적용!
+    applyStatus(timerRedEl, redBtn, getStatusHtml('red'));
+    applyStatus(timerBlueEl, blueBtn, getStatusHtml('blue'));
+};
 
 // ✨ [니치 패치 2] 체온 입력 시 실시간 색상 변화 엔진
 window.handleTempInputColor = function(inputEl) {

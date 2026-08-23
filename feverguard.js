@@ -121,23 +121,19 @@
 
         var now = Date.now();
 
-        // 1) 6개월 미만 이부프로펜 금기
+       // 1) 6개월 미만 이부프로펜 금기 (초압축 2줄 텍스트)
         if (rule.minMonths) {
             var m = ageMonths();
             if (m === null) {
                 return {
                     ok: false, hard: true,
-                    why: "아기 생년월일이 없어 월령을 확인할 수 없어요.\n" +
-                         rule.name + "은 6개월 미만에게 쓰지 않습니다.\n" +
-                         "설정에서 생년월일을 먼저 등록해주세요."
+                    why: "생년월일 정보가 없어 안전을 위해 투약이 차단됩니다.\n설정 탭에서 아기 생일을 먼저 등록해주세요."
                 };
             }
             if (m < rule.minMonths) {
                 return {
                     ok: false, hard: true,
-                    why: rule.name + "은 생후 6개월 미만에게 쓸 수 없어요.\n" +
-                         "(지금 약 " + Math.floor(m) + "개월)\n" +
-                         "소아과에 먼저 문의해주세요."
+                    why: "생후 " + rule.minMonths + "개월 미만(현재 " + Math.floor(m) + "개월) 투약 불가\n전문의 상담 전에는 절대 먹이지 마세요!"
                 };
             }
         }
@@ -184,23 +180,25 @@
         return { ok: true, why: "", left: rule.maxPerDay - n };
     };
 
-    /* ==========================================================
+/* ==========================================================
        기존 잠금에 얹기 — 더 엄격해지기만 한다
        원래 막던 건 그대로 막고, 우리가 찾은 이유를 더한다.
        ========================================================== */
-
     (function hookLock() {
         var orig = window.checkPillLock;
         if (typeof orig !== "function" || orig.__guarded) return;
 
         var wrapped = function (type) {
-            // 원래 판단이 막으면 그대로 막는다
+            // 🚨 [핵심 패치] 월령 제한 등 '절대 불가(hard)' 사유를 제일 먼저 검사해서 차단!
+            var v = window.feverCheck(type);
+            if (!v.ok && v.hard) return { locked: true, reason: v.why };
+
+            // 원래 판단이 막으면 막는다 (기존 시간 타이머 로직)
             var base;
             try { base = orig.apply(this, arguments); } catch (e) { base = { locked: false, reason: "" }; }
             if (base && base.locked) return base;
 
-            // 원래는 통과했어도 우리가 막을 이유가 있으면 막는다
-            var v = window.feverCheck(type);
+            // 원래는 통과했어도 우리가 막을 이유(기타 사유)가 있으면 막는다
             if (!v.ok) return { locked: true, reason: v.why };
 
             return { locked: false, reason: "" };

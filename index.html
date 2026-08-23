@@ -210,13 +210,39 @@ body.mode-senior .hide-on-senior { display: none !important; }
     border: 1px solid #EDF0F3 !important;
 }
 
-/* 건강 & 경제 카드 높이 맞추기 */
-#db-fever-text, #db-ledger-text {
-    min-height: 42px !important;
-    justify-content: center !important;
+/* ========================================== */
+/* 🌡️ 스마트 관리(해열/저금통) 글씨 완벽 수평 정렬 패치 */
+/* ========================================== */
+/* 1. 카드의 자동 정렬(flex) 기능을 꺼서 요소들이 멋대로 밀려나지 않게 제압 */
+[onclick*="directGoToolbox('fever')"], #db-ledger-card {
+    position: relative !important;
+    display: block !important; 
 }
-#db-ledger-progress-wrap { margin-top: auto !important; }
 
+/* 2. 글씨 박스를 공중부양시켜서 양쪽 카드의 똑같은 높이(56%)에 강제로 못 박기 */
+#db-fever-text, #db-ledger-text {
+    position: absolute !important;
+    top: 56% !important;
+    left: 0 !important;
+    width: 100% !important;
+    transform: translateY(-50%) !important;
+    display: flex !important;
+    flex-direction: column !important;
+    justify-content: center !important;
+    align-items: center !important;
+    text-align: center !important;
+    margin: 0 !important;
+}
+
+/* 3. 저금통 막대기도 바닥(bottom: 20px)에 단단히 고정 */
+#db-ledger-progress-wrap {
+    position: absolute !important;
+    bottom: 20px !important;
+    left: 20px !important;
+    right: 20px !important;
+    width: auto !important;
+    margin: 0 !important;
+}
 검은 카드 시절 잔재 일괄 청소 */
 .dad-hero-card [style*="rgba(255,255,255"],
 #dad-quest-container [style*="rgba(255,255,255"] {
