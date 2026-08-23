@@ -96,11 +96,12 @@
 
     var lastSig = "";
 
-    function relayout() {
+       function relayout() {
         var h = home();
         if (!h) return;
 
         hideBriefing();
+        setTimeout(trimCards, 60);      // 카드가 다 붙은 뒤에 솎아낸다
 
         var blocks = [];
         var seen = [];
@@ -146,7 +147,39 @@
         }).join(",");
     }
 
-    window.relayoutHome = relayout;
+      window.relayoutHome = relayout;
+
+    /* ---------- 카드 두 개까지만 ----------
+       조건부 카드가 넷이다. 운 나쁜 날엔 한꺼번에 뜬다.
+       넷이 쌓이면 넷 다 안 읽는다.
+
+       급한 순서대로 위에서 둘만 남긴다.
+       안 보이는 건 원래 오늘 안 급한 것들이다. -------- */
+
+    var CARD_ORDER = [
+        "home-expiry-alert",     // 기한 지남 — 오늘 알아야 한다
+        "home-memorybox-card",   // 배냇함 — 이 앱의 이유
+        "home-memory-card",      // 그날의 오늘 — 있으면 좋다
+        "home-words-card"        // 첫 단어 — 언제 봐도 된다
+    ];
+    var MAX_CARDS = 2;
+
+    function trimCards() {
+        var shown = 0;
+        for (var i = 0; i < CARD_ORDER.length; i++) {
+            var el = document.getElementById(CARD_ORDER[i]);
+            if (!el) continue;
+
+            if (shown < MAX_CARDS) {
+                if (el.style.display === "none") el.style.display = "";
+                shown++;
+            } else {
+                if (el.style.display !== "none") el.style.display = "none";
+            }
+        }
+    }
+
+    window.trimHomeCards = trimCards;
 
     /* ---------- 시작 ----------
        home.js · memories.js · firstwords.js 가 카드를 늦게 꽂으므로
@@ -163,7 +196,11 @@
         });
 
         // 탭을 옮겨다니면 script.js 가 다시 그린다
+              // 탭을 옮겨다니면 script.js 가 다시 그린다
         setInterval(relayout, 60000);
+
+        // 카드는 늦게 붙는 것도 있어서 따로 더 자주 확인한다
+        setInterval(trimCards, 3000);
     }
 
     if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", boot);

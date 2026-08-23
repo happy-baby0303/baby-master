@@ -251,10 +251,11 @@ body.dark-mode select option { background: #221E1A; color: #EDE7E1; }
             }
         }
 
-        if (next !== el.getAttribute("style")) {
+               if (next !== el.getAttribute("style")) {
             el.setAttribute("data-theme-applied", "true"); 
             el.setAttribute("style", next);
         }
+    }
 
     function paint(root) {
         root = root || document.body;
