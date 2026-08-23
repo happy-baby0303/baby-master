@@ -1,5 +1,5 @@
 // ==========================================
-// 🩺 육아메이트 안심 이유식 AI 엔진 V3.0 (food/app.js)
+// 🩺 배냇함 안심 이유식 AI 엔진 V3.0 (food/app.js)
 // (메인 글로벌 연동 + 찜 보관함 + 크로스셀링 통합)
 // ==========================================
 
@@ -1220,11 +1220,11 @@ window.downloadCalendarImage = function() {
         ctx.font = "900 24px 'Malgun Gothic', sans-serif";
         ctx.fillStyle = "#8B95A1";
         ctx.textAlign = "right";
-        ctx.fillText("✨ Designed by 육아메이트 AI", canvas.width - 30, canvas.height - 30);
+        ctx.fillText("✨ Designed by 배냇함 AI", canvas.width - 30, canvas.height - 30);
 
         // 4. 이미지 다운로드 실행
         const link = document.createElement('a');
-        link.download = `육아메이트_우리아기_식단표_${new Date().getTime()}.png`;
+        link.download = `배냇함_우리아기_식단표_${new Date().getTime()}.png`;
         link.href = canvas.toDataURL('image/png');
         link.click();
 
@@ -1366,7 +1366,7 @@ function saveEvapCalibration() {
     document.getElementById('food-actual-yield').value = '';
 }
 
-// 🔄 역방향: 이만큼 만들고 싶어요
+// 🔄 역방향: 이만큼 만들고 싶어요 (현실 육아 패치 완료)
 function calcReverseFood() {
     const target = parseFloat(document.getElementById('food-target-yield').value);
     const type   = document.getElementById('food-base-type').value;
@@ -1382,16 +1382,39 @@ function calcReverseFood() {
     if (type === 'cooked') mult = ratio / 2;
 
     const rate   = getYieldRate();
-    const baseG  = target / (rate * (1 + mult));
-    const waterG = baseG * mult;
+    
+    // 1. 역산: 로직상 정확한 수치 도출 (사모님한테 등짝 맞는 숫자)
+    let exactBaseG  = target / (rate * (1 + mult));
+    let exactWaterG = exactBaseG * mult;
 
-    document.getElementById('rev-base-g').innerText  = baseG.toFixed(1);
-    document.getElementById('rev-water-g').innerText = Math.round(waterG).toLocaleString();
+    // 2. 🚨 [현실 패치] 엄마들이 실제로 잴 수 있게 반올림!
+    // 쌀/고기 등은 일반 저울에 맞게 1g 단위로 반올림
+    let realisticBaseG = Math.round(exactBaseG);
+    
+    // 물은 젖병 눈금에 맞추기 편하게 무조건 10ml 단위로 반올림 (예: 137 -> 140)
+    let realisticWaterG = Math.round(exactWaterG / 10) * 10;
+
+    // 3. 반올림된 레시피로 다시 끓였을 때 "진짜로" 나오는 최종 양 계산
+    let finalYieldG = Math.round((realisticBaseG + realisticWaterG) * rate);
+
+    // 4. 화면에 값 뿌려주기
+    document.getElementById('rev-base-g').innerText  = realisticBaseG.toLocaleString();
+    document.getElementById('rev-water-g').innerText = realisticWaterG.toLocaleString();
     
     const resultBox = document.getElementById('food-reverse-result');
     resultBox.style.display = 'block';
     
-    // 살짝 띠용 하는 애니메이션으로 계산됐음을 어필
+    // 5. 살짝 띠용 하는 애니메이션으로 계산됐음을 어필
     resultBox.style.transform = 'scale(1.02)';
     setTimeout(() => { resultBox.style.transform = 'scale(1)'; }, 150);
+
+    // 6. 엄마 마음을 편안하게 해주는 안내 문구 삽입
+    let noteEl = document.getElementById('rev-realistic-note');
+    if (!noteEl) {
+        noteEl = document.createElement('div');
+        noteEl.id = 'rev-realistic-note';
+        noteEl.style.cssText = 'font-size:12.5px; color:#3182F6; font-weight:800; margin-top:16px; background:#E8F3FF; padding:12px; border-radius:12px; border:1px dashed #B1D6FF; text-align:center; word-break:keep-all; line-height:1.4;';
+        resultBox.appendChild(noteEl);
+    }
+    noteEl.innerHTML = `💡 저울과 젖병 눈금에 맞춘 <b>현실 레시피</b>예요!<br>이렇게 끓이면 약 <b>${finalYieldG.toLocaleString()}g</b> 정도 완성돼요.`;
 }
