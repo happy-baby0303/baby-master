@@ -202,6 +202,15 @@ window.getSyncCode = function() {
 function switchTab(id, el) {
     if(navigator.vibrate) navigator.vibrate(10);  
 
+    // 툴박스는 마지막에 쓴 도구로 연다.
+    // 새벽에 열나서 들어온 사람이 매번 가계부를 지나칠 이유가 없다.
+    if (id === 'toolbox') {
+        setTimeout(function () {
+            var last = localStorage.getItem('tosil_last_tool') || 'fever';
+            if (document.getElementById('panel-' + last)) switchTool(last);
+        }, 30);
+    } 
+
     // 1. 모든 탭 숨기기를 지연 없이 즉시 처리 (0.2초 대기 삭제)
     document.querySelectorAll('.tab-content').forEach(c => {
         c.classList.remove('active');
@@ -274,9 +283,16 @@ function directGoToolbox(toolType) {
 
 // 🚨 [패치 완료] 행사/핫플 탭 전환 시 지역 필터 연동
 function switchOutingSubTab(type) {
-    document.querySelectorAll('.segment-btn').forEach(b => b.classList.remove('active'));
-    const segBtn = document.getElementById('seg-' + type);
-    if(segBtn) segBtn.classList.add('active');
+    // 🚨 [패치 완료] 인라인 스타일로 애플 감성 알약 토글 UI 색상 적용!
+    const btnEvent = document.getElementById('seg-event');
+    const btnMap = document.getElementById('seg-map');
+    const onStyle = 'flex: 1; padding: 12px 0; border-radius: 12px; font-weight: 800; font-size: 14px; border: none; background: #FFF; color: var(--text-m); box-shadow: 0 2px 8px rgba(0,0,0,0.05); transition: 0.2s; cursor: pointer; white-space: nowrap;';
+    const offStyle = 'flex: 1; padding: 12px 0; border-radius: 12px; font-weight: 800; font-size: 14px; border: none; background: transparent; color: var(--text-s); transition: 0.2s; cursor: pointer; white-space: nowrap;';
+    
+    if (btnEvent && btnMap) {
+        btnEvent.style.cssText = (type === 'event') ? onStyle : offStyle;
+        btnMap.style.cssText = (type === 'map') ? onStyle : offStyle;
+    }
     
     currentSubTab = type; currentSubRegion = 'all';
     
@@ -303,6 +319,10 @@ if (!document.getElementById('tool-animation-style')) {
 }
 
 function switchTool(panelId, el) {
+    // 마지막에 쓴 도구를 기억한다.
+    // 새벽에 해열제를 썼으면 다음에도 해열제가 먼저 나와야 한다.
+    try { localStorage.setItem('tosil_last_tool', panelId); } catch (e) {}
+
     document.querySelectorAll('.tool-chip').forEach(c => c.classList.remove('active'));
     if(el) el.classList.add('active');
     else { const targetChip = document.getElementById('btn-tool-' + panelId); if(targetChip) targetChip.classList.add('active'); }
@@ -546,14 +566,23 @@ function filterPlaces() {
 
     } else {
         // [검증 육아지도 로직]
-        const filteredPlaces = hotplacesData.filter(p => {
+               const filteredPlaces = hotplacesData.filter(p => {
             if (p.isEvent) return false;
+            // 아기 편의시설 조건 (수유실·기저귀대 등)
+            if (typeof window.passesPlaceFilter === 'function' && !window.passesPlaceFilter(p)) return false;
             let matchesRegion = false;
             let addr = p.locText || p.addr || '';
             
-            if (currentRegion === 'all') { matchesRegion = true; }
+                       if (currentRegion === 'all') { matchesRegion = true; }
             else if (currentRegion === 'seoul') matchesRegion = p.region === 'seoul' || addr.includes('서울');
             else if (currentRegion === 'gyeonggi') matchesRegion = p.region === 'gyeonggi' || p.region === 'incheon' || addr.includes('경기') || addr.includes('인천') || addr.includes('동탄') || addr.includes('수원');
+            // 나머지 지역도 칩을 누르면 걸리게 한다.
+            // 이게 없으면 부산·제주 장소가 '전국 전체'에서만 보인다.
+            else if (currentRegion === 'chungcheong') matchesRegion = p.region === 'chungcheong' || p.region === 'daejeon' || addr.includes('충') || addr.includes('대전') || addr.includes('세종');
+            else if (currentRegion === 'gangwon')     matchesRegion = p.region === 'gangwon' || addr.includes('강원');
+            else if (currentRegion === 'jeolla')      matchesRegion = p.region === 'jeolla' || p.region === 'gwangju' || addr.includes('전') || addr.includes('광주');
+            else if (currentRegion === 'gyeongsang')  matchesRegion = p.region === 'gyeongsang' || p.region === 'daegu' || p.region === 'busan' || p.region === 'ulsan' || addr.includes('경') || addr.includes('대구') || addr.includes('부산') || addr.includes('울산');
+            else if (currentRegion === 'jeju')        matchesRegion = p.region === 'jeju' || addr.includes('제주');
             
             return matchesRegion && (currentSubRegion === 'all' || addr.includes(currentSubRegion)) && `${p.title} ${p.desc} ${p.locText}`.toLowerCase().includes(keyword);
         });
@@ -564,9 +593,37 @@ function filterPlaces() {
             if (p.tags && Array.isArray(p.tags)) {
                 tagsHTML = p.tags.map(tag => `<span style="background:#F2F5F8; color:#4E5968; padding:4px 8px; border-radius:6px; font-size:11px; font-weight:800; border: 1px solid #E5E8EB; margin-right:4px; display:inline-block; margin-bottom:4px;">#${tag.t || tag}</span>`).join('');
             }
-            let mapUrl = `https://map.kakao.com/link/search/${encodeURIComponent(p.query || p.title)}`;
             
-     // 🌟 [핵심 패치] '경기외곽' 버리고 주소(addr)에서 진짜 동네 이름 뽑기!
+            // 🚨 [추가됨] 직접 가본 곳이 아니면 솔직하게 밝혀서 신뢰도 상승!
+            let checkHtml = p.needsCheck
+                ? `<div style="margin-top:8px; font-size:12px; font-weight:800; color:#F04452; background:#FFF0F1; padding:6px 10px; border-radius:8px; display:inline-block;">⚠️ 방문 전 수유/유아 시설 운영 여부를 확인해주세요.</div>`
+                : '';
+
+          // 🚨 [안전 패치] 스킴 방어 엔진 및 맵 버튼 3종 세트
+            let searchQuery = encodeURIComponent(p.query || p.title);
+            let naverUrl = `https://m.map.naver.com/search2/search.naver?query=${searchQuery}`;
+            let kakaoUrl = `https://map.kakao.com/link/search/${searchQuery}`;
+            let tmapUrl = `https://surl.tmap.co.kr/search?keyword=${searchQuery}`;
+
+            // 렌더링 카드 안의 맵 버튼 3종 UI 템플릿
+            let mapButtonsHtml = `
+                <div style="display: flex; gap: 8px; margin-bottom: 12px;">
+                    <a href="${naverUrl}" target="_blank" style="flex: 1; padding: 10px 0; background: #FFF; border: 1px solid #E5E8EB; border-radius: 12px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px; box-shadow: 0 2px 4px rgba(0,0,0,0.02); text-decoration: none;">
+                        <div style="width: 20px; height: 20px; background: #03C75A; border-radius: 6px; display: flex; align-items: center; justify-content: center; color: #FFF; font-weight: 900; font-size: 12px;">N</div>
+                        <span style="font-size: 13px; font-weight: 800; color: #4E5968;">네이버</span>
+                    </a>
+                    <a href="${tmapUrl}" target="_blank" style="flex: 1; padding: 10px 0; background: #FFF; border: 1px solid #E5E8EB; border-radius: 12px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px; box-shadow: 0 2px 4px rgba(0,0,0,0.02); text-decoration: none;">
+                        <div style="width: 20px; height: 20px; background: #111111; border-radius: 6px; display: flex; align-items: center; justify-content: center; color: #FFF; font-weight: 900; font-size: 12px;">T</div>
+                        <span style="font-size: 13px; font-weight: 800; color: #4E5968;">티맵</span>
+                    </a>
+                    <a href="${kakaoUrl}" target="_blank" style="flex: 1; padding: 10px 0; background: #FFF; border: 1px solid #E5E8EB; border-radius: 12px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px; box-shadow: 0 2px 4px rgba(0,0,0,0.02); text-decoration: none;">
+                        <div style="width: 20px; height: 20px; background: #FEE500; border-radius: 6px; display: flex; align-items: center; justify-content: center; color: #191F28; font-weight: 900; font-size: 12px;">K</div>
+                        <span style="font-size: 13px; font-weight: 800; color: #4E5968;">카카오</span>
+                    </a>
+                </div>
+            `;
+            
+            // 🌟 지역명 정제
             let realLocation = p.locText || '지역';
             if (p.addr) {
                 const addrParts = p.addr.split(' ');
@@ -575,6 +632,7 @@ function filterPlaces() {
                 }
             }
 
+            // 🌟 붕 떠 있던 버튼들을 htmlString 안에 안전하게 포장!
             htmlString += `
                 <div class="box-main" style="border-radius: 20px; padding: 22px; margin-bottom: 16px; box-shadow: 0 4px 12px rgba(0,0,0,0.03); border: 1px solid var(--border); text-align: left; background: var(--bg-card);">
                     
@@ -589,29 +647,24 @@ function filterPlaces() {
                     <!-- 설명 텍스트 -->
                     <div style="font-size: 13.5px; color: var(--text-s); font-weight: 600; margin-bottom: 12px; line-height: 1.5; word-break: keep-all;">
                         ${p.desc || ''}
+                        ${typeof checkHtml !== 'undefined' ? checkHtml : ''}
                     </div>
 
                     <!-- 해시태그 -->
                     <div style="margin-bottom: 12px; display: flex; flex-wrap: wrap; gap: 4px;">
-                        ${tagsHTML}
+                        ${tagsHTML || ''}
                     </div>
 
                     <!-- 토실이 검증 박스 -->
                     <div class="place-review" style="font-size:12.5px; color:var(--text-s); background:var(--bg-sub); padding:12px; border-radius:10px; margin-bottom:16px; border: 1px dashed var(--border);">
                         <strong>💬 토실이 검증:</strong> "${p.review || '유모차와 함께하기 좋은 곳이에요!'}"
                     </div>
+                    ${mapButtonsHtml}
 
-                    <!-- 하단 액션 버튼 (맵 열기 + 아빠한테 내비 쏘기 2분할) -->
-                    <div style="display: flex; gap: 10px;">
-                        <a href="${mapUrl}" target="_blank" style="flex: 1; text-align: center; padding: 14px; background: #F2F5F8; color: #4E5968; border-radius: 12px; font-weight: 800; font-size: 14px; text-decoration: none; transition: 0.2s;">
-                            맵 열기 〉
-                        </a>
-                        <button onclick="window.sendNaviToDad('${p.title}', '${p.addr || ''}')" style="flex: 1.5; padding: 14px; background: #FEE500; color: #191F28; border: none; border-radius: 12px; font-weight: 900; font-size: 14px; cursor: pointer; box-shadow: 0 4px 10px rgba(254, 229, 0, 0.2); transition: 0.2s; display: flex; align-items: center; justify-content: center; gap: 6px;">
-                            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M12 3c-5.523 0-10 3.535-10 7.896 0 2.766 1.767 5.19 4.418 6.586l-1.127 4.195c-.092.342.278.618.575.434l4.908-3.232c.404.056.817.086 1.226.086 5.523 0 10-3.535 10-7.896C22 6.535 17.523 3 12 3z"/></svg>
-                            아빠한테 내비 쏘기
-                        </button>
-                    </div>
-
+                    <!-- 감성적인 아빠 목적지 전송 버튼 -->
+                    <button onclick="window.sendNaviToDad('${p.title}', '${p.addr || ''}')" style="width: 100%; padding: 14px; background: #191F28; color: #FFFFFF; border: none; border-radius: 12px; font-weight: 800; font-size: 14.5px; cursor: pointer; box-shadow: 0 4px 12px rgba(0,0,0,0.1); transition: 0.2s; display: flex; align-items: center; justify-content: center; gap: 8px;">
+                        <span>💌</span> 아빠에게 목적지 전송하기
+                    </button>
                 </div>
             `;
         });
@@ -630,10 +683,10 @@ function openFestivalModal(title, dateText, addr, tel, review, query, image) {
     const tmapUrl = 'tmap://search?name=' + encodeURIComponent(query);
     const kakaoUrl = 'https://map.kakao.com/link/search/' + encodeURIComponent(query);
     
-    // 버튼 패딩 다이어트 (16px -> 12px)
+  // 📞 전화 문의 버튼과 '확인 완료' 버튼을 둘 다 flex: 1로 주어 1:1 크기로 완벽 대칭 맞춤!
     const telBtn = tel && tel !== '정보없음' 
-        ? `<button onclick="window.location.href='tel:${tel}'" style="flex:1; padding:12px; background:#F2F5F8; color:#4E5968; border-radius:12px; font-weight:900; font-size:14px; border:none; cursor:pointer;">📞 전화 문의</button>` 
-        : `<button disabled style="flex:1; padding:12px; background:#F2F5F8; color:#A0AEC0; border-radius:12px; font-weight:900; font-size:14px; border:none; opacity:0.6;">📞 번호 없음</button>`;
+        ? `<button onclick="window.location.href='tel:${tel}'" style="flex: 1; padding: 14px 10px; background: #F2F5F8; color: #4E5968; border-radius: 12px; font-weight: 900; font-size: 14px; border: none; cursor: pointer; white-space: nowrap; display: flex; align-items: center; justify-content: center; gap: 4px;">📞 전화 문의</button>` 
+        : `<button disabled style="flex: 1; padding: 14px 10px; background: #F2F5F8; color: #A0AEC0; border-radius: 12px; font-weight: 900; font-size: 14px; border: none; opacity: 0.6; white-space: nowrap;">📞 번호 없음</button>`;
         
     // 📸 메인 이미지 높이 확 줄이기 (200px -> 130px)
     const modalImgHtml = (image && !image.startsWith('⚙️')) 
@@ -682,38 +735,67 @@ function openFestivalModal(title, dateText, addr, tel, review, query, image) {
                 </div>
             </div>
 
-            <!-- 🚗 길찾기 영역: 박스 및 아이콘 크기 축소 -->
+            <!-- 🚗 길찾기 영역: 토스 스타일 격자형 정렬로 찌그러짐 영구 방지 -->
             <div style="font-size:13px; font-weight:900; color:#191F28; margin-bottom:8px; display:flex; align-items:center; gap:6px;">
                 <span>🚗</span> 아기랑 모바일 길찾기
             </div>
             <div style="display:flex; gap:8px; margin-bottom:16px;">
-                <a href="${naverUrl}" target="_blank" style="flex:1; padding:10px 0; background:#FFF; border:1px solid #E5E8EB; border-radius:12px; cursor:pointer; display:flex; flex-direction:column; align-items:center; gap:6px; box-shadow:0 2px 4px rgba(0,0,0,0.02); text-decoration:none;">
-                    <div style="width:30px; height:30px; background:#03C75A; border-radius:8px; display:flex; align-items:center; justify-content:center; color:#FFF; font-weight:900; font-size:15px;">N</div>
-                    <span style="font-size:11px; font-weight:800; color:#4E5968;">네이버 지도</span>
+                <a href="https://m.map.naver.com/search2/search.naver?query=${encodeURIComponent(query)}" target="_blank" style="flex:1; padding:12px 0; background:#FFF; border:1px solid #E5E8EB; border-radius:12px; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:8px; text-decoration:none; box-shadow:0 2px 4px rgba(0,0,0,0.02);">
+                    <div style="width:24px; height:24px; background:#03C75A; border-radius:6px; display:flex; align-items:center; justify-content:center; color:#FFF; font-weight:900; font-size:13px;">N</div>
+                    <span style="font-size:13px; font-weight:800; color:#4E5968;">네이버 지도</span>
                 </a>
-                <a href="${tmapUrl}" style="flex:1; padding:10px 0; background:#FFF; border:1px solid #E5E8EB; border-radius:12px; cursor:pointer; display:flex; flex-direction:column; align-items:center; gap:6px; box-shadow:0 2px 4px rgba(0,0,0,0.02); text-decoration:none;">
-                    <div style="width:30px; height:30px; background:#111111; border-radius:8px; display:flex; align-items:center; justify-content:center; color:#FFF; font-weight:900; font-size:15px;">T</div>
-                    <span style="font-size:11px; font-weight:800; color:#4E5968;">티맵</span>
-                </a>
-                <a href="${kakaoUrl}" target="_blank" style="flex:1; padding:10px 0; background:#FFF; border:1px solid #E5E8EB; border-radius:12px; cursor:pointer; display:flex; flex-direction:column; align-items:center; gap:6px; box-shadow:0 2px 4px rgba(0,0,0,0.02); text-decoration:none;">
-                    <div style="width:30px; height:30px; background:#FEE500; border-radius:8px; display:flex; align-items:center; justify-content:center; color:#191F28; font-weight:900; font-size:15px;">K</div>
-                    <span style="font-size:11px; font-weight:800; color:#4E5968;">카카오맵</span>
+                <a href="https://surl.tmap.co.kr/search?keyword=${encodeURIComponent(query)}" target="_blank" style="flex:1; padding:12px 0; background:#FFF; border:1px solid #E5E8EB; border-radius:12px; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:8px; text-decoration:none; box-shadow:0 2px 4px rgba(0,0,0,0.02);">
+                    <div style="width:24px; height:24px; background:#111111; border-radius:6px; display:flex; align-items:center; justify-content:center; color:#FFF; font-weight:900; font-size:13px;">T</div>
+                    <span style="font-size:13px; font-weight:800; color:#4E5968;">티맵</span>
                 </a>
             </div>
 
-            <!-- ✅ 하단 액션 버튼 -->
-            <div style="display:flex; gap:8px; margin-bottom: 0;">
-                ${telBtn}
-                <button onclick="closeFestivalModalForce()" style="flex:2; padding:12px; background:#3182F6; color:#FFF; border-radius:12px; font-weight:900; font-size:14px; border:none; box-shadow:0 4px 10px rgba(49,130,246,0.3); cursor:pointer;">확인 완료</button>
-            </div>
-            
-            <div style="width: 100%; height: 10px; display: block; clear: both; flex-shrink: 0;"></div>
+           <!-- ✅ 하단 액션 버튼 (두 버튼 크기를 1:1 동일하게 맞춤) -->
+        <div style="display: flex; gap: 8px; margin-bottom: 0;">
+            ${telBtn}
+            <button onclick="closeFestivalModalForce()" style="flex: 1; padding: 14px 10px; background: #3182F6; color: #FFF; border-radius: 12px; font-weight: 900; font-size: 14px; border: none; box-shadow: 0 4px 10px rgba(49,130,246,0.3); cursor: pointer; white-space: nowrap;">확인 완료</button>
         </div>
+        
+        <div style="width: 100%; height: 10px; display: block; clear: both; flex-shrink: 0;"></div>
+    </div>
     `;
-    const modalWrap = document.getElementById('premium-modal');
-    if(modalWrap) modalWrap.style.display = 'flex';
+const modalWrap = document.getElementById('premium-modal');
+    if(modalWrap) {
+        // 1. 배경 오버레이를 화면 전체를 덮는 완벽한 Flex 센터 컨테이너로 만듦
+        modalWrap.style.cssText = `
+            display: flex !important;
+            justify-content: center !important;
+            align-items: center !important;
+            position: fixed !important;
+            top: 0 !important;
+            left: 0 !important;
+            width: 100vw !important;
+            height: 100vh !important;
+            background: rgba(0, 0, 0, 0.6) !important;
+            z-index: 99999 !important;
+            padding: 20px !important;
+            box-sizing: border-box !important;
+        `;
+        
+        // 2. 개발자 도구에 찍힌 정확한 클래스(.modal-content)를 잡아 정중앙에 꽂아넣음
+        const modalBox = modalWrap.querySelector('.modal-content') || modalWrap.querySelector('.box-main');
+        if (modalBox) {
+            modalBox.style.cssText = `
+                width: 100% !important;
+                max-width: 380px !important;
+                max-height: 85vh !important;
+                overflow-y: auto !important;
+                border-radius: 24px !important;
+                margin: auto !important;
+                transform: none !important;
+                background: var(--bg-card, #FFF) !important;
+                box-shadow: 0 20px 40px rgba(0,0,0,0.2) !important;
+                padding: 24px !important;
+                box-sizing: border-box !important;
+            `;
+        }
+    }
 }
-
 // 👇 절대 지우면 안 되는 모달 닫기 함수들! (안전하게 같이 둡니다)
 function closeFestivalModalForce() { const m = document.getElementById('premium-modal'); if(m) m.style.display = 'none'; }
 function closeFestivalModal(e) { if(e.target.className === 'modal-overlay') closeFestivalModalForce(); }
@@ -2732,22 +2814,25 @@ function renderCubes() {
         const icon = r.cat === 'meat' ? '🥩' : '🥦';
         const dDayHtml = getCubeDDayText(r.date);
         
-        // 🚨 핵심 수정: white-space: nowrap 과 flex-shrink: 0 적용으로 줄바꿈 원천 차단!
+              // 보관 정보를 아래 단으로 내린다. 언제깠지 카드와 같은 모양.
+        // 이름·수량·버튼과 한 줄에 두면 좁은 폭에서 서로 밀어낸다.
         html += `
-        <div style="background:var(--bg-card); border:1px solid var(--border); padding:16px; border-radius:16px; display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
-            <div style="display:flex; align-items:center; gap:12px; flex:1; min-width:0;">
-                <div style="font-size:24px; background:var(--bg-sub); width:44px; height:44px; border-radius:12px; display:flex; align-items:center; justify-content:center; flex-shrink:0;">${icon}</div>
-                <div style="min-width:0;">
-                    <div style="font-size:15px; font-weight:900; color:var(--text-m); margin-bottom:4px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${r.name}</div>
-                    <div style="display:flex; align-items:center; gap:6px; font-size:12px; color:var(--text-s); white-space:nowrap; flex-wrap:nowrap;">
-    ${dDayHtml} <span style="opacity:0.7;">(${r.date.substring(5).replace('-', '.')} 제조)</span>
-</div>
-                </div>
+        <div style="background:var(--bg-card); border:1px solid var(--border); padding:14px 16px; border-radius:16px; margin-bottom:8px;">
+
+            <div style="display:flex; align-items:center; gap:12px;">
+                <div style="font-size:22px; background:var(--bg-sub); width:40px; height:40px; border-radius:12px; display:flex; align-items:center; justify-content:center; flex-shrink:0;">${icon}</div>
+
+                <div style="flex:1; min-width:0; font-size:15px; font-weight:900; color:var(--text-m); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${r.name}</div>
+
+                                <button onclick="useCube('${r.id}')" style="background:#F2F5F8; color:#4E5968; border:none; border-radius:10px; width:48px; height:38px; font-size:13.5px; font-weight:800; cursor:pointer; display:flex; align-items:center; justify-content:center; flex-shrink:0;">사용</button>
             </div>
-            <div style="display:flex; align-items:center; gap:12px; flex-shrink:0; margin-left:8px;">
-                <div style="font-size:18px; font-weight:900; color:var(--primary); white-space:nowrap;">${r.qty}<span style="font-size:12px; color:var(--text-s);">개</span></div>
-               <button onclick="useCube('${r.id}')" style="background:#F2F5F8; color:#4E5968; border:none; border-radius:10px; width:54px; height:44px; font-size:14px; font-weight:800; cursor:pointer; display:flex; align-items:center; justify-content:center; flex-shrink:0;">사용</button>
+
+            <div style="display:flex; align-items:center; gap:6px; margin-top:10px; padding-left:2px; font-size:11.5px; color:var(--text-s); white-space:nowrap;">
+                <span style="flex-shrink:0; display:inline-flex; align-items:center;">${dDayHtml}</span>
+                <span style="opacity:0.75; flex-shrink:0;">${r.date.substring(5).replace('-', '.')} 제조</span>
+                <span style="margin-left:auto; font-weight:900; color:var(--primary); font-size:13px; flex-shrink:0;">${r.qty}개</span>
             </div>
+
         </div>`;
     });
 
@@ -3444,7 +3529,7 @@ window.openPediatricianReport = function() {
                 <div style="display:flex; align-items:center; gap:8px;">
                     <span style="font-size:17px;">📄</span> A4 종합 건강 리포트 발급
                 </div>
-                <span style="background: #FEE500; color: #191F28; padding: 4px 8px; border-radius: 6px; font-size: 10px;">PREMIUM</span>
+                <span style="background: #FEE500; color: #191F28; padding: 4px 8px; border-radius: 6px; font-size: 10px;">PLUS</span>
             </button>
             
             <button onclick="window.copySymptomMemo()" style="width: 100%; padding: 16px; border-radius: 16px; background: var(--bg-sub); color: #4E5968; font-weight: 800; font-size: 14.5px; border: 1px solid var(--border); cursor: pointer;">
@@ -6766,15 +6851,20 @@ window.closeInviteSheet = function() {
     if(sheet) sheet.style.display = 'none';
 };
 
-// 🔐 초대창 열기 — 이 순간부터 10분 동안만 가족 합류가 허용된다.
-//    보안 규칙이 이 두 필드를 확인한다. 창이 닫혀 있으면 코드를 알아도 못 들어온다.
-window.openFamilyInvite = async function () {
+// 🔐 초대창 열기 — 마스터용(배우자)과 뷰어용(시터) 역할을 매개변수로 받습니다.
+window.openFamilyInvite = async function (role = 'master') {
     const code = localStorage.getItem('family_sync_code');
     if (!code || typeof window.setDoc !== 'function' || typeof window.doc !== 'function') return;
+
+    // 시터 초대는 10분만 연다. 짝꿍 초대(30분)보다 짧게.
+    // 남에게 넘길 시간을 안 주는 게 목적이다.
+    const minutes = (role === 'viewer') ? 10 : 30;
+
     try {
         await window.setDoc(window.doc(window.db, 'families', code), {
             inviteOpen: true,
-            inviteUntil: Date.now() + 30 * 60 * 1000
+            inviteRole: role, // 🚨 서버에 "이번 초대장은 마스터용(or 뷰어용)이다" 라고 명시
+            inviteUntil: Date.now() + minutes * 60 * 1000
         }, { merge: true });
     } catch (e) { console.warn('초대창 열기 실패', e); }
 };
@@ -6790,53 +6880,39 @@ window.closeFamilyInvite = async function () {
     } catch (e) {}
 };
 
-window.sendKakaoInvite = function() {
-    // 초대 버튼을 눌렀으니 다시는 안 뜨게 도장 쾅!
+// 💬 카카오톡 초대장 보내기 (역할 선택)
+window.sendKakaoInvite = function(role = 'master') {
     localStorage.setItem('tosil_has_seen_invite', 'true');
-    // 🔐 초대장을 보내는 순간 10분짜리 합류 창을 연다
-    if (typeof window.openFamilyInvite === 'function') window.openFamilyInvite();
+    
+    // 🔐 초대장을 보내는 순간 10분짜리 합류 창을 '해당 역할'로 엽니다.
+    if (typeof window.openFamilyInvite === 'function') window.openFamilyInvite(role);
     const sheet = document.getElementById('invite-bottom-sheet');
     if(sheet) sheet.style.display = 'none';
     
-    // 🚨 내 가족 코드를 불러옴!
     const syncCode = localStorage.getItem('family_sync_code');
-    if (!syncCode) {
-        alert("🚨 가족 코드가 없습니다! 먼저 설정 탭에서 '내 코드 생성'을 완료해주세요.");
-        return;
-    }
+    if (!syncCode) return alert("🚨 가족 코드가 없습니다!");
 
-    // 🚨 핵심 마법: 깃허브 주소 뒤에 몰래 코드를 달아줍니다!
     const inviteUrl = `https://happy-baby0303.github.io/?code=${syncCode}`;
+    const titleText = role === 'master' ? '💌 배냇함 공동양육자 초대장!' : '💌 배냇함 안심 돌봄 초대장!';
+    const descText = role === 'master' 
+        ? `여보! 우리 아기 맞춤형 육아 비서 [배냇함]로 나랑 같이 육아 기록 공유하자 🤍`
+        : `시터님/어르신! 우리 아기 기록을 편하게 남길 수 있도록 [배냇함]에 초대합니다 🤍 (사생활 보호 기능 적용)`;
     
-    // 카카오톡 공유 API (진짜 예쁜 카톡 템플릿 보내기)
     if (typeof Kakao !== 'undefined' && Kakao.isInitialized()) {
         Kakao.Share.sendDefault({
             objectType: 'feed',
             content: {
-                title: '💌 배냇함 가족 초대장!',
-                description: `여보! 우리 아기 맞춤형 육아 비서 [배냇함]로 나랑 같이 육아 기록 공유하자 🤍\n(아래 버튼을 누르면 자동으로 연동돼!)`,
-                imageUrl: 'https://cdn-icons-png.flaticon.com/512/3135/3135715.png', // 앱 로고 이미지
-                link: {
-                    mobileWebUrl: inviteUrl,
-                    webUrl: inviteUrl,
-                },
+                title: titleText,
+                description: descText,
+                imageUrl: 'https://cdn-icons-png.flaticon.com/512/3135/3135715.png',
+                link: { mobileWebUrl: inviteUrl, webUrl: inviteUrl },
             },
-            buttons: [
-                {
-                    title: '초대 수락하고 앱 열기 👉',
-                    link: {
-                        mobileWebUrl: inviteUrl,
-                        webUrl: inviteUrl,
-                    },
-                },
-            ],
+            buttons: [{ title: '초대 수락하고 앱 열기 👉', link: { mobileWebUrl: inviteUrl, webUrl: inviteUrl } }],
         });
     } else {
-        // 카카오 실패 시 보험
-        const text = `여보! 우리 아기 육아 기록 같이 공유하자 🤍 (초대코드: ${syncCode})`;
+        const text = `${descText} (초대코드: ${syncCode})`;
         if (navigator.share) {
-            navigator.share({ title: '배냇함 초대장', text: text, url: inviteUrl })
-            .catch(console.error);
+            navigator.share({ title: '배냇함 초대장', text: text, url: inviteUrl }).catch(console.error);
         } else {
             prompt("아래 초대장을 복사해서 카톡으로 보내주세요!", text + " " + inviteUrl);
         }
@@ -7334,23 +7410,28 @@ window.renderOpenRecords = function() {
             statusHtml = `<span style="color:#00B37A; font-weight:800; font-size:12.5px; white-space:nowrap;">✅ D-${remainDays} (여유)</span>`;
         }
 
-       // ✨ [수정] 날짜 텍스트가 좁으면 아랫줄로 넘어가도록 flex-wrap: wrap 적용!
+             // 뱃지 줄을 아래 단으로 내린다.
+        // 이름·버튼과 같은 줄에 두면 138px 안에서 싸우다 잘린다.
+        // 아래로 내리면 카드 폭을 전부 쓴다. 사고로 접히는 게 아니라 처음부터 두 단이다.
         html += `
-        <div style="display:flex; justify-content:space-between; align-items:center; padding:16px; background:#FFFFFF; border:1px solid ${borderColor}; border-radius:16px; margin-bottom:8px; box-shadow:0 2px 6px rgba(0,0,0,0.02);">
-            <div style="display:flex; align-items:center; gap:12px; flex:1; min-width:0;">
-                <div style="font-size:24px; background:var(--bg-sub); width:44px; height:44px; border-radius:12px; display:flex; align-items:center; justify-content:center; flex-shrink:0;">${r.emoji}</div>
-                <div style="flex:1; min-width:0;">
-                    <div style="font-size:14.5px; font-weight:900; color:var(--text-m); margin-bottom:4px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${r.name}</div>
-                    <div style="display:flex; align-items:center; flex-wrap:wrap; gap:4px; margin-top:2px;">
-                        ${statusHtml}
-                        <span style="font-size:11px; color:var(--text-s); font-weight:600; word-break:keep-all;">(오픈: ${r.openDate})</span>
-                    </div>
+        <div style="padding:14px 16px; background:#FFFFFF; border:1px solid ${borderColor}; border-radius:16px; margin-bottom:8px; box-shadow:0 2px 6px rgba(0,0,0,0.02);">
+
+            <div style="display:flex; align-items:center; gap:12px;">
+                <div style="font-size:22px; background:var(--bg-sub); width:40px; height:40px; border-radius:12px; display:flex; align-items:center; justify-content:center; flex-shrink:0;">${r.emoji}</div>
+
+                <div style="flex:1; min-width:0; font-size:15px; font-weight:900; color:var(--text-m); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${r.name}</div>
+
+                <div style="display:flex; gap:6px; flex-shrink:0;">
+                    <button onclick="window.renewOpenRecord('${r.id}')" style="background:#E8F3FF; border:1px solid #B1D6FF; border-radius:10px; width:38px; height:38px; color:#3182F6; cursor:pointer; font-size:15px; display:flex; justify-content:center; align-items:center; transition:0.2s;" title="오늘 새로 뜯음">🔄</button>
+                    <button onclick="window.deleteOpenRecord('${r.id}')" style="background:#F2F5F8; border:none; border-radius:10px; width:38px; height:38px; color:#8B95A1; cursor:pointer; font-size:14px; display:flex; justify-content:center; align-items:center; transition:0.2s;" title="삭제">❌</button>
                 </div>
             </div>
-            <div style="display:flex; gap:6px; flex-shrink:0; margin-left:8px;">
-                <button onclick="window.renewOpenRecord('${r.id}')" style="background:#E8F3FF; border:1px solid #B1D6FF; border-radius:10px; width:40px; height:40px; color:#3182F6; cursor:pointer; font-size:16px; display:flex; justify-content:center; align-items:center; transition:0.2s;" title="오늘 새로 뜯음">🔄</button>
-                <button onclick="window.deleteOpenRecord('${r.id}')" style="background:#F2F5F8; border:none; border-radius:10px; width:40px; height:40px; color:#8B95A1; cursor:pointer; font-size:15px; display:flex; justify-content:center; align-items:center; transition:0.2s;" title="삭제">❌</button>
+
+            <div style="display:flex; align-items:center; gap:6px; margin-top:10px; padding-left:2px; font-size:11.5px; white-space:nowrap;">
+                <span style="flex-shrink:0; display:inline-flex; align-items:center;">${statusHtml}</span>
+                <span style="color:var(--text-s); font-weight:600; flex-shrink:0;">${r.openDate.substring(5).replace('-', '.')} 오픈</span>
             </div>
+
         </div>`;
     });
 
@@ -7703,23 +7784,37 @@ window.renderSettingsTab = function() {
     const syncCode = localStorage.getItem('family_sync_code');
     let syncHtml = '';
 
-    if (syncCode) {
+if (syncCode) {
         syncHtml = `
-            <div style="background: var(--bg-card); border: 1px solid var(--border); border-radius: 16px; padding: 20px; margin-bottom: 32px; box-shadow: 0 2px 8px rgba(0,0,0,0.02); box-sizing: border-box; width: 100%;">
-                <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px;">
-                    <div style="font-size: 14.5px; font-weight: 900; color: var(--text-m);">☁️ 우리 가족 안심 클라우드</div>
-                    <!-- 🚨 뱃지 배경색 파란색(#EBF4FF) ➔ 연보라색으로 변경! -->
-                    <span style="background: rgba(127, 119, 221, 0.15); color: var(--primary); font-size: 11px; font-weight: 900; padding: 4px 8px; border-radius: 8px;">기록 보호중 ✨</span>
-                </div>
-                <div style="font-size: 11.5px; color: var(--text-s); font-weight: 600; margin-bottom: 16px; line-height: 1.5; letter-spacing: -0.3px; word-break: keep-all;">소중한 육아 기록이 서버에 안전하게 보관되고 있어요.<br>초대장을 보내 짝꿍과 함께 육아의 기쁨을 나눠볼까요? </div>
+            <div class="box-main" style="border-radius: 24px; padding: 24px 20px; margin-bottom: 32px; box-shadow: 0 4px 12px rgba(0,0,0,0.03); box-sizing: border-box; width: 100%;">
                 
-                <div style="display: flex; gap: 8px;">
-                    <!-- 🚨 초대장 버튼 파란색(#3182F6) ➔ 보라색(var(--primary))으로 변경! -->
-                    <button onclick="window.showSyncCode()" style="flex: 1; padding: 12px 0; border-radius: 12px; background: var(--primary); color: #FFF; font-size: 13px; font-weight: 800; border: none; cursor: pointer; box-shadow: 0 4px 10px rgba(127,119,221,0.25); white-space: nowrap; letter-spacing: -0.5px;">
-                        💌 가족 초대장 열기
+                <!-- 🚨 gap 추가, flex-shrink와 nowrap으로 두 줄 깨짐 완벽 방어! -->
+                <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; gap: 8px;">
+                    <div style="font-size: 16px; font-weight: 900; color: var(--text-m); letter-spacing: -0.3px; display: flex; align-items: center; gap: 6px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+                        <span>☁️</span> 안심 클라우드
+                    </div>
+                    <span style="background: rgba(49, 130, 246, 0.1); color: #3182F6; font-size: 11.5px; font-weight: 800; padding: 5px 10px; border-radius: 8px; white-space: nowrap; flex-shrink: 0;">연동 중 ✨</span>
+                </div>
+                
+                <!-- 🚨 텍스트 3줄 나오던 것 2줄로 강제 다이어트! -->
+                <div style="font-size: 13px; font-weight: 600; color: var(--text-s); line-height: 1.5; margin-bottom: 20px; word-break: keep-all; letter-spacing: -0.2px;">
+                    소중한 기록을 안전하게 보관 중입니다.<br>가족을 초대해 함께 나누세요 🤍
+                </div>
+                
+                <div style="display: flex; flex-direction: column; gap: 10px;">
+                    <!-- 🖤 배우자 초대 (하이엔드 다크 톤) -->
+                    <button onclick="window.sendKakaoInvite('master')" style="width: 100%; padding: 16px; border-radius: 14px; background: #191F28; color: #FFFFFF; font-size: 14.5px; font-weight: 800; border: none; cursor: pointer; display: flex; justify-content: center; align-items: center; gap: 8px; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1); transition: 0.2s;" onmousedown="this.style.transform='scale(0.97)'" onmouseup="this.style.transform='scale(1)'">
+                        배우자 (아빠/엄마) 초대하기
                     </button>
-                    <button onclick="window.safeUnlinkFamilySync()" style="flex: 1; padding: 12px 0; border-radius: 12px; background: #FFF0F1; color: #F04452; font-size: 13px; font-weight: 900; border: 1px solid #FFE5E8; cursor: pointer; white-space: nowrap; letter-spacing: -0.5px;">
-                        🚪 방 나가기 (초기화)
+                    
+                    <!-- 🤍 시터/조부모 초대 (깔끔하고 부드러운 라이트 그레이 톤) -->
+                    <button onclick="window.sendKakaoInvite('viewer')" style="width: 100%; padding: 16px; border-radius: 14px; background: #F2F4F6; color: #4E5968; font-size: 14.5px; font-weight: 800; border: none; cursor: pointer; display: flex; justify-content: center; align-items: center; gap: 6px; transition: 0.2s;" onmousedown="this.style.transform='scale(0.97)'" onmouseup="this.style.transform='scale(1)'">
+                        조부모 / 돌봄 선생님 초대하기
+                    </button>
+                    
+                    <!-- 🚪 방 나가기 (실수 방지를 위해 깔끔한 텍스트형으로 유지) -->
+                    <button onclick="window.safeUnlinkFamilySync()" style="width: 100%; padding: 12px; background: transparent; color: #8B95A1; font-size: 12.5px; font-weight: 700; border: none; cursor: pointer; margin-top: 4px; text-decoration: underline; text-underline-offset: 4px;">
+                        가족 연동 해제 및 방 나가기
                     </button>
                 </div>
             </div>
@@ -7773,7 +7868,7 @@ window.renderSettingsTab = function() {
                 
                 <!-- 역할 설정 -->
                 <div style="display: flex; justify-content: space-between; align-items: center; padding: 16px 12px 16px 20px; border-bottom: 1px solid var(--border);">
-                    <div style="font-size: 14.5px; font-weight: 800; color: var(--text-m); margin-right: auto;">내 역할 설정</div>
+                    <div style="font-size: 14.5px; font-weight: 800; color: var(--text-m); margin-right: auto; white-space: nowrap; flex-shrink: 0;">내 역할</div>
                     <div style="display: flex; background: var(--bg-sub); border-radius: 10px; padding: 3px; border: 1px solid var(--border); flex-shrink: 0;">
                         <button onclick="window.changeUserRole('mom')" style="padding: 6px 10px; border: none; border-radius: 8px; font-size: 13px; font-weight: 900; cursor: pointer; transition: 0.2s; white-space: nowrap; ${currentRole === 'mom' ? 'background:var(--bg-card); color:#F04452; box-shadow:0 2px 6px rgba(0,0,0,0.05);' : 'background:transparent; color:#8B95A1;'}">엄마</button>
                         <button onclick="window.changeUserRole('dad')" style="padding: 6px 10px; border: none; border-radius: 8px; font-size: 13px; font-weight: 900; cursor: pointer; transition: 0.2s; white-space: nowrap; ${currentRole === 'dad' ? 'background:var(--bg-card); color:#3182F6; box-shadow:0 2px 6px rgba(0,0,0,0.05);' : 'background:transparent; color:#8B95A1;'}">아빠</button>
@@ -7794,10 +7889,10 @@ window.renderSettingsTab = function() {
                 데이터 및 기록 관리
             </div>
             <div style="background: var(--bg-card); border: 1px solid var(--border); border-radius: 16px; overflow: hidden; margin-bottom: 32px; box-shadow: 0 2px 8px rgba(0,0,0,0.02); box-sizing: border-box; width: 100%;">
-                <div onclick="window.openPediatricianReport()" style="display: flex; justify-content: space-between; align-items: center; padding: 18px 20px; border-bottom: 1px solid var(--border); cursor: pointer;">
-    <div style="font-size: 14.5px; font-weight: 800; color: var(--text-m);">🏥 소아과 제출용 A4 리포트 발급</div>
-    <div style="background: #FEE500; color: #191F28; padding: 2px 6px; border-radius: 4px; font-size: 10px; font-weight: 900;">PREMIUM</div>
-</div>
+                <div onclick="window.openPediatricianReport()" style="display: flex; justify-content: space-between; align-items: center; padding: 18px 20px; border-bottom: 1px solid var(--border); cursor: pointer; gap: 12px;">
+                    <div style="font-size: 14.5px; font-weight: 800; color: var(--text-m); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">🏥 소아과 진료용 리포트</div>
+                    <div style="background: #FEE500; color: #191F28; padding: 4px 8px; border-radius: 6px; font-size: 10px; font-weight: 900; flex-shrink: 0; white-space: nowrap;">PLUS</div>
+                </div>
                 <div onclick="window.clearAllData()" style="display: flex; justify-content: space-between; align-items: center; padding: 18px 20px; cursor: pointer;">
                     <div style="font-size: 14.5px; font-weight: 800; color: #F04452;">기록 데이터 초기화</div>
                     <div style="color: #F04452; font-size: 12px;">〉</div>
@@ -7845,6 +7940,13 @@ window.renderSettingsTab = function() {
 // 🌟 역할 변경 기능 함수 (돌봄 도우미 모드)
 // ==========================================
 window.changeUserRole = function(role) {
+    // 서버가 나를 viewer(돌봄 도우미)로 못 박아 뒀으면 스스로 못 푼다.
+    // 이게 없으면 시터가 설정에서 '엄마'를 눌러 사생활을 다 본다.
+    // 화면에서 가리는 건 잠금이 아니다. 서버가 정한 것만 잠금이다.
+    if (localStorage.getItem('tosil_role_locked') === 'viewer' && role !== 'senior') {
+        return window.showToast("돌봄 도우미 계정은 역할을 바꿀 수 없어요");
+    }
+
     if (role === 'senior' && !window.isPremiumUser()) {
         if(navigator.vibrate) navigator.vibrate([20, 50, 20]);
         return window.showPaywall();
@@ -8541,16 +8643,21 @@ window.renderHomeBatonList = function() {
         let rewardHtml = (cleanReward && cleanReward !== "없음") ? `<div style="margin-top:6px; color:rgb(183, 129, 3) !important; font-size:11.5px; font-weight:800; background:rgb(255, 249, 230) !important; padding:4px 8px; border-radius:6px; display:inline-block; border:1px solid rgb(255, 229, 143) !important;">보상: ${cleanReward}</div>` : '';
 
         // 🚨 글자 잘림 방지 (word-break:keep-all, line-height 조절)
-        html += `
-        <div style="background:var(--bg-card); border:1px solid var(--border); border-radius:16px; padding:15px 16px; margin-bottom:10px;" data-theme-src="">
-            <div style="font-size:15px; font-weight:900; color:var(--text-m); margin-bottom:9px; line-height:1.4; word-break:keep-all;">${r.text}</div>
-            ${rewardHtml}
-            <div style="display:flex; justify-content:space-between; align-items:center; gap:8px; margin-top:16px;">
-                <div style="display:flex; align-items:center; gap:6px; font-size:11.5px; font-weight:700; color:var(--text-sub); min-width:0;">
-                    ${statusHtml}<span style="margin-left:2px; font-weight:600;">${r.time}</span>
-                </div>
-                <div style="display:flex; gap:8px; align-items:center;"><button onclick="cancelBaton('${r.id}')" style="padding:14px; background:var(--bg-sub) !important; color:rgb(139, 149, 161) !important; border:none; border-radius:12px; font-size:13.5px; font-weight:800; cursor:pointer; flex-shrink:0;">거절</button>${actionBtn}</div>
+             html += `
+        <div style="background:var(--bg-card); border:1px solid var(--border); border-radius:16px; padding:14px 16px; margin-bottom:8px;">
+
+            <div style="display:flex; align-items:flex-start; gap:12px;">
+                <div style="flex:1; min-width:0; font-size:14.5px; font-weight:900; color:var(--text-m); line-height:1.45; word-break:keep-all;">${r.text}</div>
+                <div style="flex-shrink:0;">${actionBtn}</div>
             </div>
+
+            ${rewardHtml}
+
+            <div style="display:flex; align-items:center; gap:6px; margin-top:10px; padding-left:2px; font-size:11.5px; font-weight:700; color:var(--text-sub); white-space:nowrap;">
+                <span style="flex-shrink:0; display:inline-flex; align-items:center;">${statusHtml}</span>
+                <span style="flex-shrink:0; opacity:0.85;">${r.time}</span>
+            </div>
+
         </div>`;
     });
     container.innerHTML = html;
@@ -12299,15 +12406,13 @@ window.showSyncCode = function() {
     document.body.insertAdjacentHTML('beforeend', modalHtml);
 };
 
-// 클립보드 복사 함수
+// 📋 클립보드 복사 (이건 기본적으로 배우자용(master)으로 열어줍니다)
 window.copySyncCode = function(code) {
-    // 코드를 복사하는 건 곧 초대하겠다는 뜻이다. 30분짜리 창을 연다.
-    if (typeof window.openFamilyInvite === 'function') window.openFamilyInvite();
+    if (typeof window.openFamilyInvite === 'function') window.openFamilyInvite('master');
     navigator.clipboard.writeText(code).then(() => {
         window.showToast("📋 가족 코드가 클립보드에 복사되었습니다!");
     });
 };
-
 // ==========================================
 // 📸 티켓 앨범 저장 함수 (아이폰/갤럭시 완벽 호환 Web Share API 패치)
 // ==========================================
@@ -12450,50 +12555,72 @@ setInterval(() => {
     }
 }, 60000);
 
-// 2. 카카오톡/네이티브 사진 전송
+// 📸 조부모님 사진 전송 (압축 + Storage 우회 전송으로 용량 무제한 패치!)
 window.handleSeniorPhotoUpload = async function(input) {
     if (!input.files || input.files.length === 0) return;
     const file = input.files[0];
-    window.showToast("📸 사진 전송 준비 중...");
+    
+    // 어르신들이 기다리지 않게 즉각적인 피드백
+    window.showToast("⏳ 사진을 예쁘게 다듬어서 보내는 중이에요...");
 
-    const isKakaoBrowser = /KAKAOTALK/i.test(navigator.userAgent);
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        const img = new Image();
+        img.onload = async function() {
+            const canvas = document.createElement('canvas');
+            const maxSize = 1080; // 카톡으로 보기 딱 좋은 최적의 해상도
+            let width = img.width, height = img.height;
 
-    try {
-        if (!isKakaoBrowser && navigator.canShare && navigator.canShare({ files: [file] })) {
-            await navigator.share({
-                files: [file],
-                title: '우리아기 사진',
-                text: '방금 찍은 우리 아기 사진이에요 🤍'
-            });
-            window.showToast("✅ 성공적으로 전송되었습니다!");
-            input.value = '';
-            return;
-        }
-    } catch (error) { console.log("기본 공유 취소 또는 실패", error); }
+            if (width > height) {
+                if (width > maxSize) { height *= maxSize / width; width = maxSize; }
+            } else {
+                if (height > maxSize) { width *= maxSize / height; height = maxSize; }
+            }
 
-    if (typeof Kakao !== 'undefined' && Kakao.isInitialized()) {
-        window.showToast("🚀 카카오 서버를 통해 전송 중입니다...");
-        Kakao.Share.uploadImage({
-            file: input.files
-        }).then(function(res) {
-            Kakao.Share.sendDefault({
-                objectType: 'feed',
-                content: {
-                    title: '💌 우리 예쁜 아기 사진 도착!',
-                    description: '어르신(시터님)이 방금 찍어 보내신 사진이에요 🤍',
-                    imageUrl: res.infos.original.url,
-                    link: { mobileWebUrl: 'https://happy-baby0303.github.io/', webUrl: 'https://happy-baby0303.github.io/' },
-                },
-                buttons: [{ title: '앱 열고 확인하기', link: { mobileWebUrl: 'https://happy-baby0303.github.io/' } }]
-            });
-            window.showToast("✅ 카카오톡으로 전송 완료!");
-        }).catch(function(err) {
-            window.showToast("❌ 사진 용량이 너무 커서 실패했어요.");
-        });
-    } else {
-        window.showToast("❌ 공유 기능을 사용할 수 없는 환경입니다.");
-    }
-    input.value = '';
+            canvas.width = width; canvas.height = height;
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(img, 0, 0, width, height);
+
+            // 화질 0.7로 압축 (용량은 1/10로 줄고 눈으로 보는 화질은 똑같음!)
+            const dataUrl = canvas.toDataURL('image/jpeg', 0.7);
+
+            if (window.storage && window.uploadString && window.getDownloadURL) {
+                try {
+                    const syncCode = window.getSyncCode() || 'GUEST';
+                    // 사진 이름 충돌 안 나게 밀리초 + 랜덤 문자열 부여
+                    const fileName = `senior_photos/${syncCode}/${Date.now()}_${Math.random().toString(36).substring(2,7)}.jpg`;
+                    const imgRef = window.storageRef(window.storage, fileName);
+
+                    // 1. 우리 파이어베이스 창고에 사진 슛!
+                    await window.uploadString(imgRef, dataUrl, 'data_url');
+                    // 2. 올려진 사진의 진짜 인터넷 주소 가져오기
+                    const downloadUrl = await window.getDownloadURL(imgRef);
+
+                    // 3. 카카오톡으로는 무거운 사진 파일 대신, 가벼운 주소만 보냄 (절대 안 뻗음!)
+                    Kakao.Share.sendDefault({
+                        objectType: 'feed',
+                        content: {
+                            title: '💌 우리 예쁜 아기 사진 도착!',
+                            description: '어르신(시터님)이 방금 찍어 보내신 사진이에요 🤍',
+                            imageUrl: downloadUrl,
+                            link: { mobileWebUrl: 'https://happy-baby0303.github.io/', webUrl: 'https://happy-baby0303.github.io/' },
+                        },
+                        buttons: [{ title: '앱 열고 확인하기', link: { mobileWebUrl: 'https://happy-baby0303.github.io/' } }]
+                    });
+                    
+                    window.showToast("✅ 엄마 아빠에게 사진이 성공적으로 전송되었습니다!");
+                } catch(err) {
+                    console.error(err);
+                    window.showToast("❌ 인터넷 연결이 불안정하여 전송에 실패했어요.");
+                }
+            } else {
+                window.showToast("❌ 서버 시스템을 불러오지 못했습니다. 앱을 다시 켜주세요.");
+            }
+        };
+        img.src = e.target.result;
+    };
+    reader.readAsDataURL(file);
+    input.value = ''; // 다음 사진을 위해 입력칸 비우기
 };
 
 // 3. 약/케어 체크 버튼 토글
@@ -12763,9 +12890,6 @@ window.kioskCheckoutProcess = function() {
     window.kioskNextStep(3);
 };
 
-// ==========================================
-// 👵 조부모님/시터 전용 하이엔드 상태 브리핑 보드 (실시간 자동 갱신 엔진)
-// ==========================================
 window.updateSeniorBriefing = function() {
     const board = document.getElementById('senior-status-board');
     if(!board) return;
@@ -12792,25 +12916,25 @@ window.updateSeniorBriefing = function() {
         return `<span style="color:#F04452; font-weight:800;">${Math.floor(diffMins/60)}시간 ${diffMins%60}분 전</span>`;
     };
 
-    // 🍼 수유 텍스트
+    // 수유 텍스트
     let feedTxt = getTimeText(lastFeed);
     if(lastFeed) {
         let amtTxt = lastFeed.subType === '모유' ? `${lastFeed.amount}분` : `${lastFeed.amount}${lastFeed.subType==='이유식'?'g':'ml'}`;
         feedTxt += ` <span style="font-size:12px; color:#8B95A1; font-weight:600;">(${lastFeed.subType} ${amtTxt})</span>`;
     }
 
-    // 💩 기저귀 텍스트
+    // 기저귀 텍스트
     let diaperTxt = getTimeText(lastDiaper);
     if(lastDiaper) {
         diaperTxt += ` <span style="font-size:12px; color:#8B95A1; font-weight:600;">(${lastDiaper.subType})</span>`;
     }
 
-    // 💤 수면 텍스트
+    // 수면 텍스트
     let sleepTxt = '<span style="color:#B0B8C1; font-weight:700;">기록 없음</span>';
     if (isSleeping) {
         let startMins = parseInt(localStorage.getItem('tosil_sleep_start'));
         let diff = Math.floor((nowTime - startMins) / 60000);
-        sleepTxt = `<span style="color:#7C3AED; font-weight:900;">자는 중 💤 (${Math.floor(diff/60)}시간 ${diff%60}분째)</span>`;
+        sleepTxt = `<span style="color:#7C3AED; font-weight:900;">자는 중 (${Math.floor(diff/60)}시간 ${diff%60}분째)</span>`;
     } else if (lastSleep && lastSleep.amount > 0) {
         let wakeTime = lastSleep.timestamp + (lastSleep.amount * 60000);
         let diffMins = Math.floor((nowTime - wakeTime) / 60000);
@@ -12821,23 +12945,23 @@ window.updateSeniorBriefing = function() {
         sleepTxt += ` <span style="font-size:12px; color:#8B95A1; font-weight:600;">(${lastSleep.amount}분)</span>`;
     }
 
-    // ✨ [AI 큐레이터 보강] 조부모님이 돋보기 없이도 한눈에 들어오도록 토스 스타일의 둥근 프리미엄 카드 디자인 적용
+    // ✨ 불필요한 이모지 제거 및 깔끔한 디자인 적용
     board.innerHTML = `
-        <div style="background:var(--bg-card); border:1px solid var(--border); border-radius:24px; padding:20px; box-shadow:0 4px 20px rgba(0,0,0,0.03); margin-bottom: 20px;">
-            <div style="font-size:15px; font-weight:900; color:var(--text-m); margin-bottom:14px; display:flex; align-items:center; gap:6px;">
-                <span>👶</span> 아기 실시간 상태 브리핑
+        <div style="background:var(--bg-card); border:1px solid var(--border); border-radius:24px; padding:24px 20px; box-shadow:0 4px 12px rgba(0,0,0,0.04); margin-bottom: 20px;">
+            <div style="font-size:18px; font-weight:900; color:var(--text-m); margin-bottom:16px; letter-spacing: -0.5px;">
+                아기 실시간 상태 브리핑
             </div>
-            <div style="display:flex; flex-direction:column; gap:10px;">
-                <div style="display:flex; justify-content:space-between; align-items:center; background:var(--bg-sub); padding:14px 16px; border-radius:14px; border:1px solid var(--border);">
-                    <div style="font-size:14.5px; font-weight:800; color:#3182F6;">🍼 마지막 맘마</div>
+            <div style="display:flex; flex-direction:column; gap:8px;">
+                <div style="display:flex; justify-content:space-between; align-items:center; background:var(--bg-sub); padding:16px; border-radius:14px; border:1px solid var(--border);">
+                    <div style="font-size:14px; font-weight:800; color:#3182F6;">마지막 맘마</div>
                     <div style="font-size:14px; font-weight:900; color:var(--text-m); text-align:right;">${feedTxt}</div>
                 </div>
-                <div style="display:flex; justify-content:space-between; align-items:center; background:var(--bg-sub); padding:14px 16px; border-radius:14px; border:1px solid var(--border);">
-                    <div style="font-size:14.5px; font-weight:800; color:#F59E0B;">💩 마지막 기저귀</div>
+                <div style="display:flex; justify-content:space-between; align-items:center; background:var(--bg-sub); padding:16px; border-radius:14px; border:1px solid var(--border);">
+                    <div style="font-size:14px; font-weight:800; color:#F59E0B;">마지막 기저귀</div>
                     <div style="font-size:14px; font-weight:900; color:var(--text-m); text-align:right;">${diaperTxt}</div>
                 </div>
-                <div style="display:flex; justify-content:space-between; align-items:center; background:var(--bg-sub); padding:14px 16px; border-radius:14px; border:1px solid var(--border);">
-                    <div style="font-size:14.5px; font-weight:800; color:#A855F7;">🌙 수면 상태</div>
+                <div style="display:flex; justify-content:space-between; align-items:center; background:var(--bg-sub); padding:16px; border-radius:14px; border:1px solid var(--border);">
+                    <div style="font-size:14px; font-weight:800; color:#A855F7;">수면 상태</div>
                     <div style="font-size:14px; font-weight:900; color:var(--text-m); text-align:right;">${sleepTxt}</div>
                 </div>
             </div>
@@ -12861,7 +12985,7 @@ window.renderParentNotice = function() {
         if (savedNotice.trim() !== '') {
             container.innerHTML = `<div id="senior-memo-text" style="font-size: 17px; font-weight: 900; color: #191F28; line-height: 1.5; word-break: break-all; overflow-wrap: break-word;">${savedNotice.replace(/\n/g, '<br>')}</div>`;
         } else {
-            container.innerHTML = `<div id="senior-memo-text" style="font-size: 17px; font-weight: 900; color: #8B95A1; line-height: 1.5; word-break: break-all; overflow-wrap: break-word;">여기에 전달사항을 적어주세요. (예: 2시에 이유식 먹여주세요)</div>`;
+            container.innerHTML = `<div id="senior-memo-text" style="font-size: 17px; font-weight: 900; color: #8B95A1; line-height: 1.5; word-break: break-all; overflow-wrap: break-word;">여기에 전달사항을 적어주세요.</div>`;
         }
     }
 };
@@ -12880,7 +13004,7 @@ window.toggleEditSeniorMemo = function() {
         const currentNotice = localStorage.getItem('tosil_parent_notice') || '';
         
         container.innerHTML = `
-            <textarea id="senior-memo-textarea" placeholder="어르신들께 전달할 말씀을 적어주세요..." style="width: 100%; height: 90px; background: var(--bg-sub); border: 2px solid #3182F6; border-radius: 12px; padding: 12px; font-size: 15px; font-weight: 800; color: var(--text-m); outline: none; resize: none; box-sizing: border-box; line-height: 1.4; word-break: break-all; overflow-wrap: break-word;">${currentNotice}</textarea>
+            <textarea id="senior-memo-textarea" placeholder="전달할 말씀을 적어주세요..." style="width: 100%; height: 90px; background: var(--bg-sub); border: 2px solid #3182F6; border-radius: 12px; padding: 12px; font-size: 15px; font-weight: 800; color: var(--text-m); outline: none; resize: none; box-sizing: border-box; line-height: 1.4; word-break: break-all; overflow-wrap: break-word;">${currentNotice}</textarea>
         `;
         
         // 버튼을 파란색 '저장' 버튼으로 변경
@@ -14632,3 +14756,45 @@ window.openSettingsTab = function() {
     else handleShortcut();
 })();
 
+// 🗺️ [스마트 지도 라우터] PC/모바일 환경 분기 및 TMAP 404 에러 원천 차단
+window.openMap = function(type, query) {
+    const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+    const encodedQuery = encodeURIComponent(query);
+
+    if (type === 'naver') {
+        window.open(`https://m.map.naver.com/search2/search.naver?query=${encodedQuery}`, '_blank');
+    } else if (type === 'kakao') {
+        window.open(`https://map.kakao.com/link/search/${encodedQuery}`, '_blank');
+    } else if (type === 'tmap') {
+        if (isMobile) {
+            // 모바일이면 티맵 앱 스킴 발사!
+            window.location.href = `tmap://search?name=${encodedQuery}`;
+        } else {
+            // PC에서는 404 에러 나는 웹 주소 대신 네이버 지도로 안전하게 우회
+            window.open(`https://map.naver.com/v5/search/${encodedQuery}`, '_blank');
+            if (typeof window.showToast === 'function') {
+                window.showToast("💡 PC에서는 티맵 앱을 쓸 수 없어 네이버 지도로 연결해 드렸어요 🤍");
+            } else {
+                alert("티맵은 모바일 전용 앱이어서 네이버 지도로 연결해 드렸습니다.");
+            }
+        }
+    }
+};
+
+// 🗺️ 지도 앱 3종 버튼 템플릿 ('지도 앱으로 열기' 텍스트 싹 삭제!)
+let mapButtonsHtml = `
+    <div style="display: flex; gap: 8px; margin-bottom: 12px;">
+        <button onclick="window.openMap('naver', '${p.query || p.title}')" style="flex: 1; padding: 12px 0; background: #FFF; border: 1px solid #E5E8EB; border-radius: 12px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px; box-shadow: 0 2px 4px rgba(0,0,0,0.02); transition: 0.2s;" onmousedown="this.style.transform='scale(0.97)'" onmouseup="this.style.transform='scale(1)'">
+            <div style="width: 20px; height: 20px; background: #03C75A; border-radius: 6px; display: flex; align-items: center; justify-content: center; color: #FFF; font-weight: 900; font-size: 12px;">N</div>
+            <span style="font-size: 13.5px; font-weight: 800; color: #4E5968;">네이버</span>
+        </button>
+        <button onclick="window.openMap('tmap', '${p.query || p.title}')" style="flex: 1; padding: 12px 0; background: #FFF; border: 1px solid #E5E8EB; border-radius: 12px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px; box-shadow: 0 2px 4px rgba(0,0,0,0.02); transition: 0.2s;" onmousedown="this.style.transform='scale(0.97)'" onmouseup="this.style.transform='scale(1)'">
+            <div style="width: 20px; height: 20px; background: #111111; border-radius: 6px; display: flex; align-items: center; justify-content: center; color: #FFF; font-weight: 900; font-size: 12px;">T</div>
+            <span style="font-size: 13px; font-weight: 800; color: #4E5968;">티맵</span>
+        </button>
+        <button onclick="window.openMap('kakao', '${p.query || p.title}')" style="flex: 1; padding: 12px 0; background: #FFF; border: 1px solid #E5E8EB; border-radius: 12px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px; box-shadow: 0 2px 4px rgba(0,0,0,0.02); transition: 0.2s;" onmousedown="this.style.transform='scale(0.97)'" onmouseup="this.style.transform='scale(1)'">
+            <div style="width: 20px; height: 20px; background: #FEE500; border-radius: 6px; display: flex; align-items: center; justify-content: center; color: #191F28; font-weight: 900; font-size: 12px;">K</div>
+            <span style="font-size: 13px; font-weight: 800; color: #4E5968;">카카오</span>
+        </button>
+    </div>
+`;

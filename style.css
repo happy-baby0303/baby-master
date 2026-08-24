@@ -1428,3 +1428,25 @@ body.dark-mode .category-chip:not(.active) {
 .tool-chip.active .t-label { 
     color: #5B8ACA !important; 
 }
+
+/* ============================================================
+   색 덧칠 중에는 애니메이션을 끈다.
+
+   theme.js 는 요소가 생긴 뒤에 색을 칠한다.
+   그런데 CSS 에 transition 이 걸려 있으면
+   원래 색 → 덧칠한 색으로 '스르륵' 물드는 게 그대로 보인다.
+
+   덧칠 대상(data-theme-src 가 붙은 것)은 애니메이션을 아예 뺀다.
+   색이 바뀌는 순간을 눈에 안 보이게 만드는 게 유일한 방법이다.
+   ============================================================ */
+[data-theme-src],
+[data-theme-src] * {
+    transition: none !important;
+}
+
+/* 눌렀을 때 반응은 살린다. 색이 아니라 크기로 준다. */
+button:active,
+[onclick]:active {
+    transform: scale(0.97);
+    transition: transform 0.08s ease !important;
+}

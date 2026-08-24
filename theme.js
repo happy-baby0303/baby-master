@@ -270,7 +270,8 @@ body.dark-mode select option { background: #221E1A; color: #EDE7E1; }
     var pending = null;
     function schedule() {
         if (pending) return;
-        pending = setTimeout(function () { pending = null; paint(); }, 60);
+              // 60ms 는 눈에 보인다. 다음 화면 그리기 직전에 칠하면 안 보인다.
+        pending = requestAnimationFrame(function () { pending = null; paint(); });
     }
 
     function watch() {

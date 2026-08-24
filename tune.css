@@ -1,0 +1,190 @@
+/* ============================================================
+   배냇함 — 눈금 맞추기 (tune.css)
+
+   재보니 이랬다.
+     모서리 둥글기  19가지
+     글자 크기      37가지
+     안쪽 여백      89가지
+
+   14px 옆에 14.5px 이 49번, 13px 옆에 13.5px 이 48번 있었다.
+   한 곳만 보면 차이를 모른다. 화면 전체로 보면
+   "미세하게 안 맞는 느낌" 이 된다.
+
+   그게 '야무지지 않은 느낌' 의 절반이다.
+
+   HTML 을 한 줄도 안 고친다. 인라인 스타일보다 CSS 가 이기게
+   !important 를 쓴다. 원래는 나쁜 습관이지만 이 앱은 값이
+   전부 인라인에 박혀 있어서 이 방법 말고는 손댈 수가 없다.
+
+   ⚠️ 큰 숫자(D+174일, 온도, 금액)는 건드리지 않는다.
+      거긴 크기 차이가 뜻을 가진다.
+
+   index.html 에서 style.css 다음에 로드하세요.
+   ============================================================ */
+
+
+/* ==========================================================
+   1. 글자 크기 — 37가지를 8가지로
+
+   11 · 12 · 13 · 14 · 16 · 18 · 22 · 28
+   ---------------------------------------------------------- */
+
+.tab-content [style*="font-size:10px"],
+.tab-content [style*="font-size: 10px"],
+.tab-content [style*="font-size:10.5px"],
+.tab-content [style*="font-size: 10.5px"],
+.tab-content [style*="font-size:11.5px"],
+.tab-content [style*="font-size: 11.5px"] { font-size: 11px !important; }
+
+.tab-content [style*="font-size:12.5px"],
+.tab-content [style*="font-size: 12.5px"] { font-size: 12px !important; }
+
+.tab-content [style*="font-size:13.5px"],
+.tab-content [style*="font-size: 13.5px"] { font-size: 13px !important; }
+
+.tab-content [style*="font-size:14.5px"],
+.tab-content [style*="font-size: 14.5px"],
+.tab-content [style*="font-size:15px"],
+.tab-content [style*="font-size: 15px"] { font-size: 14px !important; }
+
+.tab-content [style*="font-size:15.5px"],
+.tab-content [style*="font-size: 15.5px"],
+.tab-content [style*="font-size:16.5px"],
+.tab-content [style*="font-size: 16.5px"],
+.tab-content [style*="font-size:17px"],
+.tab-content [style*="font-size: 17px"] { font-size: 16px !important; }
+
+.tab-content [style*="font-size:19px"],
+.tab-content [style*="font-size: 19px"],
+.tab-content [style*="font-size:20px"],
+.tab-content [style*="font-size: 20px"] { font-size: 18px !important; }
+
+.tab-content [style*="font-size:24px"],
+.tab-content [style*="font-size: 24px"] { font-size: 22px !important; }
+
+/* 26px 이상은 그대로 둔다.
+   D+174일 · 38.6도 · 100,000원 처럼 크기 자체가 뜻인 자리다. */
+
+
+/* ==========================================================
+   2. 모서리 둥글기 — 19가지를 4가지로
+
+   10 · 14 · 18 · 24
+   ---------------------------------------------------------- */
+
+.tab-content [style*="border-radius:3px"],
+.tab-content [style*="border-radius: 3px"],
+.tab-content [style*="border-radius:5px"],
+.tab-content [style*="border-radius: 5px"],
+.tab-content [style*="border-radius:6px"],
+.tab-content [style*="border-radius: 6px"],
+.tab-content [style*="border-radius:8px"],
+.tab-content [style*="border-radius: 8px"],
+.tab-content [style*="border-radius:9px"],
+.tab-content [style*="border-radius: 9px"],
+.tab-content [style*="border-radius:11px"],
+.tab-content [style*="border-radius: 11px"],
+.tab-content [style*="border-radius:12px"],
+.tab-content [style*="border-radius: 12px"],
+.tab-content [style*="border-radius:13px"],
+.tab-content [style*="border-radius: 13px"] { border-radius: 10px !important; }
+
+.tab-content [style*="border-radius:15px"],
+.tab-content [style*="border-radius: 15px"],
+.tab-content [style*="border-radius:16px"],
+.tab-content [style*="border-radius: 16px"],
+.tab-content [style*="border-radius:17px"],
+.tab-content [style*="border-radius: 17px"] { border-radius: 14px !important; }
+
+.tab-content [style*="border-radius:19px"],
+.tab-content [style*="border-radius: 19px"],
+.tab-content [style*="border-radius:20px"],
+.tab-content [style*="border-radius: 20px"],
+.tab-content [style*="border-radius:21px"],
+.tab-content [style*="border-radius: 21px"],
+.tab-content [style*="border-radius:22px"],
+.tab-content [style*="border-radius: 22px"] { border-radius: 18px !important; }
+
+.tab-content [style*="border-radius:26px"],
+.tab-content [style*="border-radius: 26px"],
+.tab-content [style*="border-radius:28px"],
+.tab-content [style*="border-radius: 28px"] { border-radius: 24px !important; }
+
+/* 동그란 것(50%, 999px, 100px)은 그대로. 그건 원이어야 한다. */
+
+
+/* ==========================================================
+   3. 글자 굵기 — 7가지를 3가지로
+
+   900(제목) · 700(본문 강조) · 500(설명)
+   ---------------------------------------------------------- */
+
+.tab-content [style*="font-weight:800"],
+.tab-content [style*="font-weight: 800"] { font-weight: 900 !important; }
+
+.tab-content [style*="font-weight:600"],
+.tab-content [style*="font-weight: 600"] { font-weight: 700 !important; }
+
+.tab-content [style*="font-weight:400"],
+.tab-content [style*="font-weight: 400"],
+.tab-content [style*="font-weight:300"],
+.tab-content [style*="font-weight: 300"] { font-weight: 500 !important; }
+
+
+/* ==========================================================
+   4. 선 — 진하기를 하나로
+
+   지금은 1px 짜리와 2px 짜리, 색이 다른 것들이 섞여 있다.
+   선은 눈에 안 띄어야 한다. 안 띄면 정돈돼 보인다.
+   ---------------------------------------------------------- */
+
+.tab-content [style*="border:1px solid"],
+.tab-content [style*="border: 1px solid"] {
+    border-width: 1px !important;
+}
+
+.tab-content hr,
+.tab-content [style*="height:1px"],
+.tab-content [style*="height: 1px"] {
+    opacity: 0.6;
+}
+
+
+/* ==========================================================
+   5. 카드 사이 간격 — 리듬 만들기
+
+   카드끼리는 10px, 묶음끼리는 22px.
+   두 가지만 있으면 화면에 리듬이 생긴다.
+   ---------------------------------------------------------- */
+
+.tab-content [style*="margin-bottom:8px"],
+.tab-content [style*="margin-bottom: 8px"],
+.tab-content [style*="margin-bottom:9px"],
+.tab-content [style*="margin-bottom: 9px"],
+.tab-content [style*="margin-bottom:11px"],
+.tab-content [style*="margin-bottom: 11px"],
+.tab-content [style*="margin-bottom:12px"],
+.tab-content [style*="margin-bottom: 12px"] { margin-bottom: 10px !important; }
+
+.tab-content [style*="margin-bottom:20px"],
+.tab-content [style*="margin-bottom: 20px"],
+.tab-content [style*="margin-bottom:21px"],
+.tab-content [style*="margin-bottom: 21px"],
+.tab-content [style*="margin-bottom:24px"],
+.tab-content [style*="margin-bottom: 24px"],
+.tab-content [style*="margin-bottom:26px"],
+.tab-content [style*="margin-bottom: 26px"] { margin-bottom: 22px !important; }
+
+
+/* ==========================================================
+   6. 눌리는 느낌 — 색이 아니라 크기로
+
+   theme.js 가 색을 덧칠하는 구조라 색 전환은 촌스럽게 보인다.
+   크기로 주면 덧칠과 안 부딪힌다.
+   ---------------------------------------------------------- */
+
+.tab-content button:active,
+.tab-content [onclick]:active {
+    transform: scale(0.975);
+    transition: transform 0.08s ease !important;
+}
