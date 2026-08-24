@@ -67,8 +67,10 @@ exports.sendFamilyPush = onCall(SEOUL, async (request) => {
     const familyDoc = await db.collection("families").doc(String(syncCode)).get();
     if (!familyDoc.exists) return { success: false, error: "가족방이 없습니다." };
 
-    const members = familyDoc.data().members || [];
-    const targetUids = members.filter((uid) => uid !== senderUid);
+      // members 는 { uid: "master" } 형태의 객체다. 옛 배열도 받아준다.
+    const raw = familyDoc.data().members || {};
+    const all = Array.isArray(raw) ? raw : Object.keys(raw);
+    const targetUids = all.filter((uid) => uid !== senderUid);
     if (targetUids.length === 0) {
       return { success: false, error: "알림을 보낼 가족이 없습니다." };
     }
@@ -234,20 +236,46 @@ exports.deleteUserAccount = onCall(SEOUL, async (request) => {
 
   try {
     /* 1) 내가 속한 가족방 처리 */
-    const fams = await db
+      // members 가 객체라 array-contains 로는 못 찾는다.
+    // "members.{uid}" 필드가 있는 방을 찾는 방식으로 바꾼다.
+    // 옛 배열 구조 방도 놓치지 않게 두 번 훑는다.
+    const famMap = await db
+      .collection("families")
+      .where(`members.${uid}`, "!=", null)
+      .get()
+      .catch(() => ({ docs: [] }));
+
+    const famArr = await db
       .collection("families")
       .where("members", "array-contains", uid)
-      .get();
-    report.rooms = fams.size;
+      .get()
+      .catch(() => ({ docs: [] }));
 
-    for (const fam of fams.docs) {
-      const members = fam.data().members || [];
-      if (members.length <= 1) {
+    const seen = new Set();
+    const famDocs = [];
+    [...(famMap.docs || []), ...(famArr.docs || [])].forEach((d) => {
+      if (seen.has(d.id)) return;
+      seen.add(d.id);
+      famDocs.push(d);
+    });
+    report.rooms = famDocs.length;
+
+    for (const fam of famDocs) {
+      const raw = fam.data().members || {};
+      const isArr = Array.isArray(raw);
+      const count = isArr ? raw.length : Object.keys(raw).length;
+
+      if (count <= 1) {
         await purgeFamilyData(db, fam.id);      // 마지막 사람 → 방 정리
         report.purged++;
-      } else {
-        await fam.ref.update({                  // 짝꿍 있음 → 나만 빠짐
+      } else if (isArr) {
+        await fam.ref.update({                  // 옛 배열 구조
           members: admin.firestore.FieldValue.arrayRemove(uid),
+        });
+        report.left++;
+      } else {
+        await fam.ref.update({                  // 객체 구조 — 내 키만 지운다
+          [`members.${uid}`]: admin.firestore.FieldValue.delete(),
         });
         report.left++;
       }
@@ -338,7 +366,8 @@ exports.bedtimeReminder = onSchedule(
 
         const fam = await db.collection("families").doc(code).get();
         if (!fam.exists) continue;
-        const members = (fam.data().members || []).slice(0, 10);
+                const rawM = fam.data().members || {};
+        const members = (Array.isArray(rawM) ? rawM : Object.keys(rawM)).slice(0, 10);
         if (!members.length) continue;
 
         const users = await db
