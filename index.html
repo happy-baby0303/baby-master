@@ -3933,5 +3933,41 @@ body { overflow-x: hidden !important; } /* 가로로 튀어나오는 모든 찌�
     </div>
 </div>
 
+<!-- ========================================================= -->
+<!-- 🚨 터치 하얀색 번쩍임 & 꿀렁임(확대) 자동 무력화 백신 🚨 -->
+<!-- ========================================================= -->
+<style>
+/* 1. 스마트폰에서 누를 때 생기는 하얀색/회색 그림자 완벽 박멸 */
+*, a, button, div, span, input {
+    -webkit-tap-highlight-color: transparent !important;
+}
+
+/* 2. CSS에 숨어있던 꿀렁임(크기 축소/확대) 애니메이션 강제 정지 */
+button:active, .btn-main:active, .fest-card:active, .feed-card:active, 
+.category-chip:active, .tool-chip:active, [onclick]:active {
+    transform: none !important;
+    transition: none !important;
+}
+</style>
+
+<script>
+// 3. HTML과 JS 곳곳에 박혀있는 onmousedown 꿀렁임 코드를 앱 구동 시 알아서 싹 지워주는 마법!
+document.addEventListener("DOMContentLoaded", () => {
+    // 앱이 켜지거나, 새로운 카드가 화면에 생길 때마다 실시간으로 감시하는 AI 레이더
+    const antiBounceObserver = new MutationObserver(() => {
+        document.querySelectorAll('[onmousedown*="scale"], [ontouchstart*="scale"]').forEach(el => {
+            el.removeAttribute('onmousedown');
+            el.removeAttribute('onmouseup');
+            el.removeAttribute('ontouchstart');
+            el.removeAttribute('ontouchend');
+        });
+    });
+    
+    // 몸통 전체를 감시 시작
+    antiBounceObserver.observe(document.body, { childList: true, subtree: true });
+});
+</script>
+<!-- ========================================================= -->
+
 </body>
 </html>
