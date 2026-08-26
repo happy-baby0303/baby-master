@@ -723,7 +723,77 @@ div[style*="border-radius: 8px"] {
             border-color: #333D4B !important;
         }
 
+/* ========================================================= */
+/* 🎒 외출 체크리스트 '순수 텍스트 탭' 강제 변환 마법진 */
+/* ========================================================= */
+.chk-text-tabs::-webkit-scrollbar { display: none; }
 
+button.chk-txt-btn {
+    flex-shrink: 0 !important;
+    background: transparent !important;       /* 배경 무조건 투명하게 */
+    background-color: transparent !important; /* 다크모드 배경도 투명하게 */
+    border: none !important;                  /* 껍데기 선 삭제 */
+    box-shadow: none !important;              /* 그림자 삭제 */
+    padding: 8px 4px 12px 4px !important;
+    color: #8B95A1 !important;                /* 비활성 글씨는 회색 */
+    font-size: 15px !important;
+    font-weight: 700 !important;
+    cursor: pointer !important;
+    position: relative !important;
+    border-radius: 0 !important;
+}
+
+/* 눌려있는(활성화된) 탭 글씨 진하게 */
+button.chk-txt-btn.active {
+    color: #191F28 !important;
+    font-weight: 900 !important;
+}
+
+/* ✨ 시크한 까만 밑줄 생성 */
+button.chk-txt-btn.active::after {
+    content: '';
+    position: absolute;
+    bottom: -1px; /* 부모 컨테이너의 바닥 선과 완벽히 겹침 */
+    left: 0;
+    width: 100%;
+    height: 3px;
+    background: #191F28 !important; /* 까만 밑줄 */
+    border-radius: 3px 3px 0 0;
+}
+
+/* 🌙 다크모드 절대 방어막 */
+body.dark-mode button.chk-txt-btn { color: #8B95A1 !important; }
+body.dark-mode button.chk-txt-btn.active { color: #F9FAFB !important; }
+body.dark-mode button.chk-txt-btn.active::after { background: #38BDF8 !important; }
+
+/* ========================================================= */
+/* 🎒 체크리스트 '소프트 파스텔 칩' 완벽 방어막 CSS */
+/* ========================================================= */
+.chk-premium-scroll::-webkit-scrollbar { display: none; }
+
+button.chk-premium-btn {
+    flex-shrink: 0 !important;
+    padding: 10px 16px !important;
+    border-radius: 20px !important; /* 완벽한 알약 모양 */
+    font-size: 14.5px !important;
+    cursor: pointer !important;
+    transition: all 0.2s cubic-bezier(0.2, 0.8, 0.2, 1) !important;
+    box-shadow: none !important;
+    
+    /* 🚨 스크린샷의 똥색 배경이 나오는 이유(브라우저 기본 active 속성) 원천 차단! */
+    outline: none !important;
+    -webkit-tap-highlight-color: transparent !important;
+}
+
+/* 터치했을 때 살짝 눌리는 쫀득한 느낌만 남김 */
+button.chk-premium-btn:active {
+    transform: scale(0.95) !important;
+}
+
+/* 다크모드일 때 파스텔 색상이 눈부시지 않도록 살짝 톤다운 */
+body.dark-mode button.chk-premium-btn:not([style*="background: transparent"]) {
+    filter: brightness(0.8) contrast(1.2);
+}
 
 /* ========================================================================= */
 /* CSS 패치 끝 */
@@ -2629,17 +2699,9 @@ div[style*="border-radius: 8px"] {
 <!-- 🎒 외출 준비물 체크리스트 모달 -->
 <div id="checklist-modal" class="modal-overlay" style="z-index: 5000; display:none;" onclick="closeChecklist(event)">
     <div class="sos-content-box box-main" style="max-height:80vh; display:flex; flex-direction:column;" onclick="event.stopPropagation()">
-        <div class="sos-close-btn box-sub" onclick="closeChecklistForce()">✕</div>
-        <div style="text-align:center; padding-bottom: 16px; border-bottom: 1px solid var(--border);">
-            <div style="font-size:32px; margin-bottom:8px;">🎒</div>
-            <div class="sos-choice-title" style="color:var(--text-m);">외출 준비물 팩킹 완료!</div>
-        </div>
+
         <div id="checklist-items" style="flex-grow:1; overflow-y:auto; padding: 10px 0;"></div>
-        <div style="padding-top: 16px; border-top: 1px solid var(--border); display: flex; gap: 10px;">
-            <button class="btn-main box-sub" style="flex: 1; box-shadow:none !important; margin-top:0;" onclick="resetChecklist()">🔄 초기화</button>
-            <button class="btn-main" style="flex: 1; margin-top:0; background:var(--text-m) !important; color:var(--bg-card) !important;" onclick="closeChecklistForce()">닫기</button>
-        </div>
-    </div>
+     </div>
 </div>
 
 <!-- 🎟️ 프리미엄(축제) 모달 -->

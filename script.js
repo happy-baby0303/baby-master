@@ -659,13 +659,12 @@ function filterPlaces() {
 }
 
 // ==========================================
-// 🎪 행사/핫플 모달창: 숨통 트이는 대기업급 디자인 (완벽 이원화)
+// 🎪 행사/핫플 모달창: 스마트 짐싸기 자동 매칭 엔진 (초정밀 타격 패치)
 // ==========================================
 function openFestivalModal(title, dateText, addr, tel, review, query, image, isEvent = true) {
     const body = document.getElementById('modal-dynamic-body');
     if(!body) return;
 
-    // 🚨 행사와 핫플 라벨 완벽 분리
     const dateLabel = isEvent ? '진행 기간' : '운영 정보';
     const locLabel = isEvent ? '방문 장소' : '위치 정보';
     const topIcon = isEvent ? '🚩' : '📍';
@@ -674,7 +673,6 @@ function openFestivalModal(title, dateText, addr, tel, review, query, image, isE
         ? `<button onclick="window.location.href='tel:${tel}'" style="flex: 1; padding: 14px 0; background: var(--bg-sub); color: var(--text-m); border-radius: 12px; font-weight: 800; font-size: 14.5px; border: 1px solid var(--border); cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px; transition: 0.2s;">📞 전화 문의</button>` 
         : `<button disabled style="flex: 1; padding: 14px 0; background: var(--bg-main); color: #B0B8C1; border-radius: 12px; font-weight: 800; font-size: 14.5px; border: none;">📞 번호 없음</button>`;
         
-    // 🚨 이미지 높이를 황금비율(140px)로 맞추고 여백을 예쁘게 설정!
     let modalImgHtml = '';
     if (image && image.trim() !== '' && !image.startsWith('⚙️')) {
         modalImgHtml = `
@@ -685,10 +683,40 @@ function openFestivalModal(title, dateText, addr, tel, review, query, image, isE
 
     const safeQuery = query.replace(/'/g, "\\'");
 
-    // 🚨 숨막히던 여백을 시원하게 풀고, 글씨 크기는 세련되게 깎았습니다.
+  // 💡 [니치 엔진 고도화] 축제, 행사, 갯벌 등 육아 현실에 맞춘 초정밀 키워드 판독기
+    let suggestedTheme = 'basic';
+    let themeName = '기본 외출';
+    const keywordStr = `${title} ${query} ${review}`.toLowerCase();
+
+    // 1. 1박 2일 (세면도구, 애착이불 필수)
+    if (keywordStr.includes('호텔') || keywordStr.includes('리조트') || keywordStr.includes('펜션') || keywordStr.includes('숙박') || keywordStr.includes('글램핑') || keywordStr.includes('풀빌라')) {
+        suggestedTheme = 'stay'; themeName = '1박 2일 여행';
+    } 
+    // 2. 🌊 물놀이 & 갯벌 (방수기저귀, 수건, 여벌옷 폭탄 필수) -> 갯벌, 바닥분수 추가!
+    else if (keywordStr.includes('물놀이') || keywordStr.includes('수영') || keywordStr.includes('워터파크') || keywordStr.includes('계곡') || keywordStr.includes('해수욕') || keywordStr.includes('스파') || keywordStr.includes('갯벌') || keywordStr.includes('분수')) {
+        suggestedTheme = 'water'; themeName = '물놀이/갯벌';
+    } 
+    // 3. 🏕️ 야외/행사/피크닉 (벌레기피제, 돗자리, 선크림 필수) -> 가든, 마켓, 축제, 농장 추가!
+    else if (keywordStr.includes('캠핑') || keywordStr.includes('피크닉') || keywordStr.includes('공원') || keywordStr.includes('수목원') || keywordStr.includes('동물원') || keywordStr.includes('목장') || keywordStr.includes('야외') || keywordStr.includes('가든') || keywordStr.includes('마켓') || keywordStr.includes('축제') || keywordStr.includes('페스티벌') || keywordStr.includes('농장')) {
+        suggestedTheme = 'picnic'; themeName = '야외 축제/피크닉';
+    } 
+    // 4. 🧸 실내 키즈카페 (미끄럼방지 양말 100% 필수인 곳만 핀포인트!)
+    else if (keywordStr.includes('키즈카페') || keywordStr.includes('챔피언') || keywordStr.includes('바운스') || keywordStr.includes('뽀로로') || keywordStr.includes('키카') || keywordStr.includes('실내놀이터')) {
+        suggestedTheme = 'indoor'; themeName = '실내 키즈카페';
+    }
+    // 5. 🎒 나머지는 전부 기본 외출 (박물관, 아쿠아리움, 쇼핑몰, 식당, 카페 등)
+    else {
+        suggestedTheme = 'basic'; themeName = '기본 외출';
+    }
+
+    const smartChecklistBtn = `
+        <button onclick="closeFestivalModalForce(); window.openChecklistModal('${suggestedTheme}');" style="width: 100%; padding: 16px 0; background: linear-gradient(135deg, #EBF4FF 0%, #E0F2FE 100%); color: #3182F6; border-radius: 12px; font-weight: 900; font-size: 14.5px; border: 1px solid #B1D6FF; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; margin-bottom: 8px; transition: 0.2s; box-shadow: 0 4px 10px rgba(49, 130, 246, 0.15);">
+            🎒 ${themeName} 맞춤 짐싸기 시작
+        </button>
+    `;
+
     body.innerHTML = `
         <div style="padding: 0 4px;">
-            <!-- 🚀 모던 타이틀 영역 -->
             <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 16px;">
                 <div style="width: 32px; height: 32px; background: var(--bg-sub); border: 1px solid var(--border); border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 16px; flex-shrink: 0;">${topIcon}</div>
                 <div style="font-size: 20px; font-weight: 900; color: var(--text-m); letter-spacing: -0.5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${title}</div>
@@ -696,7 +724,6 @@ function openFestivalModal(title, dateText, addr, tel, review, query, image, isE
 
             ${modalImgHtml}
 
-            <!-- 🚀 정보 영역 (가로 2분할, 선 없이 아주 깔끔하게!) -->
             <div style="display: flex; gap: 16px; margin-bottom: 24px; padding: 0 4px;">
                 <div style="flex: 1; min-width: 0;">
                     <div style="font-size: 12px; font-weight: 700; color: var(--text-s); margin-bottom: 6px;">${dateLabel}</div>
@@ -708,13 +735,11 @@ function openFestivalModal(title, dateText, addr, tel, review, query, image, isE
                 </div>
             </div>
 
-            <!-- 🚀 팩트 체크 (토스 감성의 은은한 파스텔 배경) -->
             <div style="background: rgba(49, 130, 246, 0.05); padding: 16px; border-radius: 14px; margin-bottom: 28px; border: 1px solid rgba(49, 130, 246, 0.1);">
                 <div style="font-size: 12.5px; font-weight: 900; color: #3182F6; margin-bottom: 6px;">💡 토실이 팩트 체크</div>
                 <div style="font-size: 13.5px; font-weight: 600; color: var(--text-m); line-height: 1.4; word-break: keep-all;">"${review || '주말에 아이와 방문하기 좋은 안전한 인프라를 갖추고 있습니다.'}"</div>
             </div>
 
-            <!-- 🚀 지도 버튼 (답답하지 않게 간격과 버튼 크기 최적화) -->
             <div style="display: flex; gap: 8px; margin-bottom: 20px;">
                 <button onclick="window.openMap('naver', '${safeQuery}')" style="flex: 1; padding: 12px 0; background: var(--bg-card); color: var(--text-m); border: 1px solid var(--border); border-radius: 12px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px; font-weight: 800; font-size: 13px;">
                     <span style="color: #03C75A; font-size: 16px; font-weight: 900;">N</span> 네이버
@@ -726,11 +751,13 @@ function openFestivalModal(title, dateText, addr, tel, review, query, image, isE
                     <span style="color: #FEE500; font-size: 16px; font-weight: 900;">K</span> 카카오
                 </button>
             </div>
+            
+            <!-- 🚨 새로 추가된 AI 짐싸기 연동 버튼 -->
+            ${smartChecklistBtn}
 
             <!-- 🚀 하단 액션 버튼 -->
             <div style="display: flex; gap: 8px;">
                 ${telBtn}
-                <!-- 🚨 모달 하단 닫기 버튼: 기존 촌스러운 색상 제거, 토스 느낌의 진한 회색으로 통일 -->
                 <button onclick="closeFestivalModalForce()" style="flex: 1.5; padding: 14px 0; background: var(--text-m); color: var(--bg-card); border-radius: 12px; font-weight: 800; font-size: 14.5px; border: none; cursor: pointer;">닫기</button>
             </div>
         </div>
@@ -738,43 +765,32 @@ function openFestivalModal(title, dateText, addr, tel, review, query, image, isE
 
     const modalWrap = document.getElementById('premium-modal');
     if(modalWrap) {
-        document.body.style.overflow = 'hidden'; // 배경 스크롤 잠금
-
+        document.body.style.overflow = 'hidden'; 
         modalWrap.style.cssText = `
             display: flex !important;
             justify-content: center !important;
             align-items: center !important;
             position: fixed !important;
-            top: 0 !important;
-            left: 0 !important;
-            width: 100vw !important;
-            height: 100vh !important;
-            height: 100dvh !important;
+            top: 0 !important; left: 0 !important;
+            width: 100vw !important; height: 100vh !important;
             background: rgba(0, 0, 0, 0.7) !important;
             z-index: 999999 !important;
             padding: 20px !important;
             box-sizing: border-box !important;
         `;
-        
+
         const modalBox = modalWrap.querySelector('.modal-content') || modalWrap.querySelector('.box-main');
         if (modalBox) {
             modalBox.style.cssText = `
-                width: 100% !important;
-                max-width: 380px !important;
-                /* 🚨 max-height 해제! 내용물이 딱 예쁘게 들어가면 그만큼만 상자가 늘어납니다 */
-                max-height: none !important; 
-                border-radius: 24px !important;
-                margin: auto !important;
-                transform: none !important;
-                background: var(--bg-card, #FFF) !important;
-                box-shadow: 0 24px 48px rgba(0,0,0,0.2) !important;
-                padding: 28px 24px !important; /* 넉넉한 내부 여백 */
-                box-sizing: border-box !important;
-                border: none !important;
+                width: 100% !important; max-width: 380px !important; max-height: none !important; 
+                border-radius: 24px !important; margin: auto !important; transform: none !important;
+                background: var(--bg-card, #FFF) !important; box-shadow: 0 24px 48px rgba(0,0,0,0.2) !important;
+                padding: 28px 24px !important; box-sizing: border-box !important; border: none !important;
             `;
         }
     }
 }
+
 // 👇 절대 지우면 안 되는 모달 닫기 함수들! (안전하게 같이 둡니다)
 function closeFestivalModalForce() { 
     const m = document.getElementById('premium-modal'); 
@@ -1985,51 +2001,303 @@ function startFeverRealtimeSync() {
 window.startFeverRealtimeSync = startFeverRealtimeSync;
 
 // ==========================================
-// 6. 외출 준비물 체크리스트 
+// 🎒 외출 준비물 체크리스트 (웜 베이지 테마 & 현관문 단속 니치 추가)
 // ==========================================
-function openChecklistModal() {
+window.currentChecklistTheme = 'basic'; 
+window.outingHours = 4; // 기본 외출 4시간
+
+window.changeOutingHours = function(delta) {
+    window.outingHours += delta;
+    if(window.outingHours < 1) window.outingHours = 1;
+    if(window.outingHours > 24) window.outingHours = 24;
+    
+    const saveObj = {}; 
+    if(window.checklistData) {
+        window.checklistData.forEach(item => { 
+            if (!item.isHeader) saveObj[item.id] = item.checked; 
+        });
+        localStorage.setItem('tosil_checklist_' + window.currentChecklistTheme, JSON.stringify(saveObj)); 
+    }
+    window.openChecklistModal(window.currentChecklistTheme);
+};
+
+window.openChecklistModal = function(theme = 'basic') {
+    window.currentChecklistTheme = theme;
     let months = 99, targetDate = localStorage.getItem('tosil_startDate'); 
     if (targetDate) {
         const dday = Math.ceil(Math.abs(new Date() - window.parseLocalDate(targetDate)) / (1000 * 60 * 60 * 24));
         months = Math.floor(dday / 30);
     }
-    checklistData = [
-        { id: 'c_diaper', label: '기저귀 (넉넉하게 4~5장)', checked: false }, { id: 'c_wipe', label: '물티슈 & 건티슈', checked: false },
-        { id: 'c_cloth', label: '여벌옷 1벌 & 가제 손수건 3장', checked: false }, { id: 'c_plastic', label: '기저귀 버릴 냄새차단 비닐팩', checked: false }
-    ];
-    if (months <= 5) checklistData.push({ id: 'c_milk', label: '🍼 분유/모유 & 깨끗한 젖병', checked: false }, { id: 'c_thermos', label: '🌡️ 보온병 (분유물)', checked: false });
-    else checklistData.push({ id: 'c_food', label: '(🥄 이유식 & 전용 숟가락', checked: false }, { id: 'c_cup', label: '🥤 빨대컵 (마실 물)', checked: false });
 
-    let savedChecks = {}; try { savedChecks = JSON.parse(localStorage.getItem('tosil_checklist')) || {}; } catch(e){}
-    checklistData.forEach(item => { if (savedChecks[item.id]) item.checked = true; });
-    renderChecklist();
+    let h = window.outingHours;
+    let diaperCount = Math.ceil(h / 2) + 2; 
+    let feedCount = Math.ceil(h / 3.5); 
+    if (feedCount < 1) feedCount = 1;
+
+    let baseData = [];
+
+    // 🎯 1. 가방에 미리 챙겨둘 용품
+    baseData.push({ isHeader: true, label: '가방에 미리 챙겨둘 용품' });
+    baseData.push(
+        { id: 'c_diaper', label: `기저귀 ${diaperCount}장 (외출 ${h}시간 기준 + 비상용)`, checked: false }, 
+        { id: 'c_wipe', label: '물티슈 및 가제 손수건 (얼굴/입가 전용)', checked: false },
+        { id: 'c_plastic', label: '냄새 차단용 지퍼백 (사용한 기저귀 보관용)', checked: false },
+        { id: 'c_cloth_baby', label: '아기 여벌옷 (바지에 오염물이 샐 경우 대비)', checked: false }
+    );
+
+    if (months <= 5) {
+        baseData.push(
+            { id: 'c_milk_powder', label: `소분된 분유 ${feedCount}세트 및 소독된 빈 젖병`, checked: false },
+            { id: 'c_thermos_hot', label: '보온병 (70도 이상의 따뜻한 물)', checked: false }
+        );
+    } else {
+        baseData.push(
+            { id: 'c_snack', label: '외식 통제용 아기 과자 및 간식', checked: false },
+            { id: 'c_bib', label: '실리콘 턱받이 및 이유식 숟가락', checked: false }
+        );
+    }
+
+    // 💡 [초정밀 니치 추가] 돌 이후 걷기 & 밖에서 밥 먹는 시기
+    if (months >= 13) {
+        baseData.push(
+            { id: 'c_toddler_sanitizer', label: '소독티슈 (야외 식당 아기의자 닦기용)', checked: false },
+            { id: 'c_toddler_bag', label: '미아방지 가방 또는 목걸이 (필수!)', checked: false }
+        );
+    }
+    // 💡 배변 훈련 시기
+    if (months >= 18 && months <= 36) {
+        baseData.push({ id: 'c_potty', label: '휴대용 변기 커버 & 여벌 팬티 (배변 훈련용)', checked: false });
+    }
+
+    // 🎯 2. 테마별 특수 아이템
+    if (theme === 'basic') {
+        baseData.push({ id: 'c_cloth_mom', label: '보호자 여벌 티셔츠 (갑작스러운 게워냄 대비)', checked: false });
+    } else if (theme === 'water') {
+        baseData.push(
+            { id: 'c_water_diaper', label: `방수 기저귀 ${feedCount + 1}장 (입수 직전 교체 필수)`, checked: false },
+            { id: 'c_normal_diaper', label: '일반 기저귀 (물 밖 체온 유지용 필수)', checked: false },
+            { id: 'c_towel', label: '아기 비치타월 및 젖은 옷 담을 방수백', checked: false },
+            { id: 'c_wash', label: '아기용 바디워시 및 고보습 로션', checked: false }
+        );
+    } else if (theme === 'winter') {
+        baseData.push(
+            { id: 'c_blanket', label: '두꺼운 방풍 블랭킷 및 방한모자', checked: false },
+            { id: 'c_balm', label: '고보습 립밤 및 침독 크림', checked: false }
+        );
+    } else if (theme === 'picnic') {
+        baseData.push(
+            { id: 'c_mat', label: '방수 돗자리 및 쓰레기 수거용 봉지', checked: false },
+            { id: 'c_bug', label: '아기용 모기 기피제 및 벌레 물림 연고', checked: false }
+        );
+    } else if (theme === 'indoor') {
+        baseData.push(
+            { id: 'c_socks', label: '아기 미끄럼 방지 양말 (미착용 시 위험)', checked: false },
+            { id: 'c_mom_socks', label: '보호자용 양말 (맨발 시 매장 입장 불가)', checked: false }
+        );
+    } else if (theme === 'stay') {
+        baseData.push(
+            { id: 'c_bottle_wash', label: '휴대용 젖병 세제 및 세척솔 (숙소 비치 안됨)', checked: false },
+            { id: 'c_bedding', label: '낯선 환경 수면 의식용 애착 인형 및 이불', checked: false },
+            { id: 'c_wash_travel', label: '아기 전용 세면도구 (어메니티 사용 주의)', checked: false }
+        );
+    }
+
+    // 🎯 3. 냉장 보관용품
+    baseData.push({ isHeader: true, label: '외출 직전 챙길 냉장 보관용품' });
+    baseData.push({ id: 'c_thermos_cold', label: '식힌 물을 담은 텀블러 또는 빨대컵', checked: false });
+    
+    if (months > 5) {
+        baseData.push(
+            { id: 'c_cold_food', label: `냉장 보관 중인 이유식 ${feedCount}회분`, checked: false },
+            { id: 'c_icepack', label: '보냉백 및 얼려둔 아이스팩', checked: false }
+        );
+    }
+    if (theme === 'stay') {
+        baseData.push(
+            { id: 'c_cold_med', label: '냉장 보관용 처방 시럽약 및 항생제', checked: false },
+            { id: 'c_fever', label: '해열제 2종 (교차복용) 및 체온계', checked: false }
+        );
+    }
+
+   // 🚨 4. 신규 마케팅 니치: 현관문 단속 (육아 현실 200% 반영 피눈물 방지용)
+    baseData.push({ isHeader: true, label: '🏠 현관문 나서기 전 집안 단속' });
+    
+    // 테마별 생명줄 분리 (외출 vs 숙박)
+    if (theme === 'stay') {
+        baseData.push(
+            { id: 'c_doll_stay', label: '🚨 아기 최애 애착 인형 & 수면 이불 (없으면 오늘 밤 아무도 못 잠!)', checked: false },
+            { id: 'c_laundry', label: '🧺 세탁기 안 젖은 빨래 널기 (다녀오면 쉰내 나서 처음부터 다시 빨아야 함)', checked: false }
+        );
+    } else {
+        baseData.push(
+            { id: 'c_doll_out', label: '🚨 아기 최애 장난감 & 쪽쪽이 (차 막힐 때 터지는 오열 방지용 생명줄)', checked: false }
+        );
+    }
+
+    // 공통 깜빡병 리스트
+    baseData.push(
+        { id: 'c_home_trash', label: '💩 기저귀 매직캔 & 이유식 음쓰 비우기 (귀가 후 냄새 지옥 100% 확정)', checked: false },
+        { id: 'c_home_robot', label: '🤖 바닥 장난감 치우고 로봇청소기 켜기 (로청이 장난감 먹고 토함 방지)', checked: false },
+        { id: 'c_home_window', label: '💨 에어컨 전원 끄기 및 창문 닫기 (갑작스러운 소나기·미세먼지 테러 방지)', checked: false }
+    );
+
+    window.checklistData = baseData;
+
+    let savedChecks = {}; 
+    try { savedChecks = JSON.parse(localStorage.getItem('tosil_checklist_' + theme)) || {}; } catch(e){}
+    window.checklistData.forEach(item => { if (!item.isHeader && savedChecks[item.id]) item.checked = true; });
+    
+    window.renderChecklist();
     document.getElementById('checklist-modal').style.display = 'flex';
-}
+};
 
-function renderChecklist() {
-    const container = document.getElementById('checklist-items'); if(!container) return; 
-    let htmlString = "", checkedCount = 0; 
-    checklistData.forEach((item, index) => {
-        if(item.checked) checkedCount++;
-        htmlString += `<div class="check-item ${item.checked?'checked':''}" onclick="toggleCheckItem(${index})" style="cursor:pointer; padding:12px; border-bottom:1px solid #EEE; display:flex; gap:10px;"><div class="check-box">${item.checked?'✔':'⬜'}</div><div class="check-text">${item.label}</div></div>`;
+window.renderChecklist = function() {
+    const container = document.getElementById('checklist-items'); 
+    if(!container) return; 
+
+    // 🎨 테마 컬러 (대표님 앱과 완벽히 동기화된 따뜻한 웜 베이지)
+    const bgBase = "#FDFBF7"; // 전체 바탕 (웜 베이지)
+    const bgBox = "#F2EFE8"; // 탭, 버튼 배경
+    const bgCard = "#FFFFFF"; // 리스트 아이템 (하얀색으로 띄워서 입체감 부여)
+    const textMain = "#4A423C"; // 부드러운 다크 브라운
+    const textSub = "#998F86"; 
+    const brandColor = "#7A7DF2"; 
+
+    // 🚨 1. 겉껍데기의 하얀색, 테두리, 선을 100% 박살내고 베이지색으로 강제 덮기
+    const parentBox = container.closest('.box-main');
+    if (parentBox) {
+        parentBox.style.setProperty('padding', '0px', 'important');
+        parentBox.style.setProperty('background', bgBase, 'important');
+        parentBox.style.setProperty('border', 'none', 'important');
+        parentBox.style.setProperty('box-shadow', 'none', 'important');
+        parentBox.style.setProperty('outline', 'none', 'important');
+        parentBox.style.setProperty('overflow', 'hidden', 'important');
+    }
+
+    // 메인 컨테이너도 베이지색으로 완벽 통일
+    container.style.cssText = `display: flex; flex-direction: column; height: 100%; min-height: 0; padding: 0; overflow: hidden; background: ${bgBase} !important; border: none !important; border-radius: 0 0 24px 24px;`;
+
+    let totalItems = 0; let checkedItems = 0;
+    window.checklistData.forEach(item => {
+        if(!item.isHeader) { totalItems++; if(item.checked) checkedItems++; }
     });
-    container.innerHTML = htmlString;
-}
+    let progress = Math.round((checkedItems / totalItems) * 100) || 0;
+    let isAllChecked = progress === 100;
+    let pColor = isAllChecked ? '#00B37A' : brandColor;
 
-function toggleCheckItem(index) {
-    checklistData[index].checked = !checklistData[index].checked;
-    const saveObj = {}; checklistData.forEach(item => { saveObj[item.id] = item.checked; });
-    localStorage.setItem('tosil_checklist', JSON.stringify(saveObj)); renderChecklist();
-}
-function resetChecklist() { localStorage.removeItem('tosil_checklist'); openChecklistModal(); }
-function closeChecklistForce() { document.getElementById('checklist-modal').style.display = 'none'; }
-function closeChecklist(e) { if (e.target.id === 'checklist-modal') closeChecklistForce(); }
-window.openChecklistModal = openChecklistModal;
-window.toggleCheckItem = toggleCheckItem;
-window.resetChecklist = resetChecklist;
-window.closeChecklistForce = closeChecklistForce;
-window.closeChecklist = closeChecklist;
+    // 🚨 2. 상단 헤더 (배경을 투명하게 해서 부모의 베이지색을 그대로 흡수, 상단 선 제거)
+    let topHtml = `
+        <div style="background: transparent !important; flex-shrink: 0; padding: 24px 20px 0 20px; z-index: 10; border: none !important;">
+            <div style="font-size: 22px; font-weight: 900; color: ${textMain} !important; letter-spacing: -0.5px; margin-bottom: 24px;">외출 체크리스트</div>
+            
+           <!-- 🚨 외출 예상 시간 (하얀 박스, 테두리, 그림자 전부 철거 -> 배경과 혼연일체) -->
+            <div style="display: flex; justify-content: space-between; align-items: center; background: transparent !important; padding: 0 !important; border: none !important; margin-bottom: 24px; height: 56px; box-sizing: border-box; box-shadow: none !important;">
+                
+                <!-- 왼쪽 글씨 (박스가 사라졌으므로 padding 0으로 맞춰서 위아래 글씨와 좌측 정렬 완벽 일치) -->
+                <div style="font-size: 15px; font-weight: 800; color: #4A423C !important; margin: 0 !important; padding: 0 !important; line-height: 1 !important; display: flex; align-items: center;">외출 예상 시간</div>
+                
+                <!-- 오른쪽 컨트롤러 영역 -->
+                <div style="display: flex; align-items: center; gap: 14px; margin: 0 !important; padding: 0 !important;">
+                    <!-- 마이너스 버튼 (버튼만 하얗게 띄워서 누르는 맛 살림) -->
+                    <button onclick="window.changeOutingHours(-1)" style="width: 32px !important; height: 32px !important; min-height: 32px !important; max-height: 32px !important; border-radius: 50% !important; border: 1px solid #E8E3D9 !important; background: #FFFFFF !important; color: #4A423C !important; display: inline-flex !important; align-items: center !important; justify-content: center !important; cursor: pointer; padding: 0 !important; margin: 0 !important; transform: none !important; vertical-align: middle !important; outline: none; font-size: 20px !important; font-weight: 600 !important; line-height: 1 !important; font-family: -apple-system, BlinkMacSystemFont, sans-serif !important;">-</button>
+                    
+                    <!-- 시간 숫자 -->
+                    <div style="font-size: 16px; font-weight: 900; color: #7A7DF2 !important; width: 44px; text-align: center; margin: 0 !important; padding: 0 !important; letter-spacing: -0.5px; line-height: 1 !important; display: flex; align-items: center; justify-content: center;">${window.outingHours}시간</div>
+                    
+                    <!-- 플러스 버튼 (버튼만 하얗게 띄워서 누르는 맛 살림) -->
+                    <button onclick="window.changeOutingHours(1)" style="width: 32px !important; height: 32px !important; min-height: 32px !important; max-height: 32px !important; border-radius: 50% !important; border: 1px solid #E8E3D9 !important; background: #FFFFFF !important; color: #4A423C !important; display: inline-flex !important; align-items: center !important; justify-content: center !important; cursor: pointer; padding: 0 !important; margin: 0 !important; transform: none !important; vertical-align: middle !important; outline: none; font-size: 20px !important; font-weight: 600 !important; line-height: 1 !important; font-family: -apple-system, BlinkMacSystemFont, sans-serif !important;">+</button>
+                </div>
+            </div>
 
+            <div style="display: flex; gap: 8px; overflow-x: auto; scrollbar-width: none; margin-bottom: 24px; padding-bottom: 4px;">
+    `;
+    
+    const themes = [
+        { key: 'basic',  name: '기본 외출' }, { key: 'water',  name: '물놀이' },
+        { key: 'winter', name: '한파 및 겨울' }, { key: 'picnic', name: '야외 피크닉' },
+        { key: 'indoor', name: '실내 키즈카페' }, { key: 'stay',   name: '1박 2일' }
+    ];
+
+    themes.forEach(t => {
+        const isActive = window.currentChecklistTheme === t.key;
+        const activeStyle = `background: ${textMain} !important; color: ${bgCard} !important; font-weight: 800 !important; border: none !important; box-shadow: 0 4px 10px rgba(74,66,60,0.2) !important;`;
+        const inactiveStyle = `background: ${bgBox} !important; color: ${textSub} !important; font-weight: 700 !important; border: none !important;`;
+        topHtml += `<button onclick="window.openChecklistModal('${t.key}')" style="flex-shrink: 0; padding: 10px 14px; border-radius: 12px; font-size: 13.5px; cursor: pointer; outline: none; transition: 0.2s; ${isActive ? activeStyle : inactiveStyle}">${t.name}</button>`;
+    });
+
+    topHtml += `
+            </div>
+            
+            <div style="display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 10px;">
+                <span style="font-size: 13px; font-weight: 800; color: ${pColor} !important;">${isAllChecked ? '모든 패킹을 완료했습니다' : `패킹 완료까지 ${totalItems - checkedItems}개 남았어요`}</span>
+                <span style="font-size: 15px; font-weight: 900; color: ${textMain} !important;">${checkedItems} / ${totalItems}</span>
+            </div>
+            <div style="width: 100%; height: 6px; background: #E8E3D9 !important; border-radius: 3px; overflow: hidden; margin-bottom: 20px;">
+                <div style="width: ${progress}%; height: 100%; background: ${pColor} !important; border-radius: 3px; transition: width 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);"></div>
+            </div>
+        </div>
+    `;
+
+    // 🚨 3. 리스트 영역 (배경 투명화 -> 베이지색 통일)
+    let listHtml = `<div style="flex: 1; overflow-y: auto; padding: 0 20px 20px 20px; display: flex; flex-direction: column; background: transparent !important; border: none !important;">`; 
+    
+    window.checklistData.forEach((item, index) => {
+        if (item.isHeader) {
+            listHtml += `
+                <div style="font-size: 13.5px; font-weight: 900; color: ${textSub} !important; padding: 24px 0 8px 4px;">
+                    ${item.label}
+                </div>
+            `;
+        } else {
+            let textStyle = item.checked ? `text-decoration: line-through; color: #D1CBC5 !important; font-weight: 600;` : `color: ${textMain} !important; font-weight: 700;`;
+            let boxBg = item.checked ? `${brandColor} !important` : `transparent !important`;
+            let boxBorder = item.checked ? `none !important` : `2px solid #E8E3D9 !important`;
+            let checkMark = item.checked ? `<span style="color:#ffffff !important; font-size: 11px;">✔</span>` : ``;
+
+            const isLastItem = (index === window.checklistData.length - 1) || (window.checklistData[index + 1] && window.checklistData[index + 1].isHeader);
+            const borderBottom = isLastItem ? "none" : "1px solid #F0EBE1 !important";
+
+            listHtml += `
+                <div class="check-item" onclick="window.toggleCheckItem(${index})" style="cursor:pointer; padding: 18px 20px; margin-bottom: 8px; border-radius: 16px; display: flex; gap: 14px; align-items: center; background: ${bgCard} !important; box-shadow: 0 2px 6px rgba(0,0,0,0.02) !important; transition: 0.1s;">
+                    <div style="width: 24px; height: 24px; border-radius: 50%; display: flex; align-items: center; justify-content: center; background: ${boxBg}; border: ${boxBorder}; transition: all 0.2s ease; flex-shrink: 0;">${checkMark}</div>
+                    <div style="flex: 1; font-size: 14.5px; line-height: 1.45; word-break: keep-all; ${textStyle}">${item.label}</div>
+                </div>
+            `;
+        }
+    });
+    listHtml += `</div>`; 
+
+    // 🚨 4. 하단 고정 버튼 (배경 투명화 -> 베이지색 통일, 하단 선 완벽 제거)
+    let footerHtml = `
+        <div style="flex-shrink: 0; padding: 16px 20px 24px 20px; background: transparent !important; display: flex; gap: 12px; z-index: 10; border: none !important;">
+            <button onclick="window.resetChecklist()" style="flex: 1; padding: 16px; background: ${bgBox} !important; color: ${textMain} !important; border: none !important; border-radius: 12px; font-size: 15px; font-weight: 800; cursor: pointer; outline: none;">초기화</button>
+            <button onclick="window.closeChecklistForce()" style="flex: 1; padding: 16px; background: ${textMain} !important; color: #ffffff !important; border: none !important; border-radius: 12px; font-size: 15px; font-weight: 800; cursor: pointer; outline: none; box-shadow: 0 4px 12px rgba(74,66,60,0.15) !important;">닫기</button>
+        </div>
+    `;
+
+    container.innerHTML = topHtml + listHtml + footerHtml;
+};
+
+window.toggleCheckItem = function(index) {
+    if (window.checklistData[index].isHeader) return;
+    window.checklistData[index].checked = !window.checklistData[index].checked;
+    const saveObj = {}; 
+    window.checklistData.forEach(item => { 
+        if (!item.isHeader) saveObj[item.id] = item.checked; 
+    });
+    localStorage.setItem('tosil_checklist_' + window.currentChecklistTheme, JSON.stringify(saveObj)); 
+    window.renderChecklist();
+};
+
+window.resetChecklist = function() { 
+    if(confirm("체크 내역을 모두 초기화할까요?")) {
+        localStorage.removeItem('tosil_checklist_' + window.currentChecklistTheme); 
+        window.openChecklistModal(window.currentChecklistTheme); 
+    }
+};
+
+window.closeChecklistForce = function() { document.getElementById('checklist-modal').style.display = 'none'; };
+window.closeChecklist = function(e) { if (e.target.id === 'checklist-modal') window.closeChecklistForce(); };
 // ==========================================
 // 🚨 7. 아기 발달 센서 엔진 (초압축 한줄 카피)
 // ==========================================
