@@ -153,10 +153,15 @@
         rerun();
     };
 
-    function rerun() {
+      function rerun() {
         paintBar();
         if (typeof window.filterPlaces === "function") {
             try { window.filterPlaces(); } catch (e) {}
+        }
+        // 지도 마커도 같이 걸러준다.
+        // 목록엔 8곳인데 지도엔 1,102개면 두 화면이 다른 말을 한다.
+        if (typeof window.redrawNursingMarkers === "function") {
+            try { window.redrawNursingMarkers(); } catch (e) {}
         }
         setTimeout(countUp, 120);
     }

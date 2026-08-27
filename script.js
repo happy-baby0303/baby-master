@@ -736,7 +736,7 @@ function openFestivalModal(title, dateText, addr, tel, review, query, image, isE
             </div>
 
             <div style="background: rgba(49, 130, 246, 0.05); padding: 16px; border-radius: 14px; margin-bottom: 28px; border: 1px solid rgba(49, 130, 246, 0.1);">
-                <div style="font-size: 12.5px; font-weight: 900; color: #3182F6; margin-bottom: 6px;">💡 토실이 팩트 체크</div>
+                <div style="font-size: 12.5px; font-weight: 900; color: #3182F6; margin-bottom: 6px;">${isEvent ? '가기 전에 알아두면' : '이 곳은요'}</div>
                 <div style="font-size: 13.5px; font-weight: 600; color: var(--text-m); line-height: 1.4; word-break: keep-all;">"${review || '주말에 아이와 방문하기 좋은 안전한 인프라를 갖추고 있습니다.'}"</div>
             </div>
 
@@ -2479,8 +2479,8 @@ if (h && w) {
         kaupDesc = "키에 비해 체중이 적게 나가는 날씬한 체형이에요! 활동량이 많거나 기초 대사량이 높은 아기일 수 있습니다. 아주 건강하게 잘 자라고 있어요 🏃‍♂️";
     }
     else if (kaup <= 18) { 
-        kaupBadge.innerText = '⚖️ 완벽한 황금 밸런스'; kaupBadge.style.background = '#ECFDF5'; kaupBadge.style.color = '#059669'; 
-        kaupDesc = "키와 몸무게의 비율이 교과서처럼 완벽한 황금 밸런스예요! 지금의 식습관과 패턴 그대로 건강하게 키워주시면 됩니다 💯";
+       kaupBadge.innerText = '⚖️ 표준 범위'; kaupBadge.style.background = '#ECFDF5'; kaupBadge.style.color = '#059669';
+kaupDesc = "키와 몸무게 비율이 또래 표준 범위에 들어와 있어요. 성장 속도는 아이마다 다르니 걱정되면 소아과에서 확인해 보세요.";
     }
     else if (kaup <= 20) { 
         kaupBadge.innerText = '💪 귀여운 통통 우량아'; kaupBadge.style.background = '#FFF9E6'; kaupBadge.style.color = '#B78103'; 
@@ -4620,7 +4620,7 @@ window.selectTrackerBtn = function(btn, category) {
 
         if (category === 'status_golden') { 
             activeBg = '#FBBF24'; activeColor = '#000'; window.trackerState.status = '황금색'; 
-            warningTxt = '🟢 완벽한 황금 변입니다!<br>아기의 소화 상태가 아주 훌륭하네요.'; warningColor = 'var(--success)'; warningBg = 'rgba(185, 138, 46, 0.1)';
+            warningTxt = '🟢 흔히 보는 건강한 색이에요<br>평소와 다르거나 걱정되면 소아과에 물어보세요.'; warningColor = 'var(--success)'; warningBg = 'rgba(185, 138, 46, 0.1)';
         } else if (category === 'status_green') { 
             activeBg = '#4ADE80'; activeColor = '#FFF'; window.trackerState.status = '녹색'; 
             warningTxt = '🟢 지극히 정상입니다!<br>담즙, 철분 분유 또는 녹색 채소의 영향일 수 있습니다.'; warningColor = 'var(--success)'; warningBg = 'rgba(185, 138, 46, 0.1)';
@@ -13758,7 +13758,7 @@ window.showPaywall = function() {
                     </div>
                     <div style="display: flex; align-items: center; gap: 12px;">
                         <span style="color:#38BDF8; font-size:16px;">✓</span>
-                        <span style="color:#E2E8F0; font-size:14px; font-weight:700;">사생활 완벽 보호! 시니어 안심 케어 모드</span>
+                        <span style="color:#E2E8F0; font-size:14px; font-weight:700;">가계부와 편지는 가려집니다 · 돌봄 도우미 모드</span>
                     </div>
                 </div>
 
@@ -15053,12 +15053,16 @@ window.initNursingMap = async function() {
         }]
     });
 
-    // 3. 수유실 데이터 불러오기 (핫플 데이터가 아니라 1,102개 수유실 데이터!)
+        // 3. 수유실 데이터 불러오기 (핫플 데이터가 아니라 1,102개 수유실 데이터!)
     try {
-        window.showToast("🍼 수유실 지도를 불러오는 중입니다...");
-        // 🚨 핵심: 수유실 맵이므로 'nursing.json'을 불러와야 합니다!
-        const response = await fetch('nursing.json'); 
-        const validData = await response.json();
+        // 목록 시트가 이미 받아뒀으면 그걸 쓴다. 800KB 를 두 번 받을 이유가 없다.
+        let validData = window.__nursingCache;
+        if (!validData) {
+            window.showToast("수유실 지도를 불러오는 중이에요");
+            const response = await fetch('nursing.json');
+            validData = await response.json();
+            window.__nursingCache = validData;
+        }
 
         const markers = validData.map(place => {
             const marker = new kakao.maps.Marker({
@@ -15066,23 +15070,58 @@ window.initNursingMap = async function() {
             });
             
             kakao.maps.event.addListener(marker, 'click', function() {
+                // nursing.json 에 있는 정보를 다 쓴다.
+                // 부모가 지도를 여는 이유는 "지금 열었나" 와 "유모차 되나" 다.
+                               // 시설만 남기고 '수유실' 중복과 카테고리는 뺀다.
+                // 팝업은 "여기 뭐가 있나" 한 줄이면 충분하다.
+                const facil = (place.tags || [])
+                    .map(t => (t.t || t))
+                    .filter(t => t.indexOf('수유실') === -1)
+                    .join(' · ');
+
+                const info = '수유실이 있는 곳이에요.' +
+                    (facil ? '\n' + facil : '') +
+                    '\n\n2023년 공공데이터라 방문 전 전화로 한 번 확인해 주세요.';
+
                 openFestivalModal(
-                    place.title || '수유실', 
-                    '상시 운영', 
-                    place.locText || '상세 주소 없음', 
-                    '정보없음', 
-                    '공공데이터 포털 제공 수유실/편의시설입니다.', 
-                    place.title || '수유실', 
-                    ''
+                    place.title || '수유실',
+                    place.datetime || '운영시간 문의',
+                    place.review || place.locText || '주소 정보 없음',
+                    '정보없음',
+                    info,
+                    place.title || '수유실',
+                    '',
+                    false
                 );
             });
             return marker;
         });
 
+        // 조건이 바뀌면 마커도 다시 그린다.
+        // 목록에만 필터가 걸리고 지도엔 안 걸리면 두 화면이 다른 말을 하게 된다.
+        window.__nursingClusterer = clusterer;
+        window.__nursingAllMarkers = markers.map(function (m, i) {
+            return { marker: m, place: validData[i] };
+        });
+
+        window.redrawNursingMarkers = function () {
+            const c = window.__nursingClusterer;
+            const all = window.__nursingAllMarkers || [];
+            if (!c) return;
+
+            const pass = (typeof window.passesPlaceFilter === 'function')
+                ? window.passesPlaceFilter : function () { return true; };
+
+            c.clear();
+            c.addMarkers(all.filter(function (x) { return pass(x.place); })
+                            .map(function (x) { return x.marker; }));
+        };
+
         clusterer.addMarkers(markers);
         
-        // 4. 내 위치로 부드럽게 이동 (GPS 허용 시)
-        if (navigator.geolocation) {
+        // 4. 내 위치로 이동 — 처음 열 때만.
+        //    매번 날아가면 아까 보던 자리로 못 돌아온다.
+        if (navigator.geolocation && !localStorage.getItem('tosil_map_located')) {
             navigator.geolocation.getCurrentPosition(function(position) {
                 const lat = position.coords.latitude;
                 const lon = position.coords.longitude;
@@ -15090,6 +15129,7 @@ window.initNursingMap = async function() {
                 map.setCenter(locPosition);
                 map.setLevel(6); 
                 window.nursingMapCenter = locPosition; // 위치 갱신
+                try { localStorage.setItem('tosil_map_located', '1'); } catch(e) {}
             });
         }
 
