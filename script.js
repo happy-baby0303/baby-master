@@ -2023,6 +2023,10 @@ window.changeOutingHours = function(delta) {
 
 window.openChecklistModal = function(theme = 'basic') {
     window.currentChecklistTheme = theme;
+    // 나갈 때 고른 테마를 기억해뒀다가, 돌아와서 탭에서 쓴다
+    if (theme !== 'comeback') {
+        try { localStorage.setItem('tosil_last_outing_theme', theme); } catch(e) {}
+    }
     let months = 99, targetDate = localStorage.getItem('tosil_startDate'); 
     if (targetDate) {
         const dday = Math.ceil(Math.abs(new Date() - window.parseLocalDate(targetDate)) / (1000 * 60 * 60 * 24));
@@ -2134,6 +2138,54 @@ window.openChecklistModal = function(theme = 'basic') {
         );
     }
 
+      /* 🏠 돌아와서 — 나가기 전이 아니라 돌아온 직후를 챙긴다.
+       짐 든 채로 우는 아기를 안고 현관에 서 있는 그 순간,
+       뭘 먼저 해야 할지 아무도 안 알려준다.
+       미루면 다음 외출까지 그대로 남는 것들만 골랐다. */
+    if (theme === 'comeback') {
+        baseData = [];
+
+        baseData.push({ isHeader: true, label: '아기부터' });
+        baseData.push(
+            { id: 'r_wash', label: '손발 씻기고 옷 갈아입히기 (밖에서 묻은 건 바로 씻는 게 편해요)', checked: false },
+            { id: 'r_temp', label: '체온 한 번 재기 (사람 많은 곳에 다녀왔으면 특히)', checked: false },
+            { id: 'r_feed', label: '수유 또는 이유식 (차에서 잠들었으면 깨자마자 배고파해요)', checked: false }
+        );
+
+        baseData.push({ isHeader: true, label: '지금 안 하면 내일 후회하는 것' });
+        baseData.push(
+            { id: 'r_laundry', label: '젖은 옷 바로 세탁기에 (가방에 두면 다음 날 쉰내가 나요)', checked: false },
+            { id: 'r_bottle', label: '젖병·빨대컵 씻어서 소독 (밤에 하려면 이미 지쳐 있어요)', checked: false },
+            { id: 'r_food', label: '남은 이유식·간식 냉장고에 (가방 안에서 상하면 그 가방도 빨아야 해요)', checked: false }
+        );
+
+        if (window.currentChecklistTheme === 'comeback' && localStorage.getItem('tosil_last_outing_theme') === 'water') {
+            baseData.push(
+                { id: 'r_swim', label: '수영복·튜브 헹궈서 말리기 (염소가 남으면 다음에 못 써요)', checked: false }
+            );
+        }
+
+        baseData.push({ isHeader: true, label: '다음 외출을 위해' });
+        baseData.push(
+            { id: 'r_stroller', label: '유모차 바퀴 닦고 접어두기 (흙 묻은 채로 두면 집안에 다 묻어요)', checked: false },
+            { id: 'r_refill', label: '가방에 기저귀·물티슈 다시 채워두기 (다음에 급할 때 확인 안 해도 돼요)', checked: false },
+            { id: 'r_charge', label: '휴대용 선풍기·보온병 충전하고 씻어두기', checked: false }
+        );
+
+        baseData.push({ isHeader: true, label: '오늘 남길 것' });
+        baseData.push(
+            { id: 'r_photo', label: '오늘 사진 한 장 배냇함에 담기 (지금 안 담으면 갤러리에 묻혀요)', checked: false }
+        );
+
+        window.checklistData = baseData;
+        let saved = {};
+        try { saved = JSON.parse(localStorage.getItem('tosil_checklist_comeback')) || {}; } catch(e){}
+        window.checklistData.forEach(it => { if (!it.isHeader && saved[it.id]) it.checked = true; });
+        window.renderChecklist();
+        document.getElementById('checklist-modal').style.display = 'flex';
+        return;
+    }
+
     // 공통 깜빡병 리스트
     baseData.push(
         { id: 'c_home_trash', label: '💩 기저귀 매직캔 & 이유식 음쓰 비우기 (귀가 후 냄새 지옥 100% 확정)', checked: false },
@@ -2212,10 +2264,11 @@ window.renderChecklist = function() {
             <div style="display: flex; gap: 8px; overflow-x: auto; scrollbar-width: none; margin-bottom: 24px; padding-bottom: 4px;">
     `;
     
-    const themes = [
-        { key: 'basic',  name: '기본 외출' }, { key: 'water',  name: '물놀이' },
-        { key: 'winter', name: '한파 및 겨울' }, { key: 'picnic', name: '야외 피크닉' },
-        { key: 'indoor', name: '실내 키즈카페' }, { key: 'stay',   name: '1박 2일' }
+          const themes = [
+        { key: 'basic',  name: '기본 외출' }, { key: 'comeback', name: '🏠 돌아와서' },
+        { key: 'water',  name: '물놀이' }, { key: 'winter', name: '한파 및 겨울' },
+        { key: 'picnic', name: '야외 피크닉' }, { key: 'indoor', name: '실내 키즈카페' },
+        { key: 'stay',   name: '1박 2일' }
     ];
 
     themes.forEach(t => {
@@ -2239,7 +2292,7 @@ window.renderChecklist = function() {
     `;
 
     // 🚨 3. 리스트 영역 (배경 투명화 -> 베이지색 통일)
-    let listHtml = `<div style="flex: 1; overflow-y: auto; padding: 0 20px 20px 20px; display: flex; flex-direction: column; background: transparent !important; border: none !important;">`; 
+    let listHtml = `<div id="checklist-scroll" style="flex: 1; overflow-y: auto; padding: 0 20px 20px 20px; display: flex; flex-direction: column; background: transparent !important; border: none !important;">`;
     
     window.checklistData.forEach((item, index) => {
         if (item.isHeader) {
@@ -2257,10 +2310,21 @@ window.renderChecklist = function() {
             const isLastItem = (index === window.checklistData.length - 1) || (window.checklistData[index + 1] && window.checklistData[index + 1].isHeader);
             const borderBottom = isLastItem ? "none" : "1px solid #F0EBE1 !important";
 
+                        // 괄호 앞은 제목, 괄호 안은 설명. 두 줄로 나눈다.
+            // 한 줄에 붙어 있으면 좁은 폰에서 어중간하게 접히고,
+            // 정작 재미있는 설명이 제목처럼 커 보여서 눈이 피곤하다.
+            const _m = String(item.label).match(/^(.+?)\s*\((.+)\)\s*$/);
+            const mainTxt = _m ? _m[1].trim() : item.label;
+            const subTxt  = _m ? _m[2].trim() : '';
+            const subColor = item.checked ? '#D1CBC5' : textSub;
+
             listHtml += `
-                <div class="check-item" onclick="window.toggleCheckItem(${index})" style="cursor:pointer; padding: 18px 20px; margin-bottom: 8px; border-radius: 16px; display: flex; gap: 14px; align-items: center; background: ${bgCard} !important; box-shadow: 0 2px 6px rgba(0,0,0,0.02) !important; transition: 0.1s;">
-                    <div style="width: 24px; height: 24px; border-radius: 50%; display: flex; align-items: center; justify-content: center; background: ${boxBg}; border: ${boxBorder}; transition: all 0.2s ease; flex-shrink: 0;">${checkMark}</div>
-                    <div style="flex: 1; font-size: 14.5px; line-height: 1.45; word-break: keep-all; ${textStyle}">${item.label}</div>
+                <div class="check-item" onclick="window.toggleCheckItem(${index})" style="cursor:pointer; padding: 16px 18px; margin-bottom: 8px; border-radius: 16px; display: flex; gap: 13px; align-items: flex-start; background: ${bgCard} !important; box-shadow: 0 2px 6px rgba(0,0,0,0.02) !important; transition: 0.1s;">
+                    <div style="width: 24px; height: 24px; border-radius: 50%; display: flex; align-items: center; justify-content: center; background: ${boxBg}; border: ${boxBorder}; transition: all 0.2s ease; flex-shrink: 0; margin-top: 1px;">${checkMark}</div>
+                    <div style="flex: 1; min-width: 0;">
+                        <div style="font-size: 14.5px; line-height: 1.4; word-break: keep-all; ${textStyle}">${mainTxt}</div>
+                        ${subTxt ? `<div style="font-size: 11.5px; font-weight: 600; color: ${subColor} !important; line-height: 1.5; margin-top: 4px; word-break: keep-all;">${subTxt}</div>` : ''}
+                    </div>
                 </div>
             `;
         }
@@ -2280,6 +2344,12 @@ window.renderChecklist = function() {
 
 window.toggleCheckItem = function(index) {
     if (window.checklistData[index].isHeader) return;
+
+    // 다시 그리기 전에 지금 어디를 보고 있었는지 기억해둔다.
+    // 안 그러면 항목 하나 누를 때마다 맨 위로 튕겨 올라간다.
+    const scroller = document.querySelector('#checklist-items [style*="overflow-y: auto"]');
+    const keepTop = scroller ? scroller.scrollTop : 0;
+
     window.checklistData[index].checked = !window.checklistData[index].checked;
     const saveObj = {}; 
     window.checklistData.forEach(item => { 
@@ -2287,6 +2357,10 @@ window.toggleCheckItem = function(index) {
     });
     localStorage.setItem('tosil_checklist_' + window.currentChecklistTheme, JSON.stringify(saveObj)); 
     window.renderChecklist();
+
+    // 보던 자리로 되돌려 놓는다
+    const after = document.querySelector('#checklist-items [style*="overflow-y: auto"]');
+    if (after && keepTop) after.scrollTop = keepTop;
 };
 
 window.resetChecklist = function() { 
