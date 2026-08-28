@@ -22,8 +22,18 @@ window.parseLocalDate = function(str) {
 const BABY_SPECIFIC_KEYS = [
     'tosil_babyName', 'tosil_startDate', 'tosil_feedingStage', 'tosil_baby_photo',
     'tosil_tracker_records', 'tosil_sleep_start', 'tosil_sleep_type',
-    'tosil_fever_records', 'tosil_latest_weight', 'tosil_growth_records',
-    'tosil_milestones', 'tosil_routine_data', 'tosil_routine_date'
+    'tosil_fever_records','tosil_latest_weight', 'tosil_growth_records', 'tosil_milestones', 'tosil_routine_data',
+    'tosil_routine_date',
+    // 👶 배냇함도 아이별로 갈라야 한다.
+    //    이게 빠져 있어서 둘째 배냇함에 첫째 사진이 그대로 보였다.
+    'tosil_day_photos', 'tosil_day_voices', 'tosil_sealed', 'tosil_day_notes', 'tosil_first_words',
+    // emotion.js 가 만드는 아기 시점 손편지와 답장, 그리고 도감 달성 날짜
+    'tosil_letters', 'tosil_replies', 'tosil_milestone_dates',
+    // 아기 정보 묶음, 그리고 아기마다 달라지는 돌봄 데이터
+    'tosil_baby', 'tosil_open_records', 'tosil_cube_records', 'tosil_cube_quicks',
+        'tosil_parent_notice', 'tosil_baton_records',
+    // 이달의 배냇함은 아이마다 따로 도착해야 한다
+    'tosil_monthgift_done'
 ];
 
 // 2. 현재 선택된 아기의 꼬리표 (첫째는 '', 둘째는 '_2', 셋째는 '_3')
@@ -69,12 +79,23 @@ window.getBabyProfiles = function() {
         profiles = JSON.parse(originalGetItem.call(localStorage, 'tosil_baby_profiles'));
     } catch(e) { profiles = null; }
     
-    // 배열이 아니거나 데이터가 깨져있으면 안전하게 초기화!
-    if (!Array.isArray(profiles) || profiles.length === 0) {
-        const existingName = originalGetItem.call(localStorage, 'tosil_babyName') || '첫째';
+       if (!Array.isArray(profiles) || profiles.length === 0) {
+        const existingName = originalGetItem.call(localStorage, 'tosil_babyName') || '우리 아기';
         profiles = [{ id: '', name: existingName }];
         originalSetItem.call(localStorage, 'tosil_baby_profiles', JSON.stringify(profiles));
     }
+
+    // 이름이 비었거나 '첫째' 로 굳어버린 프로필은 실제 이름으로 되살린다.
+    // 둘째만 이름이 뜨고 첫째는 '첫째' 로 뜨면 남매가 아니라 목록처럼 보인다.
+    let touched = false;
+    profiles.forEach(p => {
+        if (!p.name || p.name === '첫째' || p.name === '우리아기' || p.name === '우리 아기') {
+            const real = originalGetItem.call(localStorage, 'tosil_babyName' + (p.id || ''));
+            if (real && real.trim()) { p.name = real.trim(); touched = true; }
+        }
+    });
+    if (touched) originalSetItem.call(localStorage, 'tosil_baby_profiles', JSON.stringify(profiles));
+
     return profiles;
 };
 
@@ -82,9 +103,10 @@ window.getBabyProfiles = function() {
 // 👶 [프리미엄] 넷플릭스급 프로필 전환 애니메이션 엔진
 // ==========================================
 window.switchBabyProfile = function(suffixId) {
-    localStorage.setItem('tosil_active_baby_suffix', suffixId);
-    if(navigator.vibrate) navigator.vibrate(15);
-    
+    // 🚨 프록시를 타면 저장 위치가 어긋난다. 원본으로 직접 쓴다.
+    Storage.prototype.setItem.call(localStorage, 'tosil_active_baby_suffix', suffixId);
+    window.currentBabySuffix = suffixId;
+    if(navigator.vibrate) navigator.vibrate(15);    
     const profiles = window.getBabyProfiles();
     const targetName = profiles.find(p => p.id === suffixId)?.name || '우리아기';
 
@@ -106,39 +128,10 @@ window.switchBabyProfile = function(suffixId) {
     setTimeout(() => { location.reload(); }, 400); 
 };
 
+// 👶 [다둥이] addNewBabyProfile 은 아래쪽(14007줄 부근)에 한 번만 정의합니다.
+//    여기 있던 옛 버전은 지웠습니다. 무료 유저 검사가 없어서
+//    로딩 순서가 꼬이면 돈 안 내고 아기가 추가될 수 있었습니다.
 // ==========================================
-// 👶 [다둥이 패치] 프롬프트 창 없애고 다이렉트 온보딩 연동 엔진
-// ==========================================
-window.addNewBabyProfile = function() {
-    const profiles = window.getBabyProfiles();
-    if (profiles.length >= 3) return alert("👶 아기 프로필은 최대 3명까지 등록 가능합니다!");
-    
-    // 1. 팝업창 대신 우리가 기존에 예쁘게 만들어 둔 온보딩 이름 입력 란으로 즉시 유도하거나,
-    // 아예 온보딩 첫 단계를 바로 띄워버립니다!
-    const newName = prompt("추가할 아기의 예쁜 이름을 입력해주세요!"); // 혹은 대표님 기존 온보딩 모달 연결
-    if (!newName || !newName.trim()) return;
-    
-    const cleanName = newName.trim();
-    const newId = '_' + (new Date().getTime()); // 고유 ID 생성
-    
-    profiles.push({ id: newId, name: cleanName });
-    originalSetItem.call(localStorage, 'tosil_baby_profiles', JSON.stringify(profiles));
-    
-    // 2. 입력한 이름을 새 아기 프로필의 이름으로 즉시 박아넣기
-    originalSetItem.call(localStorage, 'tosil_babyName' + newId, cleanName);
-    
-    // 3. 굳이 이름을 두 번 묻지 않고, 곧바로 '생일(D-day)'과 '수유 단계'를 고르는 온보딩 3단계(또는 생일 입력 창)로 다이렉트 점프!
-    localStorage.setItem('tosil_active_baby_suffix', newId);
-    
-    // 4. 바로 생일 선택 온보딩 모달창을 띄워줍니다 (이름은 이미 저장되어 있으므로 생일만 고르면 끝!)
-    if (typeof window.promptBabyInfo === 'function') {
-        // 새 아기로 셋팅 전환 후 정보 수정(생일 선택) 창을 띄움
-        window.switchBabyProfile(newId);
-    } else {
-        location.reload();
-    }
-};
-
 // ==========================================
 // 💎 [Phase 2] 숫자 롤링(Rolling) 애니메이션 엔진 (토스 감성)
 // ==========================================
@@ -815,6 +808,7 @@ window.openSOSModal = function() {
     const cryBtn = document.querySelector('.sos-btn-cry');
     if(medBtn) medBtn.style.setProperty('display', 'flex', 'important');
     if(cryBtn) cryBtn.style.setProperty('display', 'flex', 'important');
+    const closeBtn = document.getElementById('btn-sos-close'); if(closeBtn) closeBtn.style.setProperty('display', 'flex', 'important');
     modal.style.display = 'flex';
 };
 window.showSosMedical = function() { 
@@ -823,8 +817,10 @@ window.showSosMedical = function() {
     const cryBtn = document.querySelector('.sos-btn-cry');
     if(medBtn) medBtn.style.setProperty('display', 'none', 'important');
     if(cryBtn) cryBtn.style.setProperty('display', 'none', 'important');
-    const medStep = document.getElementById('sos-step-medical'); if(medStep) medStep.style.setProperty('display', 'block', 'important');
+     const medStep = document.getElementById('sos-step-medical'); if(medStep) medStep.style.setProperty('display', 'block', 'important');
     const backBtn = document.getElementById('btn-sos-back'); if(backBtn) backBtn.style.setProperty('display', 'flex', 'important');
+    // 하위 단계에서는 닫기를 숨긴다. 급할 때 버튼 두 개를 고르게 하면 안 된다.
+    const closeBtn = document.getElementById('btn-sos-close'); if(closeBtn) closeBtn.style.setProperty('display', 'none', 'important');
 };
 window.showSosChecklist = function() { 
     const choiceStep = document.getElementById('sos-step-choice'); if(choiceStep) choiceStep.style.setProperty('display', 'none', 'important');
@@ -832,8 +828,9 @@ window.showSosChecklist = function() {
     const cryBtn = document.querySelector('.sos-btn-cry');
     if(medBtn) medBtn.style.setProperty('display', 'none', 'important');
     if(cryBtn) cryBtn.style.setProperty('display', 'none', 'important');
-    const cryStep = document.getElementById('sos-step-cry'); if(cryStep) cryStep.style.setProperty('display', 'block', 'important');
+       const cryStep = document.getElementById('sos-step-cry'); if(cryStep) cryStep.style.setProperty('display', 'block', 'important');
     const backBtn = document.getElementById('btn-sos-back'); if(backBtn) backBtn.style.setProperty('display', 'flex', 'important');
+    const closeBtn = document.getElementById('btn-sos-close'); if(closeBtn) closeBtn.style.setProperty('display', 'none', 'important');
 };
 window.closeSOSForce = function() { const modal = document.getElementById('sos-modal'); if(modal) modal.style.display = 'none'; };
 window.closeSOS = function(e) { if(e.target.id === 'sos-modal') closeSOSForce(); };
@@ -2004,13 +2001,14 @@ window.startFeverRealtimeSync = startFeverRealtimeSync;
 // 🎒 외출 준비물 체크리스트 (웜 베이지 테마 & 현관문 단속 니치 추가)
 // ==========================================
 window.currentChecklistTheme = 'basic'; 
-window.outingHours = 4; // 기본 외출 4시간
+// 지난번에 고른 시간을 기억한다. 매번 4시간으로 돌아가면 다시 맞춰야 한다.
+window.outingHours = Number(localStorage.getItem('tosil_outing_hours')) || 4;
 
 window.changeOutingHours = function(delta) {
     window.outingHours += delta;
     if(window.outingHours < 1) window.outingHours = 1;
     if(window.outingHours > 24) window.outingHours = 24;
-    
+    try { localStorage.setItem('tosil_outing_hours', window.outingHours); } catch(e) {}    
     const saveObj = {}; 
     if(window.checklistData) {
         window.checklistData.forEach(item => { 
@@ -2409,10 +2407,10 @@ function updateMainAISensors(months) {
 
 function setDefaultMainAISensors() {
     if(document.getElementById('main-txt-stroller')) {
-        document.getElementById('main-txt-stroller').innerText = "아기 맞춤형 유모차 매칭 센서 가동대기";
-        document.getElementById('main-txt-carseat').innerText = "단계별 안전 규격 카시트 큐레이션 보기";
-        document.getElementById('main-txt-bottle').innerText = "배앓이 방지 젖병 및 젖꼭지 스펙 확인";
-        document.getElementById('main-txt-food').innerText = "월령별 안심 이유식 레시피 및 재료 매칭";
+        document.getElementById('main-txt-stroller').innerText = "개월수에 맞는 유모차 보기";
+        document.getElementById('main-txt-carseat').innerText = "단계별 안전 규격 카시트 보기";
+        document.getElementById('main-txt-bottle').innerText = "배앓이 방지 젖병과 젖꼭지 보기";
+        document.getElementById('main-txt-food').innerText = "개월수에 맞는 이유식 레시피 보기";
         document.getElementById('main-txt-toy').innerText = "부모의 자유시간 확보용 장난감";
     }
 }
@@ -2631,7 +2629,7 @@ document.getElementById('growth-insight').innerHTML = insightMsg;
         gRes.style.display = 'none'; // 먼저 닫아놓고
         
         // 돋보기 아이콘과 함께 로딩 멘트 노출
-        if(typeof showToast === 'function') showToast("🔍 AI가 또래 100명의 성장 데이터와 비교 분석 중입니다...");
+        if(typeof showToast === 'function') showToast("또래 표준 성장 도표와 비교하고 있어요");
         else alert("분석 중입니다...");
 
         // 0.8초 뒤에 짠! 하고 나타나면서 스크롤 부드럽게 이동
@@ -7074,9 +7072,12 @@ window.nextOnboardingStep = function(step) {
 
 // 🎉 온보딩 완료 및 로딩 마술 발동! (서버 동기화 패치 완료)
 window.finishOnboarding = function(feedingStage) {
-    const name = document.getElementById('ob-name').value.trim();
-    const date = document.getElementById('ob-date').value;
-    
+    // 🚨 다둥이 추가 때는 2단계(생일)부터 시작하므로 ob-name 칸이 비어 있다.
+    //    그대로 저장하면 이름이 빈 값이 되고, 새로고침 뒤 온보딩이 또 돈다.
+    //    입력칸이 비었으면 이미 저장된 이름을 쓴다.
+    const typed = document.getElementById('ob-name').value.trim();
+    const name = typed || localStorage.getItem('tosil_babyName') || '우리 아기';
+    const date = document.getElementById('ob-date').value;    
     // 1. 기존 화면(3단계)을 숨기고 비밀의 로딩 화면을 켭니다!
     document.getElementById('onboarding-step-3').style.display = 'none';
     document.getElementById('onboarding-step-loading').style.display = 'flex';
@@ -7098,10 +7099,21 @@ window.finishOnboarding = function(feedingStage) {
 
     // ⏱️ 3.5초 뒤: 마술이 끝나면 데이터 저장 및 서버 동기화 후 새로고침!
     setTimeout(async () => {
-        localStorage.setItem('tosil_babyName', name);
+               localStorage.setItem('tosil_babyName', name);
         localStorage.setItem('tosil_startDate', date);
         localStorage.setItem('tosil_feedingStage', feedingStage);
         localStorage.setItem('tosil_baby', JSON.stringify({name: name, birth: date, stage: feedingStage}));
+
+        // 프로필 목록의 이름도 같이 맞춘다. 안 하면 목록에만 옛 이름이 남는다.
+        try {
+            const sfx = window.currentBabySuffix || '';
+            const list = JSON.parse(Storage.prototype.getItem.call(localStorage, 'tosil_baby_profiles')) || [];
+            const me = list.find(p => (p.id || '') === sfx);
+            if (me && me.name !== name) {
+                me.name = name;
+                Storage.prototype.setItem.call(localStorage, 'tosil_baby_profiles', JSON.stringify(list));
+            }
+        } catch (e) {}
 
         // 🚨 [필수 패치] 서버(families 문서)에 아기 이름/생일 실시간 반영!
         const code = localStorage.getItem('family_sync_code');
@@ -8178,7 +8190,7 @@ window.renderSettingsTab = function() {
             <!-- 💎 VIP 프리미엄 업그레이드 배너 -->
             <div onclick="document.getElementById('vip-modal-overlay').style.display='flex'" style="background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%); border-radius: 16px; padding: 20px; margin-bottom: 32px; display: flex; align-items: center; justify-content: space-between; cursor: pointer; box-shadow: 0 4px 12px rgba(0,0,0,0.15); box-sizing: border-box; width: 100%; transition: 0.2s;">
                 <div>
-                    <div style="font-size: 13px; font-weight: 900; color: #38bdf8; margin-bottom: 6px; letter-spacing: 1px;">TOSIL PLUS ✨</div>
+                    <div style="font-size: 13px; font-weight: 900; color: #38bdf8; margin-bottom: 6px; letter-spacing: 1px;">배냇함 플러스 ✨</div>
 <div style="font-size: 16px; font-weight: 900; color: #FFFFFF; line-height: 1.4; letter-spacing: -0.5px;">단 한 번의 결제로<br>우리 가족 평생 육아 기록실</div>
                 </div>
                 <div style="width: 44px; height: 44px; background: rgba(255,255,255,0.1); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: #FFFFFF; font-size: 20px;">
@@ -12707,7 +12719,7 @@ window.showSyncCode = function() {
                     <!-- 배경 장식용 원 -->
                     <div style="position: absolute; right: -40px; top: -40px; width: 120px; height: 120px; background: rgba(255,255,255,0.1); border-radius: 50%;"></div>
                     
-                    <div style="font-size: 11px; font-weight: 800; letter-spacing: 2px; opacity: 0.8; margin-bottom: 4px;">TOSIL FAMILY PASS</div>
+                    <div style="font-size: 11px; font-weight: 800; letter-spacing: 2px; opacity: 0.8; margin-bottom: 4px;">배냇함 패밀리 패스</div>
                     <div style="font-size: 20px; font-weight: 900; margin-bottom: 20px;">✈️ ${babyName}네 가족 티켓</div>
                     
                     <div style="background: rgba(255,255,255,0.15); padding: 16px; border-radius: 16px; backdrop-filter: blur(4px); text-align: center; margin-bottom: 16px; border: 1px solid rgba(255,255,255,0.2);">
@@ -13457,7 +13469,9 @@ window.openBabyManagementModal = function() {
     let listHtml = '';
     profiles.forEach((p) => {
         const isCurrent = window.currentBabySuffix === p.id;
-        const babyName = localStorage.getItem('tosil_babyName' + p.id) || p.name;
+               // 🚨 프록시를 타면 첫째('' 꼬리표)가 지금 보는 아기 이름으로 바뀐다.
+        //    전환 버튼(7283줄)과 같은 방식으로 원본에서 직접 읽는다.
+        const babyName = originalGetItem.call(localStorage, 'tosil_babyName' + p.id) || p.name || '우리아기';
 
         listHtml += `
             <div style="background: #FFFFFF; border: 1px solid #E5E8EB; border-radius: 12px; padding: 16px; margin-bottom: 12px;">
@@ -13499,18 +13513,52 @@ window.deleteBabyProfile = function(targetId, babyName) {
     const profiles = window.getBabyProfiles();
     
     // 방어막: 아기가 1명밖에 없으면 삭제 불가!
+        // 방어막: 아기가 1명밖에 없으면 삭제 불가!
     if (profiles.length <= 1) {
         return window.showToast("⚠️ 최소 1명의 아기 프로필은 유지해야 합니다.");
     }
 
+    // 🚨 첫째(접미사 없는 아기)는 원본 칸을 쓴다.
+    //    지우면 그 칸이 주인 없이 떠돌면서 다른 아기 데이터와 섞인다.
+    if (!targetId) {
+        return window.showToast("첫 아이 프로필은 삭제할 수 없어요. 정보 수정으로 바꿔주세요.");
+    }
+
     window.showConfirm(`정말 <b>${babyName}</b>의 프로필을 삭제하시겠습니까?<br><span style="font-size:12px; color:#F04452;">기록된 모든 데이터가 영구히 삭제됩니다.</span>`, function() {
-        // 프로필 배열에서 해당 아기 제거
+                // 프로필 배열에서 해당 아기 제거
         const newProfiles = profiles.filter(p => p.id !== targetId);
         
         // 프록시를 뚫고 진짜 로컬스토리지에 저장
         Storage.prototype.setItem.call(localStorage, 'tosil_baby_profiles', JSON.stringify(newProfiles));
+
+        // 🚨 "모든 데이터가 영구히 삭제됩니다" 라고 약속했으면 진짜 지워야 한다.
+        //    목록에서 이름만 빼면 사진·기록이 브라우저에 그대로 남는다.
+        //    첫째(targetId === '')는 원본 칸이라 손대지 않는다.
+        if (targetId) {
+            BABY_SPECIFIC_KEYS.forEach(function(k) {
+                Storage.prototype.removeItem.call(localStorage, k + targetId);
+            });
+            // 배냇함 모듈이 따로 쓰는 묘비도 정리
+            ['tosil_grave_photo','tosil_grave_voice','tosil_grave_seal',
+             'tosil_grave_note','tosil_grave_word','tosil_box_seen',
+             'tosil_checklist_basic','tosil_bedtime_manual'].forEach(function(k) {
+                Storage.prototype.removeItem.call(localStorage, k + targetId);
+            });
+        }
         
-        window.showToast(`🗑️ ${babyName}의 프로필이 깔끔하게 삭제되었습니다.`);
+                // 서버 쪽도 정리한다. 안 하면 다음에 켤 때 동기화로 되살아난다.
+        (async function () {
+            const code = localStorage.getItem('family_sync_code');
+            if (!code || !window.db || !window.deleteDoc || !window.doc) return;
+            const prefixes = ['photos', 'voices', 'sealed', 'notes', 'words', 'milestones',
+                              'tracker', 'fever', 'growth', 'cube', 'ledger', 'routine', 'settings'];
+            for (const p of prefixes) {
+                try { await window.deleteDoc(window.doc(window.db, p + '_' + code + targetId, 'status')); }
+                catch (e) {}
+            }
+        })();
+
+        window.showToast(`🗑️ ${babyName}의 기록이 모두 삭제되었습니다.`);
         
         // 🚨 만약 방금 삭제한 아기가 '현재 보고 있던 아기'라면?
         if (window.currentBabySuffix === targetId) {
@@ -13807,7 +13855,7 @@ window.showPaywall = function() {
                 <!-- 👑 타이틀 영역 -->
                 <div style="text-align: center; margin-bottom: 24px;">
                     <div style="display: inline-flex; align-items: center; justify-content: center; width: 64px; height: 64px; background: linear-gradient(135deg, #FDE047 0%, #F59E0B 100%); border-radius: 20px; font-size: 32px; margin-bottom: 16px; box-shadow: 0 10px 25px rgba(245,158,11,0.3);">💎</div>
-                    <div style="font-family: 'Georgia', serif; font-size: 12px; font-weight: 800; color: #FBBF24; letter-spacing: 4px; margin-bottom: 8px;">TOSIL PLUS</div>
+                    <div style="font-family: 'Georgia', serif; font-size: 12px; font-weight: 800; color: #FBBF24; letter-spacing: 4px; margin-bottom: 8px;">배냇함 플러스</div>
                     <div style="font-size: 24px; font-weight: 900; color: #FFFFFF; line-height: 1.4; letter-spacing: -0.5px;">
                         우리 가족을 위한 완벽한<br>프라이빗 육아 기록실
                     </div>
@@ -13824,7 +13872,7 @@ window.showPaywall = function() {
                     </div>
                     <div style="display: flex; align-items: center; gap: 12px;">
                         <span style="color:#38BDF8; font-size:16px;">✓</span>
-                        <span style="color:#E2E8F0; font-size:14px; font-weight:700;">인스타용 월간 성장 카드 AI 생성</span>
+                        <span style="color:#E2E8F0; font-size:14px; font-weight:700;">이달의 배냇함 카드 매달 받기</span>
                     </div>
                     <div style="display: flex; align-items: center; gap: 12px;">
                         <span style="color:#38BDF8; font-size:16px;">✓</span>
@@ -13870,9 +13918,12 @@ window.showPaywall = function() {
                             <div style="font-size: 14px; font-weight: 800; color: #D2A340; margin-bottom: 2px;">📖 실물 포토북</div>
                             <div style="font-size: 12px; color: #94A3B8;">담긴 걸 한 권으로 인쇄해서 배송</div>
                         </div>
-                        <div style="text-align: right;">
-                            <div style="font-size: 16px; font-weight: 900; color: #FFF;">₩89,000</div>
-                            <div style="font-size: 10px; font-weight: 800; color: #D2A340; margin-top: 3px;">준비 중</div>
+                                                <div style="text-align: right;">
+                            <!-- 🚨 제작 원가(B2B 단가)를 확정하기 전까지 금액을 걸지 않는다.
+                                 한 번 걸어둔 가격은 내리기가 어렵고,
+                                 원가를 모른 채 정하면 손해를 보거나 바가지가 된다. -->
+                            <div style="font-size: 15px; font-weight: 900; color: #D2A340;">준비 중</div>
+                            <div style="font-size: 10px; font-weight: 700; color: #94A3B8; margin-top: 3px;">곧 만나요</div>
                         </div>
                     </div>
 
@@ -14025,9 +14076,13 @@ window.addNewBabyProfile = function() {
     Storage.prototype.setItem.call(localStorage, 'tosil_baby_profiles', JSON.stringify(profiles));
     Storage.prototype.setItem.call(localStorage, 'tosil_babyName' + newId, cleanName);
     
-    // 현재 보고 있는 아기를 방금 만든 아기로 세팅!
-    localStorage.setItem('tosil_active_baby_suffix', newId);
-    
+       // 현재 보고 있는 아기를 방금 만든 아기로 세팅!
+    // 🚨 프록시를 타면 저장 위치가 어긋날 수 있으니 원본으로 직접 쓴다.
+    Storage.prototype.setItem.call(localStorage, 'tosil_active_baby_suffix', newId);
+
+    // 새로고침 전에 미리 갈아끼워 둔다.
+    window.currentBabySuffix = newId;
+
     // 🚨 화면 새로고침! (그러면 위의 온보딩 엔진이 작동해서 로그인 창 안 띄우고 바로 '생일 입력' 창으로 날아갑니다!)
     location.reload();
 };
@@ -14290,7 +14345,7 @@ window.downloadPediatricianReport = function() {
         
         <div style="margin-top:60px; text-align:center; color:#B0B8C1; font-size:14px; font-weight:700; border-top:1px solid #F2F4F6; padding-top:20px;">
             본 리포트는 보호자의 앱 기록을 바탕으로 자동 추출되었으며, 의료진의 빠르고 정확한 진료를 돕기 위한 참고 자료입니다.<br>
-            Powered by TOSIL PLUS
+            Powered by 배냇함 플러스
         </div>
     `;
 
@@ -14394,7 +14449,7 @@ window.downloadMonthlyGrowthCard = function() {
 
        ${window.isPremiumUser() ? '' : `
         <div style="text-align:center; padding:14px; background:rgba(255,255,255,0.6); border:1px dashed #B1D6FF; border-radius:16px; margin-bottom:16px; font-size:13px; font-weight:800; color:#3182F6;">
-            🔒 체험판으로 생성된 카드입니다 · TOSIL PLUS
+            🔒 체험판으로 생성된 카드입니다 · 배냇함 플러스
         </div>`}
 
         <div style="display:flex; justify-content:space-between; align-items:center; border-top:2px solid rgba(0,0,0,0.05); padding-top:24px; margin-top:20px;">
@@ -14541,7 +14596,7 @@ window.downloadPediatricianPDF = function() {
 
        ${window.isPremiumUser() ? '' : `
         <div style="text-align:center; padding:14px; background:#FFF9E6; border:1px dashed #F59E0B; border-radius:12px; margin-bottom:16px; font-size:12px; font-weight:800; color:#B45309;">
-            🔒 체험판으로 생성된 리포트입니다 · TOSIL PLUS
+            🔒 체험판으로 생성된 리포트입니다 · 배냇함 플러스
         </div>`}
 
         <div style="border-top:1px solid #E5E8EB;padding-top:16px;font-size:10.5px;color:#8B95A1;line-height:1.6;">

@@ -73,6 +73,45 @@
                  color: GOLD, urgent: false };
     }
 
+
+
+
+    /* ==========================================================
+       1-2. 소아과 — 열이 이틀 넘게 가면 브리핑을 챙기게 한다
+       ----------------------------------------------------------
+       리포트는 이미 만들어져 있다. 아무도 있는 줄 모를 뿐이다.
+       병원 가기 전날에 뜨는 게 이 기능의 자리다.
+       ---------------------------------------------------------- */
+
+    function reportItem() {
+        if (typeof window.openPediatricianReport !== "function") return null;
+
+        var recs = [];
+        try { recs = JSON.parse(localStorage.getItem("tosil_fever_records")) || []; }
+        catch (e) { return null; }
+
+        var now = Date.now();
+        var hot = recs.filter(function (r) {
+            return r && Number(r.temp) >= 38.0 &&
+                   Number(r.timestamp) > now - 48 * 3600000;
+        });
+
+        // 한 번 오른 건 지나간다. 이틀 가거나 39도가 넘을 때만 말한다.
+        var max = 0, oldest = now;
+        hot.forEach(function (r) {
+            if (Number(r.temp) > max) max = Number(r.temp);
+            if (Number(r.timestamp) < oldest) oldest = Number(r.timestamp);
+        });
+        if (hot.length < 2 && max < 39.0) return null;
+
+        var days = (now - oldest) > 24 * 3600000 ? "이틀째" : "오늘";
+
+        return { tool: "fever", icon: "🏥", label: "소아과",
+                 act: "window.openPediatricianReport()",
+                 text: max.toFixed(1) + "도까지 올랐어요 · " + days + "예요. 진료 브리핑을 챙겨 가세요",
+                 color: RED, urgent: true };
+    }
+
     /* ==========================================================
        2. 언제깠지 — 기한 지난 것만
        ---------------------------------------------------------- */
@@ -158,7 +197,7 @@
        ---------------------------------------------------------- */
 
     function gather() {
-        var all = [openItem(), feverItem(), cubeItem(), batonItem()]
+                var all = [reportItem(), openItem(), feverItem(), cubeItem(), batonItem()]
             .filter(Boolean);
 
         // 급한 것부터. 그리고 셋까지만.
@@ -169,8 +208,10 @@
 
     /* ---------- 화면 ---------- */
 
-    function rowHTML(it) {
-        return '<div onclick="window.switchTool(\'' + it.tool + '\')" ' +
+       function rowHTML(it) {
+        // 도구를 여는 게 아니라 바로 그 화면을 여는 항목도 있다
+        var go = it.act ? it.act : "window.switchTool('" + it.tool + "')";
+        return '<div onclick="' + go + '" ' +
             'style="display:flex; align-items:center; gap:10px; padding:11px 2px; cursor:pointer;">' +
             '<span style="font-size:17px; flex-shrink:0;">' + it.icon + '</span>' +
             '<span style="font-size:11.5px; font-weight:800; color:var(--text-sub); ' +
@@ -253,7 +294,7 @@
 
     /* ---------- 점검용 ---------- */
     window.briefDebug = function () {
-        var all = { 언제깠지: openItem(), 해열제: feverItem(), 냉동실: cubeItem(), 바통터치: batonItem() };
+              var all = { 소아과: reportItem(), 언제깠지: openItem(), 해열제: feverItem(), 냉동실: cubeItem(), 바통터치: batonItem() };
         Object.keys(all).forEach(function (k) {
             var v = all[k];
             console.log("  " + k + ":", v ? (v.urgent ? "🔴 " : "· ") + v.text : "알릴 것 없음");

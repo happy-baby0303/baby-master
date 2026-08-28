@@ -636,6 +636,13 @@
         };
     };
 
+           // 모아듣기가 열릴 때 여기서 틀어둔 소리를 끈다. 안 그러면 두 소리가 겹친다.
+    window.stopVoicePlayback = function () {
+        if (playTimer) { clearInterval(playTimer); playTimer = null; }
+        if (playing) { try { playing.pause(); } catch (e) {} }
+        playing = null; playingId = null;
+    };
+
     window.removeVoice = function (key, id) {
         var go = function () {
             var v = window.getDayVoices(key).filter(function (x) { return x.id === id; })[0];

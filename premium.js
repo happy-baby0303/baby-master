@@ -37,16 +37,16 @@
     /* ==========================================================
        ⭐ 여기가 유일한 기준표. 숫자를 바꾸려면 여기만 고친다.
        ========================================================== */
-    var PLAN = {
+       var PLAN = {
         free: {
-            photoPerDay: 1,
-            voiceTotal:  3,
+            photoPerDay: 3,
+            voiceTotal:  10,
             sealedTotal: 3,
-            familySize:  2,
+            familySize:  3,
             babies:      1
         },
         pro: {
-            photoPerDay: 3,
+            photoPerDay: Infinity,
             voiceTotal:  Infinity,
             sealedTotal: Infinity,
             familySize:  5,      // 보안 규칙도 5로 막혀 있다. 같이 움직여야 한다
@@ -107,11 +107,11 @@
        문구는 실제 동작과 한 글자도 어긋나면 안 된다. -------- */
 
     var FEATURES = {
-        photo: {
+                photo: {
             icon: "📷",
-            title: "하루 사진 " + PLAN.pro.photoPerDay + "장",
+            title: "하루 사진 무제한",
             free: "하루 " + PLAN.free.photoPerDay + "장",
-            line: "무료는 하루 한 장이에요. 프리미엄이면 세 장까지 담깁니다."
+            line: "무료도 하루 " + PLAN.free.photoPerDay + "장까지 담깁니다. 플러스는 장수를 안 셉니다."
         },
         voice: {
             icon: "🎙️",
@@ -129,7 +129,7 @@
             icon: "👵",
             title: "가족 " + PLAN.pro.familySize + "명까지",
             free: "부모 " + PLAN.free.familySize + "명",
-            line: "부모 두 분은 무료예요. 할머니 할아버지까지 " + babyName() + "의 배냇함을 볼 수 있어요."
+                      line: PLAN.free.familySize + "명까지는 무료예요. 할머니 할아버지까지 " + babyName() + "의 배냇함을 보려면 다섯 자리가 필요합니다."
         },
         book: {
             icon: "📖",
@@ -137,15 +137,30 @@
             free: "—",
             line: "지금까지 담긴 걸 한 권으로 내보냅니다. 인쇄해서 책장에 꽂을 수 있어요."
         },
-        baby: {
+                baby: {
             icon: "👶",
             title: "다둥이 프로필",
             free: "아기 " + PLAN.free.babies + "명",
             line: "둘째, 셋째의 배냇함을 따로 만들 수 있어요."
+        },
+                reel: {
+            icon: "🎧",
+            title: "소리 모아듣기",
+            free: "처음과 마지막",
+            line: "담긴 소리를 처음부터 끝까지 이어서 듣습니다. 목소리는 나란히 놓기 전에는 변한 걸 못 알아채요."
+        },
+        month: {
+            icon: "🎁",
+            title: "이달의 배냇함",
+            free: "한 장",
+            line: "달이 바뀌면 지난달이 카드 한 장으로 도착합니다. 첫 장은 선물이고, 그 뒤로는 매달이에요."
         }
     };
 
-    window.lockChip = function (label) {
+       window.lockChip = function (label) {
+        // 이름은 여기 한 곳에서만 정한다.
+        // 부르는 쪽이 뭘 넘기든 화면에는 '플러스'로 나간다.
+        label = "플러스";
         return '<span style="display:inline-flex; align-items:center; gap:3px; font-size:10px; font-weight:800; ' +
             'color:' + GOLD + '; background:' + GOLD_BG + '; padding:3px 8px; border-radius:8px; ' +
             'letter-spacing:0.2px; white-space:nowrap; vertical-align:middle;">' +
@@ -212,7 +227,7 @@
                 '<div style="font-size:11.5px; font-weight:900; color:' + PURPLE + '; margin-bottom:6px; letter-spacing:0.2px;">이건 앞으로도 무료예요</div>' +
                 freeList +
             '</div>' +
-            '<div onclick="window.startPremium()" style="text-align:center; padding:16px; background:' + GOLD + '; color:#FFF; border-radius:15px; font-size:15px; font-weight:800; cursor:pointer;">프리미엄 보러가기</div>' +
+            '<div onclick="window.startPremium()" style="text-align:center; padding:16px; background:' + GOLD + '; color:#FFF; border-radius:15px; font-size:15px; font-weight:800; cursor:pointer;"> 플러스 보러가기</div>' +
         '</div>';
 
         document.body.appendChild(wrap);
