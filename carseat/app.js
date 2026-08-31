@@ -1,5 +1,5 @@
 // ==========================================
-// 🚘 육아메이트 카시트 AI 큐레이터 엔진 V4.0 (carseat/app.js)
+// 🚘 배냇함 카시트 AI 큐레이터 엔진 V4.0 (carseat/app.js)
 // (강력한 감점 AI 탑재 + 조잡한 하드코딩 배너 제거 및 개별 리포트화)
 // ==========================================
 
@@ -316,7 +316,7 @@ function runCarseatEngine() {
         }
 
         if(score < 0) score = 0;
-        if(score === 100) reasons.push('✨ 우리 아기의 생명과 차량 호환성을 완벽하게 충족합니다!');
+        if(score === 100) reasons.push('✨ 고르신 조건에 다 맞아요');
 
         return { ...item, matchRate: score, matchReasons: reasons };
     }).filter(Boolean); // 🚨 [수정 완료] 아까 실수로 지워졌던 마법의 닫는 괄호 복구!
@@ -328,7 +328,7 @@ function runCarseatEngine() {
         return;
     }
 
-    let htmlOutput = `<div style="font-size: 16px; font-weight: 800; color: #191F28; margin-bottom: 16px;">✨ AI 안전성/호환성 검증 리포트</div>`;
+    let htmlOutput = `<div style="font-size: 16px; font-weight: 800; color: #191F28; margin-bottom: 16px;">✨ 조건에 맞는 카시트</div>`;
     
     let top3Results = processedData.slice(0, 3); 
     let otherResults = processedData.slice(3); 

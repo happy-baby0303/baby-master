@@ -1,5 +1,5 @@
 // ==========================================
-// 🛒 육아메이트 유모차 AI 엔진 V16.2 (수익 극대화 & 모바일 최적화 패치 완료!)
+// 🛒 배냇함 유모차 AI 엔진 V16.2 (수익 극대화 & 모바일 최적화 패치 완료!)
 // ==========================================
 
 let isFavViewMode = false;
@@ -161,7 +161,7 @@ function getVolume(dims) { return (dims[0] * dims[1] * dims[2]) / 1000; }
 
 function renderAdapterCard(brandName, textData) {
     if(!textData) return '';
-    let statusClass = "good"; let icon = "✅"; let badgeText = "호환 완벽";
+    let statusClass = "good"; let icon = "✅"; let badgeText = "잘 맞음";
     if (textData.includes("❌")) { statusClass = "bad"; icon = "🚨"; badgeText = "호환 불가"; }
     else if (textData.includes("필요") || textData.includes("주의") || textData.includes("필수!")) { statusClass = "warn"; icon = "⚠️"; badgeText = "조건부 호환"; }
     let mainText = textData, subText = "";
@@ -215,7 +215,7 @@ function generateCardHtml(item) {
         } else if (item.matchReasons && item.matchReasons.length > 0) {
             reasonLi = item.matchReasons.map(r => `<li style="margin-bottom:4px; color: #4E5968;">🚨 <b>${r}</b></li>`).join('');
         }
-        let reportTitle = item.matchRate >= 80 ? '🟢 AI 최적합 판정' : (item.matchRate >= 50 ? '⚠️ AI 조건부 추천' : '❌ AI 비추천 판정');
+        let reportTitle = item.matchRate >= 80 ? '🟢 조건에 잘 맞아요' : (item.matchRate >= 50 ? '⚠️ 일부만 맞아요' : '❌ 조건에 안 맞아요 판정');
         let titleColor = item.matchRate >= 80 ? '#3182F6' : (item.matchRate >= 50 ? '#F59E0B' : '#E32636');
 
         aiReportHtml = `
@@ -259,7 +259,7 @@ function generateCardHtml(item) {
     taxHtml += `<div class="receipt-total"><span>💸 최종 체감 결제액</span><span style="color:#3182F6;">${realPrice.toLocaleString()}원</span></div></div>`;
 
     const asClass = item.asInfo?.status === 'good' ? 'as-good' : (item.asInfo?.status === 'warn' ? 'as-warn' : 'as-bad');
-    const asTitle = item.asInfo?.status === 'good' ? 'A/S 안심 보장' : (item.asInfo?.status === 'warn' ? 'A/S 체크포인트' : 'A/S 리스크 경고');
+    const asTitle = item.asInfo?.status === 'good' ? 'A/S 무난한 편' : (item.asInfo?.status === 'warn' ? 'A/S 체크포인트' : 'A/S 리스크 경고');
     const asIcon = item.asInfo?.status === 'good' ? '🛡️' : (item.asInfo?.status === 'warn' ? '👀' : '🚨');
 
     // 6. 구매버튼 및 방어 멘트
@@ -645,7 +645,7 @@ function shareResult() {
         Kakao.Share.sendDefault({
             objectType: 'feed',
             content: {
-                title: '육아메이트 AI 5D 유모차 매칭 🛒',
+                title: '배냇함 AI 5D 유모차 매칭 🛒',
                 description: '우리 가족 라이프스타일과 트렁크 크기에 딱 맞는 유모차를 AI로 찾아보세요!',
                 imageUrl: 'https://happy-baby0303.github.io/baby-master/stroller/og-image.png',
                 link: { mobileWebUrl: shareUrl, webUrl: shareUrl },

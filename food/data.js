@@ -1,5 +1,5 @@
 // ==========================================
-// 🍼 육아메이트 이유식 통합 데이터베이스 (food/data.js)
+// 🍼 배냇함 이유식 통합 데이터베이스 (food/data.js)
 // ※ AI 출력 한계치까지 밀어넣은 압도적 물량 (식재료 100종 + 레시피 70종)
 // ※ 전문 영양사급 안전/조리 디테일 추가 완료 버전
 // ==========================================
@@ -141,7 +141,7 @@ const babyFoodData = [
       recipe: ["1. (안전) 닭안심은 소화가 안 되는 하얀 막과 힘줄을 칼로 완벽히 제거 후 푹 삶아 믹서에 갑니다.", "2. 💡[초보핵심] '다 식은 찬물/육수'에 쌀가루를 완벽히 풉니다.", "3. 재료 넣고 센 불 ➔ 끓어오르면 약불로 5~7분 저으며 끓이기.", "4. 고운 체에 걸러 소분하기."] },
     { id: "e08", name: "닭고기 고구마 미음", age: "early", goal: "weight", allergens: [], desc: "단맛으로 정체기 극복", texture: "10배 미음", ingredients: "닭안심 10g, 고구마 10g, 쌀가루 15g", 
       recipe: ["1. 닭안심은 힘줄 제거 후 삶고, 고구마는 껍질 까서 쪄줍니다. 모두 믹서에 갈아주세요.", "2. 💡[초보핵심] '다 식은 찬물'에 쌀가루를 먼저 완벽히 풉니다.", "3. 재료 넣고 센 불 ➔ 끓어오르면 약불로 5~7분 저으며 끓이기.", "4. 고운 체에 걸러 완성."] },
-    { id: "e09", name: "오트밀 사과 미음", age: "early", goal: "poop", allergens: [], desc: "변비 직빵 아침 메뉴", texture: "10배 미음", ingredients: "오트밀가루(초기용) 10g, 사과 10g, 쌀가루 10g", 
+        { id: "e09", name: "오트밀 사과 미음", age: "early", goal: "poop", allergens: ["flour"], desc: "변비 직빵 아침 메뉴", texture: "10배 미음", ingredients: "오트밀가루(초기용) 10g, 사과 10g, 쌀가루 10g", 
       recipe: ["1. 사과는 껍질을 깎고 강판에 곱게 갈아 즙/건더기를 준비합니다.", "2. 💡[초보핵심] 냄비에 '찬물'을 붓고 오트밀가루와 쌀가루를 먼저 덩어리 없이 풀어줍니다.", "3. 사과 간 것을 넣고 중불에서 끓이다 끓어오르면 약불로 3분간 저어 완성합니다."] },
     { id: "e10", name: "단호박 퓨레", age: "early", goal: "weight", allergens: [], desc: "달콤 부드러운 간식", texture: "플레인 요거트 농도의 퓨레", ingredients: "단호박 1/4개", 
       recipe: ["1. (안전) 단호박은 겉껍질을 두껍게 깎고, 숟가락으로 속의 씨와 실을 완벽히 긁어내 버립니다.", "2. 과육만 깍둑 썰어 찜기에 10분 이상 푹 찝니다.", "3. 따뜻할 때 포크로 곱게 으깨어 주면 완성! (뻑뻑하면 분유물 1스푼 추가)"] },
@@ -232,7 +232,7 @@ const babyFoodData = [
       recipe: ["1. 연어 쪄서 가시 완벽 확인하며 으깨기.", "2. 💡[초보핵심] 브로콜리 3mm 다지기.", "3. [끓이기] 냄비에 물 조금 적게 넣고 약불로 10분 끓이다 거의 완성될 즈음 조제한 분유 50ml 붓고 한소끔 더 끓이기."] },
     { id: "m19", name: "소고기 연근 당근 죽", age: "mid", goal: "poop", allergens: [], desc: "장 튼튼 연근 영양죽", texture: "7배죽", ingredients: "소고기 20g, 연근 10g, 당근 10g, 중기 쌀가루 25g", 
       recipe: ["1. 연근은 식초물에 5분 데쳐 아린맛 빼기.", "2. 💡[초보핵심] 연근/당근/소고기 모두 3mm로 아주 잘게 다지기.", "3. [끓이기] 센 불 ➔ 약불로 10~15분 푹 끓이기."] },
-    { id: "m20", name: "닭고기 렌틸콩 단호박 죽", age: "mid", goal: "weight", allergens: [], desc: "고단백 달콤 영양죽", texture: "7배죽", ingredients: "닭안심 20g, 레드렌틸콩 10g, 단호박 15g, 중기 쌀가루 20g", 
+        { id: "m20", name: "닭고기 렌틸콩 단호박 죽", age: "mid", goal: "weight", allergens: ["soy"], desc: "고단백 달콤 영양죽", texture: "7배죽", ingredients: "닭안심 20g, 레드렌틸콩 10g, 단호박 15g, 중기 쌀가루 20g", 
       recipe: ["1. 부드러운 '레드렌틸콩' 15분 불려 10분 삶기.", "2. 💡[초보핵심] 익힌 닭 3mm 다지고 단호박 으깨기.", "3. [끓이기] 센 불 ➔ 약불로 10~15분 푹 끓이기."] },
     { id: "m21", name: "소고기 가지 죽", age: "mid", goal: "iron", allergens: [], desc: "물컹한 식감 적응 죽", texture: "7배죽", ingredients: "소고기 20g, 가지 15g, 중기 쌀가루 25g", 
       recipe: ["1. 가지 껍질 두껍게 깎아 속살 준비.", "2. 💡[초보핵심] 가지/익힌 소고기 3mm 다지기.", "3. [끓이기] 센 불 ➔ 약불로 10~15분 푹 끓이기."] },
@@ -303,7 +303,7 @@ const babyFoodData = [
       recipe: ["1. 연어 가시 확인하며 으깨기. 💡[초보핵심] 감자/양파 5mm 다지기.", "2. 채소 볶다 연어/진밥/물 붓고 센 불 ➔ 약불 5분 졸이기."] },
     { id: "l10", name: "닭고기 밤 대추 진밥", age: "late", goal: "all", allergens: [], desc: "가을 영양밥", texture: "진밥", ingredients: "닭안심 30g, 찐 밤 15g, 말린 대추 1알, 진밥 50g", 
       recipe: ["1. (안전) 대추 씨 완벽 제거. 💡[초보핵심] 닭고기 5mm 썰기. 밤 으깨기.", "2. 닭/밤/대추/진밥/물 붓고 센 불 ➔ 약불 5분 졸이기."] },
-    { id: "l11", name: "전복 미역 진밥", age: "late", goal: "weight", allergens: ["seafood"], desc: "아기 보양 덮밥", texture: "진밥", ingredients: "전복 1마리, 불린 미역 10g, 무 10g, 진밥 50g", 
+    { id: "l11", name: "전복 미역 진밥", age: "late", goal: "weight", allergens: allergens: ["seafood", "shellfish"], desc: "아기 보양 덮밥", texture: "진밥", ingredients: "전복 1마리, 불린 미역 10g, 무 10g, 진밥 50g", 
       recipe: ["1. (안전) 전복 껍데기/내장/이빨 도려내기. 💡[초보핵심] 전복/미역 1mm, 무 5mm 다지기.", "2. 냄비에 볶다 진밥/물 붓고 약불 5분 졸이기."] },
     { id: "l12", name: "돼지고기 사과 덮밥", age: "late", goal: "weight", allergens: [], desc: "첫 돼지고기 시도!", texture: "진밥", ingredients: "돼지 안심 30g, 사과 20g, 양파 10g, 진밥 50g", 
       recipe: ["1. 💡[초보핵심] 기름기 없는 안심 5mm 다지기. 양파/사과 5mm 다지기.", "2. 고기/양파 볶다 사과/진밥/물 넣고 센 불 ➔ 약불 5분 졸이기."] },
@@ -311,7 +311,7 @@ const babyFoodData = [
       recipe: ["1. 연근 식초물 데치고 5mm 다지기. 크래미 잘게 찢기.", "2. 💡[초보핵심] 크래미 볶다 밥/물/야채 넣고 약불 5분 졸이기."] },
     { id: "l14", name: "토마토 가지 소고기 리조또", age: "late", goal: "iron", allergens: ["dairy"], desc: "서양식 풍미", texture: "리조또", ingredients: "방울토마토 3개, 가지 15g, 소고기 30g, 치즈 1/2장, 진밥 50g", 
       recipe: ["1. 방토 껍질 까고 다지기. 💡[초보핵심] 고기/가지 5mm 다지기.", "2. 볶다가 밥/물 붓고 약불 5분 졸이기.", "3. 불 끄고 치즈 섞기."] },
-    { id: "l15", name: "소고기 콩나물 무 진밥", age: "late", goal: "all", allergens: [], desc: "국밥 스타일", texture: "자박한 진밥", ingredients: "소고기 30g, 콩나물 15g, 무 15g, 진밥 50g", 
+       { id: "l15", name: "소고기 콩나물 무 진밥", age: "late", goal: "all", allergens: ["soy"], desc: "국밥 스타일", texture: "자박한 진밥", ingredients: "소고기 30g, 콩나물 15g, 무 15g, 진밥 50g",고기 30g, 콩나물 15g, 무 15g, 진밥 50g", 
       recipe: ["1. 콩나물 머리/꼬리 떼고 다지기. 💡[초보핵심] 무/고기 5mm 썰기.", "2. 볶다 물/밥 넣고 약불 5분 졸이기."] },
     { id: "l16", name: "닭고기 파프리카 진밥", age: "late", goal: "all", allergens: [], desc: "비타민C 듬뿍", texture: "진밥", ingredients: "닭안심 30g, 파프리카 15g, 양파 10g, 진밥 50g", 
       recipe: ["1. 파프리카 비닐 껍질 까고 다지기. 💡[초보핵심] 닭/양파 5mm 썰기.", "2. 볶다 물/밥 넣고 약불 5분 졸이기."] },
@@ -327,7 +327,7 @@ const babyFoodData = [
       recipe: ["1. 연근 아린맛 빼기. 💡[초보핵심] 연근/고기 5mm 썰기.", "2. 볶다 물/밥 넣고 약불 5분 졸이기."] },
     { id: "l22", name: "소고기 파프리카 진밥", age: "late", goal: "iron", allergens: [], desc: "풍미 가득 색감 밥", texture: "진밥", ingredients: "소고기 30g, 파프리카 15g, 양파 10g, 진밥 50g", 
       recipe: ["1. 파프리카 껍질 까기. 💡[초보핵심] 모든 재료 5mm 썰기.", "2. 볶다 물/밥 넣고 약불 5분 졸이기."] },
-    { id: "l23", name: "소고기 콩나물 진밥", age: "late", goal: "iron", allergens: [], desc: "시원한 아기국밥", texture: "진밥", ingredients: "소고기 30g, 콩나물 15g, 진밥 50g", 
+    { id: "l23", name: "소고기 콩나물 진밥", age: "late", goal: "iron", allergens: [], desc: "시원한 아기국밥", texture: "진밥", ingredients: "소고기 30g, 콩나물 15g, 진밥 50g", 30g, 콩나물 15g, 진밥 50g", 
       recipe: ["1. 콩나물 머리꼬리 떼기. 💡[초보핵심] 콩나물/고기 5mm 썰기.", "2. 육수 붓고 밥과 약불 5분 졸이기."] },
     { id: "l24", name: "소고기 무 버섯 진밥", age: "late", goal: "iron", allergens: [], desc: "소고기 뭇국 느낌 든든함", texture: "진밥", ingredients: "소고기 30g, 무 10g, 표고버섯 10g, 진밥 50g", 
       recipe: ["1. 표고버섯 기둥 떼기. 💡[초보핵심] 무/버섯/고기 5mm 썰기.", "2. 볶다 물/밥 넣고 약불 5분 졸이기."] },
@@ -388,7 +388,7 @@ const babyFoodData = [
       recipe: ["1. 💡[초보핵심] 고기/야채를 팬에 완전히 볶아 익히기.", "2. 볼에 밥, 볶은재료, 계란 섞기.", "3. (안전) 머핀 틀에 70% 담아 에어프라이어 160도 15분 속까지 굽기."] },
     { id: "d08", name: "들깨 무나물 볶음밥", age: "done", goal: "poop", allergens: [], desc: "소화 1등 볶음밥", texture: "부드러운 볶음밥", ingredients: "무 30g, 소고기 20g, 껍질깐 들깨가루 1t, 밥 70g", 
       recipe: ["1. 무는 얇게 채썰고 고기 다지기.", "2. 💡[초보핵심] 무에 물 넣고 뚜껑 덮어 푹 무르게 익히다 고기 볶기.", "3. 밥 섞고 불 끄기 전 들깨가루 톡."] },
-    { id: "d09", name: "렌틸콩 토마토 파스타", age: "done", goal: "iron", allergens: ["flour"], desc: "볼로네제 파스타", texture: "면 요리", ingredients: "레드렌틸콩 15g, 생토마토 1/2개, 소고기 30g, 아기면", 
+        { id: "d09", name: "렌틸콩 토마토 파스타", age: "done", goal: "iron", allergens: ["flour", "soy"], desc: "볼로네제 파스타", texture: "면 요리", ingredients: "레드렌틸콩 15g, 생토마토 1/2개, 소고기 30g, 아기면", 
       recipe: ["1. 토마토 데쳐 껍질 까고 으깨기. 렌틸콩 삶기.", "2. 고기 볶다 토마토 넣어 소스 끓이기.", "3. 💡[초보핵심] 목에 안 걸리게 면을 2cm로 잘라 삶아 소스에 비비기."] },
     { id: "d10", name: "새우 두부 완자", age: "done", goal: "weight", allergens: ["shellfish", "soy", "egg", "flour"], desc: "딤섬 느낌 반찬", texture: "완자", ingredients: "새우 40g, 두부 30g, 양파 10g, 전분 1T, 계란물 1T", 
       recipe: ["1. 새우 내장 제거 다지기. 두부 물기 꽉 짜기.", "2. 💡[초보핵심] 재료 섞어 5분 찰지게 치대기.", "3. (안전) 동그랗게 빚어 찜기에 15분 속까지 푹 찌기."] },
@@ -396,7 +396,7 @@ const babyFoodData = [
       recipe: ["1. (안전) 질식 예방 위해 블루베리는 무조건 반으로 자르기.", "2. 💡[초보핵심] 바나나 으깨고 가루/계란 섞어 반죽.", "3. 팬에 반죽 올리고 약불로 굽기."] },
     { id: "d12", name: "치즈 감자 고로케", age: "done", goal: "weight", allergens: ["dairy", "egg", "flour"], desc: "겉바속촉 간식", texture: "크로켓", ingredients: "감자 1개, 치즈 1장, 계란물, 밀가루, 무염 빵가루", 
       recipe: ["1. 감자 쪄서 으깨기. 💡[초보핵심] 동그랗게 빚으며 속에 치즈 넣기.", "2. (안전) 밀가루➔계란➔빵가루 묻혀 에어프라이어 180도 10분 속까지 굽기."] },
-    { id: "d13", name: "전복 버터 구이 덮밥", age: "done", goal: "weight", allergens: ["seafood", "dairy"], desc: "버터 풍미 특식", texture: "덮밥", ingredients: "생물 전복 1마리, 무염버터 1t, 양파 10g, 밥 70g", 
+    { id: "d13", name: "전복 버터 구이 덮밥", age: "done", goal: "weight", allergens: allergens: ["seafood", "shellfish", "dairy"]id: "d31", name: "전복 미역국 (유아식)", age: "done", goal: "iron", allergens: ["seafood", "soy"], desc: "버터 풍미 특식", texture: "덮밥", ingredients: "생물 전복 1마리, 무염버터 1t, 양파 10g, 밥 70g", 
       recipe: ["1. 전복 내장/이빨 완벽 제거 후 1mm 저미기.", "2. 💡[초보핵심] 팬에 버터 두르고 양파와 전복을 약불로 속까지 완벽히 익혀 밥에 올리기."] },
     { id: "d14", name: "소고기 숙주 볶음", age: "done", goal: "all", allergens: ["soy"], desc: "아삭한 식감 훈련", texture: "볶음", ingredients: "소고기 30g, 숙주 20g, 대파 약간, 아기간장 1t", 
       recipe: ["1. 숙주 1분 데쳐 1cm 썰기.", "2. 💡[초보핵심] 대파 기름 내고 고기 볶다가 간장 1t 넣고 빠르게 1분만 볶아 불 끄기."] },
@@ -432,7 +432,7 @@ const babyFoodData = [
       recipe: ["1. 새우 내장 빼고 다지기.", "2. 💡[초보핵심] 볼에 밥, 새우, 볶은야채, 계란 섞기.", "3. (안전) 팬에 동전 모양으로 부치며 속까지 완벽히 익히기."] },
     { id: "d30", name: "닭가슴살 사과 조림", age: "done", goal: "weight", allergens: ["soy"], desc: "단맛으로 퍽퍽함 잡기", texture: "조림", ingredients: "닭가슴살 40g, 사과 20g, 아기간장 1t", 
       recipe: ["1. 닭가슴살 1cm 깍둑썰기.", "2. 💡[초보핵심] 사과 강판에 갈아 간장 섞기.", "3. 팬에 닭 굽다 사과 소스 부어 졸이기."] },
-    { id: "d31", name: "전복 미역국 (유아식)", age: "done", goal: "iron", allergens: ["seafood", "soy"], desc: "돌아기 생일 진한 국물", texture: "국", ingredients: "전복 1마리, 불린 미역 20g, 간장 1t, 참기름", 
+    { id: "d31", name: "전복 미역국 (유아식)", age: "done", goal: "iron", allergens: allergens: ["seafood", "shellfish", "soy"], desc: "돌아기 생일 진한 국물", texture: "국", ingredients: "전복 1마리, 불린 미역 20g, 간장 1t, 참기름", 
       recipe: ["1. (안전) 전복 내장/이빨/껍질 버리고 살만 얇게 1cm 저미기.", "2. 💡[초보핵심] 미역과 전복 참기름 볶다 물 붓고 푹 끓여 간장 톡."] },
     { id: "d32", name: "돼지고기 안심 탕수육 (오븐)", age: "done", goal: "weight", allergens: ["flour"], desc: "기름기 뺀 건강 탕수육", texture: "튀김", ingredients: "돼지안심 50g, 전분, 사과 약간", 
       recipe: ["1. 💡[초보핵심] 돼지고기 길쭉하게 썰어 전분 묻혀 오븐 180도 15분 속까지 굽기.", "2. 물에 사과 끓이다 전분물 풀어 소스 만들기."] },
@@ -455,7 +455,7 @@ const babyFoodData = [
         ] 
     },
     { 
-        id: "d37", name: "부들부들 아기 계란국", age: "done", goal: "all", allergens: ["egg"], 
+      id: "d37", name: "부들부들 아기 계란국", age: "done", goal: "all", allergens: ["egg", "seafood"], 
         desc: "아침에 밥 말아 먹이기 가장 좋은 속 편한 5분 컷 국물 요리", 
         texture: "부드러운 국", ingredients: "계란 1개, 대파 약간, 멸치육수(또는 채수) 150ml", 
         recipe: [

@@ -2187,7 +2187,7 @@ window.openChecklistModal = function(theme = 'basic') {
     // 공통 깜빡병 리스트
     baseData.push(
         { id: 'c_home_trash', label: '💩 기저귀 매직캔 & 이유식 음쓰 비우기 (귀가 후 냄새 지옥 100% 확정)', checked: false },
-        { id: 'c_home_robot', label: '🤖 바닥 장난감 치우고 로봇청소기 켜기 (로청이 장난감 먹고 토함 방지)', checked: false },
+        { id: 'c_home_robot', label: '🧸 바닥 장난감 치우기 (로봇청소기 쓰시면 이때 켜두면 좋아요)', checked: false },
         { id: 'c_home_window', label: '💨 에어컨 전원 끄기 및 창문 닫기 (갑작스러운 소나기·미세먼지 테러 방지)', checked: false }
     );
 

@@ -1,5 +1,5 @@
 // ==========================================
-// 🍼 육아메이트 젖병 AI 큐레이터 엔진 (bottle/app.js)
+// 🍼 배냇함 젖병 AI 큐레이터 엔진 (bottle/app.js)
 // (네이버+쿠팡 위장 전술 및 카톡 앱 유도 탑재 완결판)
 // ==========================================
 
@@ -128,9 +128,6 @@ function renderFavorites() {
     // 찜한 화면에서는 쿠팡 링크 무조건 보여주기 (rank = 1 부여)
     htmlOutput += favItems.map(item => generateCardHTML({ ...item, matchRate: null }, 1)).join('');
     
-    // 💰 [광고 배너 예시 자리] 나중에 협찬받으면 여기에 삽입!
-    // htmlOutput += `<div class="sponsor-banner">...</div>`;
-
     resultArea.innerHTML = htmlOutput;
 }
 
@@ -175,10 +172,21 @@ function generateCardHTML(item, rank) {
 
     if (isFavViewMode) cardBorderColor = '#E32636';
 
-    const searchKeyword = `${item.brand} ${item.name}`; 
-    const partnerCode = "AF9932454";
-    let myCoupangLink = `https://www.coupang.com/np/search?q=${encodeURIComponent(searchKeyword)}&lptag=${partnerCode}`;
-   
+    // 💰 [핵심 패치] data.js에 넣은 딥링크(coupangLink)를 최우선으로 가져오게 수정!
+    let myCoupangLink = "";
+    if (item.coupangLink && item.coupangLink.trim() !== "") {
+        myCoupangLink = item.coupangLink;
+    } else {
+        const searchKeyword = `${item.brand} ${item.name}`; 
+        const partnerCode = "AF9932454"; // 대표님 파트너스 코드
+        myCoupangLink = `https://www.coupang.com/np/search?q=${encodeURIComponent(searchKeyword)}&lptag=${partnerCode}`;
+    }
+    
+  // 딥링크는 상품 하나로, 검색 링크는 목록으로 간다.
+    // 가는 곳이 다른데 버튼 글씨가 같으면 "최저가라더니 하나만 뜨네"가 된다.
+    const isDeepLink = (item.coupangLink && item.coupangLink.trim() !== "");
+    const buyLabel = isDeepLink ? "🛒 쿠팡에서 이 제품 보기 〉" : "🔍 쿠팡에서 가격 비교하기 〉";
+
     let purchaseBtn = '';
     
     // 🚨 [신뢰도 상승 패치] 3등 안에 들거나 찜한 목록에서만 쿠팡 링크 노출!
@@ -186,7 +194,7 @@ function generateCardHTML(item, rank) {
         purchaseBtn = `
             <div style="margin-top: 24px;">
                 <a href="${myCoupangLink}" target="_blank" class="buy-btn" style="display: flex; justify-content: center; align-items: center; width: 100%; margin-top: 0; background: #191F28; color: #FFF; border: 1px solid #000; box-shadow: 0 4px 14px rgba(0,0,0,0.1); font-size: 15px; padding: 18px 0; border-radius: 14px; font-weight: 900; text-decoration: none; transition: 0.2s;">
-                    🚀 쿠팡 최저가 검색하기 〉
+                   ${buyLabel}
                 </a>
             </div>
             
@@ -196,6 +204,7 @@ function generateCardHTML(item, rank) {
         `;
     } else {
         // 4등 이하는 정보성 버튼만 노출 (네이버 검색)
+        const searchKeyword = `${item.brand} ${item.name}`; 
         let naverSearchLink = `https://search.shopping.naver.com/search/all?query=${encodeURIComponent(searchKeyword)}`;
         purchaseBtn = `
             <div style="margin-top: 24px;">
@@ -245,7 +254,7 @@ function generateCardHTML(item, rank) {
             ${purchaseBtn}
 
             <button onclick="shareToHusband('${item.id}', '${item.brand}', '${item.name}')" style="display:block; width:100%; background:#F9FAFB; border:1px solid #E5E8EB; color:#4E5968; padding:16px; border-radius:14px; font-weight:800; font-size:14px; text-align:center; transition:0.2s; margin-top:16px; cursor:pointer;">
-                💬 남편에게 이 [AI 분석 리포트] 공유하기
+                💬 남편한테 이 젖병 보내기
             </button>
             <a href="../food/index.html" style="display:block; width:100%; background:#F9FAFB; border:1px solid #E5E8EB; color:#4E5968; padding:16px; border-radius:14px; font-weight:800; font-size:14px; text-align:center; text-decoration:none; transition:0.2s; margin-top:12px;">
                 🍲 이 젖병 떼면 먹일 [이유식 식단] 미리보기 ➔
@@ -287,7 +296,7 @@ function runBottleEngine() {
             score -= 20; reasons.push('선호하시는 젖병 소재와 일치하지 않습니다.'); 
         }
         if (antiColic === 'super' && item.antiColic !== 'super') { 
-            score -= 40; reasons.push('영아산통(배앓이) 완벽 차단 기능이 부족합니다.'); 
+            score -= 40; reasons.push('배앓이 방지 구조가 아닌 일반 젖병입니다.'); 
         } else if (antiColic === 'yes' && item.antiColic === 'normal') {
             score -= 20; reasons.push('일반적인 젖병으로 배앓이 특화 구조가 아닙니다.'); 
         }
@@ -312,7 +321,7 @@ function runBottleEngine() {
         }
 
         if(score < 0) score = 0;
-        if(score === 100) reasons.push('✨ 선택하신 모든 조건에 완벽하게 부합합니다!');
+        if(score === 100) reasons.push('✨ 고르신 조건에 다 맞아요');
 
         return { ...item, matchRate: score, matchReasons: reasons };
     });
@@ -348,7 +357,7 @@ function runBottleEngine() {
             </div>
             <div style="font-size: 16px; font-weight: 800; color: #191F28; margin-bottom: 16px;">✨ 가장 가까운 대안 TOP 3</div>`;
     } else {
-        htmlOutput = `<div style="font-size: 16px; font-weight: 800; color: #191F28; margin-bottom: 16px;">✨ AI 맞춤 젖병 리포트</div>`;
+        htmlOutput = `<div style="font-size: 16px; font-weight: 800; color: #191F28; margin-bottom: 16px;">✨ 조건에 맞는 젖병</div>`;
     }
     
     let top3Results = processedData.slice(0, 3); 
@@ -410,12 +419,12 @@ function shareToHusband(id, brand, name) {
         objectType: 'feed',
         content: {
             title: `여보! 우리 아기 젖병 [${brand}] 제품이 좋대 🍼`,
-            description: `AI가 분석한 배앓이 방지 리포트 확인해보고 이걸로 세트 쟁여놔줘! ❤️`,
+            description: `배냇함에서 골라봤어. 이걸로 두 개만 사보자 🤍`,
             imageUrl: 'https://happy-baby0303.github.io/baby-master/stroller/og-image.png',
             link: { mobileWebUrl: appUrl, webUrl: appUrl },
         },
         buttons: [
-            { title: '📊 AI 분석 리포트 확인하기', link: { mobileWebUrl: appUrl, webUrl: appUrl } }
+            { title: '🍼 젖병 보러 가기', link: { mobileWebUrl: appUrl, webUrl: appUrl } }
         ],
     });
 }
@@ -429,10 +438,10 @@ document.querySelectorAll('.matrix-panel select').forEach(select => {
         
         if (navigator.vibrate) navigator.vibrate(10);
         
-        // 🚨 필터 누르면 부드럽게 결과창 쪽으로 화면을 끌어올려줌 (시선 유도)
+        // 🚨 필터 누르면 부드럽게 결과창 쪽으로 화면을 끌어올려줌 (버그 수정 완료)
         const resultHeader = document.getElementById('bottle-result-area');
-        if(resultArea && window.scrollY < 200) { // 화면 위에 있을 때만
-             const yOffset = resultHeader.getBoundingClientRect().top + window.pageYOffset - 100; // 헤더 밑 여백 확보
+        if(resultHeader && window.scrollY < 200) { 
+             const yOffset = resultHeader.getBoundingClientRect().top + window.pageYOffset - 100;
              window.scrollTo({top: yOffset, behavior: 'smooth'});
         }
     });

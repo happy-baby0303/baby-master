@@ -9,11 +9,11 @@
     <meta charset="UTF-8">
     <script src="https://t1.kakaocdn.net/kakao_js_sdk/2.7.2/kakao.min.js"></script>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>육아메이트 | 프리미엄 유모차 5D AI 매칭</title>
+    <title>배냇함 | 유모차 고르기</title>
 
     <meta property="og:type" content="website">
-    <meta property="og:title" content="육아메이트 | 내 차에 들어가는 유모차 찾기">
-    <meta property="og:description" content="324가지 라이프스타일 분석! 엘베 없는 빌라, 내 차 트렁크에 딱 맞는 유모차를 1초만에 찾아보세요.">
+    <meta property="og:title" content="배냇함 | 내 차에 들어가는 유모차 찾기">
+    <meta property="og:description" content="엘베 없는 빌라, 내 차 트렁크에 맞는 유모차를 찾아드려요 엘베 없는 빌라, 내 차 트렁크에 딱 맞는 유모차를 1초만에 찾아보세요.">
     <meta property="og:image" content="https://happy-baby0303.github.io/baby-master/stroller/og-image.png"> 
     <meta property="og:url" content="https://happy-baby0303.github.io/baby-master/stroller/index.html">
 
@@ -32,8 +32,8 @@
                 </svg>
                 홈
             </a>
-            <h1 style="font-size: 18px; margin: 0; font-weight: 800;">육아메이트 AI</h1>
-            <div class="pro-badge">PRO V1.0</div>
+            <h1 style="font-size: 18px; margin: 0; font-weight: 800;">배냇함 큐레이터</h1>
+            <div class="pro-badge">유모차 49종</div>
         </div>
         <nav class="gnb-menu">
             <a href="../stroller/index.html" class="gnb-item active">☀️ 유모차</a>
@@ -45,7 +45,7 @@
     </header>
     
     <button class="floating-share-btn" onclick="shareResult()">
-        🔗 남편에게 AI 링크 보내기
+        🔗 남편한테 보내기
     </button>
 
     <main class="container">
@@ -54,7 +54,7 @@
     <!-- 1. 타이틀 다이어트: 수식어 빼고 핵심만! -->
     <div style="display: flex; align-items: center; justify-content: center; gap: 8px; margin-bottom: 6px;">
         <h2 style="margin: 0; font-size: 20px; font-weight: 900; color: #191F28;">
-            유모차 AI 큐레이터
+            내 차에 맞는 유모차
         </h2>
         <!-- 💡 JS가 알아서 쏴줄 마법의 뱃지 -->
         <span class="dynamic-age-badge" style="background: #E8F3FF; color: #3182F6; font-size: 12px; font-weight: 800; padding: 4px 8px; border-radius: 6px; white-space: nowrap;">
@@ -71,7 +71,7 @@
             </div>
 
         <div class="matrix-panel">
-            <div class="matrix-header"><span class="icon">🧬</span> 5차원 개인 상황 설정 데이터</div>
+            <div class="matrix-header"><span class="icon">	🔍</span>  우리 집 상황</div>
             <div class="matrix-grid">
                 <div class="matrix-item">
                     <label>🏡 거주 및 주행 환경</label>
@@ -102,10 +102,10 @@
                     </div>
                 </div>
                 <div class="matrix-item">
-                    <label>🦴 주 양육자 피지컬 상태</label>
+                    <label>🦴 주로 미는 분 상태</label>
                     <div class="custom-select-wrapper">
                         <select id="mat-parent" onchange="runMatrixEngine(true)">
-                            <option value="all">건강 상태 양호</option><option value="joint">손목 건초염 / 요통 진행 중</option><option value="strong">체력 만렙 / 안정감 우선</option>
+                            <option value="all">건강 상태 양호</option><option value="joint">손목이나 허리가 아파요</option><option value="strong">체력 만렙 / 안정감 우선</option>
                         </select>
                     </div>
                 </div>
@@ -121,7 +121,7 @@
 
             <div class="matrix-actions">
                 <button class="btn-reset" onclick="resetAll()">🔄 초기화</button>
-                <button class="btn-search" onclick="scrollToResults()">🔍 AI 매칭 결과 확인</button>
+                <button class="btn-search" onclick="scrollToResults()">🔍 결과 보기</button>
             </div>
             
             <div class="matrix-footer-vs" style="margin-top: 24px;">
@@ -171,7 +171,7 @@
             </button>
         </div>
 
-        <div class="result-title" id="result-top-title" style="display:none;">🏆 최적합 AI 픽 Top 3</div>
+        <div class="result-title" id="result-top-title" style="display:none;">🏆 조건에 맞는 3종</div>
         <div id="result-top-area" class="result-area"></div>
 
         <button id="show-more-btn" class="show-more-btn" style="display:none;" onclick="toggleOthers()">나머지 결과 보기 ▾</button>
@@ -179,12 +179,14 @@
 
         <div class="legal-footer">
             <p>※ 본 서비스 내 일부 상품 링크는 쿠팡 파트너스 활동의 일환으로, 구매 시 이에 따른 일정액의 수수료를 제공받습니다.</p>
-            <p><strong>육아메이트는 100% 객관적인 물리 제원과 데이터를 바탕으로 정보를 제공하며, 제휴 수수료가 AI 매칭 알고리즘 랭킹에 어떠한 영향도 미치지 않음을 엄격히 보장합니다.</strong></p>
+            <p><strong>배냇함는 제원과 데이터를 바탕으로 정보를 제공하며, 제휴 수수료는 추천 순서에 영향을 주지 않습니다.</strong></p>
         </div>
 
     </main>
     <script src="data.js"></script>
     <script src="app.js"></script>
+    <script src="disclosure.js"></script>
+    <script src="strollerguide.js"></script>
 
 <!-- 🚀 우측 하단 위로 가기 버튼 (공유 버튼과 안 겹치게 bottom: 100px 로 수정 완료!) -->
     <button id="scrollToTopBtn" onclick="window.scrollTo({top: 0, behavior: 'smooth'})" style="display: none; position: fixed; bottom: 100px; right: 20px; width: 48px; height: 48px; border-radius: 50%; background: #FFFFFF; border: 1px solid #E5E8EB; box-shadow: 0 4px 12px rgba(0,0,0,0.1); cursor: pointer; z-index: 9999; font-size: 20px; color: #4E5968; justify-content: center; align-items: center; transition: opacity 0.3s;">

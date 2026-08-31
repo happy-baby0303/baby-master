@@ -1287,7 +1287,7 @@ function getYieldRate() {
     return 1 - evap;
 }
 
-// ⏩ 정방향: 얼마나 나올까?
+// ⏩ 정방향: 얼마나 나올까? (아기 월령별 1끼 분량 자동 매칭 패치)
 function calcBabyFoodWater() {
     const type = document.getElementById('food-base-type').value;
     const ratio = parseFloat(document.getElementById('food-ratio-type').value);
@@ -1305,31 +1305,41 @@ function calcBabyFoodWater() {
     else if (type === 'raw')    waterG = Math.round(weight * ratio);
     else if (type === 'cooked') waterG = Math.round(weight * (ratio / 2));
 
-    const rate     = getYieldRate();
+    const rate   = getYieldRate();
     const totalG   = waterG + weight;
     const yieldG   = Math.round(totalG * rate);
 
-    // 🚨 여기서 ID를 res-water-g 로 완벽 매칭!
     document.getElementById('res-water-g').innerText = waterG.toLocaleString();
     document.getElementById('res-yield-g').innerText = yieldG.toLocaleString();
 
-    const cube = Math.floor(yieldG / 60), rest = yieldG % 60;
-    document.getElementById('res-cube-info').innerText =
-        cube > 0 ? `(60g 큐브 ${cube}칸${rest >= 10 ? ` + ${rest}g` : ''} 분량)` : `(한 끼 분량)`;
+    // 🚨 [현실 패치 1] 월령별 1끼 권장량에 맞춘 소분 가이드!
+    const ageFilter = document.getElementById('food-age') ? document.getElementById('food-age').value : 'early';
+    let mealSize = 60; // 초기 기본값
+    if (ageFilter === 'mid') mealSize = 100;
+    if (ageFilter === 'late') mealSize = 150;
+    if (ageFilter === 'done') mealSize = 200;
+
+    const meals = Math.floor(yieldG / mealSize);
+    const rest = yieldG % mealSize;
+    
+    let portionTip = meals > 0 
+        ? `(우리 아기 1끼 ${mealSize}g 기준 <b>약 ${meals}끼</b>${rest >= 20 ? `하고 ${rest}g 남는` : ''} 분량)` 
+        : `(아직 한 끼 분량(${mealSize}g)이 안 돼요! 재료를 조금 더 늘려볼까요?)`;
+
+    document.getElementById('res-cube-info').innerHTML = portionTip;
 
     const isCalib = !!localStorage.getItem('tosil_food_yield');
     const statusEl = document.getElementById('food-calib-status');
     if (statusEl) {
-        statusEl.innerHTML = isCalib ? `✅ 우리 집 회수율 <b>${Math.round(rate * 100)}%</b> 적용 중` : '';
+        statusEl.innerHTML = isCalib ? `✅ 우리 집 화력에 맞춘 회수율(<b>${Math.round(rate * 100)}%</b>) 적용 중` : '';
     }
 
     document.getElementById('food-calc-result').style.display = 'block';
 }
 
-// 🎯 실측 보정: 냄비 회수율 저장
+// 🎯 실측 보정: 냄비 회수율 저장 (감성 멘트 추가)
 function saveEvapCalibration() {
     const actual   = parseFloat(document.getElementById('food-actual-yield').value);
-    // 🚨 여기서도 ID를 res-water-g 로 완벽 매칭!
     const waterG   = parseFloat(document.getElementById('res-water-g').innerText.replace(/,/g, ''));
     const weight   = parseFloat(document.getElementById('food-base-weight').value);
     const statusEl = document.getElementById('food-calib-status');
@@ -1348,17 +1358,17 @@ function saveEvapCalibration() {
         statusEl.innerText = '⚠️ 투입량보다 많이 나왔어요. 용기 무게를 빼셨나요?';
         return;
     }
-    if (rate < 0.5) {
+    if (rate < 0.4) {
         statusEl.style.color = '#E32636';
-        statusEl.innerText = '⚠️ 절반 이상이 사라졌어요. 계량을 다시 확인해주세요!';
+        statusEl.innerText = '⚠️ 절반 이상이 날아갔어요. 불이 너무 셌거나 계량 오류일 수 있어요!';
         return;
     }
 
     localStorage.setItem('tosil_food_yield', rate.toFixed(3));
     statusEl.style.color = '#3182F6';
-    statusEl.innerHTML = `✅ 저장 완료! 우리 집 회수율은 <b>${Math.round(rate * 100)}%</b>네요.`;
+    statusEl.innerHTML = `🧙‍♀️ 마법의 계량 세팅 완료! 우리 집 냄비 회수율은 <b>${Math.round(rate * 100)}%</b>네요.`;
     
-    // 저장 후 즉시 재계산 돌리기
+    // 저장 후 즉시 양방향 재계산 돌리기
     calcBabyFoodWater(); 
     calcReverseFood(); 
     
@@ -1366,7 +1376,7 @@ function saveEvapCalibration() {
     document.getElementById('food-actual-yield').value = '';
 }
 
-// 🔄 역방향: 이만큼 만들고 싶어요 (현실 육아 패치 완료)
+// 🔄 역방향: 이만큼 만들고 싶어요 (육수 큐브 호환 패치 완료)
 function calcReverseFood() {
     const target = parseFloat(document.getElementById('food-target-yield').value);
     const type   = document.getElementById('food-base-type').value;
@@ -1383,32 +1393,26 @@ function calcReverseFood() {
 
     const rate   = getYieldRate();
     
-    // 1. 역산: 로직상 정확한 수치 도출 (사모님한테 등짝 맞는 숫자)
+    // 1. 역산: 로직상 정확한 수치 도출
     let exactBaseG  = target / (rate * (1 + mult));
     let exactWaterG = exactBaseG * mult;
 
-    // 2. 🚨 [현실 패치] 엄마들이 실제로 잴 수 있게 반올림!
-    // 쌀/고기 등은 일반 저울에 맞게 1g 단위로 반올림
+    // 2. 🚨 [현실 패치] 쌀은 1g, 물은 10ml 단위로 젖병 눈금 최적화!
     let realisticBaseG = Math.round(exactBaseG);
-    
-    // 물은 젖병 눈금에 맞추기 편하게 무조건 10ml 단위로 반올림 (예: 137 -> 140)
     let realisticWaterG = Math.round(exactWaterG / 10) * 10;
 
-    // 3. 반올림된 레시피로 다시 끓였을 때 "진짜로" 나오는 최종 양 계산
+    // 3. 반올림된 레시피로 다시 끓였을 때 나오는 최종 양 계산
     let finalYieldG = Math.round((realisticBaseG + realisticWaterG) * rate);
 
-    // 4. 화면에 값 뿌려주기
     document.getElementById('rev-base-g').innerText  = realisticBaseG.toLocaleString();
     document.getElementById('rev-water-g').innerText = realisticWaterG.toLocaleString();
     
     const resultBox = document.getElementById('food-reverse-result');
     resultBox.style.display = 'block';
     
-    // 5. 살짝 띠용 하는 애니메이션으로 계산됐음을 어필
     resultBox.style.transform = 'scale(1.02)';
     setTimeout(() => { resultBox.style.transform = 'scale(1)'; }, 150);
 
-    // 6. 엄마 마음을 편안하게 해주는 안내 문구 삽입
     let noteEl = document.getElementById('rev-realistic-note');
     if (!noteEl) {
         noteEl = document.createElement('div');
@@ -1416,5 +1420,12 @@ function calcReverseFood() {
         noteEl.style.cssText = 'font-size:12.5px; color:#3182F6; font-weight:800; margin-top:16px; background:#E8F3FF; padding:12px; border-radius:12px; border:1px dashed #B1D6FF; text-align:center; word-break:keep-all; line-height:1.4;';
         resultBox.appendChild(noteEl);
     }
-    noteEl.innerHTML = `💡 저울과 젖병 눈금에 맞춘 <b>현실 레시피</b>예요!<br>이렇게 끓이면 약 <b>${finalYieldG.toLocaleString()}g</b> 정도 완성돼요.`;
+
+    // 🚨 [현실 패치 2] 육수 큐브(채수/소고기 육수) 사용자 배려 기능!
+    let brothTip = '';
+    if (realisticWaterG >= 40) {
+        brothTip = `<div style="margin-top:8px; font-size:11.5px; color:#4E5968; background:#FFF; padding:8px; border-radius:8px; border:1px solid #B1D6FF; box-shadow:0 2px 4px rgba(49,130,246,0.05);">🍲 <b>육수 큐브(30ml) 1개</b>를 쓰신다면 맹물은 <b>${realisticWaterG - 30}ml</b>만 부어주세요!</div>`;
+    }
+
+    noteEl.innerHTML = `💡 젖병 눈금에 맞춘 <b>현실 레시피</b>예요!<br>이렇게 끓이면 약 <b>${finalYieldG.toLocaleString()}g</b> 정도 완성돼요.${brothTip}`;
 }

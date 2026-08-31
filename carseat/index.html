@@ -9,10 +9,10 @@
     <meta charset="UTF-8">
     <script src="https://t1.kakaocdn.net/kakao_js_sdk/2.7.2/kakao.min.js"></script>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>육아메이트 | 카시트 AI 큐레이터</title>
+    <title>배냇함 | 카시트 고르기</title>
 
     <meta property="og:type" content="website">
-    <meta property="og:title" content="육아메이트 | 내 차에 들어가는 카시트 찾기">
+    <meta property="og:title" content="배냇함 | 내 차에 들어가는 카시트 찾기">
     <meta property="og:description" content="우리 가족 라이프스타일 분석! 내 차 트렁크와 뒷좌석에 딱 맞는 카시트를 1초만에 찾아보세요.">
     <meta property="og:image" content="https://happy-baby0303.github.io/baby-master/stroller/og-image.png"> 
     <meta property="og:url" content="https://happy-baby0303.github.io/baby-master/carseat/index.html">
@@ -32,8 +32,8 @@
                 </svg>
                 홈
             </a>
-            <h1 style="font-size: 18px; margin: 0; font-weight: 800;">육아메이트 AI</h1>
-            <div class="pro-badge">PRO V1.0</div>
+            <h1 style="font-size: 18px; margin: 0; font-weight: 800;">배냇함 큐레이터</h1>
+            <div class="pro-badge">	카시트 14종</div>
         </div>
         <nav class="gnb-menu">
             <a href="../stroller/index.html" class="gnb-item">☀️ 유모차</a>
@@ -49,7 +49,7 @@
         <div class="hero-title" style="text-align: center; margin-bottom: 24px;">
             <div style="display: flex; align-items: center; justify-content: center; gap: 8px; margin-bottom: 6px;">
                 <h2 style="margin: 0; font-size: 20px; font-weight: 900; color: #191F28;">
-                    <span class="gradient-text">카시트 AI 큐레이터</span>
+                    <span class="gradient-text">내 차에 맞는 카시트</span>
                 </h2>
                 <span class="dynamic-age-badge" style="background: #E8F3FF; color: #3182F6; font-size: 12px; font-weight: 800; padding: 4px 8px; border-radius: 6px; white-space: nowrap;">
                 </span>
@@ -73,7 +73,7 @@
                         <select id="filter-age">
                             <option value="all">전체 연령</option>
                             <option value="newborn">신생아부터 사용 (0~12개월)</option>
-                            <option value="toddler">토들러/회전형 (신생아~5세)</option>
+                            <option value="toddler">토들러/회전형 (제품마다 시작 개월이 달라요)</option>
                             <option value="junior">주니어 (4세~12세)</option>
                         </select>
                     </div>
@@ -109,7 +109,7 @@
                         <select id="filter-safety">
                             <option value="all">기본 안전 기준 충족</option>
                             <option value="isize">유럽 최신 i-Size 인증 필수</option>
-                            <option value="adac">ADAC(독일) 테스트 우수 등급 필수</option>
+                            <option value="adac">ADAC 테스트를 받은 제품만</option>
                         </select>
                     </div>
                 </div>
@@ -145,7 +145,7 @@
             <p><strong>※ 면책 조항</strong><br>
             본 서비스의 차량 호환성 및 안전 스펙 정보는 제조사 기준에 따르며, 차종의 연식이나 실내 옵션에 따라 미세한 차이가 있을 수 있습니다. 구매 전 반드시 확인하시기 바랍니다.</p>
             <p><strong>※ 쿠팡 파트너스 안내</strong><br>
-            이 포스팅(서비스)은 쿠팡 파트너스 활동의 일환으로, 구매 시 이에 따른 일정액의 수수료를 제공받습니다. 육아메이트는 객관적 데이터를 바탕으로 정보를 제공하며, 수수료가 AI 매칭 알고리즘에 어떠한 영향도 미치지 않음을 엄격히 보장합니다.</p>
+            이 포스팅(서비스)은 쿠팡 파트너스 활동의 일환으로, 구매 시 이에 따른 일정액의 수수료를 제공받습니다. 배냇함는 객관적 데이터를 바탕으로 정보를 제공하며, 수수료는 추천 순서에 영향을 주지 않습니다.</p>
         </div>
 
         <!-- 💡 [팝업] 차알못을 위한 카시트 장착 방식 10초 가이드 -->
@@ -205,6 +205,8 @@
 
     <script src="data.js"></script>
     <script src="app.js"></script>
+    <script src="disclosure.js"></script>
+    <script src="carseatguide.js"></script>
 <!-- 🚀 우측 하단 위로 가기 버튼 -->
     <button id="scrollToTopBtn" onclick="window.scrollTo({top: 0, behavior: 'smooth'})" style="display: none; position: fixed; bottom: 30px; right: 20px; width: 48px; height: 48px; border-radius: 50%; background: #FFFFFF; border: 1px solid #E5E8EB; box-shadow: 0 4px 12px rgba(0,0,0,0.1); cursor: pointer; z-index: 999; font-size: 20px; color: #4E5968; justify-content: center; align-items: center; transition: opacity 0.3s;">
         ↑
